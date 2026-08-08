@@ -33,6 +33,15 @@ namespace SpellSimulator.Canvas
         // Estado del trazo
         private Vector2 lastDrawPosition;
 
+        // Bounding box del trazo en coordenadas UV [0,1]
+        // Permite recortar la region dibujada antes de mandarsela al modelo ONNX
+        private Vector2 inkBoundsMin = Vector2.one;
+        private Vector2 inkBoundsMax = Vector2.zero;
+        private bool hasInk = false;
+
+        /// <summary>True si hay al menos un trazo registrado en el lienzo.</summary>
+        public bool HasInk => hasInk;
+
         private void Awake()
         {
             InitializeCanvas();
@@ -88,6 +97,33 @@ namespace SpellSimulator.Canvas
         }
 
         /// <summary>
+        /// Devuelve el bounding box UV de la tinta dibujada en el lienzo.
+        /// Si no hay tinta, devuelve Rect(0,0,1,1) (canvas completo como fallback).
+        /// </summary>
+        public Rect GetInkBounds()
+        {
+            if (!hasInk) return new Rect(0f, 0f, 1f, 1f);
+
+            // Agregar margen del 10% del area dibujada para no cortar bordes
+            float padding = 0.08f;
+            float x = Mathf.Clamp01(inkBoundsMin.x - padding);
+            float y = Mathf.Clamp01(inkBoundsMin.y - padding);
+            float w = Mathf.Clamp01(inkBoundsMax.x + padding) - x;
+            float h = Mathf.Clamp01(inkBoundsMax.y + padding) - y;
+            return new Rect(x, y, Mathf.Max(w, 0.01f), Mathf.Max(h, 0.01f));
+        }
+
+        /// <summary>
+        /// Reinicia el bounding box de tinta. Llamar despues de disparar la inferencia.
+        /// </summary>
+        public void ResetInkBounds()
+        {
+            inkBoundsMin = Vector2.one;
+            inkBoundsMax = Vector2.zero;
+            hasInk = false;
+        }
+
+        /// <summary>
         /// Interfaz pública para recibir coordenadas UV y estampar el pincel.
         /// Aplica interpolación para evitar huecos en movimientos rápidos.
         /// </summary>
@@ -95,6 +131,11 @@ namespace SpellSimulator.Canvas
         /// <param name="isNewStroke">True si es el inicio de un trazo (click inicial).</param>
         public void DrawAt(Vector2 uvPosition, bool isNewStroke)
         {
+            // Expandir el bounding box con cada punto recibido
+            inkBoundsMin = Vector2.Min(inkBoundsMin, uvPosition);
+            inkBoundsMax = Vector2.Max(inkBoundsMax, uvPosition);
+            hasInk = true;
+
             if (isNewStroke)
             {
                 lastDrawPosition = uvPosition;
