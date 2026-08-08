@@ -4,7 +4,9 @@
     {
         None,
         Fire,
-        Air
+        Air,
+        Water,
+        Earth
     }
 
     /// <summary>
