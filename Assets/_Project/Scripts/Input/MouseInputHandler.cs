@@ -1,13 +1,12 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 using SpellSimulator.Canvas;
+using SpellSimulator.Core;
 
 namespace SpellSimulator.Input
 {
     /// <summary>
-    /// Modulo 2: Controlador de Entrada.
-    /// Acumula trazos del usuario en el canvas. La inferencia se dispara
-    /// exclusivamente via TriggerCast(), que debe conectarse a un boton UI.
+    /// Recolecta el input del raton y lo convierte en trazos vectoriales.
     /// </summary>
     public class MouseInputHandler : MonoBehaviour
     {
@@ -18,19 +17,22 @@ namespace SpellSimulator.Input
 
         [Header("Inference")]
         [SerializeField] private Inference.SentisInferenceEngine inferenceEngine;
+        [SerializeField] private DrawingCanvas fallbackCanvas;
 
         [Header("Settings")]
-        [SerializeField, Tooltip("Limpia el canvas automaticamente despues de lanzar el hechizo.")]
-        private bool clearCanvasAfterCast = true;
+        [SerializeField] private bool clearCanvasAfterCast = true;
+        [SerializeField, Range(0.001f, 0.05f), Tooltip("Tolerancia de Douglas-Peucker. Mayor = mas simplificado.")] 
+        private float simplificationTolerance = 0.005f;
+        [SerializeField, Range(1, 10), Tooltip("Resolucion del Catmull-Rom. Mayor = curvas mas suaves.")] 
+        private int splineResolution = 3;
 
-        private DrawingCanvas currentCanvas;
+        private DrawingSession currentSession = new DrawingSession();
+        private Stroke currentStroke;
         private DrawingCanvas lastUsedCanvas;
-        private Collider lastColliderHit;
 
         private void Start()
         {
-            if (mainCamera == null)
-                mainCamera = Camera.main;
+            if (mainCamera == null) mainCamera = Camera.main;
         }
 
         private void Update()
@@ -49,51 +51,58 @@ namespace SpellSimulator.Input
         {
             if (TryGetCanvasUV(out Vector2 uv, out DrawingCanvas canvasHit))
             {
-                currentCanvas  = canvasHit;
                 lastUsedCanvas = canvasHit;
-                currentCanvas.DrawAt(uv, true);
+                currentStroke = new Stroke();
+                currentStroke.AddPoint(uv);
+                currentSession.AddStroke(currentStroke);
+                
+                // Visual feedback opcional en el lienzo
+                if (canvasHit != null) canvasHit.DrawAt(uv, true);
             }
         }
 
         private void HandlePointerDrag()
         {
-            if (currentCanvas == null) return;
+            if (currentStroke == null) return;
 
             if (TryGetCanvasUV(out Vector2 uv, out DrawingCanvas canvasHit))
             {
-                if (canvasHit == currentCanvas)
-                    currentCanvas.DrawAt(uv, false);
+                // Solo agregar el punto si nos movimos lo suficiente para no inundar la lista
+                if (currentStroke.Points.Count == 0 || Vector2.Distance(currentStroke.Points[currentStroke.Points.Count - 1], uv) > 0.005f)
+                {
+                    currentStroke.AddPoint(uv);
+                    if (canvasHit != null) canvasHit.DrawAt(uv, false);
+                }
             }
         }
 
         private void HandlePointerUp()
         {
-            lastColliderHit = null;
-            currentCanvas   = null;
-            // No disparamos inferencia aqui. El usuario usa el boton.
+            currentStroke = null;
         }
 
-        /// <summary>
-        /// Lanzar el hechizo. Conectar al OnClick del boton UI en el Inspector.
-        /// Si no hay tinta en el canvas, no hace nada.
-        /// </summary>
         public void TriggerCast()
         {
-            if (lastUsedCanvas == null || !lastUsedCanvas.HasInk)
+            if (currentSession.IsEmpty)
             {
-                Debug.Log("[Input] TriggerCast: no hay tinta en el canvas.");
+                Debug.LogWarning("[Input] TriggerCast: La sesion de dibujo esta vacia.");
                 return;
             }
 
             if (inferenceEngine != null)
-                inferenceEngine.ProcessCanvas(lastUsedCanvas.GetRenderTexture());
+            {
+                DrawingSession cleanedSession = StrokeCleaner.CleanSession(currentSession, simplificationTolerance, splineResolution);
+                inferenceEngine.ProcessVectorSession(cleanedSession);
+            }
             else
                 Debug.LogWarning("[Input] InferenceEngine no asignado.");
 
             if (clearCanvasAfterCast)
-                lastUsedCanvas.ClearCanvas();
-
-            lastUsedCanvas.ResetInkBounds();
+            {
+                currentSession.Clear();
+                if (lastUsedCanvas != null) lastUsedCanvas.ClearCanvas();
+                else if (fallbackCanvas != null) fallbackCanvas.ClearCanvas();
+            }
         }
 
         private bool TryGetCanvasUV(out Vector2 uv, out DrawingCanvas canvasHit)
@@ -105,22 +114,14 @@ namespace SpellSimulator.Input
 
             if (Physics.Raycast(ray, out RaycastHit hit, maxRaycastDistance, canvasLayerMask))
             {
-                if (hit.collider != lastColliderHit)
-                {
-                    lastColliderHit = hit.collider;
-                    currentCanvas   = hit.collider.GetComponent<DrawingCanvas>();
-                }
+                canvasHit = hit.collider.GetComponent<DrawingCanvas>();
+                if (canvasHit == null) canvasHit = fallbackCanvas;
 
-                if (currentCanvas != null)
+                if (canvasHit != null)
                 {
-                    canvasHit = currentCanvas;
                     uv = hit.textureCoord;
                     return true;
                 }
-            }
-            else
-            {
-                lastColliderHit = null;
             }
 
             return false;
