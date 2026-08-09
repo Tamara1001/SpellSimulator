@@ -6,44 +6,26 @@ namespace SpellSimulator.Inference
     public class SentisInferenceEngine : MonoBehaviour
     {
         [Header("Model Configuration")]
-        [SerializeField, Tooltip("El archivo .onnx exportado (ej. glyph-recognizer.onnx)")]
-        private Unity.InferenceEngine.ModelAsset modelAsset;
-
+        [SerializeField] private Unity.InferenceEngine.ModelAsset modelAsset;
         [Header("Compiler Integration")]
-        [SerializeField, Tooltip("Referencia al interprete logico para compilar el hechizo.")]
-        private Compiler.SpellCompiler spellCompiler;
-
+        [SerializeField] private Compiler.SpellCompiler spellCompiler;
         [Header("Output Integration")]
-        [SerializeField, Tooltip("Motor de salida para instanciar efectos visuales.")]
-        private Output.SpellOutputController outputController;
-
+        [SerializeField] private Output.SpellOutputController outputController;
         [Header("Preprocessing")]
-        [SerializeField, Tooltip("Material con el shader Custom/Binarize para invertir colores.")]
-        private Material binarizeMaterial;
-
+        [SerializeField] private Material binarizeMaterial;
         [Header("Debug")]
-        [SerializeField, Tooltip("Guarda la textura final que ve el modelo como PNG.")]
-        private bool saveDebugPng = true;
+        [SerializeField] private bool saveDebugPng = true;
 
         private Unity.InferenceEngine.Model runtimeModel;
         private Unity.InferenceEngine.Worker worker;
 
-        // Tamano del escaner intermedio para el pixel scan (mayor = mas preciso, mas lento)
-        private const int ScanSize = 96;
-        // Padding en pixeles que se agrega alrededor del glifo detectado
-        private const int CropPaddingPx = 8;
-        // Umbral de luminancia para considerar un pixel como tinta
-        private const float InkThreshold = 0.25f;
-
         private void Awake()
         {
-            if (modelAsset == null)
+            if (modelAsset != null)
             {
-                Debug.LogError("SentisInferenceEngine: Falta asignar el ModelAsset.");
-                return;
+                runtimeModel = Unity.InferenceEngine.ModelLoader.Load(modelAsset);
+                worker = new Unity.InferenceEngine.Worker(runtimeModel, Unity.InferenceEngine.BackendType.GPUCompute);
             }
-            runtimeModel = Unity.InferenceEngine.ModelLoader.Load(modelAsset);
-            worker = new Unity.InferenceEngine.Worker(runtimeModel, Unity.InferenceEngine.BackendType.GPUCompute);
         }
 
         private void OnDestroy()
@@ -51,55 +33,32 @@ namespace SpellSimulator.Inference
             worker?.Dispose();
         }
 
-        /// <summary>
-        /// Pipeline de preprocesamiento en 3 pasos:
-        /// 1. Binariza el canvas completo a ScanSize x ScanSize en GPU.
-        /// 2. Escanea los pixeles en CPU para encontrar el bounding box real de la tinta.
-        /// 3. Recorta esa region y la re-escala a 96x96 para el modelo.
-        ///
-        /// Esto replica renderCandidateTensor del proyecto de referencia y evita
-        /// todo problema de espacio de coordenadas UV.
-        /// </summary>
         public void ProcessCanvas(RenderTexture canvasTexture)
         {
             if (worker == null || canvasTexture == null) return;
 
-            // ---------------------------------------------------------------
-            // PASO 1: Binarizar el canvas completo a ScanSize x ScanSize (GPU)
-            // ---------------------------------------------------------------
-            RenderTexture binarizedFull = RenderTexture.GetTemporary(ScanSize, ScanSize, 0, RenderTextureFormat.ARGB32);
-            binarizedFull.filterMode = FilterMode.Bilinear;
+            // PASO 1: Binarizar a baja resolucion para encontrar el bounding box rapidamente en CPU
+            int scanSize = 128;
+            RenderTexture binarizedLowRes = RenderTexture.GetTemporary(scanSize, scanSize, 0, RenderTextureFormat.ARGB32);
+            if (binarizeMaterial != null) Graphics.Blit(canvasTexture, binarizedLowRes, binarizeMaterial);
+            else Graphics.Blit(canvasTexture, binarizedLowRes);
 
-            if (binarizeMaterial != null)
-                Graphics.Blit(canvasTexture, binarizedFull, binarizeMaterial);
-            else
-                Graphics.Blit(canvasTexture, binarizedFull);
-
-            // ---------------------------------------------------------------
-            // PASO 2: Leer pixeles a CPU y detectar el bounding box de la tinta
-            // 96x96 = 9216 pixeles: < 0.5ms en CPU, completamente aceptable.
-            // ---------------------------------------------------------------
             RenderTexture prevActive = RenderTexture.active;
-            RenderTexture.active = binarizedFull;
-
-            Texture2D scanTex = new Texture2D(ScanSize, ScanSize, TextureFormat.RGB24, false);
-            scanTex.ReadPixels(new Rect(0, 0, ScanSize, ScanSize), 0, 0);
+            RenderTexture.active = binarizedLowRes;
+            Texture2D scanTex = new Texture2D(scanSize, scanSize, TextureFormat.RGB24, false);
+            scanTex.ReadPixels(new Rect(0, 0, scanSize, scanSize), 0, 0);
             scanTex.Apply();
-
             RenderTexture.active = prevActive;
 
-            int minX = ScanSize, maxX = 0, minY = ScanSize, maxY = 0;
+            int minX = scanSize, maxX = 0, minY = scanSize, maxY = 0;
             bool foundInk = false;
             Color[] pixels = scanTex.GetPixels();
 
-            for (int y = 0; y < ScanSize; y++)
+            for (int y = 0; y < scanSize; y++)
             {
-                for (int x = 0; x < ScanSize; x++)
+                for (int x = 0; x < scanSize; x++)
                 {
-                    Color c = pixels[y * ScanSize + x];
-                    // Los pixeles de tinta son blancos (luminancia alta) tras la binarizacion
-                    float lum = c.r * 0.299f + c.g * 0.587f + c.b * 0.114f;
-                    if (lum > InkThreshold)
+                    if (pixels[y * scanSize + x].r > 0.5f)
                     {
                         if (x < minX) minX = x;
                         if (x > maxX) maxX = x;
@@ -109,69 +68,94 @@ namespace SpellSimulator.Inference
                     }
                 }
             }
-
             Destroy(scanTex);
+            RenderTexture.ReleaseTemporary(binarizedLowRes);
 
             if (!foundInk)
             {
-                RenderTexture.ReleaseTemporary(binarizedFull);
-                Debug.LogWarning("[Inferencia] No se detecto tinta en el canvas. Ignorando.");
+                Debug.LogWarning("[Inferencia] No se detecto tinta.");
                 return;
             }
 
-            // Agregar padding sin salir de los limites
-            minX = Mathf.Max(0, minX - CropPaddingPx);
-            maxX = Mathf.Min(ScanSize - 1, maxX + CropPaddingPx);
-            minY = Mathf.Max(0, minY - CropPaddingPx);
-            maxY = Mathf.Min(ScanSize - 1, maxY + CropPaddingPx);
+            // PASO 2: Calcular bounding box CUADRADO para preservar relacion de aspecto
+            int inkW = maxX - minX;
+            int inkH = maxY - minY;
+            int maxDim = Mathf.Max(inkW, inkH);
+            
+            // Agregar 10% de margen al dimension maxima (el modelo fue entrenado con un margen)
+            float margin = maxDim * 0.1f;
+            float paddedDim = maxDim + (margin * 2);
+            
+            // Centro del bounding box original
+            float cx = minX + inkW / 2f;
+            float cy = minY + inkH / 2f;
 
-            int inkW = maxX - minX + 1;
-            int inkH = maxY - minY + 1;
-            Debug.Log($"[Inferencia] Tinta detectada en pixeles: X[{minX}-{maxX}] Y[{minY}-{maxY}] -> {inkW}x{inkH}px");
+            // Coordenadas del cuadrado en espacio UV [0,1]
+            float uvMinX = (cx - paddedDim / 2f) / scanSize;
+            float uvMinY = (cy - paddedDim / 2f) / scanSize;
+            float uvDim  = paddedDim / scanSize;
 
-            // ---------------------------------------------------------------
-            // PASO 3: Recortar la region de tinta y escalarla a 96x96 (GPU)
-            // Convertir bounds de pixel a UV [0,1] para Graphics.Blit
-            // IMPORTANTE: Graphics.Blit con scale/offset trabaja en UV donde
-            // (0,0) = bottom-left de la textura. ReadPixels tiene (0,0) = bottom-left
-            // tambien, por lo que los bounds son directamente compatibles.
-            // ---------------------------------------------------------------
-            float uvMinX = (float)minX / ScanSize;
-            float uvMinY = (float)minY / ScanSize;
-            float uvW    = (float)inkW  / ScanSize;
-            float uvH    = (float)inkH  / ScanSize;
-
+            // PASO 3: Recortar desde la textura original usando el cuadrado UV
             RenderTexture croppedRT = RenderTexture.GetTemporary(96, 96, 0, RenderTextureFormat.ARGB32);
             croppedRT.filterMode = FilterMode.Bilinear;
 
-            // CRITICO: El modelo fue entrenado con imagenes de canvas JavaScript
-            // que tienen Y=0 en la parte SUPERIOR (convencion de pantalla).
-            // Unity almacena las RenderTextures con Y=0 en la parte INFERIOR.
-            // Para enviar la imagen en la orientacion correcta al modelo, invertimos el eje Y 
-            // mediante scale/offset en el Blit (scale.y negativo y offset ajustado).
-            Vector2 scale = new Vector2(uvW, -uvH);
-            Vector2 offset = new Vector2(uvMinX, uvMinY + uvH);
+            Vector2 scale = new Vector2(uvDim, uvDim);
+            Vector2 offset = new Vector2(uvMinX, uvMinY);
             
-            // Blit con scale/offset: sampledUV = destUV * scale + offset
-            Graphics.Blit(binarizedFull, croppedRT, scale, offset);
-            RenderTexture.ReleaseTemporary(binarizedFull);
+            if (binarizeMaterial != null)
+            {
+                binarizeMaterial.mainTextureScale = scale;
+                binarizeMaterial.mainTextureOffset = offset;
+                Graphics.Blit(canvasTexture, croppedRT, binarizeMaterial);
+                
+                // Resetear scale/offset para futuros usos
+                binarizeMaterial.mainTextureScale = Vector2.one;
+                binarizeMaterial.mainTextureOffset = Vector2.zero;
+            }
+            else
+            {
+                Graphics.Blit(canvasTexture, croppedRT, scale, offset);
+            }
 
-            if (saveDebugPng)
-                SaveRenderTextureToPNG(croppedRT);
+            if (saveDebugPng) SaveRenderTextureToPNG(croppedRT);
 
-            // ---------------------------------------------------------------
-            // PASO 4: Convertir a Tensor y correr inferencia
-            // ---------------------------------------------------------------
-            var texTransform = new Unity.InferenceEngine.TextureTransform();
+            // PASO 4: Leer pixels finales y crear tensor manual
+            // El modelo espera el glifo en un tensor [-1, 1], donde -1 es fondo negro y 1 es tinta blanca.
+            // Ademas, el eje Y debe estar invertido (Y=0 en la parte superior del glifo).
+            prevActive = RenderTexture.active;
+            RenderTexture.active = croppedRT;
+            Texture2D finalTex = new Texture2D(96, 96, TextureFormat.RGB24, false);
+            finalTex.ReadPixels(new Rect(0, 0, 96, 96), 0, 0);
+            finalTex.Apply();
+            RenderTexture.active = prevActive;
+
+            Color[] finalPixels = finalTex.GetPixels();
+            float[] tensorData = new float[96 * 96];
+
+            for (int y = 0; y < 96; y++)
+            {
+                for (int x = 0; x < 96; x++)
+                {
+                    // Invertir eje Y: el tensor espera Y=0 arriba, Unity tiene Y=0 abajo.
+                    int unityY = 95 - y;
+                    float val = finalPixels[unityY * 96 + x].r;
+                    // Normalizar de [0, 1] a [-1, 1]
+                    tensorData[y * 96 + x] = (val - 0.5f) * 2.0f;
+                }
+            }
+            
+            // Pasar la textura al sistema de debug, o destruirla si nadie escucha
+            if (SpellSimulator.DebugTools.DiagnosticBus.OnTensorImageUpdated != null)
+                SpellSimulator.DebugTools.DiagnosticBus.OnTensorImageUpdated(finalTex);
+            else
+                Destroy(finalTex);
+
+            RenderTexture.ReleaseTemporary(croppedRT);
 
             using (var inputTensor = new Unity.InferenceEngine.Tensor<float>(
-                new Unity.InferenceEngine.TensorShape(1, 1, 96, 96)))
+                new Unity.InferenceEngine.TensorShape(1, 1, 96, 96), tensorData))
             {
-                Unity.InferenceEngine.TextureConverter.ToTensor(croppedRT, inputTensor, texTransform);
-
-                // Diagnostico: verificar rango de valores del tensor
-                if (saveDebugPng)
-                    DiagnoseTensor(inputTensor);
+                if (saveDebugPng) DiagnoseTensor(inputTensor);
 
                 worker.Schedule(inputTensor);
 
@@ -180,7 +164,7 @@ namespace SpellSimulator.Inference
                     float[] probs = outputTensor.DownloadToArray();
                     LogTopPredictions(probs);
 
-                    int bestIdx      = GetHighestProbabilityIndex(probs);
+                    int bestIdx = GetHighestProbabilityIndex(probs);
                     float confidence = probs[bestIdx];
 
                     if (spellCompiler != null)
@@ -190,34 +174,23 @@ namespace SpellSimulator.Inference
                     }
                 }
             }
-
-            RenderTexture.ReleaseTemporary(croppedRT);
         }
 
         private void SaveRenderTextureToPNG(RenderTexture rt)
         {
             RenderTexture prevActive = RenderTexture.active;
             RenderTexture.active = rt;
-
             Texture2D tex = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
             tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0);
             tex.Apply();
-
             RenderTexture.active = prevActive;
 
             byte[] bytes = tex.EncodeToPNG();
-            string path = System.IO.Path.Combine(Application.dataPath, "_Project/DebugCanvasCapture.png");
+            string path = Path.Combine(Application.dataPath, "_Project/DebugCanvasCapture.png");
             File.WriteAllBytes(path, bytes);
             Destroy(tex);
-
-            Debug.Log($"[Debug] Imagen final guardada en: {path}");
         }
 
-        /// <summary>
-        /// Imprime min/max/mean del tensor para verificar que los valores esten en [0,1].
-        /// Si el max es cercano a 0, el glifo no esta llegando al tensor.
-        /// Si el max es > 1, la normalizacion esta mal.
-        /// </summary>
         private void DiagnoseTensor(Unity.InferenceEngine.Tensor<float> tensor)
         {
             float[] data = tensor.DownloadToArray();
@@ -228,15 +201,11 @@ namespace SpellSimulator.Inference
                 if (v < tMin) tMin = v;
                 if (v > tMax) tMax = v;
                 tSum += v;
-                if (v > 0.1f) nonZero++;
+                if (v > 0.0f) nonZero++;
             }
             float mean = tSum / data.Length;
             float inkPercent = (float)nonZero / data.Length * 100f;
-            Debug.Log(
-                $"[Tensor Diag] min={tMin:F3} max={tMax:F3} mean={mean:F3} " +
-                $"pixels_con_tinta={nonZero}/{data.Length} ({inkPercent:F1}%) " +
-                $"| Esperado: max~1.0, ink~5-30%"
-            );
+            Debug.Log($"[Tensor Diag] min={tMin:F3} max={tMax:F3} mean={mean:F3} pixels_con_tinta={nonZero}/{data.Length} ({inkPercent:F1}%)");
         }
 
         private void LogTopPredictions(float[] probs)
@@ -245,10 +214,11 @@ namespace SpellSimulator.Inference
             for (int i = 0; i < probs.Length; i++) indices[i] = i;
             System.Array.Sort(indices, (a, b) => probs[b].CompareTo(probs[a]));
 
-            string log = "[Debug IA] Top 3: ";
+            string log = "<b>IA Top 3 Predicciones:</b>\n";
             for (int i = 0; i < Mathf.Min(3, probs.Length); i++)
-                log += $"Idx {indices[i]} ({probs[indices[i]]:F2}) | ";
+                log += $"- Idx {indices[i]} ({probs[indices[i]]:F2})\n";
             Debug.Log(log);
+            SpellSimulator.DebugTools.DiagnosticBus.OnPredictionUpdated?.Invoke(log);
         }
 
         private int GetHighestProbabilityIndex(float[] probs)

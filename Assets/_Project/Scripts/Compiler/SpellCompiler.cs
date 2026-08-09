@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections.Generic;
 
 namespace SpellSimulator.Compiler
@@ -253,14 +253,21 @@ namespace SpellSimulator.Compiler
                 activatedAt        = active ? Time.time : -1f
             };
 
-            Debug.Log(
-                $"[Compilador] Hechizo compilado -> " +
-                $"Glifo: '{glyphName}' | Elemento: {element} | " +
-                $"Confianza: {confidence:F2} | Calidad: {quality:F2} | " +
-                $"Duracion: {duration:F1}s | Escala: {effectScale:F2} | " +
-                $"Force: {force:F2} | Focus: {focus:F2} | Spread: {spread:F2} | " +
-                $"Activo: {active}"
-            );
+            string log = 
+                $"<b>[Compilador] Hechizo Compilado</b>\n" +
+                $"- Glifo: <b>{glyphName}</b>\n" +
+                $"- Elemento: {element}\n" +
+                $"- Confianza: {confidence:F2}\n" +
+                $"- Calidad: {quality:F2}\n" +
+                $"- Duracion: {duration:F1}s\n" +
+                $"- Escala: {effectScale:F2}\n" +
+                $"- Fuerza: {force:F2}\n" +
+                $"- Foco: {focus:F2}\n" +
+                $"- Dispersion: {spread:F2}\n" +
+                $"- Estado: {(active ? "<color=green>Activo</color>" : "<color=red>Inactivo</color>")}";
+                
+            Debug.Log(log);
+            SpellSimulator.DebugTools.DiagnosticBus.OnDiagnosticsUpdated?.Invoke(log);
 
             return result;
         }
