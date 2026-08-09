@@ -89,6 +89,29 @@ namespace SpellSimulator.Canvas
         }
 
         /// <summary>
+        /// Limpia el lienzo y redibuja todos los trazos de una sesion instantaneamente.
+        /// Util para implementar Undo u otras herramientas de edicion.
+        /// </summary>
+        public void RedrawSession(SpellSimulator.Core.DrawingSession session)
+        {
+            ClearCanvas();
+            ResetInkBounds();
+
+            if (session == null || session.IsEmpty)
+                return;
+
+            foreach (var stroke in session.Strokes)
+            {
+                if (stroke.Points.Count == 0) continue;
+
+                for (int i = 0; i < stroke.Points.Count; i++)
+                {
+                    DrawAt(stroke.Points[i], i == 0);
+                }
+            }
+        }
+
+        /// <summary>
         /// Devuelve la textura del lienzo de forma segura.
         /// </summary>
         public RenderTexture GetRenderTexture()

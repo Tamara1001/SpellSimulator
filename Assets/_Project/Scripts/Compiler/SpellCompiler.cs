@@ -132,29 +132,58 @@ namespace SpellSimulator.Compiler
             // Para MVP: Usar el sigilo central como base
             SpellIR result = Compile(ast.Ring.Sigil.ClassIndex, ast.Ring.Sigil.Confidence, active);
 
-            // Si detectamos signos (modificadores), aplicamos el Motor Semantico
-            if (ast.Ring.Signs.Count > 0)
-            {
-                foreach (var signNode in ast.Ring.Signs)
-                {
-                    if (indexToClassName != null && indexToClassName.TryGetValue(signNode.ClassIndex, out string signName))
-                        SemanticRules.ApplySign(ref result, SemanticRules.ParseSignName(signName));
-                }
-            }
+            // Acumular deltas de los signos usando las tablas del proyecto original
+            float deltaForce = 0f;
+            float deltaFocus = 0f;
+            float deltaSpread = 0f;
+            float deltaRange = 0f;
+            float deltaLifetime = 0f;
 
             string signNames = "Ninguno";
             if (ast.Ring.Signs.Count > 0)
             {
                 List<string> names = new List<string>();
-                foreach (var sign in ast.Ring.Signs)
+                foreach (var signNode in ast.Ring.Signs)
                 {
-                    if (indexToClassName != null && indexToClassName.TryGetValue(sign.ClassIndex, out string name))
-                        names.Add(name);
+                    if (indexToClassName != null && indexToClassName.TryGetValue(signNode.ClassIndex, out string signName))
+                    {
+                        names.Add(signName);
+                        // Acumular deltas matematicos
+                        if (SignSemantics.TryGetValue(signName, out float[] deltas))
+                        {
+                            deltaForce += deltas[0];
+                            deltaFocus += deltas[1];
+                            deltaSpread += deltas[2];
+                            deltaRange += deltas[3];
+                            deltaLifetime += deltas[4];
+                        }
+                        
+                        // Aplicar reglas de manifestacion/gravedad puras
+                        SemanticRules.ApplySign(ref result, SemanticRules.ParseSignName(signName));
+                    }
                     else
-                        names.Add($"Idx {sign.ClassIndex}");
+                    {
+                        names.Add($"Idx {signNode.ClassIndex}");
+                    }
                 }
                 signNames = string.Join(", ", names);
             }
+
+            // Recalcular los valores finales del SpellIR usando las formulas puras + los deltas
+            float quality = Mathf.Clamp01(ast.Ring.Sigil.Confidence);
+            float neatness = quality;
+
+            result.focus = Mathf.Clamp01(FocusBase + deltaFocus + quality * FocusQuality);
+            result.spread = Mathf.Clamp01(SpreadBase + deltaSpread + (1f - result.focus) * SpreadInverseFocus);
+            result.force = Mathf.Clamp01(ForceBase + deltaForce + quality * ForceQuality);
+            result.range = Mathf.Clamp01(RangeBase + deltaRange);
+            
+            result.duration = Mathf.Clamp(
+                (DurationMinSeconds + deltaLifetime) +
+                Mathf.Pow(quality * DurationQualityWeight + neatness * DurationNeatnessWeight, DurationCurve) * DurationSecondsScale,
+                DurationMinSeconds,
+                DurationMaxSeconds
+            );
 
             // Emitir diagnostico actualizado con el AST y la Telemetria completa
             string log = 
@@ -237,34 +266,14 @@ namespace SpellSimulator.Compiler
                 EffectMaxScale
             );
 
-            // 8. Sin signos reconocidos, los deltas son cero
-            //    (En la Fase Media los signos llegaran del StrokeGrouper)
-            float deltaForce  = 0f;
-            float deltaFocus  = 0f;
-            float deltaSpread = 0f;
-            float deltaRange  = 0f;
-            float deltaLifetime = 0f;
+            // 8. Calcular los parametros de comportamiento base (sin signos todavia)
+            // Estos se re-calcularan de forma final en CompileAST con todos los deltas.
+            float focus  = FocusBase + quality * FocusQuality;
+            float spread = SpreadBase + (1f - focus) * SpreadInverseFocus;
+            float force  = ForceBase + quality * ForceQuality;
+            float range  = RangeBase;
 
-            // 9. Calcular los parametros de comportamiento (formulas de spellBuilder.ts)
-            float focus = Mathf.Clamp01(
-                FocusBase + deltaFocus + quality * FocusQuality
-            );
-            float spread = Mathf.Clamp01(
-                SpreadBase + deltaSpread + (1f - focus) * SpreadInverseFocus
-            );
-            float force = Mathf.Clamp01(
-                ForceBase + deltaForce + quality * ForceQuality
-            );
-            float range = Mathf.Clamp01(
-                RangeBase + deltaRange
-            );
-
-            // 10. Calcular duracion (curva de calidad de spellBuilder.ts)
-            float durationScore = Mathf.Clamp01(
-                quality  * DurationQualityWeight +
-                neatness * DurationNeatnessWeight +
-                deltaLifetime
-            );
+            float durationScore = Mathf.Clamp01(quality * DurationQualityWeight + neatness * DurationNeatnessWeight);
             float duration = Mathf.Clamp(
                 DurationMinSeconds + Mathf.Pow(durationScore, DurationCurve) * DurationSecondsScale,
                 DurationMinSeconds,
@@ -310,22 +319,7 @@ namespace SpellSimulator.Compiler
                 activatedAt        = active ? Time.time : -1f
             };
 
-            string log = 
-                $"<b>[Compilador] Hechizo Compilado</b>\n" +
-                $"- Glifo: <b>{glyphName}</b>\n" +
-                $"- Elemento: {element}\n" +
-                $"- Confianza: {confidence:F2}\n" +
-                $"- Calidad: {quality:F2}\n" +
-                $"- Duracion: {duration:F1}s\n" +
-                $"- Escala: {effectScale:F2}\n" +
-                $"- Fuerza: {force:F2}\n" +
-                $"- Foco: {focus:F2}\n" +
-                $"- Dispersion: {spread:F2}\n" +
-                $"- Estado: {(active ? "<color=green>Activo</color>" : "<color=red>Inactivo</color>")}";
-                
-            // Eliminamos el log individual de aca para que lo maneje CompileAST
-            // Debug.Log(log);
-            // SpellSimulator.DebugTools.DiagnosticBus.OnDiagnosticsUpdated?.Invoke(log);
+            // El log individual fue eliminado para que lo maneje CompileAST directamente.
 
             return result;
         }

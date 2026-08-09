@@ -25,14 +25,47 @@ namespace SpellSimulator.Input
         [SerializeField, Range(1, 10), Tooltip("Resolucion del Catmull-Rom. Mayor = curvas mas suaves.")] 
         private int splineResolution = 3;
 
+        public enum ToolType { Pen, Eraser }
+
         private DrawingSession currentSession = new DrawingSession();
-        private Stroke currentStroke;
         private DrawingCanvas lastUsedCanvas;
+        
+        private System.Collections.Generic.Dictionary<ToolType, Input.Tools.IDrawingTool> tools;
+        private Input.Tools.IDrawingTool activeTool;
 
         private void Start()
         {
             if (mainCamera == null) mainCamera = Camera.main;
+
+            tools = new System.Collections.Generic.Dictionary<ToolType, Input.Tools.IDrawingTool>
+            {
+                { ToolType.Pen, new Input.Tools.PenTool() },
+                { ToolType.Eraser, new Input.Tools.EraserTool() }
+            };
+
+            foreach (var tool in tools.Values)
+            {
+                tool.Initialize(currentSession);
+            }
+
+            EquipTool(ToolType.Pen);
         }
+
+        public void EquipTool(ToolType type)
+        {
+            if (activeTool != null)
+                activeTool.OnUnequip();
+
+            if (tools.TryGetValue(type, out Input.Tools.IDrawingTool tool))
+            {
+                activeTool = tool;
+                activeTool.OnEquip();
+            }
+        }
+
+        // Metodos para facil acceso desde Unity UI Buttons
+        public void EquipPen() => EquipTool(ToolType.Pen);
+        public void EquipEraser() => EquipTool(ToolType.Eraser);
 
         private void Update()
         {
@@ -48,36 +81,31 @@ namespace SpellSimulator.Input
 
         private void HandlePointerDown()
         {
+            if (activeTool == null) return;
+
             if (TryGetCanvasUV(out Vector2 uv, out DrawingCanvas canvasHit))
             {
                 lastUsedCanvas = canvasHit;
-                currentStroke = new Stroke();
-                currentStroke.AddPoint(uv);
-                currentSession.AddStroke(currentStroke);
-                
-                // Visual feedback opcional en el lienzo
-                if (canvasHit != null) canvasHit.DrawAt(uv, true);
+                activeTool.OnPointerDown(uv, canvasHit);
             }
         }
 
         private void HandlePointerDrag()
         {
-            if (currentStroke == null) return;
+            if (activeTool == null) return;
 
             if (TryGetCanvasUV(out Vector2 uv, out DrawingCanvas canvasHit))
             {
-                // Solo agregar el punto si nos movimos lo suficiente para no inundar la lista
-                if (currentStroke.Points.Count == 0 || Vector2.Distance(currentStroke.Points[currentStroke.Points.Count - 1], uv) > 0.005f)
-                {
-                    currentStroke.AddPoint(uv);
-                    if (canvasHit != null) canvasHit.DrawAt(uv, false);
-                }
+                activeTool.OnPointerDrag(uv, canvasHit);
             }
         }
 
         private void HandlePointerUp()
         {
-            currentStroke = null;
+            if (activeTool != null)
+            {
+                activeTool.OnPointerUp();
+            }
         }
 
         public void TriggerCast()
@@ -105,6 +133,15 @@ namespace SpellSimulator.Input
             currentSession.Clear();
             if (lastUsedCanvas != null) lastUsedCanvas.ClearCanvas();
             else if (fallbackCanvas != null) fallbackCanvas.ClearCanvas();
+        }
+
+        public void Undo()
+        {
+            if (currentSession.UndoLastStroke())
+            {
+                if (lastUsedCanvas != null) lastUsedCanvas.RedrawSession(currentSession);
+                else if (fallbackCanvas != null) fallbackCanvas.RedrawSession(currentSession);
+            }
         }
 
         private bool TryGetCanvasUV(out Vector2 uv, out DrawingCanvas canvasHit)

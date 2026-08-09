@@ -25,6 +25,16 @@ namespace SpellSimulator.Core
             Strokes.Add(stroke);
         }
 
+        public bool UndoLastStroke()
+        {
+            if (Strokes.Count > 0)
+            {
+                Strokes.RemoveAt(Strokes.Count - 1);
+                return true;
+            }
+            return false;
+        }
+
         public void Clear()
         {
             Strokes.Clear();

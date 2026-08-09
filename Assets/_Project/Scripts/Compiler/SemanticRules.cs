@@ -40,12 +40,8 @@ namespace SpellSimulator.Compiler
             switch (sign)
             {
                 case SignType.Column:
-                    // Convierte el hechizo en un haz enfocado y de gran alcance
+                    // Convierte el hechizo en un haz enfocado
                     spell.primaryManifestation = ManifestationType.Column;
-                    spell.focus = Mathf.Clamp01(spell.focus + 0.35f);
-                    spell.range = Mathf.Clamp01(spell.range + 0.45f);
-                    spell.spread = Mathf.Clamp01(spell.spread - 0.25f);
-                    spell.force = Mathf.Clamp01(spell.force + 0.2f);
                     break;
                     
                 case SignType.Levitation:
@@ -61,41 +57,15 @@ namespace SpellSimulator.Compiler
                     break;
 
                 case SignType.Dispersion:
-                    // Esparce el efecto a los lados
-                    spell.spread = Mathf.Clamp01(spell.spread + 0.4f);
-                    spell.focus = Mathf.Clamp01(spell.focus - 0.3f);
-                    spell.force = Mathf.Clamp01(spell.force + 0.1f);
-                    break;
-
-                case SignType.Convergence:
-                    // Comprime fuertemente el lateral del hechizo
-                    spell.primaryManifestation = ManifestationType.Convergence;
-                    spell.spread = Mathf.Clamp01(spell.spread - 0.4f);
-                    spell.focus = Mathf.Clamp01(spell.focus + 0.3f);
-                    break;
-
                 case SignType.Repetition:
-                    // Escala fuertemente la potencia y duracion
-                    spell.duration += 4.5f;
-                    spell.effectScale += 1.2f;
-                    break;
-
                 case SignType.Pull:
                 case SignType.Collection:
-                    spell.spread = Mathf.Clamp01(spell.spread - 0.15f);
-                    spell.focus = Mathf.Clamp01(spell.focus + 0.2f);
-                    break;
-
                 case SignType.Billowing:
-                    // Expande el tamano base
-                    spell.effectScale += 0.8f;
-                    spell.spread = Mathf.Clamp01(spell.spread + 0.2f);
+                case SignType.Crush:
+                    // Las matematicas puras de estos modificadores ahora son manejadas 
+                    // de forma matricial (SignSemantics) en el SpellCompiler.
                     break;
 
-                case SignType.Crush:
-                    spell.force = Mathf.Clamp01(spell.force + 0.4f);
-                    spell.focus = Mathf.Clamp01(spell.focus + 0.2f);
-                    break;
             }
         }
     }
