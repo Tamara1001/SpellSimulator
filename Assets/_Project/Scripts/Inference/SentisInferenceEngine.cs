@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using SpellSimulator.Core;
 
 namespace SpellSimulator.Inference
@@ -32,26 +32,79 @@ namespace SpellSimulator.Inference
             worker?.Dispose();
         }
 
-        /// <summary>
-        /// Procesa una sesion vectorial directamente sin usar la GPU ni blitting.
-        /// </summary>
         public void ProcessVectorSession(DrawingSession session)
         {
-            if (worker == null) return;
-            if (session.IsEmpty) return;
+            if (worker == null || session.IsEmpty) return;
 
-            // 1. Rasterizar los vectores puros a 96x96
+            // 1. Detectar Anillo y Agrupar Trazos
+            RingInfo ring = RingDetector.Detect(session);
+            GroupedSession grouped = StrokeGrouper.Group(session, ring);
+
+            SpellAST ast = new SpellAST();
+            ast.HasRing = ring.Found;
+
+            if (ring.Found)
+            {
+                ast.Ring = new RingNode();
+                
+                // Procesar Sigilo interior
+                if (!grouped.Sigil.IsEmpty)
+                {
+                    var res = RunInference(grouped.Sigil, "Sigilo");
+                    ast.Ring.Sigil = new SigilNode { ClassIndex = res.ClassIndex, Confidence = res.Confidence };
+                }
+
+                // Procesar cada Signo exterior
+                foreach (var signSession in grouped.Signs)
+                {
+                    if (!signSession.IsEmpty)
+                    {
+                        // 1. Encontrar el centro del signo
+                        Vector2 signCenter = GeometryUtils.GetSessionCenter(signSession);
+                        
+                        // 2. Calcular angulo respecto al centro del anillo
+                        float angleToSign = GeometryUtils.GetAngleDegrees(ring.Center, signCenter);
+                        
+                        // 3. Rotar el signo para que apunte al Norte (90 grados en Unity UV Y-Up)
+                        float rotationNeeded = 90f - angleToSign;
+                        var rotatedSession = GeometryUtils.RotateSession(signSession, signCenter, rotationNeeded);
+
+                        // 4. Inferir usando la version rotada (el modelo la vera perfectamente "derecha")
+                        var res = RunInference(rotatedSession, "Signo");
+                        ast.Ring.Signs.Add(new SignNode { ClassIndex = res.ClassIndex, Confidence = res.Confidence });
+                    }
+                }
+            }
+            else
+            {
+                // Si no hay anillo, lo tomamos como un sigilo directo
+                ast.Ring = new RingNode();
+                var res = RunInference(grouped.Sigil, "Sigilo Unico");
+                ast.Ring.Sigil = new SigilNode { ClassIndex = res.ClassIndex, Confidence = res.Confidence };
+            }
+
+            // 2. Compilar el AST y emitir el efecto
+            if (spellCompiler != null)
+            {
+                Compiler.SpellIR spell = spellCompiler.CompileAST(ast, true);
+                if (spell.valid)
+                {
+                    outputController?.SpawnSpellEffect(spell, this.transform.position);
+                }
+            }
+        }
+
+        private (int ClassIndex, float Confidence) RunInference(DrawingSession session, string debugPrefix)
+        {
             float[] tensorData = TensorRasterizer.Rasterize(session, 96, debugStrokeRadius, 0.1f);
 
-            // 2. Opcional: Mostrar diagnosticos
-            if (saveDebugPng)
+            // Solo debuggeamos la imagen del primer sigilo para no saturar la UI
+            if (saveDebugPng && (debugPrefix == "Sigilo" || debugPrefix == "Sigilo Unico"))
             {
                 Texture2D debugTex = TensorRasterizer.DebugTensorToTexture(tensorData, 96);
                 SpellSimulator.DebugTools.DiagnosticBus.OnTensorImageUpdated?.Invoke(debugTex);
-                DiagnoseTensorData(tensorData);
             }
 
-            // 3. Crear tensor en CPU a partir del array (evita bugs de TextureConverter)
             using (var inputTensor = new Unity.InferenceEngine.Tensor<float>(
                 new Unity.InferenceEngine.TensorShape(1, 1, 96, 96), tensorData))
             {
@@ -60,41 +113,20 @@ namespace SpellSimulator.Inference
                 using (var outputTensor = worker.PeekOutput() as Unity.InferenceEngine.Tensor<float>)
                 {
                     float[] probs = outputTensor.DownloadToArray();
-                    LogTopPredictions(probs);
-
                     int bestIdx = GetHighestProbabilityIndex(probs);
-                    float confidence = probs[bestIdx];
+                    
+                    Debug.Log($"[{debugPrefix}] Prediccion: Idx {bestIdx} con {probs[bestIdx]:F2}");
+                    
+                    // El Sigilo (con o sin anillo) actualiza el panel principal
+                    if (debugPrefix == "Sigilo Unico" || debugPrefix == "Sigilo") 
+                        LogTopPredictions(probs);
 
-                    if (spellCompiler != null)
-                    {
-                        Compiler.SpellIR spell = spellCompiler.Compile(bestIdx, confidence, true);
-                        outputController?.SpawnSpellEffect(spell, this.transform.position);
-                    }
+                    return (bestIdx, probs[bestIdx]);
                 }
             }
         }
 
-        // Metodos heredados de la implementacion de pixels
-        public void ProcessCanvas(RenderTexture rt) {
-            Debug.LogWarning("ProcessCanvas esta deprecado. Usar ProcessVectorSession.");
-        }
-
-        private void DiagnoseTensorData(float[] data)
-        {
-            float tMin = float.MaxValue, tMax = float.MinValue, tSum = 0f;
-            int nonZero = 0;
-            foreach (float v in data)
-            {
-                if (v < tMin) tMin = v;
-                if (v > tMax) tMax = v;
-                tSum += v;
-                if (v > 0.0f) nonZero++;
-            }
-            float mean = tSum / data.Length;
-            float inkPercent = (float)nonZero / data.Length * 100f;
-            Debug.Log($"[Tensor Diag] min={tMin:F3} max={tMax:F3} mean={mean:F3} pixels_con_tinta={nonZero}/{data.Length} ({inkPercent:F1}%)");
-        }
-
+        // Metodos heredados de debug
         private void LogTopPredictions(float[] probs)
         {
             int[] indices = new int[probs.Length];
@@ -104,7 +136,6 @@ namespace SpellSimulator.Inference
             string log = "<b>IA Top 3 Predicciones:</b>\n";
             for (int i = 0; i < Mathf.Min(3, probs.Length); i++)
                 log += $"- Idx {indices[i]} ({probs[indices[i]]:F2})\n";
-            Debug.Log(log);
             SpellSimulator.DebugTools.DiagnosticBus.OnPredictionUpdated?.Invoke(log);
         }
 

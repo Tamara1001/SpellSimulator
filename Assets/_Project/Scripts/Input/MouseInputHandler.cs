@@ -20,7 +20,6 @@ namespace SpellSimulator.Input
         [SerializeField] private DrawingCanvas fallbackCanvas;
 
         [Header("Settings")]
-        [SerializeField] private bool clearCanvasAfterCast = true;
         [SerializeField, Range(0.001f, 0.05f), Tooltip("Tolerancia de Douglas-Peucker. Mayor = mas simplificado.")] 
         private float simplificationTolerance = 0.005f;
         [SerializeField, Range(1, 10), Tooltip("Resolucion del Catmull-Rom. Mayor = curvas mas suaves.")] 
@@ -97,12 +96,15 @@ namespace SpellSimulator.Input
             else
                 Debug.LogWarning("[Input] InferenceEngine no asignado.");
 
-            if (clearCanvasAfterCast)
-            {
-                currentSession.Clear();
-                if (lastUsedCanvas != null) lastUsedCanvas.ClearCanvas();
-                else if (fallbackCanvas != null) fallbackCanvas.ClearCanvas();
-            }
+            // Eliminado el auto-clear para permitir edicion post-casteo.
+            // Para limpiar, usar el boton en la UI que llame a ClearCanvas().
+        }
+
+        public void ClearCanvas()
+        {
+            currentSession.Clear();
+            if (lastUsedCanvas != null) lastUsedCanvas.ClearCanvas();
+            else if (fallbackCanvas != null) fallbackCanvas.ClearCanvas();
         }
 
         private bool TryGetCanvasUV(out Vector2 uv, out DrawingCanvas canvasHit)

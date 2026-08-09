@@ -119,7 +119,58 @@ namespace SpellSimulator.Compiler
         /// </summary>
         /// <param name="classIndex">Indice de clase predicho por el modelo ONNX.</param>
         /// <param name="confidence">Confianza del modelo (0..1).</param>
-        /// <param name="isRingClosed">True si el anillo esta geometricamente cerrado.</param>
+        private Dictionary<int, string> classIndexToGlyphName;
+
+        public SpellIR CompileAST(SpellSimulator.Core.SpellAST ast, bool active)
+        {
+            if (ast.Ring == null || ast.Ring.Sigil == null)
+            {
+                Debug.LogWarning("[Compilador] AST invalido o vacio.");
+                return SpellIR.Invalid("ast_empty");
+            }
+
+            // Para MVP: Usar el sigilo central como base
+            SpellIR result = Compile(ast.Ring.Sigil.ClassIndex, ast.Ring.Sigil.Confidence, active);
+
+            // Si detectamos signos (modificadores), aplicamos el Motor Semantico
+            if (ast.Ring.Signs.Count > 0)
+            {
+                foreach (var signNode in ast.Ring.Signs)
+                {
+                    if (indexToClassName != null && indexToClassName.TryGetValue(signNode.ClassIndex, out string signName))
+                        SemanticRules.ApplySign(ref result, SemanticRules.ParseSignName(signName));
+                }
+            }
+
+            string signNames = "Ninguno";
+            if (ast.Ring.Signs.Count > 0)
+            {
+                List<string> names = new List<string>();
+                foreach (var sign in ast.Ring.Signs)
+                {
+                    if (indexToClassName != null && indexToClassName.TryGetValue(sign.ClassIndex, out string name))
+                        names.Add(name);
+                    else
+                        names.Add($"Idx {sign.ClassIndex}");
+                }
+                signNames = string.Join(", ", names);
+            }
+
+            // Emitir diagnostico actualizado con el AST
+            string log = 
+                $"<b>[AST] Hechizo Compilado</b>\n" +
+                $"- Anillo Detectado: {ast.HasRing}\n" +
+                $"- Sigilo: {result.element}\n" +
+                $"- Signos Modificadores: {ast.Ring.Signs.Count} ({signNames})\n" +
+                $"- Escala Final: {result.effectScale:F2}\n" +
+                $"- Duracion: {result.duration:F1}s";
+                
+            Debug.Log(log);
+            SpellSimulator.DebugTools.DiagnosticBus.OnDiagnosticsUpdated?.Invoke(log);
+
+            return result;
+        }
+
         public SpellIR Compile(int classIndex, float confidence, bool isRingClosed)
         {
             // 1. Validacion de confianza minima
@@ -266,8 +317,9 @@ namespace SpellSimulator.Compiler
                 $"- Dispersion: {spread:F2}\n" +
                 $"- Estado: {(active ? "<color=green>Activo</color>" : "<color=red>Inactivo</color>")}";
                 
-            Debug.Log(log);
-            SpellSimulator.DebugTools.DiagnosticBus.OnDiagnosticsUpdated?.Invoke(log);
+            // Eliminamos el log individual de aca para que lo maneje CompileAST
+            // Debug.Log(log);
+            // SpellSimulator.DebugTools.DiagnosticBus.OnDiagnosticsUpdated?.Invoke(log);
 
             return result;
         }
