@@ -156,14 +156,20 @@ namespace SpellSimulator.Compiler
                 signNames = string.Join(", ", names);
             }
 
-            // Emitir diagnostico actualizado con el AST
+            // Emitir diagnostico actualizado con el AST y la Telemetria completa
             string log = 
                 $"<b>[AST] Hechizo Compilado</b>\n" +
-                $"- Anillo Detectado: {ast.HasRing}\n" +
-                $"- Sigilo: {result.element}\n" +
-                $"- Signos Modificadores: {ast.Ring.Signs.Count} ({signNames})\n" +
-                $"- Escala Final: {result.effectScale:F2}\n" +
-                $"- Duracion: {result.duration:F1}s";
+                $"- Sigilo: {result.element} (Anillo: {ast.HasRing})\n" +
+                $"- Signos ({ast.Ring.Signs.Count}): {signNames}\n" +
+                $"\n<b>[Parametros VFX]</b>\n" +
+                $"- Scale: {result.effectScale:F2}\n" +
+                $"- Duration: {result.duration:F1}s\n" +
+                $"- Force: {result.force:F2}\n" +
+                $"- Spread: {result.spread:F2}\n" +
+                $"- Gravity: {result.gravity:F2}\n" +
+                $"- Focus: {result.focus:F2}\n" +
+                $"- Range: {result.range:F2}\n" +
+                $"- Forma: {result.primaryManifestation}";
                 
             Debug.Log(log);
             SpellSimulator.DebugTools.DiagnosticBus.OnDiagnosticsUpdated?.Invoke(log);
