@@ -42,6 +42,9 @@ namespace SpellSimulator.Canvas
         /// <summary>True si hay al menos un trazo registrado en el lienzo.</summary>
         public bool HasInk => hasInk;
 
+        /// <summary>La sesion de dibujo (vectores) asociada a este lienzo especifico.</summary>
+        public Core.DrawingSession Session { get; private set; } = new Core.DrawingSession();
+
         private void Awake()
         {
             InitializeCanvas();
@@ -82,6 +85,8 @@ namespace SpellSimulator.Canvas
         /// </summary>
         public void ClearCanvas()
         {
+            Session.Clear(); // Tambien limpiamos los vectores
+
             RenderTexture previousActive = RenderTexture.active;
             RenderTexture.active = renderTexture;
             GL.Clear(true, true, clearColor);
