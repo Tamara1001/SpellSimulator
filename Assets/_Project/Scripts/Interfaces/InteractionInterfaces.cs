@@ -2,11 +2,14 @@ using UnityEngine;
 
 namespace SpellSimulator.Interfaces
 {
+    public enum HandType { Right, Left, Both }
+
     /// <summary>
     /// Todo objeto en el mundo 3D que el jugador pueda mirar y recoger/agarrar.
     /// </summary>
     public interface IInteractable
     {
+        HandType PreferredHand { get; }
         string GetInteractionPrompt();
         
         // Se llama cuando el jugador aprieta Clic Izquierdo para agarrarlo

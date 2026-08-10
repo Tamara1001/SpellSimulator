@@ -8,8 +8,10 @@ namespace SpellSimulator.Player
     {
         [Header("References")]
         [SerializeField] private Transform cameraTransform;
-        [SerializeField, Tooltip("El punto vacio en la mano donde se pegaran los objetos")] 
-        private Transform holdPoint; 
+        [SerializeField, Tooltip("Punto de agarre para la mano derecha (Herramientas)")] 
+        private Transform rightHoldPoint; 
+        [SerializeField, Tooltip("Punto de agarre para la mano izquierda (Lienzos/Escudos)")] 
+        private Transform leftHoldPoint; 
 
         [Header("Settings")]
         [SerializeField] private float interactRange = 3f;
@@ -17,7 +19,12 @@ namespace SpellSimulator.Player
 
         private PlayerInputReader inputReader;
         private IInteractable currentHovered;
-        private GameObject heldObject;
+        
+        // Manos
+        private GameObject heldRightObject;
+        private GameObject heldLeftObject;
+        
+        // La herramienta usable (Lapiz/Goma) que este en cualquier mano, usualmente la derecha
         private IUsable currentUsable;
         private bool wasUsingTool;
 
@@ -35,23 +42,23 @@ namespace SpellSimulator.Player
 
         private void HandleHover()
         {
-            if (heldObject != null)
-            {
-                // Si tenemos algo agarrado, dejamos de buscar cosas en el piso
-                currentHovered = null;
-                return;
-            }
-
-            // Raycast desde el centro de la pantalla
+            // Si miramos a algo, vemos si lo podemos agarrar
             Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
             if (Physics.Raycast(ray, out RaycastHit hit, interactRange, interactLayer))
             {
                 IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
                 if (interactable != null)
                 {
-                    currentHovered = interactable;
-                    // En el futuro, aqui mostrariamos el UI "Press Click to Grab Pen"
-                    return;
+                    // Solo podemos hacer hover si tenemos la mano correspondiente libre
+                    bool canHold = (interactable.PreferredHand == HandType.Right && heldRightObject == null) ||
+                                   (interactable.PreferredHand == HandType.Left && heldLeftObject == null) ||
+                                   interactable.PreferredHand == HandType.Both;
+                    
+                    if (canHold)
+                    {
+                        currentHovered = interactable;
+                        return;
+                    }
                 }
             }
             
@@ -62,13 +69,18 @@ namespace SpellSimulator.Player
         {
             if (inputReader.IsInteracting)
             {
-                if (heldObject != null)
-                {
-                    DropCurrentObject();
-                }
-                else if (currentHovered != null)
+                // Prioridad: Si miramos algo agarrable y tenemos mano libre, lo agarramos.
+                if (currentHovered != null)
                 {
                     GrabObject(currentHovered);
+                }
+                // Si miramos al vacio, tiramos las cosas. (Primero la derecha, si esta vacia, tiramos la izquierda)
+                else
+                {
+                    if (heldRightObject != null)
+                        DropObject(heldRightObject, HandType.Right);
+                    else if (heldLeftObject != null)
+                        DropObject(heldLeftObject, HandType.Left);
                 }
             }
         }
@@ -106,23 +118,39 @@ namespace SpellSimulator.Player
             MonoBehaviour mb = interactable as MonoBehaviour;
             if (mb != null)
             {
-                heldObject = mb.gameObject;
-                currentUsable = heldObject.GetComponent<IUsable>();
+                Transform targetHoldPoint = (interactable.PreferredHand == HandType.Left) ? leftHoldPoint : rightHoldPoint;
                 
-                // Le avisamos al objeto fisico que fue agarrado y a donde debe ir
-                interactable.OnInteract(holdPoint);
+                if (interactable.PreferredHand == HandType.Left)
+                {
+                    heldLeftObject = mb.gameObject;
+                }
+                else
+                {
+                    heldRightObject = mb.gameObject;
+                }
+
+                // Si es un IUsable (como el Lapiz), nos lo guardamos
+                IUsable usable = mb.GetComponent<IUsable>();
+                if (usable != null) currentUsable = usable;
+                
+                interactable.OnInteract(targetHoldPoint);
                 currentHovered = null;
             }
         }
 
-        private void DropCurrentObject()
+        private void DropObject(GameObject obj, HandType hand)
         {
-            if (heldObject != null)
+            IInteractable interactable = obj.GetComponent<IInteractable>();
+            interactable?.OnDrop();
+            
+            if (hand == HandType.Left)
+                heldLeftObject = null;
+            else
+                heldRightObject = null;
+            
+            IUsable usable = obj.GetComponent<IUsable>();
+            if (usable != null && currentUsable == usable)
             {
-                IInteractable interactable = heldObject.GetComponent<IInteractable>();
-                interactable?.OnDrop();
-                
-                heldObject = null;
                 currentUsable = null;
                 wasUsingTool = false;
             }

@@ -66,8 +66,17 @@ namespace SpellSimulator.Canvas
         {
             canvasRenderer = GetComponent<Renderer>();
 
-            // Crear RenderTexture. Formato ARGB32 es seguro y estándar.
-            renderTexture = new RenderTexture(resolution, resolution, 0, RenderTextureFormat.ARGB32);
+            // Calcular resolución basada en la escala física para evitar pixelado al estirar el lienzo
+            float scaleX = Mathf.Max(0.01f, transform.localScale.x);
+            float scaleY = Mathf.Max(0.01f, transform.localScale.y);
+            
+            int width = Mathf.RoundToInt(resolution * scaleX);
+            int height = Mathf.RoundToInt(resolution * scaleY);
+            width = Mathf.Max(16, width);
+            height = Mathf.Max(16, height);
+
+            // Crear RenderTexture dinámica
+            renderTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
             renderTexture.filterMode = FilterMode.Bilinear;
             renderTexture.Create();
 
@@ -208,13 +217,19 @@ namespace SpellSimulator.Canvas
             // Dependiendo de cómo esté mapeado el Quad, podría requerir invertir Y.
             // Para un Quad estándar, invertir Y suele alinear el hit del Raycast con la textura.
             float yPos = 1f - uvPosition.y; 
+            
+            // Compensar la distorsion si el lienzo no es cuadrado
+            float scaleX = Mathf.Max(0.01f, transform.localScale.x);
+            float scaleY = Mathf.Max(0.01f, transform.localScale.y);
+            float sizeX = brushSize / scaleX;
+            float sizeY = brushSize / scaleY;
 
             // Rectángulo donde se dibujará la textura
             Rect drawRect = new Rect(
-                uvPosition.x - (brushSize * 0.5f), 
-                yPos - (brushSize * 0.5f), 
-                brushSize, 
-                brushSize
+                uvPosition.x - (sizeX * 0.5f), 
+                yPos - (sizeY * 0.5f), 
+                sizeX, 
+                sizeY
             );
 
             // Estampar en GPU
@@ -222,6 +237,27 @@ namespace SpellSimulator.Canvas
 
             GL.PopMatrix();
             RenderTexture.active = previousActive;
+        }
+
+        /// <summary>
+        /// Convierte un punto del mundo tridimensional en coordenadas UV [0,1]
+        /// basándose en la malla local. Esto evita el bug de RaycastHit.textureCoord
+        /// devolviendo (0,0) cuando se usa un BoxCollider o un MeshCollider Convexo.
+        /// </summary>
+        public Vector2 GetUVFromWorldPosition(Vector3 worldPos)
+        {
+            Vector3 localPos = transform.InverseTransformPoint(worldPos);
+            MeshFilter mf = GetComponent<MeshFilter>();
+            if (mf != null && mf.sharedMesh != null)
+            {
+                Bounds b = mf.sharedMesh.bounds;
+                float u = Mathf.InverseLerp(b.min.x, b.max.x, localPos.x);
+                float v = Mathf.InverseLerp(b.min.y, b.max.y, localPos.y);
+                return new Vector2(u, v);
+            }
+            
+            // Fallback asumiendo que es un Quad estándar de Unity (-0.5 a 0.5)
+            return new Vector2(localPos.x + 0.5f, localPos.y + 0.5f);
         }
     }
 }

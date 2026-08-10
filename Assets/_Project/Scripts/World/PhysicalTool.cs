@@ -54,6 +54,8 @@ namespace SpellSimulator.World
 
         // --- IInteractable ---
 
+        public HandType PreferredHand => HandType.Right;
+
         public string GetInteractionPrompt()
         {
             return $"Agarrar {toolName}";
@@ -184,7 +186,7 @@ namespace SpellSimulator.World
                 hitCanvas = hit.collider.GetComponent<DrawingCanvas>();
                 if (hitCanvas != null)
                 {
-                    uv = hit.textureCoord;
+                    uv = hitCanvas.GetUVFromWorldPosition(hit.point);
                     return true;
                 }
             }
