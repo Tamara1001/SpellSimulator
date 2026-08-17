@@ -1,4 +1,4 @@
-﻿# 🪄 SpellSimulator — Simulador de Ejecución de Hechizos
+# 🪄 SpellSimulator — Simulador de Ejecución de Hechizos
 
 > Evaluación Final — Asignatura: **Simuladores**  
 > Motor: **Unity 3D (URP)** | IA: **Unity Sentis (ONNX)** | Target: **PC → Oculus Quest (VR)**
@@ -7,9 +7,11 @@
 
 ## Descripción General
 
-**SpellSimulator** es un simulador interactivo de físicas y sistemas de partículas activado mediante el trazado en tiempo real de diagramas geométricos sobre una superficie virtual. El usuario dibuja runas o formas sobre un "lienzo" 3D; un modelo de inteligencia artificial local reconoce la geometría trazada y el sistema compila las reglas correspondientes para instanciar efectos físicos visuales.
+**SpellSimulator** es un simulador interactivo **sandbox** de hechicería impulsado por físicas reactivas y reconocimiento de patrones. El usuario dibuja runas o formas geométricas complejas en tiempo real; un modelo de inteligencia artificial local (Sentis) reconoce la geometría trazada y el sistema compila las reglas correspondientes para instanciar proyectiles, efectos físicos y reacciones en cadena.
 
-El prototipo corre en PC (Mouse/Teclado) y está diseñado para una transición limpia hacia Realidad Virtual en **Oculus Quest**, con una arquitectura estrictamente modular que lo permite sin refactorización masiva.
+A diferencia de un RPG tradicional, el enfoque de este proyecto es la **maestría mecánica y la interactividad emergente**. El entorno funciona como un laboratorio de pruebas donde el fuego quema la madera, el viento arrastra objetos, y los elementos físicos reaccionan de manera realista a los impactos mágicos.
+
+El prototipo corre en PC (Mouse/Teclado) con un avanzado sistema híbrido de interacción FPS, diseñado para una transición limpia y directa hacia Realidad Virtual en **Oculus Quest**.
 
 ---
 
@@ -87,11 +89,31 @@ El sistema está dividido en **5 módulos desacoplados**. Cada módulo expone un
 
 ### Módulo 5 — Motor Físico de Salida (VFX Output)
 
-**Responsabilidad:** Instanciar y dirigir los sistemas de partículas en base al `SpellDescriptor`.
+**Responsabilidad:** Instanciar y dirigir los sistemas de partículas y proyectiles en base al `SpellDescriptor`.
 
 - Los efectos visuales son grafos de VFX Graph parametrizados.
-- Recibe los parámetros compilados (tipo, escala, dirección) e inyecta los valores en el grafo activo.
+- Recibe los parámetros compilados (tipo, escala, dirección) e inyecta los valores para generar proyectiles físicos o efectos de área.
 - Gestiona el ciclo de vida de los efectos (instanciación, duración, destrucción).
+
+### Módulo 6 — Entorno Reactivo (Sandbox)
+
+**Responsabilidad:** Proveer un ecosistema de físicas y materiales que reaccionen a la salida del Módulo 5.
+
+- **Destrucción y Físicas:** Integración de `Rigidbody` a todos los objetos. Aplicación de fuerzas radiales (explosiones), fuerzas centrípetas (Tornados) y fracturas dinámicas en el escenario.
+- **Propagación:** Objetos inflamables (`Flammable.cs`) que esparcen el fuego, o tornados que absorben elementos cercanos (ej: Tornado de Fuego).
+- **Dummies Ragdoll:** Muñecos de prueba articulados para evaluar de forma realista el impacto cinético y destructivo de los hechizos sin depender de rutinas de Inteligencia Artificial enemiga.
+
+---
+
+## 📖 Sistemas Inmersivos y Mecánicas (QoL)
+
+Para maximizar la inmersión sin depender de Interfaces de Usuario (UI) tradicionales en 2D, el simulador emplea sistemas 100% diegéticos:
+
+- **Sistema de Dos Manos (Dual Wielding):** El jugador puede sostener un lienzo/grimorio dinámico en la mano izquierda, mientras utiliza herramientas físicas (lápiz o goma) con la mano derecha. El tamaño del lienzo es completamente dinámico y escalable en tiempo real sin deformar los trazos.
+- **El Grimorio (Diccionario):** Un libro físico sostenido en la mano izquierda que actúa como archivo de conocimiento mágico. Registra los glifos descubiertos exactos que debes dibujar. Incluye animaciones automáticas de tinta en sus páginas para enseñar al jugador el orden y velocidad de los trazos requeridos.
+- **Sellos Mágicos en Blanco (Stamps):** Herramientas físicas de maestría. El jugador puede transferir el conocimiento de un glifo desde una página del Grimorio hacia un "Sello en Blanco". Al estampar este sello contra un lienzo, se dibuja instantáneamente el patrón perfecto, agilizando la experimentación.
+- **Retroalimentación Háptica (Haptics):** Los controladores (Gamepad/VR) reaccionan a la fricción de la tinta y emiten un pulso contundente al compilar el hechizo exitosamente.
+- **Mapeo de Hardware (Cast/Undo):** Las acciones mágicas están atadas a inputs secundarios (Click Derecho / Botones B/Y) ejecutadas directamente desde las herramientas físicas.
 
 ---
 
@@ -134,12 +156,14 @@ Estas reglas aplican a **todos** los scripts del proyecto:
 
 | Fase | Objetivo | Estado |
 |---|---|---|
-| **Fase 0** | Setup del proyecto, URP, estructura de carpetas | 🔄 En curso |
-| **Fase 1** | Módulo Canvas + Input (PC) funcional | ⬜ Pendiente |
-| **Fase 2** | Integración Sentis + modelo ResNet18 | ⬜ Pendiente |
-| **Fase 3** | Compilador lógico (MVP: Fuego, Aire, Escala) | ⬜ Pendiente |
-| **Fase 4** | VFX Graph: efectos parametrizados | ⬜ Pendiente |
-| **Fase 5** | Port a XR Interaction Toolkit (Oculus Quest) | ⬜ Pendiente |
+| **Fase 0** | Setup del proyecto, URP, estructura de carpetas | ✅ Completado |
+| **Fase 1** | Módulo Canvas + Input (PC) funcional | ✅ Completado |
+| **Fase 2** | Herramientas Físicas, Dual Wielding y UI Diegética | ✅ Completado |
+| **Fase 3** | Integración Sentis, ResNet18 y Compilador Lógico | 🔄 En curso |
+| **Fase 4** | Dummies Ragdoll y Proyectiles Mágicos Físicos | ⬜ Pendiente |
+| **Fase 5** | Grimorio, Sellos en Blanco y Diccionario | ⬜ Pendiente |
+| **Fase 6** | VFX Graph parametrizados y Reacciones del Entorno | ⬜ Pendiente |
+| **Fase 7** | Port a XR Interaction Toolkit (Oculus Quest) | ⬜ Pendiente |
 
 ---
 

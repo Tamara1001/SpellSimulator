@@ -11,7 +11,9 @@ namespace SpellSimulator.Player
         [SerializeField, Tooltip("Punto de agarre para la mano derecha (Herramientas)")] 
         private Transform rightHoldPoint; 
         [SerializeField, Tooltip("Punto de agarre para la mano izquierda (Lienzos/Escudos)")] 
-        private Transform leftHoldPoint; 
+        private Transform leftHoldPoint;
+        [SerializeField, Tooltip("[VR] Transform del controlador derecho. Desde acá sale el rayo de interacción en VR.")]
+        private Transform vrRaycastOrigin;
 
         [Header("Settings")]
         [SerializeField] private float interactRange = 3f;
@@ -42,8 +44,13 @@ namespace SpellSimulator.Player
 
         private void HandleHover()
         {
-            // Si miramos a algo, vemos si lo podemos agarrar
-            Ray ray = new Ray(cameraTransform.position, cameraTransform.forward);
+            // Si miramos a algo, vemos si lo podemos agarrar.
+            // En VR el rayo sale del controlador derecho; en PC, de la camara (mira).
+            Transform rayOrigin = (PlatformDetector.IsVR && vrRaycastOrigin != null)
+                ? vrRaycastOrigin
+                : cameraTransform;
+
+            Ray ray = new Ray(rayOrigin.position, rayOrigin.forward);
             if (Physics.Raycast(ray, out RaycastHit hit, interactRange, interactLayer))
             {
                 IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();

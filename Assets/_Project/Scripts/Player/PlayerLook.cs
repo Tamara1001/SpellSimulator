@@ -32,6 +32,10 @@ namespace SpellSimulator.Player
 
         private void Update()
         {
+            // En VR, el tracking del casco mueve la camara directamente.
+            // Si corremos PlayerLook en VR, pelearia contra el XR Origin y daria resultados raros.
+            if (PlatformDetector.IsVR) return;
+
             if (cameraTransform == null)
             {
                 Debug.LogWarning("[PlayerLook] Falta asignar el CameraTransform en el inspector.");

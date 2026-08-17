@@ -49,20 +49,23 @@ namespace SpellSimulator.Player
             jumpAction.AddBinding("<Keyboard>/space");
             jumpAction.AddBinding("<Gamepad>/buttonSouth");
 
-            // Interactuar (Tecla E o Right Trigger)
+            // Interactuar (Tecla E, Right Trigger de Gamepad, o Grip del controlador VR)
             interactAction = new InputAction("Interact", InputActionType.Button);
             interactAction.AddBinding("<Keyboard>/e");
             interactAction.AddBinding("<Gamepad>/rightTrigger");
+            interactAction.AddBinding("<XRController>{RightHand}/gripButton"); // VR: apretar el puño para agarrar
 
-            // Usar Herramienta (Click Izquierdo o Left Trigger)
+            // Usar Herramienta (Click Izquierdo, Left Trigger de Gamepad, o Gatillo del controlador VR)
             useToolAction = new InputAction("UseTool", InputActionType.Button);
             useToolAction.AddBinding("<Mouse>/leftButton");
             useToolAction.AddBinding("<Gamepad>/leftTrigger");
+            useToolAction.AddBinding("<XRController>{RightHand}/triggerButton"); // VR: gatillo para dibujar
 
-            // Uso Secundario (Click Derecho o Boton B/Circle/East)
+            // Uso Secundario (Click Derecho, Boton East de Gamepad, o Boton A del controlador VR)
             secondaryUseToolAction = new InputAction("SecondaryUseTool", InputActionType.Button);
             secondaryUseToolAction.AddBinding("<Mouse>/rightButton");
             secondaryUseToolAction.AddBinding("<Gamepad>/buttonEast");
+            secondaryUseToolAction.AddBinding("<XRController>{RightHand}/primaryButton"); // VR: Boton A para castear/undo
         }
 
         private void OnEnable()
