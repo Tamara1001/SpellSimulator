@@ -24,8 +24,8 @@ namespace SpellSimulator.Canvas
         [SerializeField, Range(0.01f, 0.2f), Tooltip("Tamaño del pincel en relación al lienzo (0-1).")]
         private float brushSize = 0.05f;
 
-        [SerializeField, Range(1f, 100f), Tooltip("Cantidad de interpolaciones entre puntos para evitar saltos al mover rápido.")]
-        private float lerpStepsPerUnit = 50f;
+        [SerializeField, Range(10f, 500f), Tooltip("Cantidad de interpolaciones entre puntos para evitar saltos al mover rápido.")]
+        private float lerpStepsPerUnit = 250f;
 
         private RenderTexture renderTexture;
         private Renderer canvasRenderer;
@@ -173,10 +173,22 @@ namespace SpellSimulator.Canvas
             inkBoundsMax = Vector2.Max(inkBoundsMax, uvPosition);
             hasInk = true;
 
+            if (brushMaterial == null) return;
+
+            // OPTIMIZACION CRITICA PARA VR (Meta Quest):
+            // Cambiar RenderTexture.active fuerza a la GPU (Tile-based) a volcar la memoria.
+            // Si lo hacemos por cada estampa, los FPS mueren. Lo hacemos UNA vez por frame.
+            RenderTexture previousActive = RenderTexture.active;
+            RenderTexture.active = renderTexture;
+            brushMaterial.SetPass(0);
+            
+            GL.PushMatrix();
+            GL.LoadPixelMatrix(0, 1, 1, 0); 
+
             if (isNewStroke)
             {
                 lastDrawPosition = uvPosition;
-                DrawStamp(uvPosition);
+                DrawStampInternal(uvPosition);
             }
             else
             {
@@ -189,42 +201,29 @@ namespace SpellSimulator.Canvas
                 {
                     float t = (float)i / steps;
                     Vector2 interpolatedUV = Vector2.Lerp(lastDrawPosition, uvPosition, t);
-                    DrawStamp(interpolatedUV);
+                    DrawStampInternal(interpolatedUV);
                 }
 
                 lastDrawPosition = uvPosition;
             }
+
+            GL.PopMatrix();
+            RenderTexture.active = previousActive;
         }
 
         /// <summary>
-        /// Dibuja el material del pincel en la coordenada UV dada usando GPU Blitting.
-        /// Cero asignaciones (GC.Alloc) por llamada.
+        /// Estampa la textura del pincel. 
+        /// Requiere que RenderTexture.active y GL.LoadPixelMatrix ya estén configurados para evitar lag.
         /// </summary>
-        /// <param name="uvPosition">Coordenada normalizada [0,1] donde estampar.</param>
-        private void DrawStamp(Vector2 uvPosition)
+        private void DrawStampInternal(Vector2 uvPosition)
         {
-            if (brushMaterial == null) return;
-
-            RenderTexture previousActive = RenderTexture.active;
-            RenderTexture.active = renderTexture;
-
-            // Configurar matriz ortográfica para dibujar en espacio 2D [0,1]
-            GL.PushMatrix();
-            GL.LoadPixelMatrix(0, 1, 1, 0); 
-
-            // El origen UV (0,0) en Unity Quad suele ser abajo a la izquierda.
-            // Graphics.DrawTexture usa el sistema (0,0) arriba a la izquierda.
-            // Dependiendo de cómo esté mapeado el Quad, podría requerir invertir Y.
-            // Para un Quad estándar, invertir Y suele alinear el hit del Raycast con la textura.
             float yPos = 1f - uvPosition.y; 
             
-            // Compensar la distorsion si el lienzo no es cuadrado
             float scaleX = Mathf.Max(0.01f, transform.localScale.x);
             float scaleY = Mathf.Max(0.01f, transform.localScale.y);
             float sizeX = brushSize / scaleX;
             float sizeY = brushSize / scaleY;
 
-            // Rectángulo donde se dibujará la textura
             Rect drawRect = new Rect(
                 uvPosition.x - (sizeX * 0.5f), 
                 yPos - (sizeY * 0.5f), 
@@ -232,11 +231,7 @@ namespace SpellSimulator.Canvas
                 sizeY
             );
 
-            // Estampar en GPU
             Graphics.DrawTexture(drawRect, Texture2D.whiteTexture, brushMaterial);
-
-            GL.PopMatrix();
-            RenderTexture.active = previousActive;
         }
 
         /// <summary>

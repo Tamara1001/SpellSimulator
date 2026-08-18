@@ -56,9 +56,22 @@ namespace SpellSimulator.Player
 
         private void HandleMovement()
         {
-            // Direccion local
+            // Direccion
             Vector2 input = inputReader.MoveValue;
-            Vector3 moveDir = transform.right * input.x + transform.forward * input.y;
+            
+            // Usar la camara principal como referencia para saber hacia donde estamos mirando
+            Transform refTransform = Camera.main != null ? Camera.main.transform : transform;
+            
+            Vector3 forward = refTransform.forward;
+            Vector3 right = refTransform.right;
+            
+            // Ignorar la inclinacion vertical (Pitch) para no volar ni hundirnos
+            forward.y = 0f;
+            right.y = 0f;
+            forward.Normalize();
+            right.Normalize();
+
+            Vector3 moveDir = right * input.x + forward * input.y;
             moveDir.Normalize();
 
             // Velocidad actual plana (ignorando la Y de gravedad)

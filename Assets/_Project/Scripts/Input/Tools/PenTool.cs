@@ -8,6 +8,12 @@ namespace SpellSimulator.Input.Tools
     {
         private DrawingSession currentSession;
         private Stroke currentStroke;
+        
+        // --- Estabilizador VR ---
+        private Vector2 smoothedUV;
+        private bool isFirstPoint = true;
+        // Velocidad del estabilizador (menor = más suave pero más "lag" percibido, mayor = más rápido pero más tembloroso)
+        private float stabilizerSpeed = 8f; 
 
         public void Initialize(DrawingSession session)
         {
@@ -26,6 +32,10 @@ namespace SpellSimulator.Input.Tools
             currentStroke.AddPoint(uv);
             currentSession.AddStroke(currentStroke);
             
+            // Inicializar el estabilizador en el punto de impacto
+            smoothedUV = uv;
+            isFirstPoint = true;
+            
             if (canvas != null) canvas.DrawAt(uv, true);
         }
 
@@ -33,11 +43,23 @@ namespace SpellSimulator.Input.Tools
         {
             if (currentStroke == null) return;
 
-            // Solo agregar el punto si nos movimos lo suficiente
-            if (currentStroke.Points.Count == 0 || Vector2.Distance(currentStroke.Points[currentStroke.Points.Count - 1], uv) > 0.005f)
+            // 1. Estabilizador (Low-Pass Filter)
+            if (isFirstPoint)
             {
-                currentStroke.AddPoint(uv);
-                if (canvas != null) canvas.DrawAt(uv, false);
+                smoothedUV = uv;
+                isFirstPoint = false;
+            }
+            else
+            {
+                // En VR, movemos la tinta suavemente hacia la mano real en base al tiempo
+                smoothedUV = Vector2.Lerp(smoothedUV, uv, Time.deltaTime * stabilizerSpeed);
+            }
+
+            // 2. Solo agregar el punto a la geometría si nos movimos lo suficiente desde el último punto suavizado
+            if (currentStroke.Points.Count == 0 || Vector2.Distance(currentStroke.Points[currentStroke.Points.Count - 1], smoothedUV) > 0.005f)
+            {
+                currentStroke.AddPoint(smoothedUV);
+                if (canvas != null) canvas.DrawAt(smoothedUV, false);
             }
         }
 

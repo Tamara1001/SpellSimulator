@@ -38,6 +38,7 @@ namespace SpellSimulator.Player
                 .With("Left", "<Keyboard>/a")
                 .With("Right", "<Keyboard>/d");
             moveAction.AddBinding("<Gamepad>/leftStick");
+            moveAction.AddBinding("<XRController>{LeftHand}/thumbstick"); // VR: Joystick izquierdo
 
             // Vista (Mouse o Right Stick)
             lookAction = new InputAction("Look", InputActionType.Value);
@@ -53,13 +54,14 @@ namespace SpellSimulator.Player
             interactAction = new InputAction("Interact", InputActionType.Button);
             interactAction.AddBinding("<Keyboard>/e");
             interactAction.AddBinding("<Gamepad>/rightTrigger");
-            interactAction.AddBinding("<XRController>{RightHand}/gripButton"); // VR: apretar el puño para agarrar
+            interactAction.AddBinding("<XRController>{RightHand}/grip"); // VR: apretar el puño para agarrar
 
             // Usar Herramienta (Click Izquierdo, Left Trigger de Gamepad, o Gatillo del controlador VR)
-            useToolAction = new InputAction("UseTool", InputActionType.Button);
+            // Definido como Value/Axis para que lea correctamente el recorrido del gatillo analógico
+            useToolAction = new InputAction("UseTool", InputActionType.Value, "Axis");
             useToolAction.AddBinding("<Mouse>/leftButton");
             useToolAction.AddBinding("<Gamepad>/leftTrigger");
-            useToolAction.AddBinding("<XRController>{RightHand}/triggerButton"); // VR: gatillo para dibujar
+            useToolAction.AddBinding("<XRController>{RightHand}/trigger"); // VR: gatillo para dibujar
 
             // Uso Secundario (Click Derecho, Boton East de Gamepad, o Boton A del controlador VR)
             secondaryUseToolAction = new InputAction("SecondaryUseTool", InputActionType.Button);
@@ -97,8 +99,8 @@ namespace SpellSimulator.Player
             IsJumping = jumpAction.triggered;
             IsInteracting = interactAction.triggered;
             
-            // IsPressed = True mientras se mantenga apretado (o triggered para un toque)
-            IsUsingTool = useToolAction.IsPressed(); 
+            // Leer el valor como float > 0.1f garantiza que funcione tanto para botones de mouse como para gatillos VR
+            IsUsingTool = useToolAction.ReadValue<float>() > 0.1f; 
             IsSecondaryUsingTool = secondaryUseToolAction.triggered; // Triggered para Cast/Undo (un solo click)
         }
     }

@@ -12,8 +12,12 @@ namespace SpellSimulator.Player
         private Transform rightHoldPoint; 
         [SerializeField, Tooltip("Punto de agarre para la mano izquierda (Lienzos/Escudos)")] 
         private Transform leftHoldPoint;
-        [SerializeField, Tooltip("[VR] Transform del controlador derecho. Desde acá sale el rayo de interacción en VR.")]
-        private Transform vrRaycastOrigin;
+        
+        [Header("VR References")]
+        [SerializeField, Tooltip("[VR] Transform del controlador derecho. De acá sale el rayo y se agarran herramientas.")]
+        private Transform vrRightController;
+        [SerializeField, Tooltip("[VR] Transform del controlador izquierdo. Acá se agarran lienzos.")]
+        private Transform vrLeftController;
 
         [Header("Settings")]
         [SerializeField] private float interactRange = 3f;
@@ -29,10 +33,38 @@ namespace SpellSimulator.Player
         // La herramienta usable (Lapiz/Goma) que este en cualquier mano, usualmente la derecha
         private IUsable currentUsable;
         private bool wasUsingTool;
+        
+        // Puntero visual para VR
+        private LineRenderer vrPointerLine;
 
         private void Awake()
         {
             inputReader = GetComponent<PlayerInputReader>();
+        }
+
+        private void Start()
+        {
+            if (PlatformDetector.IsVR)
+            {
+                // Reasignar los puntos de agarre a las manos reales de VR
+                if (vrRightController != null) rightHoldPoint = vrRightController;
+                if (vrLeftController != null) leftHoldPoint = vrLeftController;
+                
+                // Crear el rayo laser visual para VR automáticamente si no existe
+                if (vrRightController != null)
+                {
+                    vrPointerLine = vrRightController.gameObject.AddComponent<LineRenderer>();
+                    vrPointerLine.startWidth = 0.005f;
+                    vrPointerLine.endWidth = 0.005f;
+                    vrPointerLine.material = new Material(Shader.Find("Sprites/Default"));
+                    vrPointerLine.startColor = Color.white;
+                    vrPointerLine.endColor = new Color(1f, 1f, 1f, 0f); // Fade out
+                    vrPointerLine.useWorldSpace = true;
+                    
+                    vrPointerLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    vrPointerLine.receiveShadows = false;
+                }
+            }
         }
 
         private void Update()
@@ -46,13 +78,31 @@ namespace SpellSimulator.Player
         {
             // Si miramos a algo, vemos si lo podemos agarrar.
             // En VR el rayo sale del controlador derecho; en PC, de la camara (mira).
-            Transform rayOrigin = (PlatformDetector.IsVR && vrRaycastOrigin != null)
-                ? vrRaycastOrigin
+            Transform rayOrigin = (PlatformDetector.IsVR && vrRightController != null)
+                ? vrRightController
                 : cameraTransform;
 
-            Ray ray = new Ray(rayOrigin.position, rayOrigin.forward);
+            Vector3 rayDirection = rayOrigin.forward;
+            if (PlatformDetector.IsVR && rayOrigin == vrRightController)
+            {
+                // El usuario solicitó rotarlo 90 grados por código sin tocar el Transform original
+                rayDirection = Quaternion.AngleAxis(90f, rayOrigin.right) * rayOrigin.forward;
+            }
+
+            Ray ray = new Ray(rayOrigin.position, rayDirection);
+            
+            // Dibujar linea si estamos en VR
+            if (vrPointerLine != null)
+            {
+                vrPointerLine.SetPosition(0, rayOrigin.position);
+                vrPointerLine.SetPosition(1, rayOrigin.position + rayDirection * interactRange);
+            }
+
             if (Physics.Raycast(ray, out RaycastHit hit, interactRange, interactLayer))
             {
+                // Cortar la linea visual en el punto de impacto
+                if (vrPointerLine != null) vrPointerLine.SetPosition(1, hit.point);
+                
                 IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
                 if (interactable != null)
                 {
@@ -94,24 +144,36 @@ namespace SpellSimulator.Player
 
         private void HandleUsage()
         {
-            if (currentUsable == null) return;
-
-            bool isUsing = inputReader.IsUsingTool;
-
-            if (isUsing && !wasUsingTool)
+            if (currentUsable == null)
             {
-                currentUsable.OnUseStart();
+                if (inputReader.IsUsingTool && !wasUsingTool)
+                {
+                    Debug.LogWarning("[PlayerInteractor] Intentaste usar herramienta pero currentUsable es NULL. ¿Agarraste el lápiz?");
+                    wasUsingTool = true;
+                }
+                else if (!inputReader.IsUsingTool && wasUsingTool)
+                {
+                    wasUsingTool = false;
+                }
+                return;
             }
-            else if (isUsing && wasUsingTool)
+
+            if (inputReader.IsUsingTool && !wasUsingTool)
+            {
+                Debug.Log("[PlayerInteractor] Iniciando trazo (OnUseStart) con: " + currentUsable.GetType().Name);
+                currentUsable.OnUseStart();
+                wasUsingTool = true;
+            }
+            else if (inputReader.IsUsingTool && wasUsingTool)
             {
                 currentUsable.OnUseHold();
             }
-            else if (!isUsing && wasUsingTool)
+            else if (!inputReader.IsUsingTool && wasUsingTool)
             {
+                Debug.Log("[PlayerInteractor] Finalizando trazo (OnUseEnd)");
                 currentUsable.OnUseEnd();
+                wasUsingTool = false;
             }
-
-            wasUsingTool = isUsing;
 
             // Uso Secundario (Cast/Undo)
             if (inputReader.IsSecondaryUsingTool)

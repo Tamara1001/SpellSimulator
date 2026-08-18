@@ -3,6 +3,7 @@ using SpellSimulator.Interfaces;
 using SpellSimulator.Input.Tools;
 using SpellSimulator.Canvas;
 using SpellSimulator.Core;
+using SpellSimulator.Player;
 
 namespace SpellSimulator.World
 {
@@ -16,19 +17,15 @@ namespace SpellSimulator.World
     {
         public enum ToolKind { Pen, Eraser }
 
-        [Header("Settings")]
+        [Header("Drawing Settings")]
         [SerializeField] private string toolName = "Lápiz";
         [SerializeField] private ToolKind kind = ToolKind.Pen;
-        [SerializeField] private Transform raycastOrigin; // La punta del lapiz
         [SerializeField] private LayerMask canvasLayer;
+        [SerializeField] private float pcMaxDrawDistance = 5f;
+        [SerializeField] private float vrMaxDrawDistance = 10f; // Aumentado temporalmente para asegurar que el trazo llegue al lienzo
         
-        [Header("PC vs VR Mode")]
-        [SerializeField, Tooltip("Si es True, el trazo sale de la punta del lapiz (Requiere tocar el lienzo). Si es False, el trazo sale del centro de la pantalla (Láser FPS).")]
-        private bool isVRMode = false;
-        [SerializeField, Tooltip("Distancia maxima en VR Mode. Valores bajos (0.25) obligan al contacto fisico real.")] 
-        private float vrMaxDrawDistance = 0.25f;
-        [SerializeField, Tooltip("Distancia maxima en PC Mode. Láser a distancia.")] 
-        private float pcMaxDrawDistance = 10f;
+        [Tooltip("Transform desde donde sale el rayo en VR (la punta del lápiz)")]
+        [SerializeField] private Transform raycastOrigin;
 
         private Rigidbody rb;
         private Collider col;
@@ -167,17 +164,20 @@ namespace SpellSimulator.World
             Ray ray;
             float currentDistance;
 
-            if (isVRMode)
+            if (PlatformDetector.IsVR)
             {
-                // En VR, sale de la punta de la varita
-                ray = new Ray(raycastOrigin.position, raycastOrigin.forward);
+                // En VR, sale de la punta de la varita. Si no se asigno en el inspector, usamos el transform del lapiz.
+                Transform origin = raycastOrigin != null ? raycastOrigin : transform;
+                ray = new Ray(origin.position, origin.forward);
                 currentDistance = vrMaxDrawDistance;
             }
             else
             {
-                // En PC, sale del centro de la pantalla (mira del jugador) para que sea 100% preciso e intuitivo
-                Transform cam = Camera.main.transform;
-                ray = new Ray(cam.position, cam.forward);
+                // En PC, sale de la cámara
+                Camera cam = Camera.main;
+                if (cam == null) cam = FindAnyObjectByType<Camera>(); // Fallback seguro
+                
+                ray = new Ray(cam.transform.position, cam.transform.forward);
                 currentDistance = pcMaxDrawDistance;
             }
 
@@ -190,6 +190,7 @@ namespace SpellSimulator.World
                     return true;
                 }
             }
+            
             return false;
         }
     }
