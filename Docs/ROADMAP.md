@@ -71,11 +71,13 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 
 ### M6 — Aprender magia: libro-menú, libros y sellos
 *Objetivo: progresión y herramientas avanzadas.*
-- [ ] Libro-menú diegético: glifos descubiertos con animación de trazo, opciones y reinicio.
-- [ ] Libros de la biblioteca que descubren glifos; descubrimiento por experimentación; guardado local.
+- [x] Libro-menú diegético (`Grimoire`): flota frente al jugador; portada, una página por glifo descubierto (se dibuja
+      solo + nombre y explicación), opciones (reiniciar el mundo, olvidar lo aprendido). Páginas con E / grip.
+- [x] 5 libros en la torre (`LibraryBook`) que enseñan glifos; descubrimiento por experimentación (confianza ≥ 0.8);
+      guardado local (`descubrimientos.json`). Textos en `Data/Lore/glifos.json`.
 - [ ] Estampas S/M/L: cargar desde el libro y estampar (anillo abierto ⇒ se sella a mano).
 - [ ] Contraptions: triggers `RingClosed`, `SplitJoin` (sello partido), `Impact` (lanzables), `Pressure`.
-- [ ] Borrado por agua (mojar rompe sellos) y por fuego (quemar el papel).
+- [x] Borrado por agua (mojar rompe sellos) y por fuego (quemar el papel) — hecho en M4 (`SealBreaker`).
 - [ ] Superficies inscribibles generales (decals en paredes y mesas) y piedra de rayar (sellos permanentes, cooldown y 5 usos).
 - [ ] Semántica para los 6 glifos sin entrada.
 

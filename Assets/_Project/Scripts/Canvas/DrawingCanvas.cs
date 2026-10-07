@@ -136,6 +136,15 @@ namespace SpellSimulator.Canvas
             ClearTexture();
         }
 
+        /// <summary>Configura un lienzo creado por codigo (paginas del grimorio): pincel, fondo y tamanio.</summary>
+        public void Configure(Material brush, Color background, float relativeBrushSize)
+        {
+            brushMaterial = brush;
+            clearColor = background;
+            brushSize = relativeBrushSize;
+            ClearTexture();
+        }
+
         /// <summary>Borra trazos y tinta.</summary>
         public void Clear()
         {

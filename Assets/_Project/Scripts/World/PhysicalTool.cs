@@ -139,7 +139,10 @@ namespace SpellSimulator.World
 
         // --- IInteractable ---
 
-        public string GetInteractionPrompt() => $"Agarrar {toolName}";
+        private string prompt;
+
+        // Se arma una vez: el interactor lo pide en cada frame (sin GC).
+        public string GetInteractionPrompt() => prompt ??= $"Agarrar {toolName}";
 
         public void OnInteract(Transform holdPoint)
         {

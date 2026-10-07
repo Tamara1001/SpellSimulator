@@ -17,6 +17,7 @@ SpellSimulator/
 │   │   │   ├── Elements/         #   ElementLook: Fire, Water, Wind, Earth, Light
 │   │   │   ├── Materials/        #   MaterialProfile: Madera, Papel, Piedra, Tela (+ ReactionTable.asset en Data/)
 │   │   │   ├── Tools/            #   ToolDefinition: Lapiz, Pincel, Goma, Trapo
+│   │   │   ├── Lore/glifos.json  #   nombres y explicaciones en español, glifos iniciales y libros
 │   │   │   ├── PostProcess.asset #   VolumeProfile (bloom, tonemapping, color, viñeta) de Pradera
 │   │   │   └── GlyphDictionary.asset
 │   │   ├── Editor/               #   SpellSimulator.Editor.asmdef — harness, sync del diccionario, chequeos
@@ -31,6 +32,7 @@ SpellSimulator/
 │   │   ├── Audio/                #   Synth/ (generado por Tools/Audio/synth_audio.py), Kenney/{RPG,Impact,Interface} (CC0, con License.txt)
 │   │   ├── Art/Generated/        #   mallas generadas por MapBuilder (terreno, pinos, rocas, torre, muebles); no editar a mano
 │   │   ├── Scripts/              #   SpellSimulator.Runtime.asmdef
+│   │   │   ├── Learning/         #   GlyphLore, DiscoveryState, Discovery, LibraryBook, Grimoire, GrimoireButton
 │   │   │   ├── Audio/            #   AudioLibrary, AudioDirector, GameAudio, AmbientEmitter, FootstepAudio, CollisionAudio
 │   │   │   ├── Canvas/           #   DrawingCanvas
 │   │   │   ├── Casting/          #   SpellCaster, SealActivation, SealReader, SealRecord

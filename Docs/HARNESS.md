@@ -69,6 +69,11 @@ de la build son shaders del paquete de inferencia.
 objeto `Map` y lo vuelve a crear, guarda las mallas en `Art/Generated` y reubica jugador, papeles, herramientas,
 blancos y muñecos. Determinista. Para cambiar el mapa: tocar `ValleyShape` (forma) o `TowerBuilder` (torre) y regenerar.
 
+## Aprendizaje
+`SpellSimulator > Learning > Setup Current Scene` (o `LearningSetup.SetupCurrentScene()`) agrega `Discovery`, `Grimoire`
+e `InteractionPromptUI`. El progreso se guarda en `persistentDataPath/descubrimientos.json` (lo comparten editor y
+build): borrarlo después de probar para no arrancar con descubrimientos de prueba.
+
 ## Audio
 `python Tools/Audio/synth_audio.py` regenera los WAV sintetizados (`Audio/Synth`). `SpellSimulator > Audio > Setup
 Current Scene` (o `AudioSetup.SetupCurrentScene()` por MCP) rehace `Data/AudioLibrary.asset` y equipa la escena abierta
@@ -92,7 +97,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 **Física en tiempo real**: guardar posiciones (cultura invariante: `Vector3.ToString` usa coma decimal), lanzar,
 `sleep 4` en Bash y medir. Los blancos están en `TestProps` (plataforma a la altura del chorro).
 
-## Tests (116 al 2026-10-07)
+## Tests (119 al 2026-10-07)
 | Archivo | Cubre |
 |---|---|
 | `ParsingTests` | RingDetector (cerrado/abierto/dos arcos/ajuste), StrokeGrouper (transitividad), SymbolCandidate, capas, StrokeCleaner, GeometryUtils |
@@ -107,6 +112,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 | `DamageTests` | Daño de hechizo en rango de referencia, agua/viento casi no dañan, quemadura 4/s, impacto con umbral y tope 25 |
 | `ValleyShapeTests` | Mapa: torre en meseta plana, lago bajo el agua, montañas cierran el valle, pendiente caminable, sin árboles en spawn/campo/torre |
 | `AudioTests` | Todos los cues que usa el código existen y tienen clips; pasos según superficie |
+| `LearningTests` | Textos para todos los glifos del diccionario, todo glifo se puede aprender, progreso ida y vuelta |
 | `CompilerTests` | Gates (sin anillo, baja confianza, sin sigilo, varios sigilos), activo/preparado, levitation, dirección inward, cancelación, fuerza, escala |
 
 ## Sellos grabados (fixtures de pruebas manuales)

@@ -25,6 +25,8 @@ namespace SpellSimulator.Player
         public bool IsReloading { get; private set; }
         /// <summary>Reiniciar el mundo (modo Libre): Backspace, Select del gamepad, boton Y del control izquierdo.</summary>
         public bool IsResettingWorld { get; private set; }
+        /// <summary>Abrir/cerrar el grimorio: Tab, Y del gamepad, boton de menu del control izquierdo.</summary>
+        public bool IsTogglingBook { get; private set; }
 
         private InputAction moveAction;
         private InputAction lookAction;
@@ -34,6 +36,7 @@ namespace SpellSimulator.Player
         private InputAction secondaryUseToolAction;
         private InputAction reloadAction;
         private InputAction resetWorldAction;
+        private InputAction bookAction;
 
         private void Awake()
         {
@@ -85,12 +88,18 @@ namespace SpellSimulator.Player
             resetWorldAction.AddBinding("<Keyboard>/backspace");
             resetWorldAction.AddBinding("<Gamepad>/select");
             resetWorldAction.AddBinding("<XRController>{LeftHand}/secondaryButton");
+
+            bookAction = new InputAction("Book", InputActionType.Button);
+            bookAction.AddBinding("<Keyboard>/tab");
+            bookAction.AddBinding("<Gamepad>/buttonNorth");
+            bookAction.AddBinding("<XRController>{LeftHand}/menuButton");
         }
 
         private void OnEnable()
         {
             reloadAction.Enable();
             resetWorldAction.Enable();
+            bookAction.Enable();
             moveAction.Enable();
             lookAction.Enable();
             jumpAction.Enable();
@@ -103,6 +112,7 @@ namespace SpellSimulator.Player
         {
             reloadAction.Disable();
             resetWorldAction.Disable();
+            bookAction.Disable();
             moveAction.Disable();
             lookAction.Disable();
             jumpAction.Disable();
@@ -125,6 +135,7 @@ namespace SpellSimulator.Player
             IsSecondaryUsingTool = secondaryUseToolAction.triggered; // Un solo click (deshacer)
             IsReloading = reloadAction.triggered;
             IsResettingWorld = resetWorldAction.triggered;
+            IsTogglingBook = bookAction.triggered;
         }
     }
 }

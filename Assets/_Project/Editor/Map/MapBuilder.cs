@@ -49,6 +49,7 @@ namespace SpellSimulator.EditorTools.Map
             MapDetails.BuildWaterfall(map, output);
             tris += MapDetails.BuildGrass(map, lit, rng);
             MapDetails.TowerAmbience(GameObject.Find("Tower").transform, lit, output);
+            MapDetails.LibraryBooks(GameObject.Find("Tower").transform, lit);
             SetupLighting();
             RelocateGameplay();
             MapDetails.Papers(TowerOrigin(), lit, map);

@@ -5,6 +5,16 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — M6: grimorio, libros y descubrimiento
+- Nuevo módulo `Learning`: `GlyphLore` (textos en `Data/Lore/glifos.json`), `DiscoveryState` (puro), `Discovery`
+  (guardado local + descubrir por experimentación), `LibraryBook`, `Grimoire` (libro-menú que flota frente al jugador,
+  glifo que se dibuja solo, explicación, opciones) y `GrimoireButton`.
+- `IPressable` + `PlayerInteractor.HoverPrompt` + `InteractionPromptUI`: acciones instantáneas con la tecla de agarrar
+  y texto de ayuda bajo la mira, avisos "Descubriste: …". Tab / Y / menú izquierdo abre el grimorio.
+- 5 libros en la torre. Sonidos de libro y de descubrimiento. "Reiniciar el mundo" desde el grimorio.
+- Verificado en Play: grimorio abre y dibuja el glifo; leer *Los cuatro elementos* pasa de 3 a 6 glifos. 119 tests.
+  ADR-026. KI-055 arreglado (textos de ayuda sin GC).
+
 ## 2026-10-07 — Arreglos de la prueba manual de M5
 - KI-052: rampas de la torre con 3 m de altura libre (antes 2.0 m: no se podía subir al segundo piso). Estantes del
   estudio reubicados fuera del hueco nuevo.

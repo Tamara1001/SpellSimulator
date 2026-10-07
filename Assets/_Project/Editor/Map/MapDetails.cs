@@ -250,6 +250,55 @@ namespace SpellSimulator.EditorTools.Map
             Loop("MagicMotesStudy", root, o + Vector3.up * (TowerBuilder.FloorHeight + 0.5f), light, 4f, new Vector2(0.03f, 0.07f), new Vector2(0.05f, 0.2f), -0.02f, 6f, 70f, 2.5f);
         }
 
+        // ---------------------------------------------------------------- libros de la biblioteca
+
+        /// <summary>
+        /// Libros que enseñan glifos (Data/Lore/glifos.json): atril de la entrada, escritorio, mesa del estudio y un
+        /// pedestal en la terraza (premio por subir).
+        /// </summary>
+        public static void LibraryBooks(Transform tower, Material material)
+        {
+            var lore = Learning.GlyphLore.FromJson(AssetDatabase.LoadAssetAtPath<TextAsset>("Assets/_Project/Data/Lore/glifos.json").text);
+            var root = new GameObject("LibraryBooks").transform;
+            root.SetParent(tower, false);
+            Vector3 o = tower.position;
+            float floor = TowerBuilder.FloorHeight;
+            var spots = new (string id, Vector3 at, float yaw, float tilt)[]
+            {
+                ("elements", new Vector3(1.9f, 1.2f, -1.6f) + new Vector3(-0.04f, 0.02f, 0.03f), -40f, -25f),
+                ("variants", new Vector3(-0.6f, 0.86f, 0.35f), 15f, 0f),
+                ("motion", new Vector3(0.9f, floor + 0.86f, 0.2f), 60f, 0f),
+                ("shape", new Vector3(0.25f, floor + 0.86f, 0.75f), 95f, 0f),
+                ("rare", new Vector3(0f, TowerBuilder.TerraceY + 1.05f, 0f), 0f, -20f),
+            };
+
+            // Pedestal en la terraza.
+            var pedestal = new LowPolyMesh();
+            pedestal.Frustum(Matrix4x4.identity, 0.35f, 0.28f, 0f, 1f, 8, new Color(0.62f, 0.66f, 0.58f));
+            var pedMesh = MapBuilder.SaveMesh(pedestal.Build("BookPedestal"));
+            var ped = MapBuilder.Place("BookPedestal", root, pedMesh, material, o + new Vector3(0f, TowerBuilder.TerraceY, 0f), Quaternion.identity);
+            var pedCol = ped.AddComponent<CapsuleCollider>();
+            pedCol.radius = 0.32f;
+            pedCol.height = 1f;
+            pedCol.center = new Vector3(0f, 0.5f, 0f);
+
+            foreach (var (id, at, yaw, tilt) in spots)
+            {
+                var info = lore.Book(id);
+                if (info == null) continue;
+                var b = new LowPolyMesh();
+                b.Box(Matrix4x4.Translate(new Vector3(0f, 0.03f, 0f)), new Vector3(0.24f, 0.06f, 0.32f), info.Color);
+                b.Box(Matrix4x4.Translate(new Vector3(0.01f, 0.03f, 0f)), new Vector3(0.23f, 0.045f, 0.3f), new Color(0.95f, 0.9f, 0.78f));
+                b.Box(Matrix4x4.Translate(new Vector3(-0.115f, 0.03f, 0f)), new Vector3(0.015f, 0.065f, 0.32f), info.Color * 0.7f);
+                var mesh = MapBuilder.SaveMesh(b.Build($"Book_{id}"));
+                var go = MapBuilder.Place($"Book_{id}", root, mesh, material, o + at, Quaternion.Euler(tilt, yaw, 0f));
+                var col = go.AddComponent<BoxCollider>();
+                col.center = new Vector3(0f, 0.03f, 0f);
+                col.size = new Vector3(0.3f, 0.12f, 0.38f);
+                go.AddComponent<Learning.LibraryBook>().SetBook(id);
+            }
+        }
+
         // ---------------------------------------------------------------- papeles
 
         /// <summary>

@@ -1,0 +1,33 @@
+{
+  "_comment": "Nombres y explicaciones en espanol de cada glifo (grimorio). Ids = diccionario. Libros = que glifos ensena cada libro de la biblioteca.",
+  "glyphs": {
+    "fire": { "name": "Fuego", "text": "Sigilo del fuego. Crea llamas y calor: enciende la madera, el papel y la tela. El agua lo apaga y el viento lo aviva." },
+    "water": { "name": "Agua", "text": "Sigilo del agua. Moja, empuja y apaga el fuego. Si moja un sello, la tinta se corre y el sello se rompe." },
+    "wind-directs-air": { "name": "Viento", "text": "Sigilo del viento que dirige el aire. Empuja objetos, aviva lo que arde y enfria lo que no." },
+    "earth": { "name": "Tierra", "text": "Sigilo de la tierra. Golpea y rompe: parte la madera, levanta rocas del suelo y deja crateres." },
+    "light": { "name": "Luz", "text": "Variante del fuego que brilla en lugar de quemar. Ilumina y calienta apenas." },
+    "crystal": { "name": "Cristal", "text": "Pariente de la tierra que forma cristales. Con columnas hacia afuera estalla en esquirlas." },
+    "aeroform": { "name": "Aeroforma", "text": "Sigilo del aire que crea aire, pero no lo mueve por si solo: necesita signos que lo dirijan." },
+    "wind-underfoot": { "name": "Viento bajo los pies", "text": "Sigilo del aire que ayuda a sostener y a planear. Su mecanismo exacto todavia es un misterio." },
+    "column": { "name": "Columna", "text": "El motor del sello. Apunta desde su barra corta hacia la punta. Dos opuestas hacia adentro forman un chorro; hacia afuera, un abanico; en molinete, un vortice. Si una es mas larga, el chorro se inclina hacia donde apunta." },
+    "dispersion": { "name": "Dispersion", "text": "Como una columna, pero la magia se derrama despacio: dura mas y empuja menos." },
+    "levitation": { "name": "Levitacion", "text": "Une la magia con los cuerpos. Dos opuestas sostienen un orbe suspendido sobre el papel." },
+    "pull": { "name": "Atraccion", "text": "Atrae materia del mismo elemento que ya existe: el agua del lago, la piedra suelta, lo que arde. Nunca cualquier cosa." },
+    "crush": { "name": "Aplastar", "text": "Rompe y desmenuza. Hoy suma potencia al sello; su efecto propio llegara mas adelante." },
+    "float": { "name": "Flotar", "text": "Hace flotar lo que toca, sin direccion. Funciona como una levitacion sin rumbo." },
+    "region": { "name": "Region", "text": "La valvula del sello: decide donde puede aparecer la magia. Todavia solo suma potencia." },
+    "convergence": { "name": "Convergencia", "text": "Una lente: concentra la magia hacia una linea o un punto. El chorro sale mas angosto y mas fuerte." },
+    "collection": { "name": "Recoleccion", "text": "Junta material de alrededor del sello para que el hechizo lo use. Todavia solo suma potencia." },
+    "billowing": { "name": "Nube", "text": "Hace que el hechizo salga como una nube esponjosa. Todavia solo suma potencia." },
+    "repetition": { "name": "Repeticion", "text": "Devuelve las cosas a un estado anterior, como rebobinar. Todavia solo suma potencia." },
+    "weave": { "name": "Tejido", "text": "Ablanda lo solido que toca el sello para estirarlo como una cinta. Todavia solo suma potencia." }
+  },
+  "starting": [ "fire", "column", "levitation" ],
+  "books": [
+    { "id": "elements", "title": "Los cuatro elementos", "color": [0.55, 0.18, 0.16], "glyphs": [ "water", "wind-directs-air", "earth" ] },
+    { "id": "variants", "title": "Variantes y parientes", "color": [0.2, 0.35, 0.6], "glyphs": [ "light", "crystal", "aeroform", "wind-underfoot" ] },
+    { "id": "motion", "title": "Signos del movimiento", "color": [0.25, 0.48, 0.3], "glyphs": [ "dispersion", "pull", "float" ] },
+    { "id": "shape", "title": "Dar forma a la magia", "color": [0.62, 0.5, 0.2], "glyphs": [ "convergence", "region", "crush" ] },
+    { "id": "rare", "title": "Signos raros", "color": [0.42, 0.24, 0.52], "glyphs": [ "collection", "billowing", "repetition", "weave" ] }
+  ]
+}

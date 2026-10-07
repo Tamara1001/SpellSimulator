@@ -65,4 +65,14 @@ namespace SpellSimulator.Interfaces
     {
         SpellSimulator.Compiler.ElementType Element { get; }
     }
+
+    /// <summary>
+    /// Algo que se aprieta en el acto en vez de agarrarse: pasar una pagina, leer un libro, un boton del grimorio.
+    /// Se usa con la misma tecla que agarrar (E / grip) y tiene prioridad sobre agarrar.
+    /// </summary>
+    public interface IPressable
+    {
+        string GetPressPrompt();
+        void Press();
+    }
 }

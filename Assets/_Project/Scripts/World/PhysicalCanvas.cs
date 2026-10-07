@@ -47,10 +47,10 @@ namespace SpellSimulator.World
             rb.AddTorque(axis * settleTorque - rb.angularVelocity * settleDamping * (1f - Mathf.Abs(facing)), ForceMode.Acceleration);
         }
 
-        public string GetInteractionPrompt()
-        {
-            return $"Agarrar {objectName}";
-        }
+        private string prompt;
+
+        // Se arma una vez: el interactor lo pide en cada frame (sin GC).
+        public string GetInteractionPrompt() => prompt ??= $"Agarrar {objectName}";
 
         public void OnInteract(Transform holdPoint)
         {

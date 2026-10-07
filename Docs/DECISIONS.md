@@ -97,6 +97,12 @@ por código (VFX Graph no). El viejo `Fire_VFX.vfx` queda sin uso.
 hechizo le explotaría en la cara. `DrawingCanvas.EmissionSide = AwayFromViewer` en papeles (la magia sale hacia el
 objetivo, como cuando los personajes giran el papel); `InkSide` queda para sellos en paredes, mesas y piedras.
 
+## ADR-026 — El grimorio aparece en el mundo, no pegado a la cámara
+**2026-10-07.** El libro-menú se abre flotando frente al jugador (fijo en el mundo) en lugar de seguir a la cámara o
+vivir en la HUD: así se apunta a sus páginas con la misma mira/rayo que a cualquier objeto y funciona igual en PC y en
+VR. Las acciones instantáneas (pasar página, leer, botones) son `IPressable` y usan la tecla de agarrar. Se cierra con
+Tab o alejándose. En VR, más adelante, puede ir a la muñeca izquierda.
+
 ## ADR-025 — Audio por eventos, sintetizado + CC0
 **2026-10-07.** Los sistemas no reproducen sonidos: publican eventos y `GameAudio` los traduce a cues de `AudioLibrary`
 (datos). Así cambiar un sonido es cambiar un clip, y el audio se puede apagar o reemplazar sin tocar la lógica. Fuentes:

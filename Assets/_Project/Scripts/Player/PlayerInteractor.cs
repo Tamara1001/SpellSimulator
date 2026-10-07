@@ -35,6 +35,10 @@ namespace SpellSimulator.Player
         private PlayerInputReader inputReader;
         private InkSupply inkSupply;
         private IInteractable currentHovered;
+        private IPressable hoveredPressable;
+
+        /// <summary>Texto de ayuda de lo que se esta mirando ("Agarrar Lapiz", "Pagina siguiente"...). Vacio si nada.</summary>
+        public string HoverPrompt { get; private set; } = "";
         private IInkSource hoveredInkSource;
         private GameObject heldRight;
         private GameObject heldLeft;
@@ -93,14 +97,18 @@ namespace SpellSimulator.Player
             Vector3 end = origin.position + direction * interactRange;
 
             currentHovered = null;
+            hoveredPressable = null;
             hoveredInkSource = null;
-            if (Physics.Raycast(origin.position, direction, out RaycastHit hit, interactRange, interactLayer))
+            if (Physics.Raycast(origin.position, direction, out RaycastHit hit, interactRange, interactLayer, QueryTriggerInteraction.Collide))
             {
                 end = hit.point;
                 hoveredInkSource = hit.collider.GetComponentInParent<IInkSource>();
+                hoveredPressable = hit.collider.GetComponentInParent<IPressable>();
                 var interactable = hit.collider.GetComponentInParent<IInteractable>();
                 if (interactable != null && HasFreeHandFor(interactable)) currentHovered = interactable;
             }
+            HoverPrompt = hoveredPressable != null ? hoveredPressable.GetPressPrompt()
+                : currentHovered != null ? currentHovered.GetInteractionPrompt() : "";
 
             if (vrPointerLine != null)
             {
@@ -123,7 +131,8 @@ namespace SpellSimulator.Player
         {
             if (!inputReader.IsInteracting) return;
 
-            if (currentHovered != null) Grab(currentHovered);
+            if (hoveredPressable != null) hoveredPressable.Press();
+            else if (currentHovered != null) Grab(currentHovered);
             else if (heldRight != null) Drop(HandType.Right);
             else if (heldLeft != null) Drop(HandType.Left);
         }

@@ -77,6 +77,10 @@ Decidir con la medición de M7 (probablemente: solo tonemapping y color en Quest
 La música es un pad de 64 s en loop (puede cansar). Ajustar volúmenes y elegir/reemplazar sonidos tras la prueba de
 Tamara; con muchas cosas ardiendo suenan muchos loops de fuego a la vez (poner un tope si molesta).
 
+### KI-054
+🟢 `abierto` — En VR el texto de ayuda y los avisos van a la HUD de pantalla y no se ven. Pasar a un texto en el mundo
+(junto al rayo o en la muñeca) en M7.
+
 ## Resueltos (2026-10-07, reestructura del pipeline)
 
 | KI | Problema | Resolución |
@@ -113,6 +117,7 @@ Tamara; con muchas cosas ardiendo suenan muchos loops de fuego a la vez (poner u
 | KI-041 🟠 | **Nuevo (plan):** el ruido de pose creaba chorros o giros fantasma en sellos simétricos | Zona muerta hacia las clases canónicas + umbral relativo de primitivas (20%). |
 | KI-037 🟢 | La succión (pull) atraía cualquier Rigidbody | Solo atrae `IElementMatter` de su elemento (piedra = tierra, lo que arde = fuego); el pull de agua tira un chorro desde un `WaterVolume`. |
 | KI-047 🟢 | **Nuevo (M4):** el estanque se armó a y=0 y el piso real está a 0.5 (cubo) | Estanque subido. Ojo al ubicar props: la cara de arriba del `Floor` es y=0.5. |
+| KI-055 🟢 | **Nuevo (M6):** los textos de ayuda ("Agarrar …") se armaban en cada frame al mirarlos (GC por frame) | Se arman una vez y se guardan. |
 | KI-052 🟠 | **Prueba manual:** no se podía subir al segundo piso: la cabeza chocaba con el piso de arriba (2.0 m libres, el jugador mide ~2.1) | Hueco del piso mayor: 3 m libres en toda la rampa (medido con rayos: mínimo 2.98 m). |
 | KI-053 🟢 | **Prueba manual:** las hojas soltadas quedaban suspendidas y de pie (gravedad apagada desde el laboratorio) | Al soltar, gravedad + frenado del aire + torque que las acuesta. Papeles fijos (pared, escritorio) ya no se agarran. |
 | KI-050 🟢 | **Nuevo (M5):** la cascada quedaba tapada: en laderas empinadas la malla del terreno se aparta varios metros de la altura teórica | La cinta sigue la malla real (raycast contra `Terrain`). |

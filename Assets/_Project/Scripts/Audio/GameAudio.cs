@@ -3,6 +3,7 @@ using UnityEngine;
 using SpellSimulator.Canvas;
 using SpellSimulator.Casting;
 using SpellSimulator.Combat;
+using SpellSimulator.Learning;
 using SpellSimulator.Compiler;
 using SpellSimulator.Reactions;
 using SpellSimulator.World;
@@ -41,6 +42,11 @@ namespace SpellSimulator.Audio
             SealBreaker.SealBroken += OnSealBroken;
             Health.AnyDied += OnDied;
             MagicWorld.WorldReset += OnReset;
+            Grimoire.Opened += OnBookOpened;
+            Grimoire.Closed += OnBookClosed;
+            Grimoire.PageTurned += OnPageTurned;
+            LibraryBook.BookRead += OnBookRead;
+            Discovery.Discovered += OnDiscovered;
         }
 
         private void OnDisable()
@@ -59,6 +65,11 @@ namespace SpellSimulator.Audio
             SealBreaker.SealBroken -= OnSealBroken;
             Health.AnyDied -= OnDied;
             MagicWorld.WorldReset -= OnReset;
+            Grimoire.Opened -= OnBookOpened;
+            Grimoire.Closed -= OnBookClosed;
+            Grimoire.PageTurned -= OnPageTurned;
+            LibraryBook.BookRead -= OnBookRead;
+            Discovery.Discovered -= OnDiscovered;
         }
 
         private void Update()
@@ -158,6 +169,28 @@ namespace SpellSimulator.Audio
         private void OnDied(Health health)
         {
             if (Director != null) Director.Play("thud", health.Center);
+        }
+
+        // ---------------------------------------------------------------- libros
+
+        private Vector3 ListenerPosition()
+        {
+            var l = FindAnyObjectByType<AudioListener>();
+            return l != null ? l.transform.position : Vector3.zero;
+        }
+
+        private void OnBookOpened() { if (Director != null) Director.Play("book_open", ListenerPosition()); }
+        private void OnBookClosed() { if (Director != null) Director.Play("book_close", ListenerPosition()); }
+        private void OnPageTurned() { if (Director != null) Director.Play("book_flip", ListenerPosition()); }
+
+        private void OnBookRead(LibraryBook book, int learned)
+        {
+            if (Director != null) Director.Play("book_flip", book.transform.position);
+        }
+
+        private void OnDiscovered(string glyph, string source)
+        {
+            if (Director != null && glyph != null) Director.Play("ui_confirm", ListenerPosition());
         }
 
         private void OnReset()

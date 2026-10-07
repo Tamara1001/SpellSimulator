@@ -1535,6 +1535,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.World.PhysicalCanvas
   objectName: "Lienzo M\xE1gico"
   holdRotationOffset: {x: 0, y: 0, z: 0}
+  settleTorque: 40
+  settleDamping: 6
+  airDrag: 1.2
 --- !u!54 &285905736
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -8821,6 +8824,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8555206103252705276, guid: 4536faff054cbc843906605db2d025dd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5652826552516281058}
+    - targetCorrespondingSourceObject: {fileID: 8555206103252705276, guid: 4536faff054cbc843906605db2d025dd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5652826552516281061}
+    - targetCorrespondingSourceObject: {fileID: 8555206103252705276, guid: 4536faff054cbc843906605db2d025dd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5652826552516281060}
   m_SourcePrefab: {fileID: 100100000, guid: 4536faff054cbc843906605db2d025dd, type: 3}
 --- !u!114 &5652826552516281050 stripped
 MonoBehaviour:
@@ -8951,6 +8960,42 @@ MonoBehaviour:
   windCue: wind
   birdCue: bird
   birdInterval: {x: 5, y: 14}
+--- !u!114 &5652826552516281060
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1382141580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 51d3f90b9a6b5054386af17a682a60c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Learning.Grimoire
+  input: {fileID: 6309653383193446361}
+  dictionary: {fileID: 11400000, guid: dcbff51013e624d41bf303165d2d0236, type: 2}
+  pageMaterial: {fileID: 2100000, guid: e63011be0e321444e8235006cd646c84, type: 2}
+  brushMaterial: {fileID: 2100000, guid: 559b20cd76ecca344848129981c15104, type: 2}
+  coverMaterial: {fileID: 2100000, guid: c4dbb01fba5a0354faeb476b9217c842, type: 2}
+  parchment: {r: 0.934, g: 0.875, b: 0.639, a: 1}
+  strokeSpeed: 160
+  openDistance: 0.75
+  closeDistance: 3.5
+--- !u!114 &5652826552516281061
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1382141580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6edece3c85af71742839ff774c397039, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Learning.Discovery
+  loreJson: {fileID: 4900000, guid: aee853642c97c77489a7546b8549f433, type: 3}
+  caster: {fileID: 5652826552516281050}
+  experimentConfidence: 0.8
 --- !u!54 &6302587454721905793
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -9075,6 +9120,17 @@ MonoBehaviour:
   strideLength: 1.6
   minSpeed: 0.8
   groundProbe: 1.4
+--- !u!114 &6309653383193446363 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8276677653919992877, guid: 1c35391a68063564097abe5bc67a74b3, type: 3}
+  m_PrefabInstance: {fileID: 6309653383193446360}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276020706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c1e9457e056449d4f8cd9f3908333bdd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Player.PlayerInteractor
 --- !u!1001 &6861462503713185321
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -9213,8 +9269,36 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5633934605753154421, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1657372000}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4637328793154994864, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6861462503713185324}
   m_SourcePrefab: {fileID: 100100000, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
+--- !u!1 &6861462503713185322 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4637328793154994864, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
+  m_PrefabInstance: {fileID: 6861462503713185321}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &6861462503713185323 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 2841213065932987176, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
+  m_PrefabInstance: {fileID: 6861462503713185321}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &6861462503713185324
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6861462503713185322}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64c1ba28388fec442b5b288143cb475e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Player.InteractionPromptUI
+  interactor: {fileID: 6309653383193446363}
+  hud: {fileID: 6861462503713185323}
+  toastSeconds: 3.5
 --- !u!114 &7822211588431535820
 MonoBehaviour:
   m_ObjectHideFlags: 0

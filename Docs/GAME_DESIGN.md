@@ -76,6 +76,12 @@ Al oeste, una **cascada** cae de la montaña y sigue en arroyo hasta el lago. **
 exterior de la torre mirando al campo (emite hacia afuera), escritorio de la biblioteca (emite hacia arriba) y dos
 agarrables chico y mediano en la mesa de lectura.
 
+## Aprendizaje (M6)
+Se empieza conociendo **Fuego, Columna y Levitación**. Los libros de la torre enseñan el resto: *Los cuatro elementos*
+(atril de la entrada), *Variantes y parientes* (escritorio), *Signos del movimiento* y *Dar forma a la magia* (mesa
+del estudio) y *Signos raros* (pedestal en la terraza, premio por subir). Dibujar bien un glifo desconocido también lo
+descubre. El grimorio muestra cada glifo dibujándose solo, con su explicación. El progreso se guarda.
+
 ## Audio (M5)
 Música ambiental suave (pads + campanitas), viento y pájaros de fondo, cascada que se oye al acercarse. Cada acción
 suena: pluma/pincel al dibujar, goma, trapo, tintero, campanita de sello **preparado**, lanzamiento distinto por
@@ -91,7 +97,8 @@ rocas que emergen, pasos según el piso (pasto, madera, piedra). Créditos: soni
 | Usar herramienta (dibujar, estampar, borrar) | Click izquierdo | Gatillo |
 | Secundario (deshacer, cargar estampa) | Click derecho | A |
 | Recargar tinta | R | Mojar la punta en un tintero |
-| Abrir el libro-menú | Tab | Mirar la muñeca izquierda o agarrar el libro del cinturón |
+| Abrir/cerrar el grimorio | Tab (gamepad: Y) | Botón de menú del control izquierdo |
+| Pasar página, leer un libro, apretar un botón | Mirar + E | Apuntar + grip |
 | Lanzar | Soltar mientras te movés / Q | Soltar con velocidad (física) |
 | Liberar cursor | Escape | — |
 | Reiniciar el mundo (Libre) | Backspace (gamepad: Select) | Y (control izquierdo) |
