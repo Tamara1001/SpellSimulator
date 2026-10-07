@@ -176,9 +176,13 @@ namespace SpellSimulator.Reactions
             return unique;
         }
 
+        /// <summary>Se emite al reiniciar el mundo.</summary>
+        public static event System.Action WorldReset;
+
         /// <summary>Reinicio del mundo: objetos sanos y en su lugar, sin fragmentos ni hechizos.</summary>
         public void ResetWorld()
         {
+            WorldReset?.Invoke();
             if (output != null) output.ClearAll();
             Shatter.ClearAll();
             GroundMarks.ClearAll();

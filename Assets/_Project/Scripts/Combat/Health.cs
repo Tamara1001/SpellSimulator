@@ -24,6 +24,8 @@ namespace SpellSimulator.Combat
         /// <summary>(salud, daño) en cada golpe.</summary>
         public event Action<Health, float> Damaged;
         public event Action<Health> Died;
+        /// <summary>Cualquier Health de la escena que llega a 0 (audio).</summary>
+        public static event Action<Health> AnyDied;
 
         private float pendingPopup;
         private float nextPopup;
@@ -51,6 +53,7 @@ namespace SpellSimulator.Combat
             {
                 FlushPopup();
                 Died?.Invoke(this);
+                AnyDied?.Invoke(this);
             }
         }
 

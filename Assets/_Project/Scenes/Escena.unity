@@ -134,6 +134,7 @@ GameObject:
   - component: {fileID: 295679}
   - component: {fileID: 295683}
   - component: {fileID: 295684}
+  - component: {fileID: 295685}
   m_Layer: 0
   m_Name: Target_2_0
   m_TagString: Untagged
@@ -295,6 +296,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &295685
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 295677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &37318149
 GameObject:
   m_ObjectHideFlags: 0
@@ -614,6 +630,7 @@ GameObject:
   - component: {fileID: 80836778}
   - component: {fileID: 80836782}
   - component: {fileID: 80836783}
+  - component: {fileID: 80836784}
   m_Layer: 0
   m_Name: Crate_2
   m_TagString: Untagged
@@ -775,6 +792,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &80836784
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 80836776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!224 &111485607 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5633934605753154421, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
@@ -795,6 +827,7 @@ GameObject:
   - component: {fileID: 152174279}
   - component: {fileID: 152174278}
   - component: {fileID: 152174277}
+  - component: {fileID: 152174283}
   m_Layer: 0
   m_Name: PondStone
   m_TagString: Untagged
@@ -956,6 +989,21 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 152174275}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &152174283
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 152174275}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_stone
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &156889712
 GameObject:
   m_ObjectHideFlags: 0
@@ -1083,6 +1131,7 @@ GameObject:
   - component: {fileID: 177902674}
   - component: {fileID: 177902678}
   - component: {fileID: 177902679}
+  - component: {fileID: 177902680}
   m_Layer: 0
   m_Name: Target_0_0
   m_TagString: Untagged
@@ -1244,6 +1293,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &177902680
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177902672}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1001 &254598923
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1563,6 +1627,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &285905745
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 285905729}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &327918266
 GameObject:
   m_ObjectHideFlags: 0
@@ -1578,6 +1657,7 @@ GameObject:
   - component: {fileID: 327918268}
   - component: {fileID: 327918272}
   - component: {fileID: 327918273}
+  - component: {fileID: 327918274}
   m_Layer: 0
   m_Name: Target_2_2
   m_TagString: Untagged
@@ -1739,6 +1819,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &327918274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 327918266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &357541525
 GameObject:
   m_ObjectHideFlags: 0
@@ -1988,6 +2083,7 @@ GameObject:
   - component: {fileID: 528774068}
   - component: {fileID: 528774072}
   - component: {fileID: 528774073}
+  - component: {fileID: 528774074}
   m_Layer: 0
   m_Name: Target_0_1
   m_TagString: Untagged
@@ -2149,6 +2245,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &528774074
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 528774066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &541040567
 GameObject:
   m_ObjectHideFlags: 0
@@ -2164,6 +2275,7 @@ GameObject:
   - component: {fileID: 541040569}
   - component: {fileID: 541040573}
   - component: {fileID: 541040574}
+  - component: {fileID: 541040575}
   m_Layer: 0
   m_Name: Side_R
   m_TagString: Untagged
@@ -2325,6 +2437,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &541040575
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 541040567}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &576584290
 GameObject:
   m_ObjectHideFlags: 0
@@ -2454,6 +2581,7 @@ GameObject:
   - component: {fileID: 645900999}
   - component: {fileID: 645900998}
   - component: {fileID: 645900997}
+  - component: {fileID: 645901003}
   m_Layer: 0
   m_Name: PondCrate_0
   m_TagString: Untagged
@@ -2615,6 +2743,21 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 645900995}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &645901003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 645900995}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &662578723
 GameObject:
   m_ObjectHideFlags: 0
@@ -2630,6 +2773,7 @@ GameObject:
   - component: {fileID: 662578725}
   - component: {fileID: 662578729}
   - component: {fileID: 662578730}
+  - component: {fileID: 662578731}
   m_Layer: 0
   m_Name: Target_2_1
   m_TagString: Untagged
@@ -2791,6 +2935,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &662578731
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662578723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &689451860 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4604995024666586695, guid: 60e6fed39e5c11d4eb6771c314942bb1, type: 3}
@@ -2878,6 +3037,7 @@ GameObject:
   - component: {fileID: 767874849}
   - component: {fileID: 767874853}
   - component: {fileID: 767874854}
+  - component: {fileID: 767874855}
   m_Layer: 0
   m_Name: Crate_3
   m_TagString: Untagged
@@ -3039,6 +3199,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &767874855
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767874847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &796876342
 GameObject:
   m_ObjectHideFlags: 0
@@ -3054,6 +3229,7 @@ GameObject:
   - component: {fileID: 796876344}
   - component: {fileID: 796876348}
   - component: {fileID: 796876349}
+  - component: {fileID: 796876350}
   m_Layer: 0
   m_Name: Crate_4
   m_TagString: Untagged
@@ -3215,6 +3391,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &796876350
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 796876342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &833918957
 GameObject:
   m_ObjectHideFlags: 0
@@ -3230,6 +3421,7 @@ GameObject:
   - component: {fileID: 833918959}
   - component: {fileID: 833918963}
   - component: {fileID: 833918964}
+  - component: {fileID: 833918965}
   m_Layer: 0
   m_Name: Target_1_1
   m_TagString: Untagged
@@ -3391,6 +3583,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &833918965
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 833918957}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &868295407
 GameObject:
   m_ObjectHideFlags: 0
@@ -3406,6 +3613,7 @@ GameObject:
   - component: {fileID: 868295409}
   - component: {fileID: 868295413}
   - component: {fileID: 868295414}
+  - component: {fileID: 868295415}
   m_Layer: 0
   m_Name: Small_0
   m_TagString: Untagged
@@ -3567,6 +3775,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &868295415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868295407}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &874840297
 GameObject:
   m_ObjectHideFlags: 0
@@ -3582,6 +3805,7 @@ GameObject:
   - component: {fileID: 874840299}
   - component: {fileID: 874840303}
   - component: {fileID: 874840304}
+  - component: {fileID: 874840305}
   m_Layer: 0
   m_Name: Small_3
   m_TagString: Untagged
@@ -3743,6 +3967,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &874840305
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 874840297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &876209258
 GameObject:
   m_ObjectHideFlags: 0
@@ -3877,6 +4116,7 @@ GameObject:
   - component: {fileID: 936816117}
   - component: {fileID: 936816121}
   - component: {fileID: 936816122}
+  - component: {fileID: 936816123}
   m_Layer: 0
   m_Name: Small_2
   m_TagString: Untagged
@@ -4038,6 +4278,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &936816123
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 936816115}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &966683816
 GameObject:
   m_ObjectHideFlags: 0
@@ -4106,6 +4361,7 @@ GameObject:
   - component: {fileID: 978455723}
   - component: {fileID: 978455722}
   - component: {fileID: 978455721}
+  - component: {fileID: 978455727}
   m_Layer: 0
   m_Name: PondCrate_1
   m_TagString: Untagged
@@ -4267,6 +4523,21 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 978455719}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!114 &978455727
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 978455719}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &979723656
 GameObject:
   m_ObjectHideFlags: 0
@@ -4394,6 +4665,7 @@ GameObject:
   - component: {fileID: 1001713841}
   - component: {fileID: 1001713840}
   - component: {fileID: 1001713839}
+  - component: {fileID: 1001713846}
   m_Layer: 0
   m_Name: LooseStone
   m_TagString: Untagged
@@ -4555,6 +4827,21 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1001713846
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1001713838}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_stone
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &1022145666
 GameObject:
   m_ObjectHideFlags: 0
@@ -4682,6 +4969,7 @@ GameObject:
   - component: {fileID: 1052636297}
   - component: {fileID: 1052636301}
   - component: {fileID: 1052636302}
+  - component: {fileID: 1052636303}
   m_Layer: 0
   m_Name: Crate_1
   m_TagString: Untagged
@@ -4843,6 +5131,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &1052636303
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1052636295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &1134204324
 GameObject:
   m_ObjectHideFlags: 0
@@ -4858,6 +5161,7 @@ GameObject:
   - component: {fileID: 1134204326}
   - component: {fileID: 1134204330}
   - component: {fileID: 1134204331}
+  - component: {fileID: 1134204332}
   m_Layer: 0
   m_Name: Target_0_2
   m_TagString: Untagged
@@ -5019,6 +5323,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &1134204332
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1134204324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!4 &1260872873 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4665974575741207286, guid: 1c35391a68063564097abe5bc67a74b3, type: 3}
@@ -5992,6 +6311,7 @@ GameObject:
   - component: {fileID: 1739452616}
   - component: {fileID: 1739452620}
   - component: {fileID: 1739452621}
+  - component: {fileID: 1739452622}
   m_Layer: 0
   m_Name: Target_1_0
   m_TagString: Untagged
@@ -6153,6 +6473,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &1739452622
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739452614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!4 &1757511305 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4983596589079416018, guid: f9e06e9005c218b4d8a87d3ee8fb4de6, type: 3}
@@ -6210,6 +6545,7 @@ GameObject:
   - component: {fileID: 1808293531}
   - component: {fileID: 1808293535}
   - component: {fileID: 1808293536}
+  - component: {fileID: 1808293537}
   m_Layer: 0
   m_Name: Small_1
   m_TagString: Untagged
@@ -6371,6 +6707,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &1808293537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1808293529}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &1810269064
 GameObject:
   m_ObjectHideFlags: 0
@@ -6386,6 +6737,7 @@ GameObject:
   - component: {fileID: 1810269066}
   - component: {fileID: 1810269070}
   - component: {fileID: 1810269071}
+  - component: {fileID: 1810269072}
   m_Layer: 0
   m_Name: Crate_0
   m_TagString: Untagged
@@ -6547,6 +6899,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &1810269072
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1810269064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &1832246319
 GameObject:
   m_ObjectHideFlags: 0
@@ -6564,6 +6931,7 @@ GameObject:
   - component: {fileID: 1832246320}
   - component: {fileID: 1832246322}
   - component: {fileID: 1832246321}
+  - component: {fileID: 1832246329}
   m_Layer: 0
   m_Name: Body
   m_TagString: Untagged
@@ -6845,6 +7213,21 @@ Transform:
   - {fileID: 1376466052}
   m_Father: {fileID: 357541527}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1832246329
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1832246319}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_soft
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &1869033423
 GameObject:
   m_ObjectHideFlags: 0
@@ -6974,6 +7357,7 @@ GameObject:
   - component: {fileID: 1878380716}
   - component: {fileID: 1878380718}
   - component: {fileID: 1878380717}
+  - component: {fileID: 1878380725}
   m_Layer: 0
   m_Name: Body
   m_TagString: Untagged
@@ -7255,6 +7639,21 @@ Transform:
   - {fileID: 1522312964}
   m_Father: {fileID: 695827848}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1878380725
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1878380715}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_soft
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &1933547267
 GameObject:
   m_ObjectHideFlags: 0
@@ -7301,6 +7700,7 @@ GameObject:
   - component: {fileID: 1961812951}
   - component: {fileID: 1961812955}
   - component: {fileID: 1961812956}
+  - component: {fileID: 1961812957}
   m_Layer: 0
   m_Name: Heavy
   m_TagString: Untagged
@@ -7462,6 +7862,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &1961812957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1961812949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_stone
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &1963459304
 GameObject:
   m_ObjectHideFlags: 0
@@ -7609,6 +8024,7 @@ GameObject:
   - component: {fileID: 2115295409}
   - component: {fileID: 2115295413}
   - component: {fileID: 2115295414}
+  - component: {fileID: 2115295415}
   m_Layer: 0
   m_Name: Side_L
   m_TagString: Untagged
@@ -7770,6 +8186,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &2115295415
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2115295407}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1 &2145678553
 GameObject:
   m_ObjectHideFlags: 0
@@ -7785,6 +8216,7 @@ GameObject:
   - component: {fileID: 2145678555}
   - component: {fileID: 2145678559}
   - component: {fileID: 2145678560}
+  - component: {fileID: 2145678561}
   m_Layer: 0
   m_Name: Target_1_2
   m_TagString: Untagged
@@ -7946,6 +8378,21 @@ MonoBehaviour:
     BurnProgress: 0
     Integrity: 1
     Broken: 0
+--- !u!114 &2145678561
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2145678553}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 479c166206f76814c8660308038d812d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.CollisionAudio
+  cue: impact_wood
+  minSpeed: 1.2
+  cooldown: 0.12
 --- !u!1001 &584511639731302719
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8368,6 +8815,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8555206103252705276, guid: 4536faff054cbc843906605db2d025dd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5652826552516281057}
+    - targetCorrespondingSourceObject: {fileID: 8555206103252705276, guid: 4536faff054cbc843906605db2d025dd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5652826552516281059}
+    - targetCorrespondingSourceObject: {fileID: 8555206103252705276, guid: 4536faff054cbc843906605db2d025dd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5652826552516281058}
   m_SourcePrefab: {fileID: 100100000, guid: 4536faff054cbc843906605db2d025dd, type: 3}
 --- !u!114 &5652826552516281050 stripped
 MonoBehaviour:
@@ -8462,6 +8915,42 @@ MonoBehaviour:
   minExposure: 0.15
   cooldown: 0.6
   minSpacing: 0.8
+--- !u!114 &5652826552516281058
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1382141580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1771ed7c4b1b7f64c9b17297c2933087, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.GameAudio
+  caster: {fileID: 5652826552516281050}
+  ragInterval: 0.35
+--- !u!114 &5652826552516281059
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1382141580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d57d83504041fc140b6bf4584f89ace6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.AudioDirector
+  library: {fileID: 11400000, guid: d1a350163c9e7eb4dad2eb297426e1d7, type: 2}
+  master: 1
+  music: 0.5
+  ambience: 0.7
+  sfx: 0.9
+  poolSize: 24
+  musicCue: music
+  windCue: wind
+  birdCue: bird
+  birdInterval: {x: 5, y: 14}
 --- !u!54 &6302587454721905793
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -8556,6 +9045,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 2921429751633100408, guid: 1c35391a68063564097abe5bc67a74b3, type: 3}
       insertIndex: -1
       addedObject: {fileID: 276020716}
+    - targetCorrespondingSourceObject: {fileID: 2921429751633100408, guid: 1c35391a68063564097abe5bc67a74b3, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 6309653383193446362}
   m_SourcePrefab: {fileID: 100100000, guid: 1c35391a68063564097abe5bc67a74b3, type: 3}
 --- !u!114 &6309653383193446361 stripped
 MonoBehaviour:
@@ -8568,6 +9060,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dfc75b85e491dff479f8bdf5a58fd7b6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Player.PlayerInputReader
+--- !u!114 &6309653383193446362
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276020706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f4f16c7faac34e4da9d8fc0260f9e94, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.FootstepAudio
+  strideLength: 1.6
+  minSpeed: 0.8
+  groundProbe: 1.4
 --- !u!1001 &6861462503713185321
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -8841,6 +9348,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7834927958514296905, guid: c061cb0c47367a04db9938b1ee37afcd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 285905743}
+    - targetCorrespondingSourceObject: {fileID: 7834927958514296905, guid: c061cb0c47367a04db9938b1ee37afcd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 285905745}
   m_SourcePrefab: {fileID: 100100000, guid: c061cb0c47367a04db9938b1ee37afcd, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

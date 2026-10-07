@@ -15,6 +15,9 @@ namespace SpellSimulator.Reactions
         public const int MaxRocks = 30;
         public const float PuddleSeconds = 20f;
 
+        /// <summary>(elemento, punto) cada vez que un hechizo marca el suelo.</summary>
+        public static event System.Action<ElementType, Vector3> Marked;
+
         private static readonly Queue<GameObject> marks = new Queue<GameObject>();
         private static readonly Queue<GameObject> rocks = new Queue<GameObject>();
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
@@ -26,6 +29,7 @@ namespace SpellSimulator.Reactions
             Material rockMaterial, MaterialProfile rockProfile)
         {
             if (markMaterial == null) return false;
+            if (element == ElementType.Earth || element == ElementType.Fire || element == ElementType.Water) Marked?.Invoke(element, point);
             switch (element)
             {
                 case ElementType.Earth:

@@ -13,6 +13,9 @@ namespace SpellSimulator.World
     [RequireComponent(typeof(DrawingCanvas), typeof(ElementReactive))]
     public class SealBreaker : MonoBehaviour
     {
+        /// <summary>(lienzo) cuando un sello se pierde por agua o fuego.</summary>
+        public static event System.Action<DrawingCanvas> SealBroken;
+
         [SerializeField] private SpellCaster caster;
 
         private DrawingCanvas canvas;
@@ -35,6 +38,7 @@ namespace SpellSimulator.World
             if (reason == null || canvas.Session.IsEmpty) return;
 
             canvas.Clear();
+            SealBroken?.Invoke(canvas);
             if (caster != null) caster.OnSealEdited(canvas);
             DiagnosticBus.OnDiagnosticsUpdated?.Invoke($"<b>[Sello] Roto</b>\n{reason}");
             Debug.Log($"[Mundo] Sello roto en {name}: {reason}");

@@ -72,6 +72,11 @@ ni al succionar. El vapor usa el look del viento. Suficiente para Quest; revisar
 🟠 `abierto` — **Post-proceso en Quest**: bloom + tonemapping + viñeta cuestan en GPU móvil y en VR la viñeta molesta.
 Decidir con la medición de M7 (probablemente: solo tonemapping y color en Quest). El pasto es estático (sin viento).
 
+### KI-051
+🟢 `abierto` — **Audio sin escuchar por el agente**: los sintetizados se validaron por forma y duración, no de oído.
+La música es un pad de 64 s en loop (puede cansar). Ajustar volúmenes y elegir/reemplazar sonidos tras la prueba de
+Tamara; con muchas cosas ardiendo suenan muchos loops de fuego a la vez (poner un tope si molesta).
+
 ## Resueltos (2026-10-07, reestructura del pipeline)
 
 | KI | Problema | Resolución |

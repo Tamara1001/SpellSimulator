@@ -1,0 +1,426 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21056e6c0e58e094ea614e41947ca905, type: 3}
+  m_Name: AudioLibrary
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Audio.AudioLibrary
+  cues:
+  - id: seal_prepared
+    clips:
+    - {fileID: 8300000, guid: d399dee71dcd0134c91f858daba9136e, type: 3}
+    category: 0
+    volume: 0.6
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: cast_fire
+    clips:
+    - {fileID: 8300000, guid: 6fc91322a3117564b924a45e605e775b, type: 3}
+    category: 0
+    volume: 0.9
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 40
+  - id: cast_water
+    clips:
+    - {fileID: 8300000, guid: 96adec998e696d248aafa0c4de5a2745, type: 3}
+    category: 0
+    volume: 0.9
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 40
+  - id: cast_wind
+    clips:
+    - {fileID: 8300000, guid: 78645ef17ed9d5042af3814c848c491a, type: 3}
+    category: 0
+    volume: 0.9
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 40
+  - id: cast_earth
+    clips:
+    - {fileID: 8300000, guid: 0cb9236a5c103f2459e70e427af14ae7, type: 3}
+    category: 0
+    volume: 1
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 45
+  - id: cast_light
+    clips:
+    - {fileID: 8300000, guid: 77fbb56f7b6d81f479325e5a74f1ffa6, type: 3}
+    category: 0
+    volume: 0.8
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 40
+  - id: cast_fizzle
+    clips:
+    - {fileID: 8300000, guid: 4cff14fc002bcc24e9135af7f88f6ba2, type: 3}
+    category: 0
+    volume: 0.7
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: seal_break
+    clips:
+    - {fileID: 8300000, guid: 779575df5b6c3b94f94c701376353b15, type: 3}
+    - {fileID: 8300000, guid: 9d5cf33ad28128043a1b19e78b483792, type: 3}
+    - {fileID: 8300000, guid: ffb4d51da4c3beb4986f518adbaf51d4, type: 3}
+    - {fileID: 8300000, guid: 4ceb308beaf27284ab8b3ab6b8ed3e2c, type: 3}
+    - {fileID: 8300000, guid: 91e98f2bda03c3145ab3185090116a57, type: 3}
+    - {fileID: 8300000, guid: 0aaf58bb5f1805e4f94128f2ba4f0568, type: 3}
+    category: 0
+    volume: 0.7
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: pen_loop
+    clips:
+    - {fileID: 8300000, guid: 87986aa5be3c304409525ad2efcfdb16, type: 3}
+    category: 0
+    volume: 0.35
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 8
+  - id: eraser_loop
+    clips:
+    - {fileID: 8300000, guid: 3213c2c28c540ac498983c382a49cb37, type: 3}
+    category: 0
+    volume: 0.35
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 8
+  - id: rag_wipe
+    clips:
+    - {fileID: 8300000, guid: b7aaa6ab031c67d42982e1e174845d93, type: 3}
+    - {fileID: 8300000, guid: 747d25aa6891a184db74b30de62342d0, type: 3}
+    - {fileID: 8300000, guid: c2a31e65786c1e24a8ef56635b69e35e, type: 3}
+    - {fileID: 8300000, guid: 0d97b718c74c8ed4f9a2804db5856d30, type: 3}
+    - {fileID: 8300000, guid: daca2e9e618c2a444b7daf473c014536, type: 3}
+    - {fileID: 8300000, guid: 649ddc06400865d47b6ab61ccec5490f, type: 3}
+    - {fileID: 8300000, guid: eda85ead4aa6763428d8bd02e4c92f01, type: 3}
+    category: 0
+    volume: 0.5
+    pitch: {x: 0.9, y: 1.1}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 10
+  - id: ink_refill
+    clips:
+    - {fileID: 8300000, guid: cb593e15fca07bb478e39683960864ed, type: 3}
+    category: 0
+    volume: 0.6
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 10
+  - id: pickup
+    clips:
+    - {fileID: 8300000, guid: d298e61a5c4d9464c8586ff94fc2a608, type: 3}
+    - {fileID: 8300000, guid: a9db74000352f914e9b4a48d037070f8, type: 3}
+    - {fileID: 8300000, guid: 649ddc06400865d47b6ab61ccec5490f, type: 3}
+    - {fileID: 8300000, guid: eda85ead4aa6763428d8bd02e4c92f01, type: 3}
+    category: 0
+    volume: 0.5
+    pitch: {x: 0.9, y: 1.1}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 10
+  - id: ignite
+    clips:
+    - {fileID: 8300000, guid: 25754411ac16df643b0af18f04b71a57, type: 3}
+    category: 0
+    volume: 0.8
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: fire_loop
+    clips:
+    - {fileID: 8300000, guid: 31537695e2ac9f84db6620dda16c084a, type: 3}
+    category: 1
+    volume: 0.45
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 18
+  - id: hiss
+    clips:
+    - {fileID: 8300000, guid: 5663e1e22d04f7b479896e4b5c175740, type: 3}
+    category: 0
+    volume: 0.7
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: splash
+    clips:
+    - {fileID: 8300000, guid: d321e4b90e6d26c4e8621a4e28e28b72, type: 3}
+    category: 0
+    volume: 0.8
+    pitch: {x: 0.88, y: 1.12}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: crack_wood
+    clips:
+    - {fileID: 8300000, guid: 2e0c9e72842238047bfc6068514154ba, type: 3}
+    - {fileID: 8300000, guid: 0dca79723ed2f4a41ae9a643f5bc0434, type: 3}
+    - {fileID: 8300000, guid: b76559f1f3ba890438384ed5682154e8, type: 3}
+    - {fileID: 8300000, guid: f5a4fa3b542a718449061a81d8068c1d, type: 3}
+    - {fileID: 8300000, guid: bb34692ae4900b643b92366de05aed2e, type: 3}
+    - {fileID: 8300000, guid: cd752f7c000a7eb409349143b31c22db, type: 3}
+    category: 0
+    volume: 0.9
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: crack_stone
+    clips:
+    - {fileID: 8300000, guid: 36434af2f21714847815b6adde85da52, type: 3}
+    - {fileID: 8300000, guid: a19d84dae00e818499a49cf6983859e0, type: 3}
+    - {fileID: 8300000, guid: ad721eb7bdeb99a4f9f5f77b4e9e7056, type: 3}
+    - {fileID: 8300000, guid: 7c299af1973d5b64e99cc79006a6992c, type: 3}
+    - {fileID: 8300000, guid: 278feedc7db4e094682c8eaf1292a4e3, type: 3}
+    - {fileID: 8300000, guid: 8aa840d0f78444943aa977f01b589814, type: 3}
+    category: 0
+    volume: 0.9
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: thud
+    clips:
+    - {fileID: 8300000, guid: 1f19e8fb03868b343b5712cf27d57c00, type: 3}
+    - {fileID: 8300000, guid: 99e271244df550649936a922a7a51da3, type: 3}
+    - {fileID: 8300000, guid: 6e39cd9313dfebd4aa77da6ac7e4bf6e, type: 3}
+    - {fileID: 8300000, guid: 98e352db84406a742bde2849173a91d8, type: 3}
+    - {fileID: 8300000, guid: dbf32a35d7a5bfc438c7a129a0834fd9, type: 3}
+    - {fileID: 8300000, guid: f110ac8207d7bea43b19b74c53260f51, type: 3}
+    category: 0
+    volume: 0.8
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: rock_rise
+    clips:
+    - {fileID: 8300000, guid: 409d77c2fa2a52e4285eb8876c9637e7, type: 3}
+    category: 0
+    volume: 0.9
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 40
+  - id: reset_chime
+    clips:
+    - {fileID: 8300000, guid: eba1559fa54b1334c868bafd839a2129, type: 3}
+    category: 0
+    volume: 0.6
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 0
+    minDistance: 1.5
+    maxDistance: 30
+  - id: impact_wood
+    clips:
+    - {fileID: 8300000, guid: db750205e08c9c14c9ed584bb777c2e6, type: 3}
+    - {fileID: 8300000, guid: b1a7256ced89b6848b26ff00d234e986, type: 3}
+    - {fileID: 8300000, guid: 9667d273d1729164ead3033973516936, type: 3}
+    - {fileID: 8300000, guid: 99b56e341179cd943a825f4ff2553757, type: 3}
+    - {fileID: 8300000, guid: 3e0096ae90735ca45a492c44a0028e92, type: 3}
+    - {fileID: 8300000, guid: 189ac9bb122705045b6628a92674e5b4, type: 3}
+    - {fileID: 8300000, guid: 87263355898642941a939e936a4f43c8, type: 3}
+    - {fileID: 8300000, guid: f40b1a583ad23e848a601051753911d5, type: 3}
+    - {fileID: 8300000, guid: 8e77172466bdf514ca9015c9d9aa0316, type: 3}
+    - {fileID: 8300000, guid: c0fed5ba7b9ad8e4cb4dd5d44ab85b42, type: 3}
+    - {fileID: 8300000, guid: d476cea99018bd44cb894ec8f2190fe4, type: 3}
+    - {fileID: 8300000, guid: f15598c8905d7e54b818dea3a3d663d6, type: 3}
+    - {fileID: 8300000, guid: 3ad0f1d31ee664949aca9b08ddcdab2d, type: 3}
+    - {fileID: 8300000, guid: 11856ecf45bc18f48bd4f5f8850751ee, type: 3}
+    - {fileID: 8300000, guid: 050b698c8af2954468b29fa5180ecde1, type: 3}
+    category: 0
+    volume: 0.7
+    pitch: {x: 0.9, y: 1.1}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: impact_stone
+    clips:
+    - {fileID: 8300000, guid: a19d84dae00e818499a49cf6983859e0, type: 3}
+    - {fileID: 8300000, guid: ad721eb7bdeb99a4f9f5f77b4e9e7056, type: 3}
+    - {fileID: 8300000, guid: 7c299af1973d5b64e99cc79006a6992c, type: 3}
+    - {fileID: 8300000, guid: 278feedc7db4e094682c8eaf1292a4e3, type: 3}
+    - {fileID: 8300000, guid: 8aa840d0f78444943aa977f01b589814, type: 3}
+    category: 0
+    volume: 0.7
+    pitch: {x: 0.9, y: 1.1}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: impact_soft
+    clips:
+    - {fileID: 8300000, guid: 51c3707da7f45fc418563a988758507a, type: 3}
+    - {fileID: 8300000, guid: fdf830f9b2836cf4ba281a6d7d8b4ff5, type: 3}
+    - {fileID: 8300000, guid: 0d19227763bac5b42afb990213423bb5, type: 3}
+    - {fileID: 8300000, guid: e4d48f6e748f0f143957f658ddc55c4e, type: 3}
+    - {fileID: 8300000, guid: f4264a7007f02da46bb10f5c2499e793, type: 3}
+    category: 0
+    volume: 0.6
+    pitch: {x: 0.9, y: 1.1}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: step_grass
+    clips:
+    - {fileID: 8300000, guid: 5d774828b6251f149b503b8b420ed20f, type: 3}
+    - {fileID: 8300000, guid: 81219907b18b6e04a85f818963d0b744, type: 3}
+    - {fileID: 8300000, guid: 41fbe99220103d54cb87aca51c6bf156, type: 3}
+    - {fileID: 8300000, guid: 8e692118705c35a428f5774922a7f2b7, type: 3}
+    - {fileID: 8300000, guid: 7caf698380521464d819cedd0ef09eb7, type: 3}
+    category: 0
+    volume: 0.35
+    pitch: {x: 0.92, y: 1.08}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 12
+  - id: step_wood
+    clips:
+    - {fileID: 8300000, guid: 60e6bd6c0b3ed4746bade99693ece69e, type: 3}
+    - {fileID: 8300000, guid: 2466cc906f045dc41ba495b8d8c479b0, type: 3}
+    - {fileID: 8300000, guid: d88d139bb2513f441b6f1de5228e148d, type: 3}
+    - {fileID: 8300000, guid: 353a788134130bc41b670c465c8be631, type: 3}
+    - {fileID: 8300000, guid: 1675ea5a946e42b4b97f0f581f95b6d6, type: 3}
+    category: 0
+    volume: 0.4
+    pitch: {x: 0.92, y: 1.08}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 12
+  - id: step_stone
+    clips:
+    - {fileID: 8300000, guid: 493691baeff461f419abb0649bde2243, type: 3}
+    - {fileID: 8300000, guid: 38421eadff4f408419cfb485ec8eb681, type: 3}
+    - {fileID: 8300000, guid: e537149a08ad3dc4a8c641f93e6eb4fa, type: 3}
+    - {fileID: 8300000, guid: c7bd1c1a034f0d94b887600a3a78975c, type: 3}
+    - {fileID: 8300000, guid: 62073a91045b92c479e87f01e4c0e7ff, type: 3}
+    category: 0
+    volume: 0.35
+    pitch: {x: 0.92, y: 1.08}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 12
+  - id: book_open
+    clips:
+    - {fileID: 8300000, guid: aeaff748074717f4aa8bd0866243ac14, type: 3}
+    category: 0
+    volume: 0.6
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: book_close
+    clips:
+    - {fileID: 8300000, guid: 13bec41d991b5b14991b851ab217290d, type: 3}
+    category: 0
+    volume: 0.6
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: book_flip
+    clips:
+    - {fileID: 8300000, guid: 69097f2fb9c55f2458824b624926e869, type: 3}
+    - {fileID: 8300000, guid: 529fdb0d99e9f7d4189df2b6ab36ee80, type: 3}
+    - {fileID: 8300000, guid: 57aba89bd7bbe6d40bbe1042c1f01ef5, type: 3}
+    category: 0
+    volume: 0.6
+    pitch: {x: 0.9, y: 1.1}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
+  - id: ui_select
+    clips:
+    - {fileID: 8300000, guid: 5af908e8d79f50b458f2e223eb764cfa, type: 3}
+    - {fileID: 8300000, guid: beb2bab7676ac094f8a3981f12604a6c, type: 3}
+    - {fileID: 8300000, guid: 093bd8b50d96cf34a97e02d102185084, type: 3}
+    - {fileID: 8300000, guid: e48cba20a37331249942cb3a72a3be47, type: 3}
+    - {fileID: 8300000, guid: b7ba9ad6dcfc14847a1be8403815edd2, type: 3}
+    - {fileID: 8300000, guid: e40e2b6a3b1bbe047992641aa6c98da6, type: 3}
+    - {fileID: 8300000, guid: db9f8adc65f7c564bb9bf1617d51c445, type: 3}
+    - {fileID: 8300000, guid: 5aeb6ec7bb15ac0429cc2b3230293f5e, type: 3}
+    category: 0
+    volume: 0.5
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 0
+    minDistance: 1.5
+    maxDistance: 30
+  - id: ui_confirm
+    clips:
+    - {fileID: 8300000, guid: 76bab8f385a534f4c88406818f149ba9, type: 3}
+    - {fileID: 8300000, guid: 804c18753232efe4b98be60ed4f68d76, type: 3}
+    - {fileID: 8300000, guid: da7e0000c207a7b45ab21219a4f3034b, type: 3}
+    - {fileID: 8300000, guid: c2ba76c8cde472449bfcc30b73415804, type: 3}
+    category: 0
+    volume: 0.5
+    pitch: {x: 0.95, y: 1.05}
+    spatialBlend: 0
+    minDistance: 1.5
+    maxDistance: 30
+  - id: music
+    clips:
+    - {fileID: 8300000, guid: c3d961b5c3bbaf44a803435df6260304, type: 3}
+    category: 2
+    volume: 0.5
+    pitch: {x: 1, y: 1}
+    spatialBlend: 0
+    minDistance: 1.5
+    maxDistance: 30
+  - id: wind
+    clips:
+    - {fileID: 8300000, guid: ba133103528f449499dbfb468bb4aee4, type: 3}
+    category: 1
+    volume: 0.35
+    pitch: {x: 1, y: 1}
+    spatialBlend: 0
+    minDistance: 1.5
+    maxDistance: 30
+  - id: waterfall
+    clips:
+    - {fileID: 8300000, guid: 2f3e4afd82fc8d34ca07782a922e2c7a, type: 3}
+    category: 1
+    volume: 0.9
+    pitch: {x: 1, y: 1}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 45
+  - id: bird
+    clips:
+    - {fileID: 8300000, guid: d4f8b9dc72b19634fbafd39488e219f6, type: 3}
+    - {fileID: 8300000, guid: 545f5612cdc4ed441892801cf308b7ef, type: 3}
+    - {fileID: 8300000, guid: e06b458d81cdccf4998ae2d41020e55f, type: 3}
+    - {fileID: 8300000, guid: bbd6c28c96b44fa4eb0b7e975adb8f54, type: 3}
+    category: 1
+    volume: 0.35
+    pitch: {x: 0.9, y: 1.1}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 40

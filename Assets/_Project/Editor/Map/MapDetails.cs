@@ -97,6 +97,10 @@ namespace SpellSimulator.EditorTools.Map
             if (output == null) return;
             Vector3 foot = new Vector3(bottom.x, ValleyShape.WaterLevel + 0.2f, bottom.y);
             Loop("FallSplash", root, foot, output.LookFor(ElementType.Water), 70f, new Vector2(0.2f, 0.45f), new Vector2(2f, 4f), 0.9f, 1.2f, 25f);
+            var fallAudio = new GameObject("FallAudio");
+            fallAudio.transform.SetParent(root, false);
+            fallAudio.transform.position = foot + Vector3.up * 2f;
+            fallAudio.AddComponent<SpellSimulator.Audio.AmbientEmitter>();
             Loop("FallMist", root, foot + Vector3.up * 0.5f, output.LookFor(ElementType.Wind), 8f, new Vector2(1.2f, 2.4f), new Vector2(0.3f, 0.8f), -0.05f, 2.5f, 60f);
         }
 

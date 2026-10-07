@@ -69,6 +69,11 @@ de la build son shaders del paquete de inferencia.
 objeto `Map` y lo vuelve a crear, guarda las mallas en `Art/Generated` y reubica jugador, papeles, herramientas,
 blancos y muñecos. Determinista. Para cambiar el mapa: tocar `ValleyShape` (forma) o `TowerBuilder` (torre) y regenerar.
 
+## Audio
+`python Tools/Audio/synth_audio.py` regenera los WAV sintetizados (`Audio/Synth`). `SpellSimulator > Audio > Setup
+Current Scene` (o `AudioSetup.SetupCurrentScene()` por MCP) rehace `Data/AudioLibrary.asset` y equipa la escena abierta
+(correrlo en Pradera y en Escena). Regenerar el mapa conserva el audio (vive en SystemManagers y Player).
+
 ## Sellos de plantilla (Play Mode)
 `SpellSimulator.EditorTools.HarnessSeals.Cast("PaperCanvas", "fire", ("column", 270f), ("column", 90f))` dibuja sigilo,
 signos (id, ángulo en el anillo; orientados hacia adentro) y anillo con las plantillas del diccionario, y lanza. Sirve
@@ -87,7 +92,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 **Física en tiempo real**: guardar posiciones (cultura invariante: `Vector3.ToString` usa coma decimal), lanzar,
 `sleep 4` en Bash y medir. Los blancos están en `TestProps` (plataforma a la altura del chorro).
 
-## Tests (114 al 2026-10-07)
+## Tests (116 al 2026-10-07)
 | Archivo | Cubre |
 |---|---|
 | `ParsingTests` | RingDetector (cerrado/abierto/dos arcos/ajuste), StrokeGrouper (transitividad), SymbolCandidate, capas, StrokeCleaner, GeometryUtils |
@@ -101,6 +106,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 | `ReactionTests` | Fuego (enciende, se sostiene, se consume, rompe), agua (apaga, moja, bloquea ignición, apaga aun bajo fuego), viento (aviva/enfría), tierra (rompe madera, no piedra), secado, tabla por material |
 | `DamageTests` | Daño de hechizo en rango de referencia, agua/viento casi no dañan, quemadura 4/s, impacto con umbral y tope 25 |
 | `ValleyShapeTests` | Mapa: torre en meseta plana, lago bajo el agua, montañas cierran el valle, pendiente caminable, sin árboles en spawn/campo/torre |
+| `AudioTests` | Todos los cues que usa el código existen y tienen clips; pasos según superficie |
 | `CompilerTests` | Gates (sin anillo, baja confianza, sin sigilo, varios sigilos), activo/preparado, levitation, dirección inward, cancelación, fuerza, escala |
 
 ## Sellos grabados (fixtures de pruebas manuales)

@@ -24,6 +24,8 @@ namespace SpellSimulator.Reactions
 
         /// <summary>Se emite con cada cambio de fase (encendido, apagado, empapado, roto...).</summary>
         public event Action<ElementReactive, ReactionEvents> Reacted;
+        /// <summary>Lo mismo para cualquier reactivo de la escena (audio, estadisticas).</summary>
+        public static event Action<ElementReactive, ReactionEvents> AnyReacted;
 
         public MaterialProfile Profile => profile;
         /// <summary>Lo que arde es fuego; si no, el elemento de su material.</summary>
@@ -65,7 +67,11 @@ namespace SpellSimulator.Reactions
             if (profile == null) { pending = default; return ReactionEvents.None; }
             ReactionEvents events = ReactionModel.Step(ref state, profile.parameters, pending, dt);
             pending = default;
-            if (events != ReactionEvents.None) Reacted?.Invoke(this, events);
+            if (events != ReactionEvents.None)
+            {
+                Reacted?.Invoke(this, events);
+                AnyReacted?.Invoke(this, events);
+            }
             RefreshLook();
             return events;
         }

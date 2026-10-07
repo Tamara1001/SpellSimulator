@@ -5,6 +5,16 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — M5: audio
+- Nuevo módulo `Audio`: `AudioLibrary` (37 cues como datos), `AudioDirector` (pool de 24 fuentes, loops por objeto,
+  música y viento de fondo, pájaros al azar), `GameAudio` (eventos → sonidos), `AmbientEmitter` (cascada),
+  `FootstepAudio` (pasto/madera/piedra), `CollisionAudio` (golpes de cajas, piedras y muñecos).
+- Eventos nuevos para el audio en `PhysicalTool`, `ElementReactive`, `WaterVolume`, `GroundMarks`, `SealBreaker`,
+  `Health` y `MagicWorld` (nadie depende del audio).
+- 29 sonidos sintetizados con `Tools/Audio/synth_audio.py` + 281 de Kenney CC0 (RPG Audio, Impact Sounds, Interface
+  Sounds; descargados con permiso de Tamara). `AudioImportRules` (Vorbis mono).
+- Verificado en Play: música, viento, cascada, lanzamiento y 10 loops de fuego sobre 10 objetos ardiendo. 116 tests.
+
 ## 2026-10-07 — M5: cascada, pasto, detalles de la torre, papeles y post-proceso
 - Cascada (`Waterfall.shader`: vetas que caen, espuma) que sigue la ladera real + arroyo con `WaterVolume` hasta el
   lago, salpicaduras y bruma al pie. `ValleyShape`: cauce del arroyo (+1 test).

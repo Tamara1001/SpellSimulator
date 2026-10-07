@@ -65,7 +65,9 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
       ambiente, cascada (`Waterfall`), post-proceso (bloom, tonemapping neutral, color, viñeta). Falta medir en Quest
       (~76k triángulos) y decidir qué post-proceso queda en VR (KI-049).
 - [x] Papeles fijos (atril del campo, pared exterior de la torre, escritorio) y agarrables S/M/L (mesa de lectura + atril).
-- [ ] Música (ambiental) + SFX diegéticos (pluma, tinta, viento, fuego, agua, roturas).
+- [x] Audio (módulo `Audio`): música ambiental, viento, cascada, pájaros; pluma, goma, trapo, tinta, sello preparado,
+      lanzamiento por elemento, fallo, fuego, vapor, salpicaduras, roturas, golpes, pasos por superficie. Sintetizado
+      (`Tools/Audio/synth_audio.py`) + Kenney CC0. Falta: mezcla fina, música con más variedad (KI-051).
 
 ### M6 — Aprender magia: libro-menú, libros y sellos
 *Objetivo: progresión y herramientas avanzadas.*

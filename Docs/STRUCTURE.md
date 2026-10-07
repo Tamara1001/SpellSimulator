@@ -28,8 +28,10 @@ SpellSimulator/
 │   │   │   ├── System/           #   SystemManagers, Canvas (UI), camaras, luz, EventSystem
 │   │   │   └── VFX/              #   Fire (+Fire_VFX.vfx), Air, Earth, Light, Water, FireSpell_VFX.vfx
 │   │   ├── Scenes/               #   Pradera.unity (mapa del modo Libre, build index 0) y Escena.unity (laboratorio de pruebas)
+│   │   ├── Audio/                #   Synth/ (generado por Tools/Audio/synth_audio.py), Kenney/{RPG,Impact,Interface} (CC0, con License.txt)
 │   │   ├── Art/Generated/        #   mallas generadas por MapBuilder (terreno, pinos, rocas, torre, muebles); no editar a mano
 │   │   ├── Scripts/              #   SpellSimulator.Runtime.asmdef
+│   │   │   ├── Audio/            #   AudioLibrary, AudioDirector, GameAudio, AmbientEmitter, FootstepAudio, CollisionAudio
 │   │   │   ├── Canvas/           #   DrawingCanvas
 │   │   │   ├── Casting/          #   SpellCaster, SealActivation, SealReader, SealRecord
 │   │   │   ├── Combat/           #   Health, DamageTable, DamageModel, ImpactDamage, DamageNumbers

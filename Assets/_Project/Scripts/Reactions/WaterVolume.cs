@@ -17,6 +17,8 @@ namespace SpellSimulator.Reactions
     public class WaterVolume : MonoBehaviour
     {
         public static readonly List<WaterVolume> All = new List<WaterVolume>();
+        /// <summary>(punto, fuerza 0-1) cuando algo cae al agua.</summary>
+        public static event System.Action<Vector3, float> Splashed;
 
         private const int MaxRipples = 16;
         private const float MinIntakeLifetime = 0.45f;
@@ -103,6 +105,7 @@ namespace SpellSimulator.Reactions
         {
             at.y = SurfaceY;
             AddRipple(at, strength);
+            Splashed?.Invoke(at, strength);
             WaterEffects.Burst(splash, at, Mathf.RoundToInt(12f + 30f * strength), 1.5f + 2f * strength);
         }
 

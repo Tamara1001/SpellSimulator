@@ -73,6 +73,13 @@ namespace SpellSimulator.World
         private Camera cachedCamera;
         private bool held;
 
+        /// <summary>(herramienta, usando) al empezar y terminar de dibujar/borrar/limpiar sobre un lienzo.</summary>
+        public static event System.Action<PhysicalTool, bool> UseChanged;
+        /// <summary>(herramienta) al recargar tinta.</summary>
+        public static event System.Action<PhysicalTool> Refilled;
+        /// <summary>(herramienta) al agarrarla.</summary>
+        public static event System.Action<PhysicalTool> PickedUp;
+
         public HandType PreferredHand => HandType.Right;
         public ToolKind Kind => kind;
         public bool UsesInk => kind == ToolKind.Pen;
@@ -109,6 +116,7 @@ namespace SpellSimulator.World
                 if (well.Refill(ink) > 0f)
                 {
                     RefreshInkVisual();
+                    Refilled?.Invoke(this);
                     Haptics.Pulse(HandType.Right, 0.3f, 0.08f);
                 }
                 break;
@@ -136,6 +144,7 @@ namespace SpellSimulator.World
         public void OnInteract(Transform holdPoint)
         {
             held = true;
+            PickedUp?.Invoke(this);
             rb.isKinematic = true;
             col.enabled = false;
             transform.SetParent(holdPoint);
@@ -166,6 +175,7 @@ namespace SpellSimulator.World
             currentCanvas = canvas;
             lastUv = uv;
             tool.OnPointerDown(uv, canvas);
+            UseChanged?.Invoke(this, true);
         }
 
         public void OnUseHold()
@@ -202,6 +212,7 @@ namespace SpellSimulator.World
             tool.OnPointerUp();
             DrawingCanvas finished = currentCanvas;
             currentCanvas = null;
+            UseChanged?.Invoke(this, false);
 
             // Canon: el hechizo se lanza al cerrar el anillo. Solo la tinta puede cerrarlo; borrar solo actualiza la fase.
             if (spellCaster == null)
@@ -229,6 +240,7 @@ namespace SpellSimulator.World
             if (!UsesInk) return 0f;
             float amount = source.Refill(ink);
             RefreshInkVisual();
+            if (amount > 0f) Refilled?.Invoke(this);
             return amount;
         }
 

@@ -76,6 +76,12 @@ Al oeste, una **cascada** cae de la montaña y sigue en arroyo hasta el lago. **
 exterior de la torre mirando al campo (emite hacia afuera), escritorio de la biblioteca (emite hacia arriba) y dos
 agarrables chico y mediano en la mesa de lectura.
 
+## Audio (M5)
+Música ambiental suave (pads + campanitas), viento y pájaros de fondo, cascada que se oye al acercarse. Cada acción
+suena: pluma/pincel al dibujar, goma, trapo, tintero, campanita de sello **preparado**, lanzamiento distinto por
+elemento, chisporroteo si el sello falla, fuego que arde, vapor al apagarse, salpicaduras, roturas de madera y piedra,
+rocas que emergen, pasos según el piso (pasto, madera, piedra). Créditos: sonidos de Kenney (kenney.nl), CC0.
+
 ## Controles
 
 | Acción | PC | VR |

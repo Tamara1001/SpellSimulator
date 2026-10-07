@@ -97,6 +97,13 @@ por código (VFX Graph no). El viejo `Fire_VFX.vfx` queda sin uso.
 hechizo le explotaría en la cara. `DrawingCanvas.EmissionSide = AwayFromViewer` en papeles (la magia sale hacia el
 objetivo, como cuando los personajes giran el papel); `InkSide` queda para sellos en paredes, mesas y piedras.
 
+## ADR-025 — Audio por eventos, sintetizado + CC0
+**2026-10-07.** Los sistemas no reproducen sonidos: publican eventos y `GameAudio` los traduce a cues de `AudioLibrary`
+(datos). Así cambiar un sonido es cambiar un clip, y el audio se puede apagar o reemplazar sin tocar la lógica. Fuentes:
+sintetizados por código (`Tools/Audio/synth_audio.py`, determinista: magia, fuego, agua, viento, música ambiental) y
+paquetes CC0 de Kenney (RPG Audio, Impact Sounds, Interface Sounds: pasos, golpes, tela, libros, interfaz). Importación
+Vorbis mono (`AudioImportRules`): música en streaming, loops comprimidos, efectos cortos descomprimidos.
+
 ## ADR-024 — Mapa generado por código, low-poly y laboratorio aparte
 **2026-10-07.** El mapa del modo Libre (`Pradera.unity`) lo genera `MapBuilder` (editor) a partir de `ValleyShape` (puro,
 con tests): terreno low-poly con colores por triángulo, pinos y rocas facetados, torre con rampas. Sin assets externos:
