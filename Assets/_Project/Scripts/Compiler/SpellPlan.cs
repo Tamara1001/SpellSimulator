@@ -73,6 +73,8 @@ namespace SpellSimulator.Compiler
         public float Quality;
         public PlanPrimitive Primitives;
         public readonly List<string> Notes = new List<string>();
+        /// <summary>Lectura de cada signo que entro al plan (para diagnostico y overlays).</summary>
+        public readonly List<SignReading> Signs = new List<SignReading>();
 
         public static SpellPlan Inert() => new SpellPlan { Primitives = PlanPrimitive.Burst };
 

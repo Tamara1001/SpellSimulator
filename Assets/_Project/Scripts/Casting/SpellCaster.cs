@@ -30,6 +30,10 @@ namespace SpellSimulator.Casting
         [SerializeField, Range(1, 10), Tooltip("Resolucion del Catmull-Rom. Mayor = curvas mas suaves.")]
         private int splineResolution = StrokeCleaner.DefaultSplineResolution;
 
+        [Header("Pruebas")]
+        [SerializeField, Tooltip("Guarda cada sello lanzado en persistentDataPath/Sellos para reproducirlo como fixture.")]
+        private bool recordSeals = true;
+
         /// <summary>Ultimo hechizo compilado (valido o no). Util para UI y tests.</summary>
         public SpellIR LastSpell { get; private set; }
 
@@ -121,7 +125,8 @@ namespace SpellSimulator.Casting
             GlyphPrediction[] predictions = reading.Predictions;
 
             LastSpell = spell;
-            PublishDiagnostics(ast, spell, predictions, dictionary.Dictionary);
+            string summary = PublishDiagnostics(ast, spell, predictions, dictionary.Dictionary);
+            if (recordSeals) Record(canvas, iso, summary);
             SpellCompiled?.Invoke(spell, canvas);
 
             if (spell.valid && spell.active && output != null)
@@ -129,7 +134,19 @@ namespace SpellSimulator.Casting
             return spell;
         }
 
-        private static void PublishDiagnostics(GlyphAST ast, SpellIR spell, GlyphPrediction[] predictions, GlyphDictionary dictionary)
+        private static void Record(DrawingCanvas canvas, Vector2 iso, string summary)
+        {
+            var record = new SealRecord
+            {
+                Iso = iso,
+                Session = canvas.Session.Scaled(Vector2.one),
+                Summary = System.Text.RegularExpressions.Regex.Replace(summary, "<[^>]+>", "")
+            };
+            string path = SealRecord.Save(record);
+            if (path != null) Debug.Log($"[Cast] Sello guardado: {path}");
+        }
+
+        private static string PublishDiagnostics(GlyphAST ast, SpellIR spell, GlyphPrediction[] predictions, GlyphDictionary dictionary)
         {
             var predictionsLog = new StringBuilder("<b>IA Top 3 (sigilo):</b>\n");
             // El primer candidato es el central (sigilo) cuando hay tinta en el centro.
@@ -161,6 +178,7 @@ namespace SpellSimulator.Casting
                 {
                     log.AppendLine($"<b>[Plan]</b> {plan.Primitives}");
                     log.AppendLine($"Chorro ({plan.Aim.x:F1}, {plan.Aim.y:F1}, {plan.Aim.z:F1}) | Abanico {plan.Dispersion:F1} | Giro {plan.Circulation:F1} | Lente {plan.Focus:F1}");
+                    foreach (var reading in plan.Signs) log.AppendLine($"- {PlanResolver.DescribeSign(reading)}");
                     if (plan.Notes.Count > 0) log.AppendLine($"Notas: {string.Join(", ", plan.Notes)}");
                 }
             }
@@ -170,6 +188,7 @@ namespace SpellSimulator.Casting
             string text = log.ToString();
             Debug.Log(text);
             DiagnosticBus.OnDiagnosticsUpdated?.Invoke(text);
+            return text;
         }
 
         private static string Describe(GlyphRecognition r)

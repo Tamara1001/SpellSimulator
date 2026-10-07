@@ -79,6 +79,9 @@ namespace SpellSimulator.Output
                 var fan = Track("Fan", look, frame.Origin + frame.Normal * s * 0.1f, frame.Facing(frame.Normal), s);
                 Shape(fan, ParticleSystemShapeType.Circle, s * 0.5f, 0f);
                 Speed(fan, speed * (0.6f + 0.4f * Mathf.Min(plan.Dispersion, 2f)), (s * (3f + 6f * spell.range)) / speed);
+                // Abanico = lamina radial sobre el plano del papel: particulas finas y casi sin flotacion, para que se
+                // lea como una erupcion plana y no como una nube que tapa la camara (prueba manual 2026-10-07).
+                Thin(fan, FanSizeFactor, FanGravityFactor * look.gravity);
                 bodyTracks.Add((fan, 360f * density));
             }
 
@@ -240,6 +243,19 @@ namespace SpellSimulator.Output
                 renderer.lengthScale = 1.5f;
             }
             return ps;
+        }
+
+        private const float FanSizeFactor = 0.45f;
+        private const float FanGravityFactor = 0.25f;
+
+        private static void Thin(ParticleSystem ps, float sizeFactor, float gravity)
+        {
+            var main = ps.main;
+            var size = main.startSize;
+            main.startSize = new ParticleSystem.MinMaxCurve(size.constantMin * sizeFactor, size.constantMax * sizeFactor);
+            main.gravityModifier = gravity;
+            var overLife = ps.sizeOverLifetime;
+            overLife.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 1f, 1f, 0.3f));
         }
 
         private static void Shape(ParticleSystem ps, ParticleSystemShapeType type, float radius, float angle)

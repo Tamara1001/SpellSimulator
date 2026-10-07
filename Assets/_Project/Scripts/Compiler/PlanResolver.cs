@@ -85,6 +85,41 @@ namespace SpellSimulator.Compiler
             return readings;
         }
 
+        /// <summary>
+        /// Giro del signo respecto de "hacia adentro", en grados (-180..180]. 0 = adentro, 180 = afuera,
+        /// +90 = horario, -90 = antihorario (Y arriba, igual que PlanTests).
+        /// </summary>
+        public static float TwistFromInwardDeg(SignReading s)
+        {
+            if (s.At.sqrMagnitude < 1e-9f) return 0f;
+            float inward = GeometryUtils.AngleDeg(-s.At);
+            return PoseMathDelta(inward, GeometryUtils.AngleDeg(s.Facing));
+        }
+
+        /// <summary>Descripcion corta en espanol: "abajo -> adentro (3)".</summary>
+        public static string DescribeSign(SignReading s)
+        {
+            string where = s.At.sqrMagnitude < 0.04f ? "centro" : SideName(GeometryUtils.AngleDeg(s.At));
+            float twist = TwistFromInwardDeg(s);
+            float a = Mathf.Abs(twist);
+            string facing = a <= 45f ? "adentro" : a >= 135f ? "afuera" : twist > 0f ? "horario" : "antihorario";
+            string trust = s.FacingTrust < FacingTrustFloor ? " sin direccion" : s.FacingFromPose ? "" : " asumido";
+            return $"{s.Id} {where} -> {facing} ({twist:F0}){trust}";
+        }
+
+        private static string SideName(float bearingDeg)
+        {
+            float b = GeometryUtils.NormalizeAngleDeg(bearingDeg);
+            if (b < 22.5f || b >= 337.5f) return "derecha";
+            if (b < 67.5f) return "arriba-der";
+            if (b < 112.5f) return "arriba";
+            if (b < 157.5f) return "arriba-izq";
+            if (b < 202.5f) return "izquierda";
+            if (b < 247.5f) return "abajo-izq";
+            if (b < 292.5f) return "abajo";
+            return "abajo-der";
+        }
+
         private static float PoseMathDelta(float fromDeg, float toDeg)
         {
             float d = GeometryUtils.NormalizeAngleDeg(toDeg - fromDeg);
@@ -175,6 +210,7 @@ namespace SpellSimulator.Compiler
             if (leak) plan.Notes.Add("dispersion-leak");
             foreach (string m in unmodeled) plan.Notes.Add("unmodeled-" + m);
 
+            plan.Signs.AddRange(signs);
             plan.Primitives = Primitives(plan);
             return plan;
         }

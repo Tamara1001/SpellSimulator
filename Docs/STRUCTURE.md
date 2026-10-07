@@ -26,7 +26,7 @@ SpellSimulator/
 │   │   ├── Scenes/Escena.unity   #   unica escena (Build index 0)
 │   │   ├── Scripts/              #   SpellSimulator.Runtime.asmdef
 │   │   │   ├── Canvas/           #   DrawingCanvas
-│   │   │   ├── Casting/          #   SpellCaster, SealActivation, SealReader
+│   │   │   ├── Casting/          #   SpellCaster, SealActivation, SealReader, SealRecord
 │   │   │   ├── Compiler/         #   GlyphAST, GlyphAstBuilder, SpellCompiler, SemanticRules, SpellQuality, SpellDirection, SpellIR, SpellPlan, PlanResolver
 │   │   │   ├── Core/             #   DrawingData (Stroke, DrawingSession), GeometryUtils, StrokeCleaner, InkReservoir
 │   │   │   ├── Debug/            #   DiagnosticBus, DiagnosticUIController   (namespace DebugTools)
@@ -38,7 +38,8 @@ SpellSimulator/
 │   │   │   ├── Player/           #   PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor, InkSupply, Haptics
 │   │   │   ├── Recognition/      #   TensorRasterizer, GlyphClassifier, SentisGlyphClassifier, GlyphPrediction (+ClassificationMath), PoseMath
 │   │   │   └── World/            #   PhysicalTool, PhysicalCanvas, Inkwell, Respawnable
-│   │   └── Tests/EditMode/       #   SpellSimulator.Tests.EditMode.asmdef — Parsing, Recognition, Compiler, modelo
+│   │   ├── Tests/EditMode/       #   SpellSimulator.Tests.EditMode.asmdef — Parsing, Recognition, Compiler, modelo
+│   │   └── Tests/Fixtures/       #   Sellos reales grabados (SealRecord .json) para SealFixtureTests
 │   ├── Settings/                 # URP assets (PC_RPAsset, renderers, volume profiles)
 │   ├── XR/, XRI/                 # settings de OpenXR / XR Interaction Toolkit (generados)
 │   ├── Samples/                  # samples importados (XRI Starter Assets, VFX, SRP Core) — no editar

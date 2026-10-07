@@ -132,5 +132,20 @@ namespace SpellSimulator.Tests
             var plan = Plan(Sign("dispersion", 0f, 180f));
             Assert.IsTrue(plan.Leak);
         }
+
+        [Test]
+        public void DescribeSign_NamesSideAndFacing()
+        {
+            Assert.AreEqual("column abajo -> adentro (0)", PlanResolver.DescribeSign(WithPose(Sign("column", 270f))));
+            Assert.AreEqual("column arriba -> afuera (180)", PlanResolver.DescribeSign(WithPose(Sign("column", 90f, 180f))));
+            StringAssert.Contains("horario", PlanResolver.DescribeSign(WithPose(Sign("column", 0f, 90f))));
+            StringAssert.EndsWith("sin direccion", PlanResolver.DescribeSign(Sign("column", 0f, 0f, 1f, 0.1f)));
+        }
+
+        private static SignReading WithPose(SignReading s)
+        {
+            s.FacingFromPose = true;
+            return s;
+        }
     }
 }

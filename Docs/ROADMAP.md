@@ -21,7 +21,8 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 - [x] **Auto-activación al cerrar el anillo** (canon). El secundario de las herramientas es deshacer. (2026-10-07)
 - [x] Rechazar círculos que forman parte de un glifo como anillo (KI-032).
 - [x] Primera prueba manual: sigilo grande partido (resuelto con afinidad + lectura guiada) y dibujo lento (resuelto).
-- [ ] Más pruebas con dibujos reales; fixtures de sesiones reales (serializar `DrawingSession`).
+- [x] Fixtures de sesiones reales: `SealRecord` graba cada cast; `SealFixtureTests` los reproduce.
+- [ ] Juntar fixtures de pruebas manuales (columnas a mano, signos chicos) y fijar expectativas.
 - [x] Hápticos (trazo, cast, sin tinta, recarga).
 - [ ] Dibujo por **contacto de la punta** en VR: implementado detrás de un toggle, falta probar en el Quest (KI-034).
 - [x] Feedback en el papel: pulso de "preparado", destello al lanzar o fallar (`SealFeedback`).

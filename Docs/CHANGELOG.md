@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — Grabación de sellos y lectura de signos en el panel
+- La prueba manual de M3 mostró columnas leídas hacia afuera (abanico) y una columna leída como `region`, sin forma de
+  saber qué se dibujó. Ahora `SealRecord` guarda cada sello lanzado (trazos crudos + resultado) en
+  `persistentDataPath/Sellos` y `SealFixtureTests` los reproduce como tests.
+- El panel lista cada signo: lado del anillo, hacia dónde apunta (adentro/afuera/horario/antihorario) y el giro en grados.
+- Abanico más fino (partículas 45%, casi sin flotación): ya no tapa la cámara.
+- Docs: HARNESS, STRUCTURE, ARCHITECTURE, ROADMAP. 89 tests (1 ignorado sin fixtures). Build actualizada.
+
 ## 2026-10-07 — M3: el hechizo tiene forma y fuerza
 - **Pose**: el clasificador lee la salida `angle`, se calibra con las plantillas y da la rotación de cada glifo.
 - **Plan** (port de `reading/` + `plan/`): ley vectorial de columnas (chorro, abanico, vórtice), levitación (orbe),
