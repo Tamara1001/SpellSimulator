@@ -18,7 +18,8 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 
 ### M2 — El trazo se siente bien 🔄
 *Objetivo: dibujar y lanzar en PC y VR sin fricción.*
-- [ ] **Auto-activación al cerrar el anillo** (canon). El secundario del lápiz pasa a ser deshacer (pregunta abierta en GAME_DESIGN).
+- [x] **Auto-activación al cerrar el anillo** (canon). El secundario de las herramientas es deshacer. (2026-10-07)
+- [ ] Rechazar círculos que forman parte de un glifo como anillo (KI-032).
 - [ ] Validación con dibujos reales; ajuste del agrupado y los umbrales (KI-020); fixtures de sesiones reales.
 - [ ] Dibujo por **contacto de la punta** en VR (además del rayo) + hápticos de fricción.
 - [ ] Feedback diegético en el papel: brillo de "preparado", trazo reconocido resaltado y advertencias.
@@ -31,7 +32,8 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 - [ ] `SpellManifestation` por familia: aura, column, dispersion, levitation, pull, convergence, region, orb.
 - [ ] VFX Graph de los 5 elementos con las mismas propiedades exposed; look estilizado WHA.
 - [ ] Tamaño físico del sello (radio en metros) ⇒ escala y caudal (ley extensiva).
-- [ ] `MagicField` + `MagicWorld` (ticks) con un primer consumidor: empujar Rigidbodies.
+- [ ] `MagicField` + `MagicWorld` (ticks) con un primer consumidor: empujar Rigidbodies (incluido el jugador).
+- [ ] **Benchmark en Quest** para fijar el límite de hechizos activos (provisorio: 6).
 
 ### M4 — El mundo reacciona
 *Objetivo: el sandbox que justifica el simulador.*
@@ -48,7 +50,7 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 - [ ] Blockout del mapa: torre (bibliotecas, mesas, atriles), pradera, lago y montañas de borde.
 - [ ] Arte estilizado (toon/acuarela), iluminación y post-proceso. Presupuesto Quest.
 - [ ] Papeles fijos en atriles y paredes; papeles agarrables S/M/L.
-- [ ] Sonido diegético (pluma, viento, fuego, agua).
+- [ ] Música (ambiental) + SFX diegéticos (pluma, tinta, viento, fuego, agua, roturas).
 
 ### M6 — Aprender magia: libro-menú, libros y sellos
 *Objetivo: progresión y herramientas avanzadas.*
@@ -57,12 +59,12 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 - [ ] Estampas S/M/L: cargar desde el libro y estampar (anillo abierto ⇒ se sella a mano).
 - [ ] Contraptions: triggers `RingClosed`, `SplitJoin` (sello partido), `Impact` (lanzables), `Pressure`.
 - [ ] Borrado por agua (mojar rompe sellos) y por fuego (quemar el papel).
-- [ ] Superficies inscribibles generales (decals en paredes y mesas) y piedra de rayar.
+- [ ] Superficies inscribibles generales (decals en paredes y mesas) y piedra de rayar (sellos permanentes, cooldown y 5 usos).
 - [ ] Semántica para los 6 glifos sin entrada.
 
 ### M7 — Pulido y entrega del modo Libre
 - [ ] Build Quest estable, perfilado (inferencia TTA ×8 vs ×1, VFX, física).
-- [ ] Tutorial ligero (notas en la torre o el primer libro).
+- [ ] Tutorial (después de M6): notas en la torre o el primer libro. Enseña a "cerrar el anillo al final".
 - [ ] PlayMode tests del cast (KI-026). Documentación final de la evaluación.
 
 ---

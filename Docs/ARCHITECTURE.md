@@ -37,7 +37,7 @@ Todo entre `SpellCaster` y `SpellIR` es **lógica pura** (estática, testeada) e
 | `Recognition` | `TensorRasterizer`, `SentisGlyphClassifier`, `IGlyphClassifier`, `GlyphPrediction`, `ClassificationMath` | Rasterizado idéntico al de entrenamiento, inferencia por lotes, TTA de 8 rotaciones, softmax. |
 | `Glyphs` | `GlyphDictionary`, `GlyphEntry`, `GlyphSemantic`, `GlyphDictionaryAsset` | Diccionario como **datos** (JSON de la referencia) → rol, elemento, tamaño de referencia, capas permitidas, semántica, plantillas. |
 | `Compiler` | `GlyphAST`, `GlyphAstBuilder`, `GlyphWarnings`, `SpellCompiler`, `SemanticRules`, `SpellQuality`, `SpellDirection`, `SpellIR` | Port fiel de `compiler/` de la referencia (sin la capa Plan). |
-| `Casting` | `SpellCaster` | **Único punto de entrada** para lanzar: orquesta el pipeline, publica diagnósticos, evento `SpellCompiled`. |
+| `Casting` | `SpellCaster`, `SealActivation` | **Único punto de entrada** para lanzar: auto-activación al cerrar el anillo, fases del sello, orquesta el pipeline, diagnósticos, eventos `SpellCompiled` / `SealPhaseChanged`. |
 | `Output` | `SpellOutputController` | Prefab por elemento, sobre el lienzo, orientado por `direction` (papel → mundo), parámetros al VFX Graph. |
 | `Player` | `PlatformDetector`, `PlayerInputReader`, `PlayerMovement`, `PlayerLook`, `PlayerInteractor` | Rig PC/VR, input por código, agarrar/soltar/usar por mano. |
 | `World` | `PhysicalTool`, `PhysicalCanvas` | Objetos agarrables/usables. |
@@ -48,7 +48,10 @@ Dependencias (sin ciclos): `Core` ← `Parsing` ← `Compiler` → `Recognition`
 
 ## Contratos clave
 
-- `SpellCaster.Cast(DrawingCanvas) → SpellIR` (+ evento `SpellCompiled`).
+- `SpellCaster.OnStrokeFinished(canvas)`: al terminar un trazo de tinta evalúa el sello y, si el anillo quedó cerrado,
+  **lanza** (canon). `OnSealEdited(canvas)` tras borrar o deshacer (nunca lanza). Fases en `SealActivation`:
+  `Drawing → Prepared (anillo abierto) → Spent (lanzado)`; reabrir el anillo rearma el sello. Evento `SealPhaseChanged`.
+- `SpellCaster.Cast(DrawingCanvas) → SpellIR` (+ evento `SpellCompiled`): compila y lanza sin mirar la fase.
 - `IGlyphClassifier.Classify(IReadOnlyList<DrawingSession>) → GlyphPrediction[]` (probabilidades por candidato).
 - `SealParser.Parse(DrawingSession) → ParsedSeal`; orden de candidatos: sigilo central primero, luego signos.
 - `GlyphAstBuilder.Build(ParsedSeal, predicciones, GlyphDictionary) → GlyphAST`.
@@ -78,7 +81,7 @@ Dependencias (sin ciclos): `Core` ← `Parsing` ← `Compiler` → `Recognition`
 | Jump | Space | South | — |
 | Interact (agarrar/soltar) | E | Right trigger | Right grip |
 | UseTool (dibujar/borrar) | Click izq. | Left trigger | Right trigger |
-| SecondaryUse (lápiz: cast · goma: deshacer) | Click der. | East | A |
+| SecondaryUse (deshacer) | Click der. | East | A |
 | Liberar cursor | Escape (click recaptura) | — | — |
 
 ## Escena `Escena.unity`

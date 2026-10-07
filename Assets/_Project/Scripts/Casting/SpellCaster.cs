@@ -36,6 +36,60 @@ namespace SpellSimulator.Casting
         /// <summary>Se emite tras cada cast con el resultado compilado.</summary>
         public event System.Action<SpellIR, DrawingCanvas> SpellCompiled;
 
+        /// <summary>Se emite cuando cambia la fase de un sello (para feedback en el lienzo, hapticos, sonido).</summary>
+        public event System.Action<DrawingCanvas, SealPhase> SealPhaseChanged;
+
+        private readonly Dictionary<DrawingCanvas, SealPhase> phases = new Dictionary<DrawingCanvas, SealPhase>();
+
+        public SealPhase GetPhase(DrawingCanvas canvas)
+        {
+            return canvas != null && phases.TryGetValue(canvas, out var phase) ? phase : SealPhase.Drawing;
+        }
+
+        /// <summary>Llamar al terminar un trazo de tinta: si el anillo quedo cerrado, el hechizo se lanza (canon).</summary>
+        public void OnStrokeFinished(DrawingCanvas canvas) => Reevaluate(canvas, castAllowed: true);
+
+        /// <summary>Llamar tras borrar o deshacer: actualiza la fase sin lanzar.</summary>
+        public void OnSealEdited(DrawingCanvas canvas) => Reevaluate(canvas, castAllowed: false);
+
+        private void Reevaluate(DrawingCanvas canvas, bool castAllowed)
+        {
+            if (canvas == null) return;
+
+            RingInfo ring = canvas.Session.IsEmpty
+                ? RingInfo.NotFound()
+                : RingDetector.Detect(Clean(canvas));
+            SealPhase previous = GetPhase(canvas);
+            SealPhase next = SealActivation.Evaluate(ring, previous, castAllowed, out bool shouldCast);
+
+            if (shouldCast)
+            {
+                SpellIR spell = Cast(canvas);
+                next = SealActivation.AfterCast(spell.valid && spell.active);
+            }
+            else if (next == SealPhase.Prepared && previous != SealPhase.Prepared)
+            {
+                DiagnosticBus.OnDiagnosticsUpdated?.Invoke(
+                    $"<b>[Sello] Preparado</b>\nAnillo abierto ({ring.Completeness:P0}). Cerralo para lanzar.");
+            }
+
+            SetPhase(canvas, next);
+        }
+
+        private void SetPhase(DrawingCanvas canvas, SealPhase phase)
+        {
+            if (GetPhase(canvas) == phase) return;
+            phases[canvas] = phase;
+            SealPhaseChanged?.Invoke(canvas, phase);
+        }
+
+        private DrawingSession Clean(DrawingCanvas canvas)
+        {
+            // Los trazos estan en UV; en un lienzo no cuadrado se pasan a un espacio isotropico.
+            return StrokeCleaner.CleanSession(canvas.Session.Scaled(canvas.UvToIsotropic), simplificationTolerance, splineResolution);
+        }
+
+        /// <summary>Compila y lanza lo que haya en el lienzo, sin mirar la fase. Lo usan la auto-activacion y los tests.</summary>
         public SpellIR Cast(DrawingCanvas canvas)
         {
             if (canvas == null || canvas.Session.IsEmpty)
@@ -49,11 +103,7 @@ namespace SpellSimulator.Casting
                 return SpellIR.Invalid("Sin reconocedor", null);
             }
 
-            // Los trazos estan en UV; en un lienzo no cuadrado se pasan a un espacio isotropico.
-            DrawingSession isotropic = canvas.Session.Scaled(canvas.UvToIsotropic);
-            DrawingSession cleaned = StrokeCleaner.CleanSession(isotropic, simplificationTolerance, splineResolution);
-
-            ParsedSeal seal = SealParser.Parse(cleaned);
+            ParsedSeal seal = SealParser.Parse(Clean(canvas));
             var candidates = new List<DrawingSession>();
             foreach (var c in seal.AllCandidates()) candidates.Add(c.Strokes);
 

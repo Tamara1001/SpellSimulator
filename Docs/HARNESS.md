@@ -58,11 +58,12 @@ El Editor **auto-refresca** mientras se editan archivos desde afuera: si un `.cs
 
 Al agregar un `using` de un paquete nuevo en runtime, sumar su asmdef a `references` de `SpellSimulator.Runtime.asmdef`.
 
-## Tests (44 al 2026-10-07)
+## Tests (50 al 2026-10-07)
 | Archivo | Cubre |
 |---|---|
 | `ParsingTests` | RingDetector (cerrado/abierto/dos arcos/ajuste), StrokeGrouper (transitividad), SymbolCandidate, capas, StrokeCleaner, GeometryUtils |
 | `RecognitionTests` | Softmax, TTA, TensorRasterizer, GlyphDictionary, **end-to-end modelo: 20/20 plantillas** |
+| `SealActivationTests` | Fases del sello: preparado, cerrar ⇒ lanzar, gastado no relanza, inválido reintenta, borrar rearma |
 | `CompilerTests` | Gates (sin anillo, baja confianza, sin sigilo, varios sigilos), activo/preparado, levitation, dirección inward, cancelación, fuerza, escala |
 
 ## Escribir tests

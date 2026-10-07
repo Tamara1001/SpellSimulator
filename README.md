@@ -113,7 +113,7 @@ Para maximizar la inmersión sin depender de Interfaces de Usuario (UI) tradicio
 - **El Grimorio (Diccionario):** Un libro físico sostenido en la mano izquierda que actúa como archivo de conocimiento mágico. Registra los glifos descubiertos exactos que debes dibujar. Incluye animaciones automáticas de tinta en sus páginas para enseñar al jugador el orden y velocidad de los trazos requeridos.
 - **Sellos Mágicos en Blanco (Stamps):** Herramientas físicas de maestría. El jugador puede transferir el conocimiento de un glifo desde una página del Grimorio hacia un "Sello en Blanco". Al estampar este sello contra un lienzo, se dibuja instantáneamente el patrón perfecto, agilizando la experimentación.
 - **Retroalimentación Háptica (Haptics):** Los controladores (Gamepad/VR) reaccionan a la fricción de la tinta y emiten un pulso contundente al compilar el hechizo exitosamente.
-- **Mapeo de Hardware (Cast/Undo):** Las acciones mágicas están atadas a inputs secundarios (Click Derecho / Botones B/Y) ejecutadas directamente desde las herramientas físicas.
+- **Activación canónica:** como en Witch Hat Atelier, el hechizo se lanza al **cerrar el anillo**. El input secundario de las herramientas (click derecho / botón A) deshace el último trazo.
 
 ---
 
@@ -150,8 +150,9 @@ bugs y deuda técnica en [`Docs/KNOWN_ISSUES.md`](Docs/KNOWN_ISSUES.md).
 1. Abrir el proyecto con **Unity 6000.3.14f1**.
 2. Cargar `Assets/_Project/Scenes/Escena.unity`.
 3. **Play**. En PC: `WASD` + mouse, `E` agarra/suelta (lápiz a la derecha, lienzo a la izquierda),
-   click izquierdo dibuja, click derecho con el lápiz **castea** (con la goma: deshacer).
-4. En VR (Quest Link/OpenXR): grip agarra, gatillo dibuja, botón A castea/deshace.
+   click izquierdo dibuja y click derecho deshace. Dibujá el sigilo y los signos y **cerrá el anillo al final**:
+   el hechizo se lanza solo.
+4. En VR (Quest Link/OpenXR): grip agarra, gatillo dibuja, botón A deshace.
 5. Tests: menú `SpellSimulator > Harness > Run EditMode Tests` (resultado en `Logs/harness-editmode.txt`).
 
 ---

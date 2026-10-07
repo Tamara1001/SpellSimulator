@@ -79,12 +79,32 @@ Mismo sistema mágico, en una arena de combate.
 | Lanzar | Soltar mientras te movés / Q | Soltar con velocidad (física) |
 | Liberar cursor | Escape | — |
 
+## Decisiones (2026-10-07)
+1. **Auto-activación**: el hechizo se lanza solo al **cerrar el anillo**. El secundario de las herramientas es deshacer.
+   Consecuencia de diseño (canon): *el anillo se cierra al final*. Si el anillo ya estaba cerrado y el sello era
+   inválido, cada trazo nuevo vuelve a intentar el lanzamiento. Un sello lanzado queda **gastado** hasta que se borre
+   o se vuelva a abrir el anillo.
+2. **Hechizos activos simultáneos**: se define midiendo rendimiento en Quest (tarea de M3/M7). Valor provisorio: 6.
+3. **El personaje recibe efectos** en el modo Libre: empujones, viento y salpicaduras. No recibe daño.
+4. **Sellos grabados en piedra** (definido):
+   - Son permanentes y se reactivan tocándolos (secundario sobre el sello) o con su trigger.
+   - Cooldown = `max(5 s, 2 × duración del hechizo)`.
+   - **Durabilidad de 5 usos**: cada uso agrieta la piedra (visual) y al quinto se parte.
+   - Un golpe de tierra o una explosión fuerte también la rompe.
+   - Grabar es lento (≈ 3× el tiempo de dibujar) pero no gasta tinta.
+5. **Duelo** (valores iniciales, todo en un SO de balance):
+   - Vida 100 por jugador; ronda de **3 minutos**; al mejor de 3 rondas.
+   - Tinta: depósito de 100 por herramienta y regeneración pasiva de 2/s. Dos tinteros en la arena recargan
+     completo en 1.5 s, pero te dejan expuesto.
+   - Mazo: **3 sellos preparados, 1 carga cada uno**, elegidos antes de la partida. Estamparlos es casi instantáneo.
+   - Daño de referencia:
+     - Impacto directo: 8–30, según `force × caudal × quality`.
+     - Quemadura: 4/s mientras dura.
+     - Aplastamiento con tierra o fragmentos: hasta 25.
+     - Agua y viento: casi no dañan, pero empujan, derriban y rompen sellos rivales.
+   - Arena circular simétrica de ~24 m de diámetro, con 4 coberturas destructibles y una fuente central.
+6. **Audio**: música (ambiental en Libre, más tensa en Duelo) + SFX diegéticos (pluma, tinta, fuego, agua, viento, roturas).
+7. **Tutorial**: sí, pero más adelante (después de M6).
+
 ## Preguntas abiertas
-1. **Auto-activación**: ¿el hechizo se lanza solo al cerrar el anillo (canon, propuesta) o se conserva la acción
-   explícita de "lanzar"? Afecta el feel en PC.
-2. ¿Hay un **límite de hechizos activos** simultáneos (por rendimiento en Quest)?
-3. ¿El **personaje recibe efectos** en el modo Libre (empujones, quemaduras visuales) o es intocable?
-4. ¿Los **sellos permanentes** grabados en piedra se pueden reactivar indefinidamente (con un cooldown)?
-5. **Duelo**: ¿cuánta vida y cuánto tiempo? ¿Cuántos sellos preparados? ¿Arena simétrica?
-6. **Sonido**: ¿música ambiental o sólo sonidos diegéticos (pluma, viento, fuego)?
-7. ¿Hay un **tutorial guiado** (un maestro o notas en la torre) o se aprende sólo con los libros?
+- Ninguna bloqueante. Los números del Duelo se ajustan jugando (D1).

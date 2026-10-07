@@ -8,6 +8,13 @@ Al resolver uno, no lo borres: marcalo resuelto y explicá cómo.
 
 ## Abiertos
 
+### KI-032
+🟠 `abierto` — **Trazos de un glifo detectados como anillo.** Con sólo el sigilo de fuego dibujado, sus curvas ya se
+leen como un "anillo abierto" (fase Preparado). Si un glifo grande tuviera un círculo cerrado, la auto-activación
+intentaría lanzar (sería inválido por falta de sigilo, sin efecto). La referencia rechaza los "círculos decorados con
+glifos" (`parser/rings/glyphCircle.ts`: cola de tinta fuera de la banda, trazos que cruzan, trazos pegados). Portar esa
+regla y exigir un radio mínimo relativo al tamaño de los demás trazos.
+
 ### KI-020
 🟠 `abierto` — **Agrupado de trazos simplificado.** `StrokeGrouper` usa umbral radial (0.40 r) + proximidad. La
 referencia hace búsqueda de particiones guiada por reconocimiento (`parser/grouping/partition.ts`): separa un signo

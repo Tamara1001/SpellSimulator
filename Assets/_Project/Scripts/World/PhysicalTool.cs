@@ -10,7 +10,7 @@ namespace SpellSimulator.World
     /// <summary>
     /// Herramienta fisica (lapiz, goma) que el jugador agarra y usa. Proyecta un rayo sobre un DrawingCanvas:
     /// en PC desde la camara (mira), en VR desde la punta de la herramienta.
-    /// Uso primario = dibujar/borrar. Secundario: lapiz = lanzar hechizo, goma = deshacer.
+    /// Uso primario = dibujar/borrar. Secundario = deshacer. El hechizo se lanza solo al cerrar el anillo.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(Collider))]
@@ -28,7 +28,7 @@ namespace SpellSimulator.World
         private Transform raycastOrigin;
 
         [Header("Casting")]
-        [SerializeField, Tooltip("Servicio que lanza el hechizo (solo lo usa el lapiz).")]
+        [SerializeField, Tooltip("Servicio que evalua el sello al terminar cada trazo y lanza el hechizo.")]
         private SpellCaster spellCaster;
 
         private Rigidbody rb;
@@ -100,22 +100,27 @@ namespace SpellSimulator.World
         {
             if (currentCanvas == null) return;
             tool.OnPointerUp();
+            DrawingCanvas finished = currentCanvas;
             currentCanvas = null;
+
+            // Canon: el hechizo se lanza al cerrar el anillo. Solo la tinta puede cerrarlo; borrar solo actualiza la fase.
+            if (spellCaster == null)
+            {
+                Debug.LogWarning($"[PhysicalTool] {name} no tiene SpellCaster asignado.", this);
+                return;
+            }
+            if (kind == ToolKind.Pen) spellCaster.OnStrokeFinished(finished);
+            else spellCaster.OnSealEdited(finished);
         }
 
+        /// <summary>Secundario: deshacer el ultimo trazo del lienzo apuntado.</summary>
         public void OnSecondaryUseStart()
         {
             if (!TryShootLaser(out _, out DrawingCanvas canvas)) return;
+            if (!canvas.Session.UndoLastStroke()) return;
 
-            if (kind == ToolKind.Pen)
-            {
-                if (spellCaster != null) spellCaster.Cast(canvas);
-                else Debug.LogWarning($"[PhysicalTool] {name} no tiene SpellCaster asignado.", this);
-            }
-            else if (canvas.Session.UndoLastStroke())
-            {
-                canvas.Redraw();
-            }
+            canvas.Redraw();
+            if (spellCaster != null) spellCaster.OnSealEdited(canvas);
         }
 
         private bool TryShootLaser(out Vector2 uv, out DrawingCanvas canvas)
