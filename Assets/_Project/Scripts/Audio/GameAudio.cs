@@ -88,7 +88,7 @@ namespace SpellSimulator.Audio
 
         private void OnPhase(DrawingCanvas canvas, SealPhase phase)
         {
-            if (phase == SealPhase.Prepared && Director != null) Director.Play("seal_prepared", canvas.transform.position);
+            if ((phase == SealPhase.Prepared || phase == SealPhase.Armed) && Director != null) Director.Play("seal_prepared", canvas.transform.position);
         }
 
         private void OnCompiled(SpellIR spell, DrawingCanvas canvas)

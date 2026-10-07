@@ -15,6 +15,8 @@ namespace SpellSimulator.World
         [Header("Papel suelto")]
         [SerializeField, Tooltip("Aceleracion angular (rad/s2) que acuesta la hoja cuando esta suelta: un papel no queda de canto.")]
         private float settleTorque = 40f;
+        [SerializeField, Tooltip("Si se acuesta sola al soltarla. Desactivar en piedras y placas con sello.")]
+        private bool settleFlat = true;
         [SerializeField, Tooltip("Frenado del giro al acostarse (1/s).")]
         private float settleDamping = 6f;
         [SerializeField, Tooltip("Frenado del aire mientras cae suelta (planea un poco).")]
@@ -38,7 +40,7 @@ namespace SpellSimulator.World
         /// </summary>
         private void FixedUpdate()
         {
-            if (holdParent != null || rb.isKinematic) return;
+            if (!settleFlat || holdParent != null || rb.isKinematic) return;
             Vector3 normal = transform.forward;
             float facing = Vector3.Dot(normal, Vector3.up);
             Vector3 target = facing >= 0f ? Vector3.up : Vector3.down;

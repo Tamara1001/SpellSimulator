@@ -76,7 +76,8 @@ namespace SpellSimulator.Casting
                 ? RingInfo.NotFound()
                 : RingDetector.Detect(Clean(canvas));
             SealPhase previous = GetPhase(canvas);
-            SealPhase next = SealActivation.Evaluate(ring, previous, castAllowed, out bool shouldCast);
+            bool deferred = canvas.GetComponentInParent<Interfaces.ISealTrigger>() != null;
+            SealPhase next = SealActivation.Evaluate(ring, previous, castAllowed, deferred, out bool shouldCast);
 
             if (shouldCast)
             {
@@ -89,7 +90,21 @@ namespace SpellSimulator.Casting
                     $"<b>[Sello] Preparado</b>\nAnillo abierto ({ring.Completeness:P0}). Cerralo para lanzar.");
             }
 
+            if (next == SealPhase.Armed && previous != SealPhase.Armed)
+                DiagnosticBus.OnDiagnosticsUpdated?.Invoke(
+                    "<b>[Sello] Armado</b>\nEl sello se lanza cuando se active su disparador (impacto o presion).");
+
             SetPhase(canvas, next);
+        }
+
+        /// <summary>Dispara un sello armado (lo llaman los disparadores). Devuelve si se lanzo.</summary>
+        public bool Trigger(DrawingCanvas canvas)
+        {
+            if (canvas == null || !SealActivation.ShouldFire(GetPhase(canvas))) return false;
+            SpellIR spell = Cast(canvas);
+            bool launched = spell.valid && spell.active;
+            SetPhase(canvas, launched ? SealPhase.Spent : SealPhase.Armed);
+            return launched;
         }
 
         private void SetPhase(DrawingCanvas canvas, SealPhase phase)

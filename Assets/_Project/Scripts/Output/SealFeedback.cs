@@ -80,7 +80,7 @@ namespace SpellSimulator.Output
                 float t = (flashUntil - Time.time) / flashSeconds;
                 tint = Color.Lerp(tint, flashColor, t);
             }
-            else if (phase == SealPhase.Prepared)
+            else if (phase == SealPhase.Prepared || phase == SealPhase.Armed)
             {
                 float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * pulseSpeed * Mathf.PI * 2f);
                 tint = Color.Lerp(tint, preparedColor, pulse * 0.6f);

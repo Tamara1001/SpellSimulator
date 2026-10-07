@@ -82,6 +82,12 @@ Se empieza conociendo **Fuego, Columna y Levitación**. Los libros de la torre e
 del estudio) y *Signos raros* (pedestal en la terraza, premio por subir). Dibujar bien un glifo desconocido también lo
 descubre. El grimorio muestra cada glifo dibujándose solo, con su explicación. El progreso se guarda.
 
+## Sellos en objetos (M6)
+Un objeto con `SealTrigger` no lanza el sello al cerrar el anillo: lo deja **armado** (el papel pulsa igual que uno
+preparado) y se lanza cuando algo lo activa. En el campo de práctica, junto a la mesa de estampas: dos **piedras de
+impacto** (se arrojan; el golpe fuerte, desde 3 m/s, lanza el sello) y una **placa de presión** con una **pesa** (lo pesado
+apoyado más de 0,25 s la activa; también el jugador). Tras lanzarse el sello queda gastado: se borra y se vuelve a dibujar.
+
 ## Estampas (M6)
 Tres tamaños en la mesa del campo de práctica (S 8 cm, M 20 cm, L 34 cm) y una M en el escritorio de la biblioteca. Se
 cargan desde la página de un glifo del grimorio (5 usos por carga). Un **sigilo** se estampa con su anillo **abierto**:

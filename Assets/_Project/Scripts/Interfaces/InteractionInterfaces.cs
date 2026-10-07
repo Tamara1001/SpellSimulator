@@ -76,3 +76,12 @@ namespace SpellSimulator.Interfaces
         void Press();
     }
 }
+
+namespace SpellSimulator.Interfaces
+{
+    /// <summary>
+    /// Marca un objeto cuyo sello no se lanza al cerrar el anillo sino cuando se activa un disparador (impacto,
+    /// presion). SpellCaster lo busca en el lienzo para dejar el sello armado.
+    /// </summary>
+    public interface ISealTrigger { }
+}

@@ -119,6 +119,7 @@ Tamara; con muchas cosas ardiendo suenan muchos loops de fuego a la vez (poner u
 | KI-047 🟢 | **Nuevo (M4):** el estanque se armó a y=0 y el piso real está a 0.5 (cubo) | Estanque subido. Ojo al ubicar props: la cara de arriba del `Floor` es y=0.5. |
 | KI-056 🟠 | **Prueba manual:** no se podía entrar a la torre sin saltar (el zócalo subía 60 cm en la puerta) | Zócalo cortado en la puerta y bajado a 25 cm; umbral de 5 cm. |
 | KI-057 🟠 | **Prueba manual:** el jugador se trababa con muebles y bordes (cápsula de 1 m de ancho, esfera extra, fricción) | Cápsula de radio 0.3, sin la esfera, material sin fricción, subida automática de escalones (≤ 35 cm) y gravedad contra el piso cuando está quieto (no resbala en rampas). Silla y atril fuera del paso puerta → rampa. |
+| KI-059 🟡 | **Pendiente:** `SplitJoin` (sello partido en dos objetos que se activa al juntarlos) no está hecho; las piedras y placas solo cubren `Impact` y `Pressure` | Fusionar las sesiones de dos lienzos al alinearlos. |
 | KI-058 🟢 | **Prueba manual:** el dorso de los lienzos no se veía | `Canvas.mat` de doble cara. |
 | KI-055 🟢 | **Nuevo (M6):** los textos de ayuda ("Agarrar …") se armaban en cada frame al mirarlos (GC por frame) | Se arman una vez y se guardan. |
 | KI-052 🟠 | **Prueba manual:** no se podía subir al segundo piso: la cabeza chocaba con el piso de arriba (2.0 m libres, el jugador mide ~2.1) | Hueco del piso mayor: 3 m libres en toda la rampa (medido con rayos: mínimo 2.98 m). |

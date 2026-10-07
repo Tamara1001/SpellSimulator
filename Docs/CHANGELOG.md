@@ -5,6 +5,15 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — M6: sellos en objetos (impacto y presión)
+- `SealPhase.Armed`: con un `SealTrigger` en el objeto, cerrar el anillo arma el sello en vez de lanzarlo
+  (`SealActivation.Evaluate` con `deferred`, `ShouldFire`). `SpellCaster.Trigger(canvas)` lo lanza; `ISealTrigger` evita
+  que Casting dependa de World.
+- `SealTrigger` (Impact por velocidad relativa, Pressure por masa apoyada) y `PhysicalCanvas.settleFlat`.
+- `MapContraptions`: 2 piedras de impacto, placa de presión y pesa junto a la mesa de estampas.
+- 3 tests de `SealActivation` (125 en total). Verificado en Play: ambos quedan Armed y se lanzan al golpe y al peso.
+- Pendiente: `SplitJoin` (KI-059).
+
 ## 2026-10-07 — M6: estampas
 - `StampPattern` (puro): sigilo + anillo abierto del diámetro de la estampa; signo del tamaño del anillo existente,
   orientado hacia su centro. `Stamp`: se agarra, se carga del grimorio abierto (`Grimoire.CurrentGlyph`, 5 usos) y

@@ -58,5 +58,31 @@ namespace SpellSimulator.Tests
             var reopened = SealActivation.Evaluate(Ring(true, false), SealPhase.Spent, false, out _);
             Assert.AreEqual(SealPhase.Prepared, reopened, "Borrar parte del anillo de un sello gastado lo rearma.");
         }
+
+        [Test]
+        public void ClosedRing_WithTrigger_ArmsInsteadOfCasting()
+        {
+            var phase = SealActivation.Evaluate(Ring(true, true), SealPhase.Prepared, true, deferred: true, out bool cast);
+            Assert.AreEqual(SealPhase.Armed, phase);
+            Assert.IsFalse(cast);
+        }
+
+        [Test]
+        public void ArmedSeal_StaysArmed_AndOnlyArmedFires()
+        {
+            var phase = SealActivation.Evaluate(Ring(true, true), SealPhase.Armed, true, deferred: true, out bool cast);
+            Assert.AreEqual(SealPhase.Armed, phase);
+            Assert.IsFalse(cast);
+            Assert.IsTrue(SealActivation.ShouldFire(SealPhase.Armed));
+            Assert.IsFalse(SealActivation.ShouldFire(SealPhase.Prepared));
+            Assert.IsFalse(SealActivation.ShouldFire(SealPhase.Spent));
+        }
+
+        [Test]
+        public void SpentSeal_WithTrigger_DoesNotRearm_ButOpeningTheRingPrepares()
+        {
+            Assert.AreEqual(SealPhase.Spent, SealActivation.Evaluate(Ring(true, true), SealPhase.Spent, true, true, out _));
+            Assert.AreEqual(SealPhase.Prepared, SealActivation.Evaluate(Ring(true, false), SealPhase.Armed, false, true, out _));
+        }
     }
 }

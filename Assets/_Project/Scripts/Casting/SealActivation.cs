@@ -9,6 +9,8 @@ namespace SpellSimulator.Casting
         Drawing,
         /// <summary>Anillo abierto: el sello espera a que lo cierren.</summary>
         Prepared,
+        /// <summary>Anillo cerrado en un sello con disparador (impacto, presion): espera a que algo lo active.</summary>
+        Armed,
         /// <summary>El hechizo ya se lanzo. No vuelve a lanzarse hasta que el anillo se abra o se borre.</summary>
         Spent
     }
@@ -24,10 +26,15 @@ namespace SpellSimulator.Casting
         /// <param name="castAllowed">False para ediciones que no pueden cerrar un anillo (borrar, deshacer).</param>
         /// <param name="shouldCast">True si hay que compilar y lanzar ahora.</param>
         public static SealPhase Evaluate(RingInfo ring, SealPhase current, bool castAllowed, out bool shouldCast)
+            => Evaluate(ring, current, castAllowed, false, out shouldCast);
+
+        /// <param name="deferred">El sello tiene un disparador: al cerrar el anillo queda armado en vez de lanzarse.</param>
+        public static SealPhase Evaluate(RingInfo ring, SealPhase current, bool castAllowed, bool deferred, out bool shouldCast)
         {
             shouldCast = false;
             if (!ring.Found) return SealPhase.Drawing;
             if (!ring.Complete) return SealPhase.Prepared;
+            if (deferred) return current == SealPhase.Spent ? SealPhase.Spent : SealPhase.Armed;
 
             // Anillo cerrado. Un sello gastado no se relanza con trazos nuevos.
             if (current == SealPhase.Spent) return SealPhase.Spent;
@@ -36,6 +43,9 @@ namespace SpellSimulator.Casting
             shouldCast = castAllowed;
             return current;
         }
+
+        /// <summary>El disparador de un sello se activo: solo lanza si estaba armado.</summary>
+        public static bool ShouldFire(SealPhase current) => current == SealPhase.Armed;
 
         /// <summary>Fase tras un intento de cast con el anillo cerrado.</summary>
         public static SealPhase AfterCast(bool launched) => launched ? SealPhase.Spent : SealPhase.Prepared;
