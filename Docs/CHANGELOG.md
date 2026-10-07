@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — Primeras fixtures reales y sigilo sin partes sueltas
+- Dos sellos grabados por Tamara (mismo dibujo, uno prolijo y uno a propósito desprolijo) pasan a `Tests/Fixtures`.
+- El desprolijo fallaba porque una columna cercana se fusionaba con el fuego (confianza 0.43). Nueva hipótesis del
+  `SealReader`: separar del sigilo las partes que no lo tocan y leerlas como signos. Ahora lanza fuego.
+- Descubierto KI-042: columna con barra curva/separada se lee como `region`. Convención aclarada: la columna apunta
+  desde la barra corta hacia la punta del palito.
+- 90 tests. Docs: KNOWN_ISSUES, HARNESS, ARCHITECTURE.
+
 ## 2026-10-07 — Grabación de sellos y lectura de signos en el panel
 - La prueba manual de M3 mostró columnas leídas hacia afuera (abanico) y una columna leída como `region`, sin forma de
   saber qué se dibujó. Ahora `SealRecord` guarda cada sello lanzado (trazos crudos + resultado) en

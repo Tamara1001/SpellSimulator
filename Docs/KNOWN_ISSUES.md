@@ -12,7 +12,15 @@ Al resolver uno, no lo borres: marcalo resuelto y explicá cómo.
 🟠 `parcial` — **Agrupado de trazos.** Ahora: afinidad portada de la referencia (tocarse, encerrar, compartir centro) +
 lectura guiada por reconocimiento barata (`SealReader`: hipótesis "capa media fusionada al sigilo" en el mismo batch y
 modo radial si nada fue válido). Cubre sigilos grandes con partes sueltas (fuego, agua, tierra, luz, viento: test
-end-to-end). Falta la búsqueda de particiones completa de la referencia (`partition.ts`) para signos pegados al sigilo.
+end-to-end). Si nada es válido, prueba también **el sigilo sin sus partes sueltas** (`SealParser.PeelLooseFromSigil`):
+lo que no toca el núcleo pasa a ser signo (fixture `fire_columnas_mal`). Falta la búsqueda de particiones completa de
+la referencia (`partition.ts`).
+
+### KI-042
+🟠 `abierto` — **Columna dibujada con la barra curva o separada del palito se lee como `region`** (fixture
+`fire_columnas_bien`: 0.62 region / 0.38 column). Es una confusión del modelo entre dos glifos parecidos. Opciones: tutorial
+que muestre la columna canónica (barra recta tocando el palito), o desempate por geometría (la región es un arco sin
+palito). Pendiente de más fixtures.
 
 ### KI-022
 🟢 `abierto` — El gate de ambigüedad del sigilo (`PrimarySigilAmbiguityGap = 0.05`) es inalcanzable con softmax puro:

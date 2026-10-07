@@ -52,6 +52,97 @@ namespace SpellSimulator.Parsing
             return merged;
         }
 
+        /// <summary>Dos trazos se tocan si pasan a menos de esto (en radios del anillo).</summary>
+        public const float TouchDistance = 0.05f;
+        /// <summary>Partes sueltas a menos de esto entre si forman un mismo signo (como el alcance de afinidad).</summary>
+        public const float PeelClusterReach = 0.2f;
+
+        /// <summary>
+        /// Hipotesis inversa a la fusion: el sigilo se quedo con un signo cercano que no lo toca (prueba manual
+        /// 2026-10-07: una columna pegada al fuego bajo la confianza del sigilo a 0.43). El nucleo es la parte conectada
+        /// con mas tinta; las demas partes sueltas se agrupan entre si y pasan a ser signos. Null si el sigilo es una
+        /// sola pieza.
+        /// </summary>
+        public static ParsedSeal PeelLooseFromSigil(ParsedSeal seal)
+        {
+            if (!seal.Ring.Found || seal.SigilCandidate == null) return null;
+            var strokes = seal.SigilCandidate.Strokes.Strokes;
+            if (strokes.Count < 2) return null;
+
+            float touch = TouchDistance * seal.Ring.Radius;
+            int[] part = Components(strokes, touch);
+
+            // Nucleo = componente con mas tinta.
+            var ink = new Dictionary<int, float>();
+            for (int i = 0; i < strokes.Count; i++)
+            {
+                ink.TryGetValue(part[i], out float v);
+                ink[part[i]] = v + GeometryUtils.StrokeLength(strokes[i]);
+            }
+            if (ink.Count < 2) return null;
+            int core = -1;
+            foreach (var kv in ink) if (core < 0 || kv.Value > ink[core]) core = kv.Key;
+
+            var coreStrokes = new DrawingSession();
+            var loose = new List<Stroke>();
+            for (int i = 0; i < strokes.Count; i++)
+                if (part[i] == core) coreStrokes.AddStroke(strokes[i]); else loose.Add(strokes[i]);
+
+            var peeled = new ParsedSeal { Ring = seal.Ring };
+            peeled.SigilCandidate = SymbolCandidate.Build(coreStrokes, seal.Ring.Center, seal.Ring.Radius);
+            int[] cluster = Components(loose, PeelClusterReach * seal.Ring.Radius);
+            var bySign = new Dictionary<int, DrawingSession>();
+            for (int i = 0; i < loose.Count; i++)
+            {
+                if (!bySign.TryGetValue(cluster[i], out var session)) bySign[cluster[i]] = session = new DrawingSession();
+                session.AddStroke(loose[i]);
+            }
+            foreach (var session in bySign.Values)
+                peeled.SignCandidates.Add(SymbolCandidate.Build(session, seal.Ring.Center, seal.Ring.Radius));
+            peeled.SignCandidates.AddRange(seal.SignCandidates);
+            return peeled;
+        }
+
+        /// <summary>Componentes conexas (union-find) de trazos que pasan a menos de reach entre si.</summary>
+        private static int[] Components(IReadOnlyList<Stroke> strokes, float reach)
+        {
+            int[] parent = new int[strokes.Count];
+            for (int i = 0; i < parent.Length; i++) parent[i] = i;
+            int Find(int x) { while (parent[x] != x) x = parent[x] = parent[parent[x]]; return x; }
+
+            for (int i = 0; i < strokes.Count; i++)
+                for (int j = i + 1; j < strokes.Count; j++)
+                    if (StrokeDistance(strokes[i], strokes[j]) <= reach) parent[Find(i)] = Find(j);
+
+            for (int i = 0; i < parent.Length; i++) parent[i] = Find(i);
+            return parent;
+        }
+
+        /// <summary>Distancia minima entre dos polilineas (punto contra segmento, en ambos sentidos).</summary>
+        public static float StrokeDistance(Stroke a, Stroke b)
+        {
+            float best = float.MaxValue;
+            best = UnityEngine.Mathf.Min(best, PointsToPolyline(a.Points, b.Points));
+            best = UnityEngine.Mathf.Min(best, PointsToPolyline(b.Points, a.Points));
+            return best;
+        }
+
+        private static float PointsToPolyline(List<UnityEngine.Vector2> points, List<UnityEngine.Vector2> line)
+        {
+            float best = float.MaxValue;
+            foreach (var p in points)
+            {
+                if (line.Count == 1) { best = UnityEngine.Mathf.Min(best, (p - line[0]).magnitude); continue; }
+                for (int k = 0; k + 1 < line.Count; k++)
+                {
+                    UnityEngine.Vector2 a = line[k], ab = line[k + 1] - a;
+                    float t = ab.sqrMagnitude > 1e-12f ? UnityEngine.Mathf.Clamp01(UnityEngine.Vector2.Dot(p - a, ab) / ab.sqrMagnitude) : 0f;
+                    best = UnityEngine.Mathf.Min(best, (p - (a + ab * t)).magnitude);
+                }
+            }
+            return best;
+        }
+
         public static ParsedSeal Parse(DrawingSession cleaned, GroupingMode mode = GroupingMode.Affinity)
         {
             var seal = new ParsedSeal { Ring = RingDetector.Detect(cleaned) };

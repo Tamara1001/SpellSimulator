@@ -25,14 +25,24 @@ namespace SpellSimulator.Casting
     /// <summary>
     /// Lectura guiada por reconocimiento (aproximacion barata a la busqueda de particiones de la referencia):
     /// prueba varias agrupaciones del mismo dibujo y se queda con la que el modelo entiende mejor.
-    /// 1) afinidad, 2) afinidad con la capa media fusionada al sigilo (en el mismo batch), 3) radial si nada fue valido.
+    /// 1) afinidad, 2) afinidad con la capa media fusionada al sigilo (en el mismo batch), 3) si nada fue valido, el sigilo
+    /// sin sus partes sueltas (que pasan a ser signos), 4) radial.
     /// </summary>
     public static class SealReader
     {
         public static SealReading Read(DrawingSession cleaned, IGlyphClassifier classifier, GlyphDictionary dictionary, float time)
         {
-            SealReading best = ReadWithMergeHypothesis(SealParser.Parse(cleaned, GroupingMode.Affinity), classifier, dictionary, time);
+            ParsedSeal affinity = SealParser.Parse(cleaned, GroupingMode.Affinity);
+            SealReading best = ReadWithMergeHypothesis(affinity, classifier, dictionary, time);
             if (best.Spell.valid || !best.Ast.Ring.Found) return best;
+
+            ParsedSeal peeled = SealParser.PeelLooseFromSigil(affinity);
+            if (peeled != null)
+            {
+                SealReading peel = ReadPlain(peeled, classifier, dictionary, time);
+                if (peel.IsBetterThan(best)) best = peel;
+                if (best.Spell.valid) return best;
+            }
 
             SealReading radial = ReadWithMergeHypothesis(SealParser.Parse(cleaned, GroupingMode.Radial), classifier, dictionary, time);
             return radial.IsBetterThan(best) ? radial : best;
@@ -57,6 +67,17 @@ namespace SpellSimulator.Casting
             byCandidate[merged.SigilCandidate] = all[all.Length - 1];
             SealReading fused = Build(merged, byCandidate, dictionary, time);
             return fused.IsBetterThan(split) ? fused : split;
+        }
+
+        private static SealReading ReadPlain(ParsedSeal seal, IGlyphClassifier classifier, GlyphDictionary dictionary, float time)
+        {
+            var candidates = new List<SymbolCandidate>(seal.AllCandidates());
+            var sessions = new List<DrawingSession>();
+            foreach (var c in candidates) sessions.Add(c.Strokes);
+            GlyphPrediction[] all = classifier.Classify(sessions);
+            var byCandidate = new Dictionary<SymbolCandidate, GlyphPrediction>();
+            for (int i = 0; i < candidates.Count; i++) byCandidate[candidates[i]] = all[i];
+            return Build(seal, byCandidate, dictionary, time);
         }
 
         private static SealReading Build(ParsedSeal seal, Dictionary<SymbolCandidate, GlyphPrediction> byCandidate, GlyphDictionary dictionary, float time)
