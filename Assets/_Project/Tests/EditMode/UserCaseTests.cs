@@ -21,6 +21,7 @@ namespace SpellSimulator.Tests
         {
             var model = AssetDatabase.LoadAssetAtPath<ModelAsset>(TestAssets.ModelPath);
             classifier = new GlyphClassifier(model, BackendType.CPU, useRotationTta: true);
+            classifier.CalibratePose(TestAssets.Dictionary.TemplateSessions());
         }
 
         [OneTimeTearDown]
@@ -67,6 +68,45 @@ namespace SpellSimulator.Tests
             Assert.IsTrue(reading.Spell.valid, reading.Spell.status);
             Assert.AreEqual(element, reading.Spell.element);
             Assert.AreEqual(2, reading.Ast.Signs.Count + reading.Ast.Unknowns.Count, "Los dos signos quedan separados del sigilo.");
+        }
+
+        private static void AddSign(DrawingSession session, string id, Vector2 at, float rotationDeg)
+        {
+            foreach (var s in PoseTests.Rotated(id, rotationDeg).Strokes)
+            {
+                var stroke = new Stroke();
+                foreach (var p in s.Points) stroke.AddPoint((p - new Vector2(0.5f, 0.5f)) * 0.6f + at);
+                session.AddStroke(stroke);
+            }
+        }
+
+        [Test]
+        public void InwardColumnsTopAndBottom_JetStraightOut()
+        {
+            // Plantilla de signo = abajo apuntando arriba. Arriba hay que rotarla 180 para que apunte adentro.
+            var session = Template("fire", C, 0.22f);
+            session.AddStroke(TestStrokes.Circle(C, 0.4f, 64));
+            AddSign(session, "column", C + new Vector2(0f, -0.3f), 0f);
+            AddSign(session, "column", C + new Vector2(0f, 0.3f), 180f);
+
+            var plan = Read(session).Spell.plan;
+
+            Assert.Greater(plan.Aim.z, 0.5f, "Columnas opuestas hacia adentro chocan y salen del papel.");
+            Assert.Less(new Vector2(plan.Aim.x, plan.Aim.y).magnitude, 0.3f * plan.Aim.z);
+        }
+
+        [Test]
+        public void BothColumnsPointingUp_PushUpAlongThePaper()
+        {
+            var session = Template("fire", C, 0.22f);
+            session.AddStroke(TestStrokes.Circle(C, 0.4f, 64));
+            AddSign(session, "column", C + new Vector2(0f, -0.3f), 0f);
+            AddSign(session, "column", C + new Vector2(0f, 0.3f), 0f);
+
+            var plan = Read(session).Spell.plan;
+
+            Assert.Greater(plan.Aim.y, 0.5f, "Ambas apuntan hacia arriba: empuje lateral hacia arriba.");
+            Assert.That(plan.Aim.z, Is.LessThan(0.2f));
         }
 
         [TestCase("fire")]

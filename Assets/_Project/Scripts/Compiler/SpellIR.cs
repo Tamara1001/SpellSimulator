@@ -85,6 +85,12 @@ namespace SpellSimulator.Compiler
         /// <summary>Time.time al activarse, -1 si no esta activo.</summary>
         public float activatedAt;
 
+        /// <summary>Que hace el hechizo en el espacio (chorro, abanico, vortice, orbe, succion). Ver PlanResolver.</summary>
+        public SpellPlan plan;
+
+        /// <summary>Radio del anillo en metros (lo completa SpellCaster). El caudal escala con su area (ley extensiva).</summary>
+        public float sealRadius;
+
         public static SpellIR Invalid(string status, string[] warnings, float neatness = 0f)
         {
             return new SpellIR
@@ -102,7 +108,8 @@ namespace SpellSimulator.Compiler
                 gravity = 1f,
                 neatness = neatness,
                 direction = Vector3.forward,
-                activatedAt = -1f
+                activatedAt = -1f,
+                plan = SpellPlan.Inert()
             };
         }
 

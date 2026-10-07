@@ -54,6 +54,8 @@ namespace SpellSimulator.Compiler
         /// <summary>Mejor confianza de cualquier otra clase.</summary>
         public float CompetitorConfidence;
         public bool Recognized;
+        /// <summary>Rotacion respecto de la plantilla (grados antihorarios), de la pose del modelo. NaN si no hay.</summary>
+        public float RotationDeg = float.NaN;
         /// <summary>Motivo si no fue reconocido: low_confidence, unknown_class, wrong_layer.</summary>
         public string RejectReason;
 

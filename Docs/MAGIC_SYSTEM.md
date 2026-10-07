@@ -72,18 +72,21 @@ Están detalladas en `ground-truth.md`. Las que más impactan el diseño 3D son 
 
 ## 4. Traducción a reglas de juego
 
+Leyes del §3 implementadas en M3 (`PlanResolver` + `SpellManifestation` + `MagicField`): ráfaga, columna (chorro,
+abanico, vórtice), levitación (orbe), pull (succión) y convergencia (lente). Faltan región, weave y orbe-vasija.
+
 | Canon | Regla en SpellSimulator | Estado |
 |---|---|---|
-| Tinta de conjuro | Tinta = **recurso** en ambos modos. Cada herramienta tiene un depósito; se recarga con tinteros (objetos que se pueden llevar y mover). En PC, `R` recarga desde el tintero que tengas encima. | Diseño |
-| Cerrar el anillo activa | Al levantar el lápiz, si el anillo quedó cerrado, el hechizo **se lanza solo**. Anillo abierto = preparado (se ve el brillo, pero no se lanza). | Compilador listo; falta la auto-activación |
-| Prolijidad | `quality`, `stability` y `neatness` modulan la potencia y la duración. Un sello muy desprolijo hace sólo la ráfaga. | Parcial |
-| Tamaño extensivo | El radio del anillo **en metros** escala el caudal y la fuerza en el mundo. | Diseño |
+| Tinta de conjuro | Tinta = **recurso** en ambos modos. Cada herramienta tiene un depósito; se recarga con tinteros (objetos que se pueden llevar y mover). En PC, `R` recarga desde el tintero que tengas encima. | ✅ M2 |
+| Cerrar el anillo activa | Al levantar el lápiz, si el anillo quedó cerrado, el hechizo **se lanza solo**. Anillo abierto = preparado (se ve el brillo, pero no se lanza). | ✅ M2 |
+| Prolijidad | `quality`, `stability` y `neatness` modulan la potencia y la duración. Un sello muy desprolijo hace sólo la ráfaga. | Parcial (calidad modula densidad y acople; falta el "chisporroteo") |
+| Tamaño extensivo | El radio del anillo **en metros** escala el caudal y la fuerza en el mundo. | ✅ M3 (`MagicField`: el área escala el acople, la forma la velocidad) |
 | Romper el sello | La goma borra trazos y el **trapo** borra el lienzo entero. El **agua** de un hechizo que moja un sello lo mancha y lo rompe. Cortar o quemar el papel también lo rompe. | Diseño |
 | Contraptions | Sellos en objetos del mundo (paredes, piedras, mesas, papeles fijos) con disparadores: cerrar el anillo, juntar dos mitades, impacto o pisarlo. | Diseño |
 | Sellos partidos | Dos medias lunas en dos objetos; al alinearlos (distancia y ángulo) el sello se completa. | Diseño |
 | Sellos lanzables | Un sello en un papel o una piedra queda en reposo y se activa al impactar. | Diseño |
 | Estampas | Una estampa vacía copia un glifo del libro-menú y lo estampa en cualquier superficie. El tamaño de la estampa = tamaño del sello. | Diseño |
-| Elementos | Fuego, agua, viento, tierra y luz, con variantes por sigilo. | Listo (compilador) |
+| Elementos | Fuego, agua, viento, tierra y luz, con variantes por sigilo. | ✅ Compilador + look por elemento (M3) |
 | Magia prohibida | No se incluye por ahora (decisión 2026-10-07). | — |
 
 ## 5. Elementos × mundo (matriz de reacciones)

@@ -85,3 +85,19 @@ fuego rompen sellos (canon). Dibujar en el propio cuerpo no se modela por ahora.
 ## ADR-018 — El tamaño físico del sello importa
 **2026-10-07.** Por la ley extensiva del canon (`ground-truth.md` §2), el radio del anillo en metros escala el caudal y
 la fuerza total, mientras que la forma de los signos define la velocidad. Justifica papeles y estampas de varios tamaños.
+
+## ADR-019 — Partículas Shuriken + shader propio en vez de VFX Graph
+**2026-10-07.** Las manifestaciones se arman con `ParticleSystem` configurados por código a partir del plan y de un
+`ElementLook` (SO). El shader `SpellSimulator/SpellParticle` dibuja un disco suave procedural, aditivo o alfa, sin
+texturas. Razones: VFX Graph en Quest exige compute y es más caro; Shuriken es estable en móvil y se puede generar 100%
+por código (VFX Graph no). El viejo `Fire_VFX.vfx` queda sin uso.
+
+## ADR-020 — Los papeles emiten hacia el lado opuesto a quien mira
+**2026-10-07.** En el canon la magia sale por la cara con tinta, pero un papel de mano mira hacia quien dibuja, y el
+hechizo le explotaría en la cara. `DrawingCanvas.EmissionSide = AwayFromViewer` en papeles (la magia sale hacia el
+objetivo, como cuando los personajes giran el papel); `InkSide` queda para sellos en paredes, mesas y piedras.
+
+## ADR-021 — Física por arrastre al flujo
+**2026-10-07.** `MagicField` no aplica aceleraciones libres: cada primitiva define una velocidad de flujo y los cuerpos
+se aceleran hacia ella. La forma de los signos fija la velocidad y el área del sello, el acople (canon: intensivo vs.
+extensivo). Evita lanzamientos absurdos y hace que un sello grande "empuje más masa", no "más rápido".

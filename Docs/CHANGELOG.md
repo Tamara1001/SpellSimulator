@@ -5,6 +5,17 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — M3: el hechizo tiene forma y fuerza
+- **Pose**: el clasificador lee la salida `angle`, se calibra con las plantillas y da la rotación de cada glifo.
+- **Plan** (port de `reading/` + `plan/`): ley vectorial de columnas (chorro, abanico, vórtice), levitación (orbe),
+  pull (succión), convergencia (lente), dispersión (fuga), spin-up R‑21. Zona muerta + umbral relativo contra el ruido.
+- **Manifestación 3D**: `SpellManifestation` con una pista de partículas por primitiva, tiempos R‑01, en el centro del
+  anillo y con el radio real del sello. `ElementLook` × 5 y shader `SpellParticle` (Shuriken, apto Quest).
+- **Física**: `MagicField` por arrastre al flujo (empuja cajas y al jugador); `Respawnable` para lo que cae del mundo.
+- Papeles emiten hacia el lado opuesto a quien mira (ADR-020). Panel de diagnóstico muestra el plan.
+- Escena: plataforma con 9 blancos, cajas y una pesada. Harness: `HarnessCapture` + galería de primitivas.
+- 86 tests (pose y leyes del plan). Build de Windows actualizada.
+
 ## 2026-10-07 — M2: correcciones de la prueba manual, tinta, trapo, feedback y build
 - **Prueba manual**: el sigilo de fuego grande se partía en sigilo + 2 signos `region`. Se resolvió con agrupado por
   **afinidad** (de la referencia) + `SealReader` (lectura guiada por reconocimiento, en un batch). 5 sigilos grandes pasan end-to-end.

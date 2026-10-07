@@ -87,6 +87,7 @@ namespace SpellSimulator.Compiler
 
             // La activacion es el cierre del anillo y nada mas (invariante de la referencia).
             bool active = ast.Ring.Complete;
+            SpellPlan plan = PlanResolver.Resolve(PlanResolver.ReadSigns(ast), primary.Id, primary.Entry.Element, quality);
             return new SpellIR
             {
                 valid = true,
@@ -116,7 +117,8 @@ namespace SpellSimulator.Compiler
                 xTiltDeg = xTilt,
                 yTiltDeg = yTilt,
                 directionCoherence = coherence,
-                activatedAt = active ? time : -1f
+                activatedAt = active ? time : -1f,
+                plan = plan
             };
         }
 

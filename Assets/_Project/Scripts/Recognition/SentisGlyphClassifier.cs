@@ -43,6 +43,14 @@ namespace SpellSimulator.Recognition
             classifier = null;
         }
 
+        /// <summary>Calibra la cabeza de pose con las plantillas del diccionario (una vez, al iniciar).</summary>
+        public void CalibratePose(IReadOnlyList<DrawingSession> templates)
+        {
+            if (classifier == null) return;
+            classifier.CalibratePose(templates);
+            Debug.Log($"[Reconocimiento] Pose calibrada: {classifier.IsPoseCalibrated}");
+        }
+
         public GlyphPrediction[] Classify(IReadOnlyList<DrawingSession> candidates)
         {
             if (classifier == null) return new GlyphPrediction[0];

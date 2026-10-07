@@ -79,10 +79,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0b327969746fa79419fcef2a85376572, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Output.SpellOutputController
-  fireVFXPrefab: {fileID: 6686773562433114309, guid: d803d359e6af52e499679678f2730db7, type: 3}
-  waterVFXPrefab: {fileID: 4877043286424220123, guid: 54817d0dd925c7a4eb8dd193f2969a26, type: 3}
-  windVFXPrefab: {fileID: 4268524353424583305, guid: b687c5ac87f0a8143b2e556c12abb043, type: 3}
-  earthVFXPrefab: {fileID: 4877043286424220123, guid: c267fefe4a4260d47bd3fdf75adc0fb3, type: 3}
-  lightVFXPrefab: {fileID: 4268524353424583305, guid: 064504107942584458158ad38289c9c5, type: 3}
+  fire: {fileID: 11400000, guid: 2403721d26b7723478bf94a10478a719, type: 2}
+  water: {fileID: 11400000, guid: 584833238ba03444489c7398f052b456, type: 2}
+  wind: {fileID: 11400000, guid: 884d01ad2514ef84ab187646aada93f7, type: 2}
+  earth: {fileID: 11400000, guid: 4615ca28929dc944f8baef469cea6ef3, type: 2}
+  light: {fileID: 11400000, guid: dc6d433902fb03b4cb416bfedc7bb110, type: 2}
   surfaceOffset: 0.05
-  fadeMargin: 0.5
+  maxActive: 6

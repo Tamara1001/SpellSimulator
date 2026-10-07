@@ -1,104 +1,92 @@
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.VFX;
+using SpellSimulator.Canvas;
 using SpellSimulator.Compiler;
 
 namespace SpellSimulator.Output
 {
     /// <summary>
-    /// Modulo 5: salida visual. Instancia el prefab del elemento sobre el lienzo, orientado segun la
-    /// direccion compilada (espacio-papel -> mundo) y pasa los parametros al VFX Graph.
+    /// Modulo 5: salida. Crea la manifestacion 3D (SpellManifestation) y su efecto fisico (MagicField) en el centro del
+    /// anillo, con el tamanio real del sello y la cara de emision del papel. El look de cada elemento es un ElementLook.
     /// </summary>
     public class SpellOutputController : MonoBehaviour
     {
-        [Header("VFX Prefabs por Elemento")]
-        [SerializeField] private GameObject fireVFXPrefab;
-        [SerializeField] private GameObject waterVFXPrefab;
-        [SerializeField] private GameObject windVFXPrefab;
-        [SerializeField] private GameObject earthVFXPrefab;
-        [SerializeField] private GameObject lightVFXPrefab;
+        [Header("Looks por elemento")]
+        [SerializeField] private ElementLook fire;
+        [SerializeField] private ElementLook water;
+        [SerializeField] private ElementLook wind;
+        [SerializeField] private ElementLook earth;
+        [SerializeField] private ElementLook light;
 
-        [Header("Colocacion")]
-        [SerializeField, Tooltip("Distancia (m) delante del lienzo donde nace el efecto.")]
-        private float surfaceOffset = 0.05f;
-        [SerializeField, Tooltip("Segundos extra antes de destruir el efecto, para el fade.")]
-        private float fadeMargin = 0.5f;
+        [Header("Escala y presupuesto")]
+        [SerializeField, Tooltip("Distancia (m) delante del papel donde nace el efecto.")]
+        private float surfaceOffset = 0.03f;
+        [SerializeField, Tooltip("Hechizos activos simultaneos. Los mas viejos se apagan (provisorio hasta medir en Quest).")]
+        private int maxActive = 6;
 
-        // Nombres de propiedades exposed del VFX Graph.
-        private static readonly int ForceId = Shader.PropertyToID("Force");
-        private static readonly int SpreadId = Shader.PropertyToID("Spread");
-        private static readonly int FocusId = Shader.PropertyToID("Focus");
-        private static readonly int RangeId = Shader.PropertyToID("Range");
-        private static readonly int GravityId = Shader.PropertyToID("Gravity");
-        private static readonly int DurationId = Shader.PropertyToID("Duration");
-        private static readonly int StabilityId = Shader.PropertyToID("Stability");
-        private static readonly int QualityId = Shader.PropertyToID("Quality");
-        private static readonly int StrengthId = Shader.PropertyToID("Strength");
-        private static readonly int DirectionId = Shader.PropertyToID("Direction");
+        private readonly List<SpellManifestation> active = new List<SpellManifestation>();
+        private Camera cachedCamera;
 
-        /// <param name="anchor">Transform del lienzo: right = +x del papel, up = +y.</param>
-        /// <param name="surfaceNormalLocal">Normal "hacia afuera del papel" en espacio local del lienzo.</param>
-        public GameObject SpawnSpellEffect(SpellIR spell, Transform anchor, Vector3 surfaceNormalLocal)
+        /// <param name="ringCenterUV">Centro del anillo en UV del lienzo.</param>
+        public SpellManifestation SpawnSpellEffect(SpellIR spell, DrawingCanvas canvas, Vector2 ringCenterUV)
         {
             if (!spell.valid || !spell.active) return null;
 
-            GameObject prefab = SelectPrefab(spell.element);
-            if (prefab == null)
+            ElementLook look = LookFor(spell.element);
+            if (look == null || look.material == null)
             {
-                Debug.LogWarning($"[VFX Output] Sin prefab para el elemento {spell.element}.");
+                Debug.LogWarning($"[VFX Output] Sin ElementLook para {spell.element}.");
                 return null;
             }
 
-            Vector3 normal = anchor.TransformDirection(surfaceNormalLocal).normalized;
-            Vector3 worldDirection = PaperToWorld(spell.direction, anchor, normal);
-            Vector3 position = anchor.position + normal * surfaceOffset;
-            Quaternion rotation = Quaternion.LookRotation(worldDirection, Mathf.Abs(Vector3.Dot(worldDirection, anchor.up)) > 0.99f ? anchor.forward : anchor.up);
-
-            GameObject instance = Instantiate(prefab, position, rotation);
-            instance.transform.localScale = prefab.transform.localScale * spell.effectScale;
-
-            if (instance.TryGetComponent(out VisualEffect vfx))
+            if (cachedCamera == null) cachedCamera = Camera.main;
+            Vector3 viewer = cachedCamera != null ? cachedCamera.transform.position : canvas.transform.position - canvas.transform.forward;
+            Vector3 normal = canvas.EmissionNormal(viewer);
+            Transform t = canvas.transform;
+            // El borde derecho del dibujo es el mismo de ambos lados del papel: X e Y no se espejan al emitir por atras.
+            var frame = new SealFrame
             {
-                SetFloat(vfx, ForceId, spell.force);
-                SetFloat(vfx, SpreadId, spell.spread);
-                SetFloat(vfx, FocusId, spell.focus);
-                SetFloat(vfx, RangeId, spell.range);
-                SetFloat(vfx, GravityId, spell.gravity);
-                SetFloat(vfx, DurationId, spell.duration);
-                SetFloat(vfx, StabilityId, spell.stability);
-                SetFloat(vfx, QualityId, spell.quality);
-                SetFloat(vfx, StrengthId, spell.strength);
-                if (vfx.HasVector3(DirectionId)) vfx.SetVector3(DirectionId, worldDirection);
-            }
+                Origin = canvas.UVToWorld(ringCenterUV) + normal * surfaceOffset,
+                Right = t.right,
+                Up = t.up,
+                Normal = normal,
+                Radius = Mathf.Max(spell.sealRadius, 0.05f),
+            };
+            frame.Scale = frame.Radius * spell.effectScale;
 
-            Destroy(instance, spell.duration + fadeMargin);
-            Debug.Log($"[VFX Output] {spell.element} ({spell.sigilId}) | {spell.primaryManifestation} | " +
-                      $"escala {spell.effectScale:F2} | {spell.duration:F1}s");
-            return instance;
+            var go = new GameObject($"Spell_{spell.element}_{spell.primaryManifestation}");
+            var manifestation = go.AddComponent<SpellManifestation>();
+            manifestation.Init(spell, frame, look);
+            go.AddComponent<MagicField>().Init(spell, frame, look);
+
+            Track(manifestation);
+            Debug.Log($"[VFX Output] {spell.element} ({spell.sigilId}) | {spell.plan?.Primitives} | " +
+                      $"radio {frame.Radius:F2} m | {manifestation.BodySeconds:F1} s");
+            return manifestation;
         }
 
-        /// <summary>Direccion espacio-papel (x derecha, y arriba, z afuera) -> mundo.</summary>
-        public static Vector3 PaperToWorld(Vector3 paper, Transform anchor, Vector3 worldNormal)
+        private void Track(SpellManifestation manifestation)
         {
-            Vector3 world = anchor.right * paper.x + anchor.up * paper.y + worldNormal * paper.z;
-            return world.sqrMagnitude > 1e-8f ? world.normalized : worldNormal;
+            active.RemoveAll(m => m == null);
+            active.Add(manifestation);
+            while (active.Count > maxActive)
+            {
+                if (active[0] != null) Destroy(active[0].gameObject);
+                active.RemoveAt(0);
+            }
         }
 
-        private GameObject SelectPrefab(ElementType element)
+        private ElementLook LookFor(ElementType element)
         {
             switch (element)
             {
-                case ElementType.Fire: return fireVFXPrefab;
-                case ElementType.Water: return waterVFXPrefab;
-                case ElementType.Wind: return windVFXPrefab;
-                case ElementType.Earth: return earthVFXPrefab;
-                case ElementType.Light: return lightVFXPrefab;
+                case ElementType.Fire: return fire;
+                case ElementType.Water: return water;
+                case ElementType.Wind: return wind;
+                case ElementType.Earth: return earth;
+                case ElementType.Light: return light;
                 default: return null;
             }
-        }
-
-        private static void SetFloat(VisualEffect vfx, int id, float value)
-        {
-            if (vfx.HasFloat(id)) vfx.SetFloat(id, value);
         }
     }
 }

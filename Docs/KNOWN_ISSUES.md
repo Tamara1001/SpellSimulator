@@ -20,16 +20,26 @@ para pasar `≥ 0.62` la alternativa no puede superar 0.38. En la referencia la 
 (template matcher + ML). Queda como red de seguridad.
 
 ### KI-023
-🟢 `abierto` — **Capa Plan no portada** (`compiler/plan/`: columnas, regiones, vórtices, R‑xx). `SpellIR` tiene
-manifestaciones y escalares, pero no el "plan" que la referencia anima. Ver [[ROADMAP]] F4.
+🟠 `parcial` — **Capa Plan portada en parte.** Están: lectura con orientación, columnas (chorro, abanico, vórtice),
+levitación (orbe), pull (succión), convergencia (lente), dispersión como fuga y spin-up (R‑21). Faltan: **region**
+(cercos y válvulas, `region.ts` + `chevrons.ts`), **weave**, **orb/vessel** y snapping de simetría. Hoy esos signos aportan
+solo potencia y dejan una nota `unmodeled-*`.
+
+### KI-037
+🟢 `abierto` — **La succión (pull) atrae cualquier Rigidbody.** En el canon solo atrae materia del mismo elemento (agua
+del lago, fuego de una fogata). Se resuelve con el sistema de materiales y elementos de M4 (`MaterialProfile`).
+
+### KI-038
+🟢 `abierto` — **Partículas sin presupuesto medido en Quest**: cada hechizo puede llegar a ~1000 partículas (chorro 420/s).
+El límite de 6 hechizos activos es provisorio. Medir en el dispositivo (M3/M7).
+
+### KI-039
+🟢 `abierto` — `SpellManifestation.FastForward` adelanta partículas y tiempos pero no la física. Sirve para capturas y
+previews, no para simular resultados.
 
 ### KI-024
 🟢 `abierto` — `Assets/_Recovery/0.unity` (escena de recuperación tras un crash) y `_Project/DebugCanvasCapture.png`
 siguen en el repo. No se borraron porque pueden tener trabajo tuyo: revisar y decidir.
-
-### KI-025
-🟢 `abierto` — No se aprovechan las cabezas de pose del modelo (`angle`, `scale`, `center`). La orientación de cada
-signo sale de la geometría (`DirectedOrientationDeg`), no de la red. La referencia calibra el ángulo por glifo.
 
 ### KI-007
 🟢 `abierto` — El cast aloca (listas, `float[]` por predicción, `StringBuilder` de diagnóstico, `Texture2D` de debug).
@@ -74,4 +84,7 @@ convendría automatizarlo.
 | KI-033 🔴 | **Nuevo:** `Tensor<float>(shape, array)` copia el array entero, así que un cast con menos candidatos que el anterior lanzaba excepción | El buffer mide exactamente el batch. Lo encontró un test end-to-end. |
 | KI-035 🟠 | **Nuevo (prueba manual):** sigilo grande partido en sigilo + signos | Ver KI-020. Test `UserCaseTests`. |
 | KI-036 🟢 | **Nuevo (prueba manual):** dibujar se sentía lento | Estabilizador por plataforma (PC 40, VR 14) y sensibilidad al dibujar 0.2 → 0.6. |
+| KI-025 🟢 | No se usaban las cabezas de pose del modelo | `GlyphClassifier` lee `angle`, calibra con plantillas y da la rotación de cada glifo (test: error < 25° en 7 poses). |
+| KI-040 🔴 | **Nuevo (física):** el campo aplicaba aceleración sin límite, y un cuerpo liviano salía a cientos de m/s | Modelo de arrastre hacia la velocidad del flujo, ráfaga acotada, `Respawnable`. |
+| KI-041 🟠 | **Nuevo (plan):** el ruido de pose creaba chorros o giros fantasma en sellos simétricos | Zona muerta hacia las clases canónicas + umbral relativo de primitivas (20%). |
 | KI-031 🟢 | **Nuevo:** suelo detectaba triggers (lienzo sostenido) | `QueryTriggerInteraction.Ignore`. |

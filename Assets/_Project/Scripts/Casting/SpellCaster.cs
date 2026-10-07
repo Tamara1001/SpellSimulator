@@ -41,6 +41,12 @@ namespace SpellSimulator.Casting
 
         private readonly Dictionary<DrawingCanvas, SealPhase> phases = new Dictionary<DrawingCanvas, SealPhase>();
 
+        private void Start()
+        {
+            // La pose del modelo da la orientacion de cada signo; se calibra con las plantillas del diccionario.
+            if (classifier != null && dictionary != null) classifier.CalibratePose(dictionary.Dictionary.TemplateSessions());
+        }
+
         public SealPhase GetPhase(DrawingCanvas canvas)
         {
             return canvas != null && phases.TryGetValue(canvas, out var phase) ? phase : SealPhase.Drawing;
@@ -106,6 +112,12 @@ namespace SpellSimulator.Casting
             SealReading reading = SealReader.Read(Clean(canvas), classifier, dictionary.Dictionary, Time.time);
             GlyphAST ast = reading.Ast;
             SpellIR spell = reading.Spell;
+
+            // Tamanio real del sello: el pipeline trabaja en espacio isotropico (lado mayor del lienzo = 1).
+            Vector2 iso = canvas.UvToIsotropic;
+            Vector2 worldSize = canvas.WorldSize;
+            spell.sealRadius = ast.Ring.Radius * Mathf.Max(worldSize.x, worldSize.y);
+            Vector2 ringCenterUV = new Vector2(ast.Ring.Center.x / Mathf.Max(iso.x, 1e-6f), ast.Ring.Center.y / Mathf.Max(iso.y, 1e-6f));
             GlyphPrediction[] predictions = reading.Predictions;
 
             LastSpell = spell;
@@ -113,7 +125,7 @@ namespace SpellSimulator.Casting
             SpellCompiled?.Invoke(spell, canvas);
 
             if (spell.valid && spell.active && output != null)
-                output.SpawnSpellEffect(spell, canvas.transform, canvas.SurfaceNormalLocal);
+                output.SpawnSpellEffect(spell, canvas, ringCenterUV);
             return spell;
         }
 
@@ -144,7 +156,13 @@ namespace SpellSimulator.Casting
                 log.AppendLine($"Escala {spell.effectScale:F2} | Dur {spell.duration:F1}s | Fuerza {spell.force:F2}");
                 log.AppendLine($"Foco {spell.focus:F2} | Disp {spell.spread:F2} | Alcance {spell.range:F2}");
                 log.AppendLine($"Grav {spell.gravity:F2} | Calidad {spell.quality:F2} | Estab {spell.stability:F2}");
-                log.AppendLine($"Inclinacion x{spell.xTiltDeg:F0} y{spell.yTiltDeg:F0} (coh {spell.directionCoherence:F2})");
+                var plan = spell.plan;
+                if (plan != null)
+                {
+                    log.AppendLine($"<b>[Plan]</b> {plan.Primitives}");
+                    log.AppendLine($"Chorro ({plan.Aim.x:F1}, {plan.Aim.y:F1}, {plan.Aim.z:F1}) | Abanico {plan.Dispersion:F1} | Giro {plan.Circulation:F1} | Lente {plan.Focus:F1}");
+                    if (plan.Notes.Count > 0) log.AppendLine($"Notas: {string.Join(", ", plan.Notes)}");
+                }
             }
 
             foreach (var w in spell.warnings) log.AppendLine($"<color=#e0a040>! {GlyphWarnings.Describe(w)}</color>");

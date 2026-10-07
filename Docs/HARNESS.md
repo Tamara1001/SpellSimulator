@@ -64,7 +64,20 @@ ignorada por git). Verificar arrancándola con `-logFile` unos segundos: debe lo
 excepciones fuera de `[XR]` (OpenXR sin casco loguea `XR_ERROR_FORM_FACTOR_UNAVAILABLE`: esperado). Los ~500 warnings
 de la build son shaders del paquete de inferencia.
 
-## Tests (64 al 2026-10-07)
+## Captura visual
+`SpellSimulator.EditorTools.HarnessCapture.Capture(ruta, posición, objetivo)` renderiza a PNG con una cámara temporal (la
+cámara del jugador usa Cinemachine y `Unity_Camera_Capture` falla). Para ver un hechizo en pleno cuerpo:
+`caster.Cast(canvas)` → `manifestation.FastForward(1.4f)` → `Capture(...)`. Las capturas van al scratchpad, no al repo.
+
+**Galería de primitivas** (Play Mode): sigilo + signos con `TemplateStrokes` rotados (`rot = (bearing − 270) + twist`;
+twist 0 = adentro, 180 = afuera, −90 = antihorario). Casos de referencia: fuego + 2 columnas adentro = chorro;
+agua + 4 afuera = abanico; viento + molinete = vórtice; fuego + 2 levitaciones = orbe; agua + 2 pulls = solo succión;
+luz + 1 columna a la izquierda = chorro lateral.
+
+**Física en tiempo real**: guardar posiciones (cultura invariante: `Vector3.ToString` usa coma decimal), lanzar,
+`sleep 4` en Bash y medir. Los blancos están en `TestProps` (plataforma a la altura del chorro).
+
+## Tests (86 al 2026-10-07)
 | Archivo | Cubre |
 |---|---|
 | `ParsingTests` | RingDetector (cerrado/abierto/dos arcos/ajuste), StrokeGrouper (transitividad), SymbolCandidate, capas, StrokeCleaner, GeometryUtils |
@@ -72,6 +85,8 @@ de la build son shaders del paquete de inferencia.
 | `SealActivationTests` | Fases del sello: preparado, cerrar ⇒ lanzar, gastado no relanza, inválido reintenta, borrar rearma |
 | `UserCaseTests` | **End-to-end con el modelo (CPU)**: sigilos grandes en anillo chico (5 elementos), sigilo + 2 columnas, sigilo solo no es anillo |
 | `InkTests` / `RagToolTests` | Depósito de tinta y trapo |
+| `PoseTests` | La pose recupera la rotación (column 0/45/90/180/270°, pull, levitation) |
+| `PlanTests` | Leyes R‑05 a R‑21: chorro vertical, inclinación por signo largo, abanico, vórtice, potencia sin dirección, orbe, levitación invertida, solo pull, lente, spin-up, fuga |
 | `CompilerTests` | Gates (sin anillo, baja confianza, sin sigilo, varios sigilos), activo/preparado, levitation, dirección inward, cancelación, fuerza, escala |
 
 ## Escribir tests

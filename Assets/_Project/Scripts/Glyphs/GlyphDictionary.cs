@@ -36,6 +36,20 @@ namespace SpellSimulator.Glyphs
 
         public int IndexOf(string id) => Array.IndexOf(idByIndex, id);
 
+        /// <summary>Plantilla de cada clase del modelo como sesion (null si la clase no tiene entrada). Para calibrar pose.</summary>
+        public Core.DrawingSession[] TemplateSessions()
+        {
+            var sessions = new Core.DrawingSession[idByIndex.Length];
+            for (int i = 0; i < sessions.Length; i++)
+            {
+                var entry = Get(i);
+                if (entry.TemplateStrokes.Count == 0) continue;
+                sessions[i] = new Core.DrawingSession();
+                foreach (var points in entry.TemplateStrokes) sessions[i].AddStroke(new Core.Stroke(new List<Vector2>(points)));
+            }
+            return sessions;
+        }
+
         /// <param name="classMapJson">glyph-class-to-idx.json: { "id": indice }.</param>
         /// <param name="entryJsons">Un JSON por glifo, con el rol que le da su carpeta.</param>
         public static GlyphDictionary FromJson(string classMapJson, IEnumerable<(string json, GlyphKind kind)> entryJsons)

@@ -7,6 +7,15 @@ namespace SpellSimulator.Canvas
     /// Modulo 1: lienzo dinamico. Duenio de su DrawingSession (vectores) y de una RenderTexture donde la tinta
     /// se estampa por GPU (GL + Graphics.DrawTexture), sin acceso a pixeles por CPU.
     /// </summary>
+    /// <summary>Por que cara del papel sale la magia.</summary>
+    public enum EmissionSide
+    {
+        /// <summary>Canon: por la cara con tinta (paredes, mesas, sellos fijos).</summary>
+        InkSide,
+        /// <summary>Hacia el lado opuesto a quien mira (papeles de mano: la magia sale hacia el objetivo, no al lanzador).</summary>
+        AwayFromViewer
+    }
+
     [RequireComponent(typeof(Renderer))]
     public class DrawingCanvas : MonoBehaviour
     {
@@ -15,6 +24,10 @@ namespace SpellSimulator.Canvas
         private int resolution = 512;
         [SerializeField, Tooltip("Color de fondo del lienzo al limpiarlo.")]
         private Color clearColor = Color.black;
+
+        [Header("Emission")]
+        [SerializeField, Tooltip("Por que cara sale el hechizo. Papeles: AwayFromViewer. Paredes/mesas: InkSide.")]
+        private EmissionSide emissionSide = EmissionSide.AwayFromViewer;
 
         [Header("Brush Settings")]
         [SerializeField, Tooltip("Material para estampar el pincel (Unlit/Transparent).")]
@@ -61,6 +74,26 @@ namespace SpellSimulator.Canvas
         }
 
         public RenderTexture GetRenderTexture() => renderTexture;
+
+        /// <summary>
+        /// Normal de emision en mundo. Con AwayFromViewer apunta al lado contrario de viewerPosition.
+        /// </summary>
+        public Vector3 EmissionNormal(Vector3 viewerPosition)
+        {
+            Vector3 ink = transform.TransformDirection(surfaceNormalLocal).normalized;
+            if (emissionSide == EmissionSide.InkSide) return ink;
+            return Vector3.Dot(ink, viewerPosition - transform.position) > 0f ? -ink : ink;
+        }
+
+        /// <summary>UV [0,1] -> punto del mundo sobre la superficie.</summary>
+        public Vector3 UVToWorld(Vector2 uv)
+        {
+            var local = new Vector3(
+                Mathf.Lerp(meshBounds.min.x, meshBounds.max.x, uv.x),
+                Mathf.Lerp(meshBounds.min.y, meshBounds.max.y, uv.y),
+                meshBounds.center.z);
+            return transform.TransformPoint(local);
+        }
 
         private void Awake()
         {

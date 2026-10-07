@@ -17,6 +17,14 @@ namespace SpellSimulator.Recognition
         }
 
         public float Confidence => Probabilities.Length > 0 ? Probabilities[BestIndex] : 0f;
+
+        /// <summary>
+        /// Rotacion del glifo respecto de su pose de plantilla, en grados antihorarios (Y arriba). NaN si el
+        /// clasificador no tiene pose calibrada. Para signos: 0 = dibujado como en el diccionario (abajo, apuntando arriba).
+        /// </summary>
+        public float RotationDeg = float.NaN;
+
+        public bool HasRotation => !float.IsNaN(RotationDeg);
     }
 
     /// <summary>Contrato del reconocedor. Permite tests con un clasificador falso.</summary>

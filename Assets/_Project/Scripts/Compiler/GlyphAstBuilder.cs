@@ -51,7 +51,8 @@ namespace SpellSimulator.Compiler
             {
                 Candidate = candidate,
                 Entry = entry,
-                Confidence = prediction.Confidence
+                Confidence = prediction.Confidence,
+                RotationDeg = prediction.RotationDeg
             };
 
             float[] p = prediction.Probabilities;

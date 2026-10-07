@@ -32,11 +32,14 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 
 ### M3 — El hechizo tiene forma y fuerza
 *Objetivo: cada combinación de signos se ve y se comporta distinto.*
-- [ ] Leer `animation-spec.md` de la referencia y portar `compiler/reading` + `compiler/plan` (KI-023).
-- [ ] `SpellManifestation` por familia: aura, column, dispersion, levitation, pull, convergence, region, orb.
-- [ ] VFX Graph de los 5 elementos con las mismas propiedades exposed; look estilizado WHA.
-- [ ] Tamaño físico del sello (radio en metros) ⇒ escala y caudal (ley extensiva).
-- [ ] `MagicField` + `MagicWorld` (ticks) con un primer consumidor: empujar Rigidbodies (incluido el jugador).
+- [x] Pose del modelo ⇒ orientación de cada signo (KI-025).
+- [x] Port de lectura + plan: columnas, levitación, pull, convergencia, dispersión, spin-up (KI-023 parcial).
+- [x] `SpellManifestation`: ráfaga, chorro, abanico, vórtice, orbe y succión, con los tiempos de R‑01.
+- [x] Look de los 5 elementos (`ElementLook` + shader de partículas propio, Shuriken en vez de VFX Graph).
+- [x] Tamaño físico del sello (radio en metros) ⇒ escala y acople (ley extensiva).
+- [x] `MagicField`: física por arrastre al flujo sobre cualquier Rigidbody, incluido el jugador.
+- [ ] Region (cercos), weave y orb/vessel (KI-023).
+- [ ] Look más estilizado WHA (trazos de tinta, glow, texturas pintadas); sonido por elemento.
 - [ ] **Benchmark en Quest** para fijar el límite de hechizos activos (provisorio: 6).
 
 ### M4 — El mundo reacciona
