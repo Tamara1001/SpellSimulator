@@ -50,4 +50,10 @@ namespace SpellSimulator.Interfaces
         /// <summary>Llena el deposito y devuelve cuanta tinta paso.</summary>
         float Refill(SpellSimulator.Core.InkReservoir target);
     }
+
+    /// <summary>Algo que modifica el color de una superficie (carbon, humedad). Lo consulta quien pinta el material.</summary>
+    public interface ISurfaceTint
+    {
+        UnityEngine.Color Tint(UnityEngine.Color color);
+    }
 }

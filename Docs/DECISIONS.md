@@ -97,6 +97,13 @@ por código (VFX Graph no). El viejo `Fire_VFX.vfx` queda sin uso.
 hechizo le explotaría en la cara. `DrawingCanvas.EmissionSide = AwayFromViewer` en papeles (la magia sale hacia el
 objetivo, como cuando los personajes giran el papel); `InkSide` queda para sellos en paredes, mesas y piedras.
 
+## ADR-022 — Mundo reactivo por ticks y fractura por grilla
+**2026-10-07.** Las reacciones (fuego, agua, viento, impacto) no corren por frame ni por colisión: `MagicWorld` hace ticks
+a 15 Hz y consulta la misma geometría que la física (`MagicField.ExposureAt`). Las reglas son lógica pura
+(`ReactionModel`) y los números son datos (`MaterialProfile`, `ReactionTable`). La fractura empieza como una grilla de
+bloques con el material del objeto (estilizado, barato, sin assets); la pre-fractura Voronoi queda para mesas y paredes
+de M5. El calor acumulado tiene tope (2× la ignición): sin él, lo que ardía mucho se volvía inapagable.
+
 ## ADR-021 — Física por arrastre al flujo
 **2026-10-07.** `MagicField` no aplica aceleraciones libres: cada primitiva define una velocidad de flujo y los cuerpos
 se aceleran hacia ella. La forma de los signos fija la velocidad y el área del sello, el acople (canon: intensivo vs.

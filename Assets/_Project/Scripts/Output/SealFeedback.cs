@@ -32,10 +32,12 @@ namespace SpellSimulator.Output
         private SealPhase phase;
         private Color flashColor;
         private float flashUntil = -1f;
+        private ISurfaceTint surfaceTint;
 
         private void Awake()
         {
             canvas = GetComponent<DrawingCanvas>();
+            surfaceTint = GetComponent<ISurfaceTint>();
             canvasRenderer = GetComponent<Renderer>();
             block = new MaterialPropertyBlock();
             if (canvasRenderer.sharedMaterial != null && canvasRenderer.sharedMaterial.HasProperty(BaseColorId))
@@ -72,16 +74,16 @@ namespace SpellSimulator.Output
 
         private void Update()
         {
-            Color tint = baseColor;
+            Color tint = surfaceTint != null ? surfaceTint.Tint(baseColor) : baseColor;
             if (Time.time < flashUntil)
             {
                 float t = (flashUntil - Time.time) / flashSeconds;
-                tint = Color.Lerp(baseColor, flashColor, t);
+                tint = Color.Lerp(tint, flashColor, t);
             }
             else if (phase == SealPhase.Prepared)
             {
                 float pulse = 0.5f + 0.5f * Mathf.Sin(Time.time * pulseSpeed * Mathf.PI * 2f);
-                tint = Color.Lerp(baseColor, preparedColor, pulse * 0.6f);
+                tint = Color.Lerp(tint, preparedColor, pulse * 0.6f);
             }
 
             canvasRenderer.GetPropertyBlock(block);

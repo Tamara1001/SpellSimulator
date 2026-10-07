@@ -61,6 +61,13 @@ en el Inspector del lápiz y probar en el Quest; el `RaycastTool` de la punta de
 🟢 `abierto` — Sin PlayMode tests. El smoke test de cast en Play Mode se hizo a mano por MCP (ver [[HARNESS]]);
 convendría automatizarlo.
 
+### KI-043
+🟢 `abierto` — **Fractura simple por grilla**: los fragmentos son cubos (se ve bien en cajas, no en objetos redondos).
+Pre-fractura Voronoi pendiente (M5, mesas y paredes).
+
+### KI-044
+🟢 `abierto` — Las llamas de un objeto que gira quedan inclinadas (se orientan al crearse). Menor.
+
 ## Resueltos (2026-10-07, reestructura del pipeline)
 
 | KI | Problema | Resolución |
@@ -95,4 +102,6 @@ convendría automatizarlo.
 | KI-025 🟢 | No se usaban las cabezas de pose del modelo | `GlyphClassifier` lee `angle`, calibra con plantillas y da la rotación de cada glifo (test: error < 25° en 7 poses). |
 | KI-040 🔴 | **Nuevo (física):** el campo aplicaba aceleración sin límite, y un cuerpo liviano salía a cientos de m/s | Modelo de arrastre hacia la velocidad del flujo, ráfaga acotada, `Respawnable`. |
 | KI-041 🟠 | **Nuevo (plan):** el ruido de pose creaba chorros o giros fantasma en sellos simétricos | Zona muerta hacia las clases canónicas + umbral relativo de primitivas (20%). |
+| KI-045 🟠 | **Nuevo (M4):** el calor de lo que ardía crecía sin tope y el agua se evaporaba antes de apagarlo | Tope de calor (2× ignición) + test `Water_ExtinguishesALongFire_StillUnderFire`. |
+| KI-046 🟢 | **Nuevo (M4):** el reinicio movía cuerpos cinemáticos (herramienta en la mano) | `RespawnAll` ignora cinemáticos. |
 | KI-031 🟢 | **Nuevo:** suelo detectaba triggers (lienzo sostenido) | `QueryTriggerInteraction.Ignore`. |

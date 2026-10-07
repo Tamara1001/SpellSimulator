@@ -78,6 +78,7 @@ Mismo sistema mágico, en una arena de combate.
 | Abrir el libro-menú | Tab | Mirar la muñeca izquierda o agarrar el libro del cinturón |
 | Lanzar | Soltar mientras te movés / Q | Soltar con velocidad (física) |
 | Liberar cursor | Escape | — |
+| Reiniciar el mundo (Libre) | Backspace (gamepad: Select) | Y (control izquierdo) |
 
 ## Decisiones (2026-10-07)
 1. **Auto-activación**: el hechizo se lanza solo al **cerrar el anillo**. El secundario de las herramientas es deshacer.

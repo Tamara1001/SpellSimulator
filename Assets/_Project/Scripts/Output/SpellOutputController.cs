@@ -57,7 +57,7 @@ namespace SpellSimulator.Output
             var go = new GameObject($"Spell_{spell.element}_{spell.primaryManifestation}");
             var manifestation = go.AddComponent<SpellManifestation>();
             manifestation.Init(spell, frame, look);
-            go.AddComponent<MagicField>().Init(spell, frame, look);
+            go.AddComponent<MagicField>().Init(spell, frame, look, canvas.gameObject);
 
             Track(manifestation);
             Debug.Log($"[VFX Output] {spell.element} ({spell.sigilId}) | {spell.plan?.Primitives} | " +
@@ -76,7 +76,15 @@ namespace SpellSimulator.Output
             }
         }
 
-        private ElementLook LookFor(ElementType element)
+        /// <summary>Apaga todos los hechizos vivos (reinicio del mundo).</summary>
+        public void ClearAll()
+        {
+            foreach (var m in active) if (m != null) Destroy(m.gameObject);
+            active.Clear();
+        }
+
+        /// <summary>Look de un elemento (tambien lo usan las reacciones: llamas de lo que arde).</summary>
+        public ElementLook LookFor(ElementType element)
         {
             switch (element)
             {

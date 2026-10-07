@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2291fd7bd9838e4b88dba90a42f35bc, type: 3}
+  m_Name: Tela
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.MaterialProfile
+  displayName: Tela
+  parameters:
+    flammable: 1
+    ignitionHeat: 0.6
+    burnSeconds: 6
+    burnDestroys: 1
+    coolingPerSecond: 0.3
+    wetAbsorb: 1.5
+    dryingPerSecond: 0.03
+    fracturable: 0
+    strength: 1
+    spreadHeatPerSecond: 0.7
+  charColor: {r: 0.08, g: 0.06, b: 0.05, a: 1}
+  wetDarkening: 0.35
+  fragmentsPerAxis: 1

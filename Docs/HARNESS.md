@@ -64,6 +64,11 @@ ignorada por git). Verificar arrancándola con `-logFile` unos segundos: debe lo
 excepciones fuera de `[XR]` (OpenXR sin casco loguea `XR_ERROR_FORM_FACTOR_UNAVAILABLE`: esperado). Los ~500 warnings
 de la build son shaders del paquete de inferencia.
 
+## Sellos de plantilla (Play Mode)
+`SpellSimulator.EditorTools.HarnessSeals.Cast("PaperCanvas", "fire", ("column", 270f), ("column", 90f))` dibuja sigilo,
+signos (id, ángulo en el anillo; orientados hacia adentro) y anillo con las plantillas del diccionario, y lanza. Sirve
+para probar reacciones: fuego → blancos ardiendo; agua → apagado; tierra → fractura; `MagicWorld.ResetWorld()`.
+
 ## Captura visual
 `SpellSimulator.EditorTools.HarnessCapture.Capture(ruta, posición, objetivo)` renderiza a PNG con una cámara temporal (la
 cámara del jugador usa Cinemachine y `Unity_Camera_Capture` falla). Para ver un hechizo en pleno cuerpo:
@@ -77,7 +82,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 **Física en tiempo real**: guardar posiciones (cultura invariante: `Vector3.ToString` usa coma decimal), lanzar,
 `sleep 4` en Bash y medir. Los blancos están en `TestProps` (plataforma a la altura del chorro).
 
-## Tests (91 al 2026-10-07)
+## Tests (103 al 2026-10-07)
 | Archivo | Cubre |
 |---|---|
 | `ParsingTests` | RingDetector (cerrado/abierto/dos arcos/ajuste), StrokeGrouper (transitividad), SymbolCandidate, capas, StrokeCleaner, GeometryUtils |
@@ -88,6 +93,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 | `PoseTests` | La pose recupera la rotación (column 0/45/90/180/270°, pull, levitation) |
 | `PlanTests` | Leyes R‑05 a R‑21: chorro vertical, inclinación por signo largo, abanico, vórtice, potencia sin dirección, orbe, levitación invertida, solo pull, lente, spin-up, fuga |
 | `SealFixtureTests` | **Sellos reales grabados** (`Tests/Fixtures/*.json`) reproducidos con el modelo (hoy: `fire_columnas_bien`, `fire_columnas_mal`); ida y vuelta del formato; anotaciones sobre el papel |
+| `ReactionTests` | Fuego (enciende, se sostiene, se consume, rompe), agua (apaga, moja, bloquea ignición, apaga aun bajo fuego), viento (aviva/enfría), tierra (rompe madera, no piedra), secado, tabla por material |
 | `CompilerTests` | Gates (sin anillo, baja confianza, sin sigilo, varios sigilos), activo/preparado, levitation, dirección inward, cancelación, fuerza, escala |
 
 ## Sellos grabados (fixtures de pruebas manuales)

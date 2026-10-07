@@ -1,0 +1,140 @@
+using UnityEngine;
+using SpellSimulator.Compiler;
+using SpellSimulator.Output;
+
+namespace SpellSimulator.Reactions
+{
+    /// <summary>
+    /// Mundo reactivo (SYSTEMS_DESIGN 5): a TickRate Hz cruza los hechizos vivos (MagicField) con los objetos
+    /// reactivos, propaga el fuego entre vecinos y avanza el estado de cada uno. Buffers preasignados: sin GC por tick.
+    /// </summary>
+    public class MagicWorld : MonoBehaviour
+    {
+        public const float TickRate = 15f;
+        private const int MaxHits = 64;
+
+        [SerializeField] private ReactionTable reactions;
+        [SerializeField, Tooltip("De aca salen los looks (llamas de lo que arde).")]
+        private SpellOutputController output;
+        [SerializeField, Tooltip("Alcance del fuego hacia los vecinos, ademas del tamanio del objeto (m).")]
+        private float spreadReach = 0.35f;
+        [SerializeField, Tooltip("Impulso de los fragmentos al romperse.")]
+        private float shatterImpulse = 2.5f;
+
+        private static readonly Collider[] hits = new Collider[MaxHits];
+        private static readonly ElementReactive[] found = new ElementReactive[MaxHits];
+        private float accumulator;
+
+        private void Update()
+        {
+            accumulator += Time.deltaTime;
+            float step = 1f / TickRate;
+            // Un tick por frame como maximo: si el juego va lento, el mundo reacciona mas lento (no en rafagas).
+            if (accumulator < step) return;
+            float dt = Mathf.Min(accumulator, step * 3f);
+            accumulator = 0f;
+            Tick(dt);
+        }
+
+        private void Tick(float dt)
+        {
+            if (reactions == null) return;
+            ExposeToSpells();
+            SpreadFire();
+
+            var all = ElementReactive.All;
+            for (int i = all.Count - 1; i >= 0; i--)
+            {
+                var reactive = all[i];
+                if (reactive == null || !reactive.isActiveAndEnabled) continue;
+                ReactionEvents events = reactive.Tick(dt);
+                if (events == ReactionEvents.None) continue;
+                Handle(reactive, events);
+            }
+        }
+
+        private void ExposeToSpells()
+        {
+            var fields = MagicField.Active;
+            for (int f = 0; f < fields.Count; f++)
+            {
+                var field = fields[f];
+                int n = Gather(field.Frame.Origin, field.ReachRadius);
+                for (int i = 0; i < n; i++)
+                {
+                    var reactive = found[i];
+                    if (field.Source != null && reactive.gameObject == field.Source) continue;
+                    float intensity = field.ExposureAt(reactive.WorldBounds.center);
+                    if (intensity <= 0f) continue;
+                    reactive.AddExposure(reactions.For(field.Element, reactive.Profile), intensity);
+                }
+            }
+        }
+
+        private void SpreadFire()
+        {
+            var all = ElementReactive.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                var burning = all[i];
+                if (burning == null || !burning.isActiveAndEnabled || !burning.State.Burning || burning.Profile == null) continue;
+                Bounds b = burning.WorldBounds;
+                float heat = burning.Profile.parameters.spreadHeatPerSecond;
+                if (heat <= 0f) continue;
+                float reach = b.extents.magnitude + spreadReach;
+                int n = Gather(b.center, reach);
+                for (int k = 0; k < n; k++)
+                {
+                    var neighbour = found[k];
+                    if (neighbour == burning) continue;
+                    float distance = Vector3.Distance(neighbour.WorldBounds.ClosestPoint(b.center), b.center);
+                    float falloff = 1f - Mathf.Clamp01(distance / reach);
+                    neighbour.AddExposure(new Exposure { Heat = heat }, falloff);
+                }
+            }
+        }
+
+        private void Handle(ElementReactive reactive, ReactionEvents events)
+        {
+            if ((events & ReactionEvents.Ignited) != 0)
+            {
+                reactive.SetFlames(output != null ? output.LookFor(ElementType.Fire) : null, true);
+                Debug.Log($"[Mundo] {reactive.name} se prendio fuego.");
+            }
+            if ((events & (ReactionEvents.Extinguished | ReactionEvents.BurnedOut)) != 0)
+                reactive.SetFlames(null, false);
+            if ((events & ReactionEvents.Extinguished) != 0) Debug.Log($"[Mundo] {reactive.name} se apago.");
+            if ((events & ReactionEvents.Broken) != 0)
+            {
+                Debug.Log($"[Mundo] {reactive.name} se rompio.");
+                Shatter.Break(reactive, reactive.WorldBounds.center + Vector3.down * 0.1f, shatterImpulse * Mathf.Sqrt(reactive.Mass));
+            }
+        }
+
+        /// <summary>Reactivos distintos cuyo collider toca la esfera.</summary>
+        private static int Gather(Vector3 center, float radius)
+        {
+            int count = Physics.OverlapSphereNonAlloc(center, radius, hits, ~0, QueryTriggerInteraction.Collide);
+            int unique = 0;
+            for (int i = 0; i < count; i++)
+            {
+                var reactive = hits[i].GetComponentInParent<ElementReactive>();
+                if (reactive == null || !reactive.isActiveAndEnabled) continue;
+                bool seen = false;
+                for (int j = 0; j < unique; j++) if (found[j] == reactive) { seen = true; break; }
+                if (!seen) found[unique++] = reactive;
+            }
+            return unique;
+        }
+
+        /// <summary>Reinicio del mundo: objetos sanos y en su lugar, sin fragmentos ni hechizos.</summary>
+        public void ResetWorld()
+        {
+            if (output != null) output.ClearAll();
+            Shatter.ClearAll();
+            foreach (var reactive in ElementReactive.All) if (reactive != null) reactive.ResetState();
+            World.Respawnable.RespawnAll();
+            Debug.Log("[Mundo] Reinicio.");
+        }
+    }
+}

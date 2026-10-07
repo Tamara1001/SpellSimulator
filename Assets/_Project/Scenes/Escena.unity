@@ -133,6 +133,7 @@ GameObject:
   - component: {fileID: 295680}
   - component: {fileID: 295679}
   - component: {fileID: 295683}
+  - component: {fileID: 295684}
   m_Layer: 0
   m_Name: Target_2_0
   m_TagString: Untagged
@@ -273,6 +274,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &295684
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 295677}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &37318149
 GameObject:
   m_ObjectHideFlags: 0
@@ -591,6 +613,7 @@ GameObject:
   - component: {fileID: 80836779}
   - component: {fileID: 80836778}
   - component: {fileID: 80836782}
+  - component: {fileID: 80836783}
   m_Layer: 0
   m_Name: Crate_2
   m_TagString: Untagged
@@ -731,6 +754,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &80836783
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 80836776}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!224 &111485607 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 5633934605753154421, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
@@ -750,6 +794,7 @@ GameObject:
   - component: {fileID: 177902675}
   - component: {fileID: 177902674}
   - component: {fileID: 177902678}
+  - component: {fileID: 177902679}
   m_Layer: 0
   m_Name: Target_0_0
   m_TagString: Untagged
@@ -890,6 +935,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &177902679
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 177902672}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1001 &254598923
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1085,6 +1151,40 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &285905743
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 285905729}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 720bb24696562814c94362b849e726ec, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.SealBreaker
+  caster: {fileID: 5652826552516281050}
+--- !u!114 &285905744
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 285905729}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 96036ceee8f9e1e409bb59282b0b6634, type: 2}
+  tintRenderer: 0
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &327918266
 GameObject:
   m_ObjectHideFlags: 0
@@ -1099,6 +1199,7 @@ GameObject:
   - component: {fileID: 327918269}
   - component: {fileID: 327918268}
   - component: {fileID: 327918272}
+  - component: {fileID: 327918273}
   m_Layer: 0
   m_Name: Target_2_2
   m_TagString: Untagged
@@ -1239,6 +1340,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &327918273
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 327918266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &528774066
 GameObject:
   m_ObjectHideFlags: 0
@@ -1253,6 +1375,7 @@ GameObject:
   - component: {fileID: 528774069}
   - component: {fileID: 528774068}
   - component: {fileID: 528774072}
+  - component: {fileID: 528774073}
   m_Layer: 0
   m_Name: Target_0_1
   m_TagString: Untagged
@@ -1393,6 +1516,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &528774073
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 528774066}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &541040567
 GameObject:
   m_ObjectHideFlags: 0
@@ -1407,6 +1551,7 @@ GameObject:
   - component: {fileID: 541040570}
   - component: {fileID: 541040569}
   - component: {fileID: 541040573}
+  - component: {fileID: 541040574}
   m_Layer: 0
   m_Name: Side_R
   m_TagString: Untagged
@@ -1547,6 +1692,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &541040574
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 541040567}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &662578723
 GameObject:
   m_ObjectHideFlags: 0
@@ -1561,6 +1727,7 @@ GameObject:
   - component: {fileID: 662578726}
   - component: {fileID: 662578725}
   - component: {fileID: 662578729}
+  - component: {fileID: 662578730}
   m_Layer: 0
   m_Name: Target_2_1
   m_TagString: Untagged
@@ -1701,6 +1868,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &662578730
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 662578723}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &689451860 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4604995024666586695, guid: 60e6fed39e5c11d4eb6771c314942bb1, type: 3}
@@ -1738,6 +1926,7 @@ GameObject:
   - component: {fileID: 767874850}
   - component: {fileID: 767874849}
   - component: {fileID: 767874853}
+  - component: {fileID: 767874854}
   m_Layer: 0
   m_Name: Crate_3
   m_TagString: Untagged
@@ -1878,6 +2067,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &767874854
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767874847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &796876342
 GameObject:
   m_ObjectHideFlags: 0
@@ -1892,6 +2102,7 @@ GameObject:
   - component: {fileID: 796876345}
   - component: {fileID: 796876344}
   - component: {fileID: 796876348}
+  - component: {fileID: 796876349}
   m_Layer: 0
   m_Name: Crate_4
   m_TagString: Untagged
@@ -2032,6 +2243,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &796876349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 796876342}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &833918957
 GameObject:
   m_ObjectHideFlags: 0
@@ -2046,6 +2278,7 @@ GameObject:
   - component: {fileID: 833918960}
   - component: {fileID: 833918959}
   - component: {fileID: 833918963}
+  - component: {fileID: 833918964}
   m_Layer: 0
   m_Name: Target_1_1
   m_TagString: Untagged
@@ -2186,6 +2419,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &833918964
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 833918957}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &868295407
 GameObject:
   m_ObjectHideFlags: 0
@@ -2200,6 +2454,7 @@ GameObject:
   - component: {fileID: 868295410}
   - component: {fileID: 868295409}
   - component: {fileID: 868295413}
+  - component: {fileID: 868295414}
   m_Layer: 0
   m_Name: Small_0
   m_TagString: Untagged
@@ -2340,6 +2595,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &868295414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 868295407}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &874840297
 GameObject:
   m_ObjectHideFlags: 0
@@ -2354,6 +2630,7 @@ GameObject:
   - component: {fileID: 874840300}
   - component: {fileID: 874840299}
   - component: {fileID: 874840303}
+  - component: {fileID: 874840304}
   m_Layer: 0
   m_Name: Small_3
   m_TagString: Untagged
@@ -2494,6 +2771,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &874840304
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 874840297}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!20 &902557874 stripped
 Camera:
   m_CorrespondingSourceObject: {fileID: 4410364709839933752, guid: 1c35391a68063564097abe5bc67a74b3, type: 3}
@@ -2513,6 +2811,7 @@ GameObject:
   - component: {fileID: 936816118}
   - component: {fileID: 936816117}
   - component: {fileID: 936816121}
+  - component: {fileID: 936816122}
   m_Layer: 0
   m_Name: Small_2
   m_TagString: Untagged
@@ -2653,6 +2952,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &936816122
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 936816115}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &966683816
 GameObject:
   m_ObjectHideFlags: 0
@@ -2720,6 +3040,7 @@ GameObject:
   - component: {fileID: 1052636298}
   - component: {fileID: 1052636297}
   - component: {fileID: 1052636301}
+  - component: {fileID: 1052636302}
   m_Layer: 0
   m_Name: Crate_1
   m_TagString: Untagged
@@ -2860,6 +3181,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &1052636302
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1052636295}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &1134204324
 GameObject:
   m_ObjectHideFlags: 0
@@ -2874,6 +3216,7 @@ GameObject:
   - component: {fileID: 1134204327}
   - component: {fileID: 1134204326}
   - component: {fileID: 1134204330}
+  - component: {fileID: 1134204331}
   m_Layer: 0
   m_Name: Target_0_2
   m_TagString: Untagged
@@ -3014,6 +3357,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &1134204331
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1134204324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!4 &1260872873 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4665974575741207286, guid: 1c35391a68063564097abe5bc67a74b3, type: 3}
@@ -3479,6 +3843,7 @@ GameObject:
   - component: {fileID: 1739452617}
   - component: {fileID: 1739452616}
   - component: {fileID: 1739452620}
+  - component: {fileID: 1739452621}
   m_Layer: 0
   m_Name: Target_1_0
   m_TagString: Untagged
@@ -3619,6 +3984,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &1739452621
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1739452614}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!4 &1757511305 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4983596589079416018, guid: f9e06e9005c218b4d8a87d3ee8fb4de6, type: 3}
@@ -3675,6 +4061,7 @@ GameObject:
   - component: {fileID: 1808293532}
   - component: {fileID: 1808293531}
   - component: {fileID: 1808293535}
+  - component: {fileID: 1808293536}
   m_Layer: 0
   m_Name: Small_1
   m_TagString: Untagged
@@ -3815,6 +4202,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &1808293536
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1808293529}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &1810269064
 GameObject:
   m_ObjectHideFlags: 0
@@ -3829,6 +4237,7 @@ GameObject:
   - component: {fileID: 1810269067}
   - component: {fileID: 1810269066}
   - component: {fileID: 1810269070}
+  - component: {fileID: 1810269071}
   m_Layer: 0
   m_Name: Crate_0
   m_TagString: Untagged
@@ -3969,6 +4378,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &1810269071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1810269064}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &1933547267
 GameObject:
   m_ObjectHideFlags: 0
@@ -4014,6 +4444,7 @@ GameObject:
   - component: {fileID: 1961812952}
   - component: {fileID: 1961812951}
   - component: {fileID: 1961812955}
+  - component: {fileID: 1961812956}
   m_Layer: 0
   m_Name: Heavy
   m_TagString: Untagged
@@ -4154,6 +4585,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &1961812956
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1961812949}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: f2099405188225444a7b0828b26737bf, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &1974982747 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 9204424087184301609, guid: f9e06e9005c218b4d8a87d3ee8fb4de6, type: 3}
@@ -4186,6 +4638,7 @@ GameObject:
   - component: {fileID: 2115295410}
   - component: {fileID: 2115295409}
   - component: {fileID: 2115295413}
+  - component: {fileID: 2115295414}
   m_Layer: 0
   m_Name: Side_L
   m_TagString: Untagged
@@ -4326,6 +4779,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &2115295414
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2115295407}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1 &2145678553
 GameObject:
   m_ObjectHideFlags: 0
@@ -4340,6 +4814,7 @@ GameObject:
   - component: {fileID: 2145678556}
   - component: {fileID: 2145678555}
   - component: {fileID: 2145678559}
+  - component: {fileID: 2145678560}
   m_Layer: 0
   m_Name: Target_1_2
   m_TagString: Untagged
@@ -4480,6 +4955,27 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!114 &2145678560
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2145678553}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0526eabac6a039642854333cca4e2ece, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ElementReactive
+  profile: {fileID: 11400000, guid: 69b5200c976309e408e69684f948edf8, type: 2}
+  tintRenderer: 1
+  state:
+    Heat: 0
+    Wetness: 0
+    Burning: 0
+    BurnProgress: 0
+    Integrity: 1
+    Broken: 0
 --- !u!1001 &584511639731302719
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4893,6 +5389,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 8555206103252705276, guid: 4536faff054cbc843906605db2d025dd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 5652826552516281054}
+    - targetCorrespondingSourceObject: {fileID: 8555206103252705276, guid: 4536faff054cbc843906605db2d025dd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5652826552516281056}
+    - targetCorrespondingSourceObject: {fileID: 8555206103252705276, guid: 4536faff054cbc843906605db2d025dd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5652826552516281055}
   m_SourcePrefab: {fileID: 100100000, guid: 4536faff054cbc843906605db2d025dd, type: 3}
 --- !u!114 &5652826552516281050 stripped
 MonoBehaviour:
@@ -4905,6 +5407,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4047c122a5ef5e438c3ed074c19cc96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Compiler.SpellCompiler
+--- !u!114 &5652826552516281051 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2256094165641764747, guid: 4536faff054cbc843906605db2d025dd, type: 3}
+  m_PrefabInstance: {fileID: 5652826552516281049}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1382141580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0b327969746fa79419fcef2a85376572, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Output.SpellOutputController
 --- !u!114 &5652826552516281054
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4926,6 +5439,36 @@ MonoBehaviour:
   ambiguousColor: {r: 0.95, g: 0.65, b: 0.15, a: 1}
   unknownColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
   surfaceOffset: 0.004
+--- !u!114 &5652826552516281055
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1382141580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90ca69aed388ab549b11a4e7c6c2ce56, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.WorldResetter
+  input: {fileID: 6309653383193446361}
+  world: {fileID: 5652826552516281056}
+--- !u!114 &5652826552516281056
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1382141580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1dde9249dedc8640a9ea9f04cbeeb07, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.MagicWorld
+  reactions: {fileID: 11400000, guid: b24ea0bd6a6058a4d8e8eb43434ac8c1, type: 2}
+  output: {fileID: 5652826552516281051}
+  spreadReach: 0.35
+  shatterImpulse: 2.5
 --- !u!54 &6302587454721905793
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -5021,6 +5564,17 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 276020716}
   m_SourcePrefab: {fileID: 100100000, guid: 1c35391a68063564097abe5bc67a74b3, type: 3}
+--- !u!114 &6309653383193446361 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8605067658818240564, guid: 1c35391a68063564097abe5bc67a74b3, type: 3}
+  m_PrefabInstance: {fileID: 6309653383193446360}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 276020706}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dfc75b85e491dff479f8bdf5a58fd7b6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Player.PlayerInputReader
 --- !u!1001 &6861462503713185321
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5288,6 +5842,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 7834927958514296905, guid: c061cb0c47367a04db9938b1ee37afcd, type: 3}
       insertIndex: -1
       addedObject: {fileID: 285905742}
+    - targetCorrespondingSourceObject: {fileID: 7834927958514296905, guid: c061cb0c47367a04db9938b1ee37afcd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 285905744}
+    - targetCorrespondingSourceObject: {fileID: 7834927958514296905, guid: c061cb0c47367a04db9938b1ee37afcd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 285905743}
   m_SourcePrefab: {fileID: 100100000, guid: c061cb0c47367a04db9938b1ee37afcd, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

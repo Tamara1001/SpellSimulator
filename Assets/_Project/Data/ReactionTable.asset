@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dcd1748c864a4384badf559e0519ecd6, type: 3}
+  m_Name: ReactionTable
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.ReactionTable
+  elements:
+  - element: 1
+    heat: 3
+    wet: 0
+    impact: 0
+    fan: 0
+  - element: 2
+    heat: -2
+    wet: 1.2
+    impact: 0.1
+    fan: 0
+  - element: 3
+    heat: 0
+    wet: 0
+    impact: 0.05
+    fan: 1
+  - element: 4
+    heat: 0
+    wet: 0
+    impact: 1.2
+    fan: 0
+  - element: 5
+    heat: 0.4
+    wet: 0
+    impact: 0
+    fan: 0
+  overrides:
+  - material: {fileID: 11400000, guid: 96036ceee8f9e1e409bb59282b0b6634, type: 2}
+    element: 2
+    multiplier: 1.5
+  - material: {fileID: 11400000, guid: 96036ceee8f9e1e409bb59282b0b6634, type: 2}
+    element: 1
+    multiplier: 1.5
+  - material: {fileID: 11400000, guid: f2099405188225444a7b0828b26737bf, type: 2}
+    element: 3
+    multiplier: 0

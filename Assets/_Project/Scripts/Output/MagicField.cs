@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Compiler;
 
@@ -28,6 +29,17 @@ namespace SpellSimulator.Output
         /// <summary>Area de referencia: anillo de 0.3 m de radio.</summary>
         public const float ReferenceRadius = 0.3f;
 
+        /// <summary>Campos vivos (para MagicWorld: reacciones de materiales).</summary>
+        public static readonly List<MagicField> Active = new List<MagicField>();
+
+        /// <summary>Elemento del hechizo.</summary>
+        public ElementType Element => spell.element;
+        /// <summary>Objeto que lo emitio (el papel): no se afecta a si mismo.</summary>
+        public GameObject Source { get; private set; }
+        public SealFrame Frame => frame;
+        /// <summary>Esfera que contiene todo el alcance del hechizo.</summary>
+        public float ReachRadius { get; private set; }
+
         private SpellManifestation manifestation;
         private SpellIR spell;
         private SpellPlan plan;
@@ -38,8 +50,9 @@ namespace SpellSimulator.Output
         private float areaFactor;
         private bool burstApplied;
 
-        public void Init(SpellIR compiled, SealFrame sealFrame, ElementLook look)
+        public void Init(SpellIR compiled, SealFrame sealFrame, ElementLook look, GameObject source = null)
         {
+            Source = source;
             manifestation = GetComponent<SpellManifestation>();
             spell = compiled;
             plan = compiled.plan ?? SpellPlan.Inert();
@@ -49,6 +62,67 @@ namespace SpellSimulator.Output
             // Misma velocidad que las particulas: lo que se ve es lo que empuja.
             flowSpeed = (2f + 8f * compiled.force) * look.speed;
             coupling = BaseCoupling * push * areaFactor * Mathf.Lerp(0.6f, 1f, compiled.quality);
+            ReachRadius = frame.Scale * Mathf.Max(4f + 10f * compiled.range, 6f);
+        }
+
+        private void OnEnable() => Active.Add(this);
+        private void OnDisable() => Active.Remove(this);
+
+        /// <summary>
+        /// Intensidad (0-1) del hechizo en un punto, con la misma geometria que la fisica: rafaga al golpe, chorro,
+        /// abanico, vortice y orbe. La succion no expone (atrae, no toca). Lo usa MagicWorld para quemar, mojar, romper.
+        /// </summary>
+        public float ExposureAt(Vector3 point)
+        {
+            if (manifestation == null || plan == null) return 0f;
+            float t = manifestation.SinceStrike;
+            if (t < 0f) return 0f;
+            Vector3 offset = point - frame.Origin;
+            float best = 0f;
+
+            if (plan.Has(PlanPrimitive.Burst) && t < SpellManifestation.StrikeSeconds)
+            {
+                float radius = frame.Scale * 3f;
+                if (Vector3.Dot(offset, frame.Normal) >= -0.1f)
+                    best = Mathf.Max(best, 1f - Mathf.Clamp01(offset.magnitude / radius));
+            }
+            if (!manifestation.InBody) return best;
+            float envelope = manifestation.Envelope(t);
+
+            if (plan.Has(PlanPrimitive.Jet))
+            {
+                Vector3 dir = frame.Direction(plan.Aim);
+                float length = frame.Scale * (4f + 10f * spell.range);
+                float radius = frame.Scale * 0.9f / plan.Focus;
+                float along = Vector3.Dot(offset, dir);
+                float off = (offset - dir * along).magnitude;
+                if (along >= 0f && along <= length && off <= radius)
+                    best = Mathf.Max(best, envelope * (1f - 0.5f * along / length) * (1f - 0.5f * off / radius));
+            }
+            if (plan.Has(PlanPrimitive.Fan))
+            {
+                float radius = frame.Scale * (3f + 6f * spell.range);
+                float height = Vector3.Dot(offset, frame.Normal);
+                float r = (offset - frame.Normal * height).magnitude;
+                if (height >= -0.1f && height <= frame.Scale * 1.5f && r <= radius)
+                    best = Mathf.Max(best, envelope * (1f - r / radius));
+            }
+            if (plan.Has(PlanPrimitive.Vortex))
+            {
+                float radius = frame.Scale * 2.5f, height = frame.Scale * 6f;
+                float along = Vector3.Dot(offset, frame.Normal);
+                float r = (offset - frame.Normal * along).magnitude;
+                if (along >= -0.1f && along <= height && r <= radius)
+                    best = Mathf.Max(best, envelope * (1f - r / radius));
+            }
+            if (plan.Has(PlanPrimitive.Hold))
+            {
+                Vector3 holdPoint = frame.Point(plan.Hold.At) + frame.Normal * frame.Scale * 0.3f;
+                float radius = frame.Scale * 1.2f;
+                float d = (point - holdPoint).magnitude;
+                if (d <= radius) best = Mathf.Max(best, envelope * (1f - 0.5f * d / radius));
+            }
+            return best * Mathf.Lerp(0.5f, 1f, spell.force);
         }
 
         private void FixedUpdate()

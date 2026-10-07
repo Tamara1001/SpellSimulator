@@ -95,6 +95,9 @@ flowchart TB
 - **Presupuesto**: máximo N manifestaciones activas y M partículas totales; las más viejas se apagan con fade.
 
 ## 5. Mundo reactivo
+> **Estado (M4, 2026-10-07):** hecho el núcleo — `MagicWorld`, `ElementReactive`, `MaterialProfile`, `ReactionTable`,
+> fuego, agua, viento, impacto, fractura por grilla y reinicio. Faltan lago, suelo, dummies y pre-fractura.
+
 - `MagicField` no busca objetos por frame: un **MagicWorld** hace *ticks* a 10–20 Hz con `Physics.OverlapXNonAlloc`
   (buffers preasignados) y despacha a los componentes reactivos.
 - `ElementReactive` + `MaterialProfile` (SO por material: madera, piedra, papel, tela, agua, metal) con sus

@@ -29,17 +29,24 @@ namespace SpellSimulator.World
 
         public void Respawn()
         {
-            rb.linearVelocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
+            if (!rb.isKinematic)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
             rb.position = startPosition;
             rb.rotation = startRotation;
             transform.SetPositionAndRotation(startPosition, startRotation);
         }
 
-        /// <summary>Reinicia todos los objetos reposicionables de la escena.</summary>
+        /// <summary>
+        /// Reinicia los objetos reposicionables de la escena. Los cinematicos (herramientas en la mano, el jugador)
+        /// no se tocan: el reinicio no te saca lo que tenes agarrado.
+        /// </summary>
         public static void RespawnAll()
         {
-            foreach (var r in FindObjectsByType<Respawnable>(FindObjectsSortMode.None)) r.Respawn();
+            foreach (var r in FindObjectsByType<Respawnable>(FindObjectsSortMode.None))
+                if (r.rb != null && !r.rb.isKinematic) r.Respawn();
         }
     }
 }

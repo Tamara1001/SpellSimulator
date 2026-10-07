@@ -23,6 +23,8 @@ namespace SpellSimulator.Player
 
         // Recargar tinta (R / boton West). En VR se recarga mojando la punta en un tintero.
         public bool IsReloading { get; private set; }
+        /// <summary>Reiniciar el mundo (modo Libre): Backspace, Select del gamepad, boton Y del control izquierdo.</summary>
+        public bool IsResettingWorld { get; private set; }
 
         private InputAction moveAction;
         private InputAction lookAction;
@@ -31,6 +33,7 @@ namespace SpellSimulator.Player
         private InputAction useToolAction;
         private InputAction secondaryUseToolAction;
         private InputAction reloadAction;
+        private InputAction resetWorldAction;
 
         private void Awake()
         {
@@ -77,11 +80,17 @@ namespace SpellSimulator.Player
             reloadAction = new InputAction("Reload", InputActionType.Button);
             reloadAction.AddBinding("<Keyboard>/r");
             reloadAction.AddBinding("<Gamepad>/buttonWest");
+
+            resetWorldAction = new InputAction("ResetWorld", InputActionType.Button);
+            resetWorldAction.AddBinding("<Keyboard>/backspace");
+            resetWorldAction.AddBinding("<Gamepad>/select");
+            resetWorldAction.AddBinding("<XRController>{LeftHand}/secondaryButton");
         }
 
         private void OnEnable()
         {
             reloadAction.Enable();
+            resetWorldAction.Enable();
             moveAction.Enable();
             lookAction.Enable();
             jumpAction.Enable();
@@ -93,6 +102,7 @@ namespace SpellSimulator.Player
         private void OnDisable()
         {
             reloadAction.Disable();
+            resetWorldAction.Disable();
             moveAction.Disable();
             lookAction.Disable();
             jumpAction.Disable();
@@ -114,6 +124,7 @@ namespace SpellSimulator.Player
             IsUsingTool = useToolAction.ReadValue<float>() > 0.1f; 
             IsSecondaryUsingTool = secondaryUseToolAction.triggered; // Un solo click (deshacer)
             IsReloading = reloadAction.triggered;
+            IsResettingWorld = resetWorldAction.triggered;
         }
     }
 }

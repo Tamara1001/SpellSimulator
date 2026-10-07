@@ -45,13 +45,14 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 
 ### M4 — El mundo reacciona
 *Objetivo: el sandbox que justifica el simulador.*
-- [ ] `MaterialProfile` + `ReactionTable` (SO). `ElementReactive`.
-- [ ] Fuego: `Flammable`, propagación, apagado por agua y avivado por viento, carbonización.
-- [ ] Fractura: herramienta de pre-fractura + swap a fragmentos (mesas, paredes, rocas). Pools.
+- [x] `MaterialProfile` + `ReactionTable` (SO). `ElementReactive` + `MagicWorld` (ticks a 15 Hz).
+- [x] Fuego: arde, se propaga a vecinos, lo apaga el agua, lo aviva el viento, carboniza y consume (`ReactionModel`).
+- [x] Romper el sello: papel empapado o en llamas pierde el dibujo (`SealBreaker`).
+- [~] Fractura: versión simple por grilla (`Shatter`, presupuesto de 160 fragmentos). Falta pre-fractura Voronoi para mesas y paredes.
 - [ ] Agua: lago estilizado con ripples por GPU, splashes, flotación y evaporación. Pull atrae agua.
 - [ ] Suelo: cráteres (decals) y rocas emergentes.
 - [ ] Dummies de prueba (ragdoll) y barriles, cajas y estantes destructibles.
-- [ ] Reinicio del mundo.
+- [x] Reinicio del mundo (Backspace / Select / Y izquierdo).
 
 ### M5 — La torre y la pradera
 *Objetivo: el escenario final del modo Libre.*

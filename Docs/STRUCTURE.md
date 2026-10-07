@@ -15,6 +15,7 @@ SpellSimulator/
 │   │   ├── Data/                 #   glyph-recognizer.onnx(+.data), glyph-class-to-idx.json,
 │   │   │   ├── Dictionary/       #   sigils/*.json, signs/*.json (copiados de la referencia)
 │   │   │   ├── Elements/         #   ElementLook: Fire, Water, Wind, Earth, Light
+│   │   │   ├── Materials/        #   MaterialProfile: Madera, Papel, Piedra, Tela (+ ReactionTable.asset en Data/)
 │   │   │   ├── Tools/            #   ToolDefinition: Lapiz, Pincel, Goma, Trapo
 │   │   │   └── GlyphDictionary.asset
 │   │   ├── Editor/               #   SpellSimulator.Editor.asmdef — harness, sync del diccionario, chequeos
@@ -37,8 +38,9 @@ SpellSimulator/
 │   │   │   ├── Output/           #   SpellOutputController, SpellManifestation, MagicField, ElementLook, SealFrame, SealFeedback
 │   │   │   ├── Parsing/          #   RingDetector, StrokeGrouper, SymbolCandidate, SealParser
 │   │   │   ├── Player/           #   PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor, InkSupply, Haptics
+│   │   │   ├── Reactions/        #   ReactionModel, MaterialProfile, ReactionTable, ElementReactive, MagicWorld, BurnEffect, Shatter, WorldResetter
 │   │   │   ├── Recognition/      #   TensorRasterizer, GlyphClassifier, SentisGlyphClassifier, GlyphPrediction (+ClassificationMath), PoseMath
-│   │   │   └── World/            #   PhysicalTool, PhysicalCanvas, Inkwell, Respawnable
+│   │   │   └── World/            #   PhysicalTool, ToolDefinition, PhysicalCanvas, Inkwell, Respawnable, SealBreaker
 │   │   ├── Tests/EditMode/       #   SpellSimulator.Tests.EditMode.asmdef — Parsing, Recognition, Compiler, modelo
 │   │   └── Tests/Fixtures/       #   Sellos reales grabados (SealRecord .json) para SealFixtureTests
 │   ├── Settings/                 # URP assets (PC_RPAsset, renderers, volume profiles)
@@ -54,7 +56,7 @@ SpellSimulator/
 | Tipo | Lugar |
 |---|---|
 | Script runtime | `Assets/_Project/Scripts/<Modulo>/` (crear módulo nuevo = carpeta + namespace) |
-| Sandbox (Flammable, ragdolls, fuerzas) | `Scripts/Sandbox/` (namespace `SpellSimulator.Sandbox`) |
+| Mundo reactivo (materiales, fuego, fractura) | `Scripts/Reactions/` (namespace `SpellSimulator.Reactions`) |
 | Herramienta de editor | `Assets/_Project/Editor/` |
 | Test | `Assets/_Project/Tests/EditMode/` (o `PlayMode/`) |
 | VFX Graph / prefab de efecto | `Assets/_Project/Prefabs/VFX/` |

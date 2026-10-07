@@ -5,6 +5,19 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — M4: el mundo reacciona (núcleo)
+- Nuevo módulo `Reactions`: `ReactionModel` (reglas puras), `MaterialProfile` (Madera, Papel, Piedra, Tela),
+  `ReactionTable` (elemento × material como datos), `ElementReactive`, `MagicWorld` (ticks a 15 Hz), `BurnEffect`,
+  `Shatter` (fractura por grilla), `WorldResetter`.
+- El fuego enciende la madera, se propaga a los vecinos, carboniza y la consume hasta romperla; el agua apaga y moja
+  (lo mojado no prende hasta secarse); el viento aviva lo que arde y enfría lo que no; la tierra rompe la madera y
+  no la piedra. `MagicField.ExposureAt` usa la misma geometría que la física.
+- `SealBreaker`: si el papel se empapa o se prende fuego, el sello se pierde (canon). El hechizo no afecta a su propio papel.
+- Reinicio del mundo: Backspace / Select / Y izquierdo. Escena: 21 objetos de madera/piedra + papel reactivos.
+- Harness: `HarnessSeals` dibuja y lanza sellos de plantilla. Verificado en Play Mode (fuego → 9/9 blancos ardiendo,
+  tierra → 7 rotos, reinicio → 22/22 sanos). Arreglados KI-045 y KI-046. 103 tests.
+- Docs: ROADMAP, ARCHITECTURE, STRUCTURE, DECISIONS (ADR-022), KNOWN_ISSUES, GAME_DESIGN, MAGIC_SYSTEM, HARNESS.
+
 ## 2026-10-07 — M2: pincel y lectura del sello sobre el papel
 - `ToolDefinition` (SO) para cada herramienta; `PhysicalTool` lo lee. Assets en `Data/Tools`: Lápiz (4 cm),
   **Pincel** (10 cm, 20 tinta/m, 150 de capacidad) — nuevo objeto `Brush` en la escena —, Goma y Trapo.

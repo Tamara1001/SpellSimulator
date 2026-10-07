@@ -81,7 +81,7 @@ abanico, vórtice), levitación (orbe), pull (succión) y convergencia (lente). 
 | Cerrar el anillo activa | Al levantar el lápiz, si el anillo quedó cerrado, el hechizo **se lanza solo**. Anillo abierto = preparado (se ve el brillo, pero no se lanza). | ✅ M2 |
 | Prolijidad | `quality`, `stability` y `neatness` modulan la potencia y la duración. Un sello muy desprolijo hace sólo la ráfaga. | Parcial (calidad modula densidad y acople; falta el "chisporroteo") |
 | Tamaño extensivo | El radio del anillo **en metros** escala el caudal y la fuerza en el mundo. | ✅ M3 (`MagicField`: el área escala el acople, la forma la velocidad) |
-| Romper el sello | La goma borra trazos y el **trapo** borra el lienzo entero. El **agua** de un hechizo que moja un sello lo mancha y lo rompe. Cortar o quemar el papel también lo rompe. | Diseño |
+| Romper el sello | La goma borra trazos y el **trapo** borra el lienzo entero. El **agua** de un hechizo que moja un sello lo mancha y lo rompe. Cortar o quemar el papel también lo rompe. | Parcial (M4: papel empapado o en llamas pierde el sello; falta cortar) |
 | Contraptions | Sellos en objetos del mundo (paredes, piedras, mesas, papeles fijos) con disparadores: cerrar el anillo, juntar dos mitades, impacto o pisarlo. | Diseño |
 | Sellos partidos | Dos medias lunas en dos objetos; al alinearlos (distancia y ángulo) el sello se completa. | Diseño |
 | Sellos lanzables | Un sello en un papel o una piedra queda en reposo y se activa al impactar. | Diseño |

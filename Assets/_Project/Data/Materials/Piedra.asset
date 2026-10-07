@@ -1,0 +1,29 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e2291fd7bd9838e4b88dba90a42f35bc, type: 3}
+  m_Name: Piedra
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Reactions.MaterialProfile
+  displayName: Piedra
+  parameters:
+    flammable: 0
+    ignitionHeat: 1
+    burnSeconds: 1
+    burnDestroys: 0
+    coolingPerSecond: 0.5
+    wetAbsorb: 0.2
+    dryingPerSecond: 0.1
+    fracturable: 1
+    strength: 3
+    spreadHeatPerSecond: 0
+  charColor: {r: 0.25, g: 0.24, b: 0.23, a: 1}
+  wetDarkening: 0.35
+  fragmentsPerAxis: 3
