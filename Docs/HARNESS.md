@@ -58,12 +58,20 @@ El Editor **auto-refresca** mientras se editan archivos desde afuera: si un `.cs
 
 Al agregar un `using` de un paquete nuevo en runtime, sumar su asmdef a `references` de `SpellSimulator.Runtime.asmdef`.
 
-## Tests (50 al 2026-10-07)
+## Build de Windows
+`Unity_RunCommand` con `BuildPipeline.BuildPlayer` (escena `Escena.unity`, `StandaloneWindows64`, salida `Build/SpellSimulator.exe`,
+ignorada por git). Verificar arrancándola con `-logFile` unos segundos: debe loguear `[PlatformDetector] Modo: PC` y 0
+excepciones fuera de `[XR]` (OpenXR sin casco loguea `XR_ERROR_FORM_FACTOR_UNAVAILABLE`: esperado). Los ~500 warnings
+de la build son shaders del paquete de inferencia.
+
+## Tests (64 al 2026-10-07)
 | Archivo | Cubre |
 |---|---|
 | `ParsingTests` | RingDetector (cerrado/abierto/dos arcos/ajuste), StrokeGrouper (transitividad), SymbolCandidate, capas, StrokeCleaner, GeometryUtils |
 | `RecognitionTests` | Softmax, TTA, TensorRasterizer, GlyphDictionary, **end-to-end modelo: 20/20 plantillas** |
 | `SealActivationTests` | Fases del sello: preparado, cerrar ⇒ lanzar, gastado no relanza, inválido reintenta, borrar rearma |
+| `UserCaseTests` | **End-to-end con el modelo (CPU)**: sigilos grandes en anillo chico (5 elementos), sigilo + 2 columnas, sigilo solo no es anillo |
+| `InkTests` / `RagToolTests` | Depósito de tinta y trapo |
 | `CompilerTests` | Gates (sin anillo, baja confianza, sin sigilo, varios sigilos), activo/preparado, levitation, dirección inward, cancelación, fuerza, escala |
 
 ## Escribir tests

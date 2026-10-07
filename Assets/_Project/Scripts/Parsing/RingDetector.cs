@@ -63,7 +63,7 @@ namespace SpellSimulator.Parsing
                 }
 
                 Measure(ring);
-                if (!ring.Found) continue;
+                if (!ring.Found || IsGlyphCircle(ring, session)) continue;
 
                 float score = ring.Radius * ring.Roundness * ring.Completeness;
                 if (score > bestScore)
@@ -129,6 +129,52 @@ namespace SpellSimulator.Parsing
             float closureQuality = ring.Complete ? ring.Roundness : coverage;
             float lineSmoothness = Mathf.Clamp01(nearInkRatio * 0.72f + (1f - residual) * 0.28f - overdraw * 0.12f);
             ring.Neatness = Mathf.Clamp01(ring.Roundness * 0.42f + lineSmoothness * 0.36f + closureQuality * 0.22f);
+        }
+
+        // parser/rings/constants.ts (GLYPH_CIRCLE_*): un circulo con colas o atravesado por trazos es parte de un glifo.
+        public const float GlyphBandHalfWidthRatio = 0.13f;
+        public const float GlyphMaxTailRatio = 0.24f;
+        public const float GlyphTailWithCrossingRatio = 0.12f;
+        public const float GlyphCrossInner = 0.85f;
+        public const float GlyphCrossOuter = 1.15f;
+        public const int GlyphMinCrossingStrokes = 2;
+
+        /// <summary>
+        /// Rechaza circulos que forman parte de un glifo (glyphCircle.ts): mucha tinta del propio trazo fuera de la linea
+        /// del circulo (colas), o trazos ajenos que lo cruzan de adentro hacia afuera.
+        /// </summary>
+        public static bool IsGlyphCircle(RingInfo ring, DrawingSession session)
+        {
+            float band = ring.Radius * GlyphBandHalfWidthRatio;
+            float far = 0f;
+            foreach (var stroke in ring.Strokes)
+            {
+                for (int i = 1; i < stroke.Points.Count; i++)
+                {
+                    Vector2 a = stroke.Points[i - 1], b = stroke.Points[i];
+                    if (Mathf.Abs(Vector2.Distance((a + b) * 0.5f, ring.Center) - ring.Radius) > band)
+                        far += Vector2.Distance(a, b);
+                }
+            }
+            float tailRatio = far / (2f * Mathf.PI * ring.Radius);
+
+            int crossing = 0;
+            foreach (var stroke in session.Strokes)
+            {
+                if (ring.Contains(stroke)) continue;
+                bool inside = false, outside = false;
+                foreach (var p in stroke.Points)
+                {
+                    float r = Vector2.Distance(p, ring.Center) / ring.Radius;
+                    inside |= r <= GlyphCrossInner;
+                    outside |= r >= GlyphCrossOuter;
+                }
+                if (inside && outside) crossing++;
+            }
+
+            return tailRatio > GlyphMaxTailRatio ||
+                   crossing >= GlyphMinCrossingStrokes ||
+                   (crossing >= 1 && tailRatio > GlyphTailWithCrossingRatio);
         }
 
         private static void MarkBins(bool[] bins, Vector2 center, Vector2 a, Vector2 b)

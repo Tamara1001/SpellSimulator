@@ -13,7 +13,7 @@ namespace SpellSimulator.Player
         [Header("Settings")]
         [SerializeField] private float lookSensitivity = 0.2f;
         [SerializeField, Tooltip("Multiplicador de sensibilidad mientras se dibuja, para mas precision.")]
-        private float drawingSensitivityMultiplier = 0.3f;
+        private float drawingSensitivityMultiplier = 0.6f;
         [SerializeField] private float topClamp = 85f;
         [SerializeField] private float bottomClamp = -85f;
 

@@ -103,13 +103,10 @@ namespace SpellSimulator.Casting
                 return SpellIR.Invalid("Sin reconocedor", null);
             }
 
-            ParsedSeal seal = SealParser.Parse(Clean(canvas));
-            var candidates = new List<DrawingSession>();
-            foreach (var c in seal.AllCandidates()) candidates.Add(c.Strokes);
-
-            GlyphPrediction[] predictions = classifier.Classify(candidates);
-            GlyphAST ast = GlyphAstBuilder.Build(seal, predictions, dictionary.Dictionary);
-            SpellIR spell = SpellCompiler.Compile(ast, Time.time);
+            SealReading reading = SealReader.Read(Clean(canvas), classifier, dictionary.Dictionary, Time.time);
+            GlyphAST ast = reading.Ast;
+            SpellIR spell = reading.Spell;
+            GlyphPrediction[] predictions = reading.Predictions;
 
             LastSpell = spell;
             PublishDiagnostics(ast, spell, predictions, dictionary.Dictionary);

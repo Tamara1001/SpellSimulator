@@ -1,4 +1,5 @@
 using UnityEngine;
+using SpellSimulator.DebugTools;
 using SpellSimulator.Interfaces;
 
 namespace SpellSimulator.Player
@@ -32,7 +33,9 @@ namespace SpellSimulator.Player
         [SerializeField] private LayerMask interactLayer = Physics.DefaultRaycastLayers;
 
         private PlayerInputReader inputReader;
+        private InkSupply inkSupply;
         private IInteractable currentHovered;
+        private IInkSource hoveredInkSource;
         private GameObject heldRight;
         private GameObject heldLeft;
         private IUsable rightUsable;
@@ -46,6 +49,7 @@ namespace SpellSimulator.Player
         private void Awake()
         {
             inputReader = GetComponent<PlayerInputReader>();
+            inkSupply = GetComponent<InkSupply>();
         }
 
         private void Start()
@@ -76,6 +80,7 @@ namespace SpellSimulator.Player
             HandleHover();
             HandleInteraction();
             HandleUsage();
+            if (inputReader.IsReloading) Reload();
         }
 
         private void HandleHover()
@@ -88,9 +93,11 @@ namespace SpellSimulator.Player
             Vector3 end = origin.position + direction * interactRange;
 
             currentHovered = null;
+            hoveredInkSource = null;
             if (Physics.Raycast(origin.position, direction, out RaycastHit hit, interactRange, interactLayer))
             {
                 end = hit.point;
+                hoveredInkSource = hit.collider.GetComponentInParent<IInkSource>();
                 var interactable = hit.collider.GetComponentInParent<IInteractable>();
                 if (interactable != null && HasFreeHandFor(interactable)) currentHovered = interactable;
             }
@@ -135,6 +142,29 @@ namespace SpellSimulator.Player
                 if (inputReader.IsSecondaryUsingTool) usable.OnSecondaryUseStart();
             }
             wasUsingTool = using_;
+        }
+
+        /// <summary>
+        /// Recargar tinta de la herramienta activa. Fuente: el tintero que se mira, uno en la mano, o la reserva personal.
+        /// </summary>
+        private void Reload()
+        {
+            if (!(ActiveUsable is IInkUser user) || !user.UsesInk || user.Ink.Missing <= 0f) return;
+
+            IInkSource source = hoveredInkSource ?? HeldInkSource(heldLeft) ?? HeldInkSource(heldRight) ?? inkSupply;
+            if (source == null) return;
+
+            float amount = user.RefillFrom(source);
+            // Si se recargo de un tintero, tambien se repone la reserva personal.
+            if (inkSupply != null && !ReferenceEquals(source, inkSupply)) amount += inkSupply.Stock(source);
+            if (amount > 0f) Haptics.Pulse(HandType.Right, 0.3f, 0.08f);
+            DiagnosticBus.OnDiagnosticsUpdated?.Invoke(
+                $"<b>[Tinta]</b> Lapiz {user.Ink.Fraction:P0}" + (inkSupply != null ? $" | reserva {inkSupply.Reserve.Level:F0}" : ""));
+        }
+
+        private static IInkSource HeldInkSource(GameObject held)
+        {
+            return held != null && held.TryGetComponent(out IInkSource source) ? source : null;
         }
 
         private void Grab(IInteractable interactable)

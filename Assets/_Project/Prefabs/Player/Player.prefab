@@ -114,6 +114,7 @@ GameObject:
   - component: {fileID: 2279519186911720831}
   - component: {fileID: 5507056984684758675}
   - component: {fileID: 7049695904594532309}
+  - component: {fileID: 2777152246422468284}
   m_Layer: 0
   m_Name: Player
   m_TagString: Player
@@ -186,7 +187,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Player.PlayerLook
   cameraTransform: {fileID: 4665974575741207286}
   lookSensitivity: 0.25
-  drawingSensitivityMultiplier: 0.2
+  drawingSensitivityMultiplier: 0.6
   topClamp: 85
   bottomClamp: -85
 --- !u!114 &8276677653919992877
@@ -276,6 +277,21 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Player.PlatformDetector
   pcRig: {fileID: 8795602290394820363}
   vrRig: {fileID: 2805062509127943836}
+--- !u!114 &2777152246422468284
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2921429751633100408}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ce1b9b3d7dffb054e8306b8f5783cfc6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Player.InkSupply
+  reserve:
+    capacity: 300
+    level: 300
 --- !u!1 &3260308334234408566
 GameObject:
   m_ObjectHideFlags: 0

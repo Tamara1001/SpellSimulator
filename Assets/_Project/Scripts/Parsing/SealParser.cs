@@ -23,10 +23,39 @@ namespace SpellSimulator.Parsing
     /// </summary>
     public static class SealParser
     {
-        public static ParsedSeal Parse(DrawingSession cleaned)
+        /// <summary>
+        /// Hipotesis alternativa: el sigilo absorbe todos los grupos de la capa media (sigilos grandes con partes sueltas,
+        /// como viento o tierra). Comparte los candidatos de signo restantes con el sello original (mismas instancias).
+        /// Null si no hay nada que fusionar.
+        /// </summary>
+        public static ParsedSeal MergeMiddleIntoSigil(ParsedSeal seal)
+        {
+            if (!seal.Ring.Found || seal.SigilCandidate == null) return null;
+
+            var merged = new ParsedSeal { Ring = seal.Ring };
+            var strokes = new DrawingSession();
+            foreach (var s in seal.SigilCandidate.Strokes.Strokes) strokes.AddStroke(s);
+
+            bool absorbed = false;
+            foreach (var sign in seal.SignCandidates)
+            {
+                if (sign.RadiusNorm <= RingLayers.MiddleMax)
+                {
+                    foreach (var s in sign.Strokes.Strokes) strokes.AddStroke(s);
+                    absorbed = true;
+                }
+                else merged.SignCandidates.Add(sign);
+            }
+            if (!absorbed) return null;
+
+            merged.SigilCandidate = SymbolCandidate.Build(strokes, seal.Ring.Center, seal.Ring.Radius);
+            return merged;
+        }
+
+        public static ParsedSeal Parse(DrawingSession cleaned, GroupingMode mode = GroupingMode.Affinity)
         {
             var seal = new ParsedSeal { Ring = RingDetector.Detect(cleaned) };
-            var groups = StrokeGrouper.Group(cleaned, seal.Ring);
+            var groups = StrokeGrouper.Group(cleaned, seal.Ring, mode);
 
             if (!seal.Ring.Found)
             {

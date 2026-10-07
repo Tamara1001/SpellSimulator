@@ -8,22 +8,11 @@ Al resolver uno, no lo borres: marcalo resuelto y explicá cómo.
 
 ## Abiertos
 
-### KI-032
-🟠 `abierto` — **Trazos de un glifo detectados como anillo.** Con sólo el sigilo de fuego dibujado, sus curvas ya se
-leen como un "anillo abierto" (fase Preparado). Si un glifo grande tuviera un círculo cerrado, la auto-activación
-intentaría lanzar (sería inválido por falta de sigilo, sin efecto). La referencia rechaza los "círculos decorados con
-glifos" (`parser/rings/glyphCircle.ts`: cola de tinta fuera de la banda, trazos que cruzan, trazos pegados). Portar esa
-regla y exigir un radio mínimo relativo al tamaño de los demás trazos.
-
 ### KI-020
-🟠 `abierto` — **Agrupado de trazos simplificado.** `StrokeGrouper` usa umbral radial (0.40 r) + proximidad. La
-referencia hace búsqueda de particiones guiada por reconocimiento (`parser/grouping/partition.ts`): separa un signo
-pegado al sigilo y mantiene juntos los puntos sueltos de un glifo. Síntoma esperado: un signo dibujado en la capa media
-muy cerca del centro se suma al sigilo. Próximo paso: probar con dibujos reales y, si falla, portar `hypotheses.ts`.
-
-### KI-021
-🟠 `abierto` — **No hay forma de limpiar el lienzo completo** desde el juego (los botones del HUD viejo estaban
-inactivos y se eliminaron). Sólo goma (trazo a trazo) y deshacer. Propuesta: mantener secundario de la goma = limpiar.
+🟠 `parcial` — **Agrupado de trazos.** Ahora: afinidad portada de la referencia (tocarse, encerrar, compartir centro) +
+lectura guiada por reconocimiento barata (`SealReader`: hipótesis "capa media fusionada al sigilo" en el mismo batch y
+modo radial si nada fue válido). Cubre sigilos grandes con partes sueltas (fuego, agua, tierra, luz, viento: test
+end-to-end). Falta la búsqueda de particiones completa de la referencia (`partition.ts`) para signos pegados al sigilo.
 
 ### KI-022
 🟢 `abierto` — El gate de ambigüedad del sigilo (`PrimarySigilAmbiguityGap = 0.05`) es inalcanzable con softmax puro:
@@ -45,6 +34,10 @@ signo sale de la geometría (`DirectedOrientationDeg`), no de la red. La referen
 ### KI-007
 🟢 `abierto` — El cast aloca (listas, `float[]` por predicción, `StringBuilder` de diagnóstico, `Texture2D` de debug).
 Es aceptable porque ocurre sólo al castear, nunca por frame. El buffer de entrada del clasificador sí se reutiliza.
+
+### KI-034
+🟢 `abierto` — **Dibujo por contacto en VR sin probar** (`PhysicalTool.vrContactDrawing`, apagado por defecto). Activarlo
+en el Inspector del lápiz y probar en el Quest; el `RaycastTool` de la punta debe apuntar hacia el papel.
 
 ### KI-026
 🟢 `abierto` — Sin PlayMode tests. El smoke test de cast en Play Mode se hizo a mano por MCP (ver [[HARNESS]]);
@@ -76,4 +69,9 @@ convendría automatizarlo.
 | KI-028 🟢 | **Nuevo:** Douglas‑Peucker dividía por cero en trazos que se cruzan; trazos cortos compartidos por referencia | Distancia a punto en segmentos degenerados; copia de trazos. Tests. |
 | KI-029 🟢 | **Nuevo:** clustering de signos no transitivo | Union‑find. Test. |
 | KI-030 🟢 | **Nuevo:** `renderer.material` instanciado nunca se destruía | `DrawingCanvas.OnDestroy` lo destruye. |
+| KI-021 🟠 | No había forma de limpiar el lienzo | Trapo (`RagTool`): frotarlo limpia todo y rearma el sello. |
+| KI-032 🟠 | Curvas de un glifo leídas como anillo | `RingDetector.IsGlyphCircle` (colas fuera de la banda, trazos que cruzan), de `glyphCircle.ts`. Tests. |
+| KI-033 🔴 | **Nuevo:** `Tensor<float>(shape, array)` copia el array entero, así que un cast con menos candidatos que el anterior lanzaba excepción | El buffer mide exactamente el batch. Lo encontró un test end-to-end. |
+| KI-035 🟠 | **Nuevo (prueba manual):** sigilo grande partido en sigilo + signos | Ver KI-020. Test `UserCaseTests`. |
+| KI-036 🟢 | **Nuevo (prueba manual):** dibujar se sentía lento | Estabilizador por plataforma (PC 40, VR 14) y sensibilidad al dibujar 0.2 → 0.6. |
 | KI-031 🟢 | **Nuevo:** suelo detectaba triggers (lienzo sostenido) | `QueryTriggerInteraction.Ignore`. |

@@ -30,18 +30,18 @@ Todo entre `SpellCaster` y `SpellIR` es **lógica pura** (estática, testeada) e
 
 | Módulo | Clases | Responsabilidad |
 |---|---|---|
-| `Core` | `Stroke`, `DrawingSession`, `GeometryUtils`, `StrokeCleaner` | Datos de trazo y geometría 2D. Ángulos en grados matemáticos con Y arriba (como la referencia). |
+| `Core` | `Stroke`, `DrawingSession`, `GeometryUtils`, `StrokeCleaner`, `InkReservoir` | Datos de trazo y geometría 2D. Ángulos en grados matemáticos con Y arriba (como la referencia). |
 | `Canvas` | `DrawingCanvas` | Dueño de su `Session` (UV) y de una `RenderTexture`. `DrawAt`, `Redraw`, `Clear`, `GetUVFromWorldPosition`, `UvToIsotropic`, `SurfaceNormalLocal`. |
-| `Input.Tools` | `IDrawingTool`, `PenTool`, `EraserTool` | Editan la sesión del lienzo desde UV. Pen con estabilizador exponencial; Eraser con radio en metros. |
+| `Input.Tools` | `IDrawingTool`, `PenTool`, `EraserTool`, `RagTool` | Editan la sesión del lienzo desde UV. Pen con estabilizador exponencial; Eraser con radio en metros. |
 | `Parsing` | `RingDetector`, `RingInfo`, `StrokeGrouper`, `SymbolCandidate`, `RingLayers`, `SealParser`, `ParsedSeal` | Geometría del sello: ajuste de círculo (Kasa), cobertura angular → anillo cerrado/abierto, capas radiales, candidatos con métricas (`sizeNorm`, `radiusNorm`, `angleDeg`, orientación, forma). |
-| `Recognition` | `TensorRasterizer`, `SentisGlyphClassifier`, `IGlyphClassifier`, `GlyphPrediction`, `ClassificationMath` | Rasterizado idéntico al de entrenamiento, inferencia por lotes, TTA de 8 rotaciones, softmax. |
+| `Recognition` | `TensorRasterizer`, `GlyphClassifier` (puro, testeable), `SentisGlyphClassifier` (componente), `IGlyphClassifier`, `GlyphPrediction`, `ClassificationMath` | Rasterizado idéntico al de entrenamiento, inferencia por lotes, TTA de 8 rotaciones, softmax. |
 | `Glyphs` | `GlyphDictionary`, `GlyphEntry`, `GlyphSemantic`, `GlyphDictionaryAsset` | Diccionario como **datos** (JSON de la referencia) → rol, elemento, tamaño de referencia, capas permitidas, semántica, plantillas. |
 | `Compiler` | `GlyphAST`, `GlyphAstBuilder`, `GlyphWarnings`, `SpellCompiler`, `SemanticRules`, `SpellQuality`, `SpellDirection`, `SpellIR` | Port fiel de `compiler/` de la referencia (sin la capa Plan). |
-| `Casting` | `SpellCaster`, `SealActivation` | **Único punto de entrada** para lanzar: auto-activación al cerrar el anillo, fases del sello, orquesta el pipeline, diagnósticos, eventos `SpellCompiled` / `SealPhaseChanged`. |
-| `Output` | `SpellOutputController` | Prefab por elemento, sobre el lienzo, orientado por `direction` (papel → mundo), parámetros al VFX Graph. |
-| `Player` | `PlatformDetector`, `PlayerInputReader`, `PlayerMovement`, `PlayerLook`, `PlayerInteractor` | Rig PC/VR, input por código, agarrar/soltar/usar por mano. |
-| `World` | `PhysicalTool`, `PhysicalCanvas` | Objetos agarrables/usables. |
-| `Interfaces` | `IInteractable`, `IUsable`, `HandType` | Contratos jugador ↔ objetos. |
+| `Casting` | `SpellCaster`, `SealActivation`, `SealReader` (lectura guiada: prueba agrupaciones y elige la que el modelo entiende) | **Único punto de entrada** para lanzar: auto-activación al cerrar el anillo, fases del sello, orquesta el pipeline, diagnósticos, eventos `SpellCompiled` / `SealPhaseChanged`. |
+| `Output` | `SpellOutputController`, `SealFeedback` (pulso de preparado y destello en el papel) | Prefab por elemento, sobre el lienzo, orientado por `direction` (papel → mundo), parámetros al VFX Graph. |
+| `Player` | `PlatformDetector`, `PlayerInputReader`, `PlayerMovement`, `PlayerLook`, `PlayerInteractor` (recarga de tinta), `InkSupply`, `Haptics` | Rig PC/VR, input por código, agarrar/soltar/usar por mano. |
+| `World` | `PhysicalTool` (lápiz, goma, trapo; tinta), `PhysicalCanvas`, `Inkwell` | Objetos agarrables/usables. |
+| `Interfaces` | `IInteractable`, `IUsable`, `HandType`, `IInkUser`, `IInkSource` | Contratos jugador ↔ objetos. |
 | `Debug` (`DebugTools`) | `DiagnosticBus`, `DiagnosticUIController` | Tensor, top‑3 y log del compilador en la UI. |
 
 Dependencias (sin ciclos): `Core` ← `Parsing` ← `Compiler` → `Recognition`, `Glyphs`; `Casting` usa todo; `World` → `Casting`; nada depende de `World`/`Player` salvo `World`.
@@ -82,6 +82,7 @@ Dependencias (sin ciclos): `Core` ← `Parsing` ← `Compiler` → `Recognition`
 | Interact (agarrar/soltar) | E | Right trigger | Right grip |
 | UseTool (dibujar/borrar) | Click izq. | Left trigger | Right trigger |
 | SecondaryUse (deshacer) | Click der. | East | A |
+| Recargar tinta | R (mirando un tintero, con uno en la mano o de la reserva) | West | Mojar la punta en un tintero |
 | Liberar cursor | Escape (click recaptura) | — | — |
 
 ## Escena `Escena.unity`
@@ -90,9 +91,10 @@ Dependencias (sin ciclos): `Core` ← `Parsing` ← `Compiler` → `Recognition`
 CinemachineCamera · Directional Light · EventSystem
 Canvas (UI) ─ HUD (Crosshair) ─ DEBUG [DiagnosticUIController]
 SystemManagers [SentisGlyphClassifier, SpellCaster, SpellOutputController]
-PaperCanvas (layer 6) [DrawingCanvas, PhysicalCanvas]
-Player [PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor] ─ PCRIG / VRRIG
-Pen, Eraser (layer 7) [PhysicalTool → SpellCaster] ─ RaycastTool
+PaperCanvas (layer 6) [DrawingCanvas, PhysicalCanvas, SealFeedback]
+Player [PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor, InkSupply] ─ PCRIG / VRRIG
+Pen, Eraser, Rag (layer 7) [PhysicalTool → SpellCaster] ─ RaycastTool
+Inkwell [Inkwell]
 Floor
 ```
 

@@ -18,8 +18,11 @@ namespace SpellSimulator.Player
         // Uso continuo (ej. mantener click izquierdo para dibujar)
         public bool IsUsingTool { get; private set; }
         
-        // Uso secundario (ej. click derecho para castear/undo)
+        // Uso secundario (click derecho / A: deshacer)
         public bool IsSecondaryUsingTool { get; private set; }
+
+        // Recargar tinta (R / boton West). En VR se recarga mojando la punta en un tintero.
+        public bool IsReloading { get; private set; }
 
         private InputAction moveAction;
         private InputAction lookAction;
@@ -27,6 +30,7 @@ namespace SpellSimulator.Player
         private InputAction interactAction;
         private InputAction useToolAction;
         private InputAction secondaryUseToolAction;
+        private InputAction reloadAction;
 
         private void Awake()
         {
@@ -68,10 +72,16 @@ namespace SpellSimulator.Player
             secondaryUseToolAction.AddBinding("<Mouse>/rightButton");
             secondaryUseToolAction.AddBinding("<Gamepad>/buttonEast");
             secondaryUseToolAction.AddBinding("<XRController>{RightHand}/primaryButton"); // VR: Boton A para castear/undo
+
+            // Recargar tinta
+            reloadAction = new InputAction("Reload", InputActionType.Button);
+            reloadAction.AddBinding("<Keyboard>/r");
+            reloadAction.AddBinding("<Gamepad>/buttonWest");
         }
 
         private void OnEnable()
         {
+            reloadAction.Enable();
             moveAction.Enable();
             lookAction.Enable();
             jumpAction.Enable();
@@ -82,6 +92,7 @@ namespace SpellSimulator.Player
 
         private void OnDisable()
         {
+            reloadAction.Disable();
             moveAction.Disable();
             lookAction.Disable();
             jumpAction.Disable();
@@ -101,7 +112,8 @@ namespace SpellSimulator.Player
             
             // Leer el valor como float > 0.1f garantiza que funcione tanto para botones de mouse como para gatillos VR
             IsUsingTool = useToolAction.ReadValue<float>() > 0.1f; 
-            IsSecondaryUsingTool = secondaryUseToolAction.triggered; // Triggered para Cast/Undo (un solo click)
+            IsSecondaryUsingTool = secondaryUseToolAction.triggered; // Un solo click (deshacer)
+            IsReloading = reloadAction.triggered;
         }
     }
 }

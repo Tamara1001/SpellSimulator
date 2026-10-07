@@ -19,12 +19,16 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 ### M2 — El trazo se siente bien 🔄
 *Objetivo: dibujar y lanzar en PC y VR sin fricción.*
 - [x] **Auto-activación al cerrar el anillo** (canon). El secundario de las herramientas es deshacer. (2026-10-07)
-- [ ] Rechazar círculos que forman parte de un glifo como anillo (KI-032).
-- [ ] Validación con dibujos reales; ajuste del agrupado y los umbrales (KI-020); fixtures de sesiones reales.
-- [ ] Dibujo por **contacto de la punta** en VR (además del rayo) + hápticos de fricción.
-- [ ] Feedback diegético en el papel: brillo de "preparado", trazo reconocido resaltado y advertencias.
-- [ ] Trapo (limpiar el lienzo) (KI-021). `ToolDefinition` como SO; pincel.
-- [ ] **Tinta como recurso**: depósito por herramienta, tinteros como objetos y recarga con `R` / contacto.
+- [x] Rechazar círculos que forman parte de un glifo como anillo (KI-032).
+- [x] Primera prueba manual: sigilo grande partido (resuelto con afinidad + lectura guiada) y dibujo lento (resuelto).
+- [ ] Más pruebas con dibujos reales; fixtures de sesiones reales (serializar `DrawingSession`).
+- [x] Hápticos (trazo, cast, sin tinta, recarga).
+- [ ] Dibujo por **contacto de la punta** en VR: implementado detrás de un toggle, falta probar en el Quest (KI-034).
+- [x] Feedback en el papel: pulso de "preparado", destello al lanzar o fallar (`SealFeedback`).
+- [ ] Advertencias y glifos reconocidos mostrados en el papel (hoy en el panel DEBUG).
+- [x] Trapo (limpiar el lienzo) (KI-021).
+- [ ] `ToolDefinition` como SO; pincel (grosor por herramienta).
+- [x] **Tinta como recurso**: depósito en el lápiz (indicador por color), tinteros físicos, reserva personal, `R` en PC y mojar la punta en VR.
 
 ### M3 — El hechizo tiene forma y fuerza
 *Objetivo: cada combinación de signos se ve y se comporta distinto.*

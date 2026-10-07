@@ -16,7 +16,7 @@ SpellSimulator/
 │   │   │   ├── Dictionary/       #   sigils/*.json, signs/*.json (copiados de la referencia)
 │   │   │   └── GlyphDictionary.asset
 │   │   ├── Editor/               #   SpellSimulator.Editor.asmdef — harness, sync del diccionario, chequeos
-│   │   ├── Materials/            #   Canvas, BrushMaterial, Pen, Eraser, VRPointer, Binarize(.shader)
+│   │   ├── Materials/            #   Canvas, BrushMaterial, Pen, Eraser, Rag, Inkwell, VRPointer, Binarize(.shader)
 │   │   ├── Prefabs/
 │   │   │   ├── Objects/          #   PaperCanvas, Pen, Eraser, Tool
 │   │   │   ├── Player/           #   Player (PCRIG + VRRIG)
@@ -25,18 +25,18 @@ SpellSimulator/
 │   │   ├── Scenes/Escena.unity   #   unica escena (Build index 0)
 │   │   ├── Scripts/              #   SpellSimulator.Runtime.asmdef
 │   │   │   ├── Canvas/           #   DrawingCanvas
-│   │   │   ├── Casting/          #   SpellCaster (punto de entrada del pipeline)
+│   │   │   ├── Casting/          #   SpellCaster, SealActivation, SealReader
 │   │   │   ├── Compiler/         #   GlyphAST, GlyphAstBuilder, SpellCompiler, SemanticRules, SpellQuality, SpellDirection, SpellIR
-│   │   │   ├── Core/             #   DrawingData (Stroke, DrawingSession), GeometryUtils, StrokeCleaner
+│   │   │   ├── Core/             #   DrawingData (Stroke, DrawingSession), GeometryUtils, StrokeCleaner, InkReservoir
 │   │   │   ├── Debug/            #   DiagnosticBus, DiagnosticUIController   (namespace DebugTools)
 │   │   │   ├── Glyphs/           #   GlyphDictionary, GlyphEntry, GlyphDictionaryAsset
-│   │   │   ├── Input/Tools/      #   IDrawingTool, PenTool, EraserTool
+│   │   │   ├── Input/Tools/      #   IDrawingTool, PenTool, EraserTool, RagTool
 │   │   │   ├── Interfaces/       #   IInteractable, IUsable, HandType
-│   │   │   ├── Output/           #   SpellOutputController
+│   │   │   ├── Output/           #   SpellOutputController, SealFeedback
 │   │   │   ├── Parsing/          #   RingDetector, StrokeGrouper, SymbolCandidate, SealParser
-│   │   │   ├── Player/           #   PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor
-│   │   │   ├── Recognition/      #   TensorRasterizer, SentisGlyphClassifier, GlyphPrediction (+ClassificationMath)
-│   │   │   └── World/            #   PhysicalTool, PhysicalCanvas
+│   │   │   ├── Player/           #   PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor, InkSupply, Haptics
+│   │   │   ├── Recognition/      #   TensorRasterizer, GlyphClassifier, SentisGlyphClassifier, GlyphPrediction (+ClassificationMath)
+│   │   │   └── World/            #   PhysicalTool, PhysicalCanvas, Inkwell
 │   │   └── Tests/EditMode/       #   SpellSimulator.Tests.EditMode.asmdef — Parsing, Recognition, Compiler, modelo
 │   ├── Settings/                 # URP assets (PC_RPAsset, renderers, volume profiles)
 │   ├── XR/, XRI/                 # settings de OpenXR / XR Interaction Toolkit (generados)
