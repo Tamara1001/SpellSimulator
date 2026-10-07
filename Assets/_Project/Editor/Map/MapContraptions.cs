@@ -24,6 +24,8 @@ namespace SpellSimulator.EditorTools.Map
             Slab(template, material, caster, stoneProfile, "ImpactStone_M", origin + new Vector3(-0.6f, 0.2f, 0f), 0.34f, 0.07f, false, SealTrigger.Mode.Impact, 3f);
             Slab(template, material, caster, stoneProfile, "ImpactStone_S", origin + new Vector3(0.15f, 0.2f, 0f), 0.2f, 0.06f, false, SealTrigger.Mode.Impact, 3f);
             Slab(template, material, caster, stoneProfile, "PressurePlate", origin + new Vector3(0f, 0.1f, 2.2f), 0.9f, 0.1f, true, SealTrigger.Mode.Pressure, 1.5f);
+            var plate = GameObject.Find("PressurePlate");
+            if (plate != null) plate.GetComponent<SealTrigger>().SetPermanent(5, 3f);
             Weight(map, material, stoneProfile, origin + new Vector3(1.0f, 0.3f, 0f));
         }
 

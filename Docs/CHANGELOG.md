@@ -13,6 +13,8 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - `MapContraptions`: 2 piedras de impacto, placa de presión y pesa junto a la mesa de estampas.
 - 3 tests de `SealActivation` (125 en total). Verificado en Play: ambos quedan Armed y se lanzan al golpe y al peso.
 - Pendiente: `SplitJoin` (KI-059).
+- Sello permanente: `SealTrigger.SetPermanent(usos, enfriamiento)` + `SpellCaster.Rearm` / `SealActivation.Rearm`; la placa
+  tiene 5 usos y 3 s. Los usos se reinician si el papel se rompe. 126 tests.
 
 ## 2026-10-07 — M6: estampas
 - `StampPattern` (puro): sigilo + anillo abierto del diámetro de la estampa; signo del tamaño del anillo existente,

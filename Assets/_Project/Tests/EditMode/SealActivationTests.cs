@@ -84,5 +84,13 @@ namespace SpellSimulator.Tests
             Assert.AreEqual(SealPhase.Spent, SealActivation.Evaluate(Ring(true, true), SealPhase.Spent, true, true, out _));
             Assert.AreEqual(SealPhase.Prepared, SealActivation.Evaluate(Ring(true, false), SealPhase.Armed, false, true, out _));
         }
+
+        [Test]
+        public void Rearm_OnlyTurnsASpentSealBackToArmed()
+        {
+            Assert.AreEqual(SealPhase.Armed, SealActivation.Rearm(SealPhase.Spent));
+            Assert.AreEqual(SealPhase.Prepared, SealActivation.Rearm(SealPhase.Prepared));
+            Assert.AreEqual(SealPhase.Drawing, SealActivation.Rearm(SealPhase.Drawing));
+        }
     }
 }

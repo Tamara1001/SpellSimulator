@@ -107,6 +107,13 @@ namespace SpellSimulator.Casting
             return launched;
         }
 
+        /// <summary>Vuelve a armar un sello gastado (sellos permanentes). El anillo sigue cerrado en el papel.</summary>
+        public void Rearm(DrawingCanvas canvas)
+        {
+            if (canvas == null) return;
+            SetPhase(canvas, SealActivation.Rearm(GetPhase(canvas)));
+        }
+
         private void SetPhase(DrawingCanvas canvas, SealPhase phase)
         {
             if (GetPhase(canvas) == phase) return;

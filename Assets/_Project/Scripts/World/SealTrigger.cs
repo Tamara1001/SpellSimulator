@@ -26,11 +26,33 @@ namespace SpellSimulator.World
         [SerializeField, Tooltip("Pressure: la normal del contacto debe apuntar hacia arriba al menos asi (dot con up).")]
         private float minUpDot = 0.6f;
 
+        [Header("Sello permanente (piedra de rayar)")]
+        [SerializeField, Tooltip("Usos totales antes de gastarse. 1 = un solo lanzamiento (hay que volver a dibujar).")]
+        private int maxUses = 1;
+        [SerializeField, Tooltip("Segundos de enfriamiento antes de volver a armarse.")]
+        private float cooldownSeconds = 3f;
+
         private DrawingCanvas canvas;
+        private int uses;
+        private float rearmAt = -1f;
         private float held;
         private float lastLoad;
 
         public Mode TriggerMode => mode;
+        public int UsesLeft => Mathf.Max(0, maxUses - uses);
+
+        public void SetPermanent(int uses, float cooldown)
+        {
+            maxUses = Mathf.Max(1, uses);
+            cooldownSeconds = cooldown;
+        }
+
+        private void Fire()
+        {
+            if (!caster.Trigger(canvas)) return;
+            uses++;
+            if (uses < maxUses) rearmAt = Time.time + cooldownSeconds;
+        }
 
         public void Configure(Mode newMode, SpellCaster spellCaster, float threshold)
         {
@@ -41,11 +63,19 @@ namespace SpellSimulator.World
 
         private void Awake() => canvas = GetComponentInChildren<DrawingCanvas>();
 
+        /// <summary>Un sello nuevo (el lienzo se borro) empieza con todos sus usos.</summary>
+        private void OnEnable() => SealBreaker.SealBroken += OnBroken;
+        private void OnDisable() => SealBreaker.SealBroken -= OnBroken;
+        private void OnBroken(DrawingCanvas broken)
+        {
+            if (broken == canvas) { uses = 0; rearmAt = -1f; }
+        }
+
         private void OnCollisionEnter(Collision collision)
         {
             if (mode != Mode.Impact || canvas == null || caster == null) return;
             if (collision.relativeVelocity.magnitude < impactSpeed) return;
-            caster.Trigger(canvas);
+            Fire();
         }
 
         private void OnCollisionStay(Collision collision)
@@ -60,6 +90,13 @@ namespace SpellSimulator.World
             lastLoad = Time.time;
         }
 
+        private void Update()
+        {
+            if (rearmAt < 0f || Time.time < rearmAt || caster == null) return;
+            rearmAt = -1f;
+            caster.Rearm(canvas);
+        }
+
         private void FixedUpdate()
         {
             if (mode != Mode.Pressure || canvas == null || caster == null) return;
@@ -68,7 +105,7 @@ namespace SpellSimulator.World
             if (held >= pressureSeconds)
             {
                 held = 0f;
-                caster.Trigger(canvas);
+                Fire();
             }
         }
     }

@@ -78,6 +78,7 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 - [x] Estampas S/M/L (`Stamp` + `StampPattern`): se cargan del grimorio (secundario apuntando al libro, 5 usos), el
       sigilo se estampa con anillo abierto (preparado, se cierra a mano) y los signos se ajustan al anillo y apuntan adentro.
 - [x] Contraptions parciales: `SealTrigger` con `Impact` (piedra arrojada) y `Pressure` (placa con peso); el anillo cerrado deja el sello *armado*.
+- [x] Sello permanente (piedra de rayar): `SealTrigger` con usos y enfriamiento; la placa de presión tiene 5 usos y 3 s.
 - [ ] Contraptions: `SplitJoin` (sello partido en dos objetos).
 - [x] Borrado por agua (mojar rompe sellos) y por fuego (quemar el papel) — hecho en M4 (`SealBreaker`).
 - [ ] Superficies inscribibles generales (decals en paredes y mesas) y piedra de rayar (sellos permanentes, cooldown y 5 usos).

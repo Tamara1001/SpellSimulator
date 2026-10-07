@@ -44,6 +44,9 @@ namespace SpellSimulator.Casting
             return current;
         }
 
+        /// <summary>Sello permanente: tras el enfriamiento un sello gastado vuelve a quedar armado.</summary>
+        public static SealPhase Rearm(SealPhase current) => current == SealPhase.Spent ? SealPhase.Armed : current;
+
         /// <summary>El disparador de un sello se activo: solo lanza si estaba armado.</summary>
         public static bool ShouldFire(SealPhase current) => current == SealPhase.Armed;
 
