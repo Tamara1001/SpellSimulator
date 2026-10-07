@@ -79,7 +79,7 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
       sigilo se estampa con anillo abierto (preparado, se cierra a mano) y los signos se ajustan al anillo y apuntan adentro.
 - [x] Contraptions parciales: `SealTrigger` con `Impact` (piedra arrojada) y `Pressure` (placa con peso); el anillo cerrado deja el sello *armado*.
 - [x] Sello permanente (piedra de rayar): `SealTrigger` con usos y enfriamiento; la placa de presión tiene 5 usos y 3 s.
-- [ ] Contraptions: `SplitJoin` (sello partido en dos objetos).
+- [x] Contraptions: `SplitJoin` (`SplitSealHalf` + `SplitJoinMath`): dos mitades que se juntan lado a lado fusionan sus trazos y lanzan el hechizo.
 - [x] Tanda de la prueba manual: correr y agacharse, objetos movibles (E, rueda, Q), lienzos que flotan o se apoyan, dar vuelta
       la hoja (F), emisión por la cara con tinta, modo de escritorio (V), sellos en el piso/torre/cajas, cuadernos, caballetes
       y demás lienzos, mesas de trabajo con herramientas nuevas, cielo, grimorio movible con flechas y páginas de ayuda, agua.

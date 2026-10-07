@@ -112,6 +112,11 @@ anterior/siguiente), **Controles**, **Sellos y estampas** y **Opciones**. Se apr
 pantalla casi completa (clic con el mouse). El borde de abajo se agarra con E para llevarlo. Empezás conociendo los 8
 sigilos y los signos columna, levitación, dispersión y atracción (para copiarlos con estampas).
 
+## Sellos partidos (M6)
+Junto a las piedras de impacto hay dos **mitades de sello** de piedra. Dibujá cada parte del sello en una mitad (por ejemplo,
+medio anillo y el sigilo en una, el resto en la otra) y juntalas **lado a lado**, con la tinta hacia el mismo lado: tras 0,4 s los
+trazos se unen en un solo sello y se lanza. Las mitades se borran al lanzar. Una mitad sola nunca lanza.
+
 ## Sellos en objetos (M6)
 Un objeto con `SealTrigger` no lanza el sello al cerrar el anillo: lo deja **armado** (el papel pulsa igual que uno
 preparado) y se lanza cuando algo lo activa. En el campo de práctica, junto a la mesa de estampas: dos **piedras de

@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — M6: sellos partidos (SplitJoin)
+- `SplitJoinMath` (puro): `Merge` fusiona dos sesiones UV por el ancho de cada mitad; `IsRightNeighbour` decide si B está pegada a la
+  derecha de A (tolerancia 8 cm, misma cara). `SplitSealHalf`: al estar pegadas 0,4 s crea un lienzo temporal del tamaño de las dos,
+  lanza con `SpellCaster.Cast` y borra las mitades; sola nunca lanza (`ISealTrigger`).
+- Dos mitades de piedra junto a las piedras de impacto (`MapContraptions`). 5 tests nuevos (131). Verificado en Play: fuego válido.
+- KI-059 resuelto, KI-073 abierto.
+
 ## 2026-10-07 — Segunda prueba manual: interacción, grimorio-menú, tumbarse y fuego en el mundo
 - **Causa raíz de varios fallos:** la máscara del rayo de E solo veía las capas Canvas/Interactable; libro, estampas y cajas no
   se podían apuntar (`InteractionSetup.FixInteractMask`). Agarrar ahora intercambia de mano.

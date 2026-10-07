@@ -106,7 +106,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 **Física en tiempo real**: guardar posiciones (cultura invariante: `Vector3.ToString` usa coma decimal), lanzar,
 `sleep 4` en Bash y medir. Los blancos están en `TestProps` (plataforma a la altura del chorro).
 
-## Tests (126 al 2026-10-07)
+## Tests (131 al 2026-10-07)
 | Archivo | Cubre |
 |---|---|
 | `ParsingTests` | RingDetector (cerrado/abierto/dos arcos/ajuste), StrokeGrouper (transitividad), SymbolCandidate, capas, StrokeCleaner, GeometryUtils |
@@ -123,6 +123,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 | `AudioTests` | Todos los cues que usa el código existen y tienen clips; pasos según superficie |
 | `LearningTests` | Textos para todos los glifos del diccionario, todo glifo se puede aprender, progreso ida y vuelta |
 | `StampTests` | Con el modelo: el sigilo estampado deja el anillo abierto (preparado), cerrado a mano lanza su elemento, columnas estampadas forman un chorro |
+| `SplitJoinTests` | Fusion de las mitades de un sello partido (UV proporcional al ancho) y reglas de "pegadas lado a lado" |
 | `CompilerTests` | Gates (sin anillo, baja confianza, sin sigilo, varios sigilos), activo/preparado, levitation, dirección inward, cancelación, fuerza, escala |
 
 ## Sellos grabados (fixtures de pruebas manuales)

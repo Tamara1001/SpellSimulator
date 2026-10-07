@@ -49,6 +49,11 @@ namespace SpellSimulator.Canvas
 
         private float inkSign = 1f;
 
+        /// <summary>+1 si la cara con tinta es la visible, -1 si es la de atras (ver NoteInkViewer).</summary>
+        public float InkSign => inkSign;
+        public void SetInkSign(float sign) => inkSign = sign >= 0f ? 1f : -1f;
+        public Material BrushMaterial => brushMaterial;
+
         /// <summary>Normal de la cara visible del lienzo, en mundo.</summary>
         public Vector3 FaceNormal => transform.TransformDirection(surfaceNormalLocal).normalized;
 

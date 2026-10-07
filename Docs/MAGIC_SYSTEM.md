@@ -85,7 +85,7 @@ del estanque con agua).
 | Tamaño extensivo | El radio del anillo **en metros** escala el caudal y la fuerza en el mundo. | ✅ M3 (`MagicField`: el área escala el acople, la forma la velocidad) |
 | Romper el sello | La goma borra trazos y el **trapo** borra el lienzo entero. El **agua** de un hechizo que moja un sello lo mancha y lo rompe. Cortar o quemar el papel también lo rompe. | Parcial (M4: papel empapado o en llamas pierde el sello; falta cortar) |
 | Contraptions | Sellos en objetos del mundo (paredes, piedras, mesas, papeles fijos) con disparadores: cerrar el anillo, juntar dos mitades, impacto o pisarlo. | Impacto y presión implementados (`SealTrigger`); falta juntar dos mitades |
-| Sellos partidos | Dos medias lunas en dos objetos; al alinearlos (distancia y ángulo) el sello se completa. | Diseño |
+| Sellos partidos | Dos medias lunas en dos objetos; al alinearlos (distancia y ángulo) el sello se completa. | Implementado (`SplitSealHalf`) |
 | Sellos lanzables | Un sello en un papel o una piedra queda en reposo y se activa al impactar. | Diseño |
 | Estampas | Una estampa vacía copia un glifo del libro-menú y lo estampa en cualquier superficie. El tamaño de la estampa = tamaño del sello. | Diseño |
 | Elementos | Fuego, agua, viento, tierra y luz, con variantes por sigilo. | ✅ Compilador + look por elemento (M3) |

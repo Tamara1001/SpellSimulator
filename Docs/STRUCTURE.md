@@ -48,7 +48,7 @@ SpellSimulator/
 │   │   │   ├── Player/           #   PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor, InkSupply, Haptics
 │   │   │   ├── Reactions/        #   ReactionModel, MaterialProfile, ReactionTable, ElementReactive, MagicWorld, BurnEffect, Shatter, WorldResetter, WaterVolume, WaterEffects, GroundSurface, GroundReactions, GroundMarks, RockRise, MarkFade
 │   │   │   ├── Recognition/      #   TensorRasterizer, GlyphClassifier, SentisGlyphClassifier, GlyphPrediction (+ClassificationMath), PoseMath
-│   │   │   └── World/            #   PhysicalTool, ToolDefinition, PhysicalCanvas, Inkwell, Respawnable, SealBreaker, TrainingDummy, Stamp, FaceCamera, SealTrigger, Movable, Inscribable, InscribedDecal; Map/ValleyShape
+│   │   │   └── World/            #   PhysicalTool, ToolDefinition, PhysicalCanvas, Inkwell, Respawnable, SealBreaker, TrainingDummy, Stamp, FaceCamera, SealTrigger, Movable, Inscribable, InscribedDecal, SplitSealHalf; Map/ValleyShape
 │   │   ├── Tests/EditMode/       #   SpellSimulator.Tests.EditMode.asmdef — Parsing, Recognition, Compiler, modelo
 │   │   └── Tests/Fixtures/       #   Sellos reales grabados (SealRecord .json) para SealFixtureTests
 │   ├── Settings/                 # URP assets (PC_RPAsset, renderers, volume profiles)

@@ -132,7 +132,8 @@ Tamara; con muchas cosas ardiendo suenan muchos loops de fuego a la vez (poner u
 | KI-062 🟢 | Las piedras de impacto y la placa emitían hacia abajo (la cara visible del lienzo es -Z) | Rotación corregida: cara hacia arriba. |
 | KI-061 🟡 | Sin test automático de agacharse, correr, arrojar ni del modo de escritorio (solo se verificó la lógica en Play con llamadas directas) | Probar a mano; pasarlo a PlayMode en M7. |
 | KI-060 🟡 | Las calcomanías de tinta no tienen anotaciones ni pulso de "preparado" como el papel, y las estampas no estampan sobre ellas | `SealFeedback` y `Stamp` solo buscan lienzos de la capa Canvas con material de papel. |
-| KI-059 🟡 | **Pendiente:** `SplitJoin` (sello partido en dos objetos que se activa al juntarlos) no está hecho; las piedras y placas solo cubren `Impact` y `Pressure` | Fusionar las sesiones de dos lienzos al alinearlos. |
+| KI-059 🟢 | `SplitJoin` (sello partido en dos objetos) | `SplitSealHalf`: al juntarse lado a lado 0,4 s se fusionan los trazos en un lienzo temporal y se lanza con `SpellCaster.Cast`. |
+| KI-073 🟡 | Los sellos partidos solo juntan en horizontal (B a la derecha de A, misma cara); no hay unión vertical ni de más de dos piezas | Ampliar `SplitJoinMath` si hace falta. |
 | KI-058 🟢 | **Prueba manual:** el dorso de los lienzos no se veía | `Canvas.mat` de doble cara. |
 | KI-055 🟢 | **Nuevo (M6):** los textos de ayuda ("Agarrar …") se armaban en cada frame al mirarlos (GC por frame) | Se arman una vez y se guardan. |
 | KI-052 🟠 | **Prueba manual:** no se podía subir al segundo piso: la cabeza chocaba con el piso de arriba (2.0 m libres, el jugador mide ~2.1) | Hueco del piso mayor: 3 m libres en toda la rampa (medido con rayos: mínimo 2.98 m). |

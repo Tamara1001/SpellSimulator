@@ -26,6 +26,23 @@ namespace SpellSimulator.EditorTools.Map
             Slab(template, material, caster, stoneProfile, "PressurePlate", origin + new Vector3(0f, 0.1f, 2.2f), 0.9f, 0.1f, true, SealTrigger.Mode.Pressure, 1.5f);
             var plate = GameObject.Find("PressurePlate");
             if (plate != null) plate.GetComponent<SealTrigger>().SetPermanent(5, 3f);
+            // Sello partido: dos mitades que se dibujan por separado y se juntan lado a lado.
+            for (int i = 0; i < 2; i++)
+            {
+                string half = i == 0 ? "SplitHalf_A_L" : "SplitHalf_A_R";
+                Slab(template, material, caster, stoneProfile, half, origin + new Vector3(-1.1f + i * 0.45f, 0.2f, -1.5f), 0.3f, 0.06f, false, SealTrigger.Mode.Impact, 3f);
+                var go = GameObject.Find(half);
+                var trigger = go.GetComponent<SealTrigger>();
+                if (trigger != null) Object.DestroyImmediate(trigger);
+                go.AddComponent<SplitSealHalf>().Configure("A", caster);
+                var grab = go.GetComponent<PhysicalCanvas>();
+                if (grab != null)
+                {
+                    var gso = new SerializedObject(grab);
+                    gso.FindProperty("objectName").stringValue = "mitad de sello";
+                    gso.ApplyModifiedProperties();
+                }
+            }
             Weight(map, material, stoneProfile, origin + new Vector3(1.0f, 0.3f, 0f));
         }
 
