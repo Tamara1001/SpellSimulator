@@ -1,0 +1,20 @@
+{
+    "name": "SpellSimulator.Runtime",
+    "rootNamespace": "SpellSimulator",
+    "references": [
+        "Unity.InferenceEngine",
+        "Unity.InputSystem",
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Unity.XR.Management"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

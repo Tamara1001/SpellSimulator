@@ -1,0 +1,109 @@
+{
+  "colorGroups": [
+    {
+      "query": "-path:Graph",
+      "color": {
+        "a": 1,
+        "rgb": 16777215
+      }
+    },
+    {
+      "query": "tag:#community/Compilador_de_Hechizos",
+      "color": {
+        "a": 1,
+        "rgb": 15079755
+      }
+    },
+    {
+      "query": "tag:#community/Inferencia_Sentis",
+      "color": {
+        "a": 1,
+        "rgb": 3978315
+      }
+    },
+    {
+      "query": "tag:#community/Lienzo_GPU",
+      "color": {
+        "a": 1,
+        "rgb": 16769305
+      }
+    },
+    {
+      "query": "tag:#community/Datos_de_Trazo_y_Tests",
+      "color": {
+        "a": 1,
+        "rgb": 4416472
+      }
+    },
+    {
+      "query": "tag:#community/Limpieza_de_Trazos",
+      "color": {
+        "a": 1,
+        "rgb": 16089649
+      }
+    },
+    {
+      "query": "tag:#community/AST_y_Geometria",
+      "color": {
+        "a": 1,
+        "rgb": 9510580
+      }
+    },
+    {
+      "query": "tag:#community/Herramientas_e_Input",
+      "color": {
+        "a": 1,
+        "rgb": 4649200
+      }
+    },
+    {
+      "query": "tag:#community/Interaccion_Agarrar-Usar",
+      "color": {
+        "a": 1,
+        "rgb": 15741670
+      }
+    },
+    {
+      "query": "tag:#community/Jugador_y_Plataforma",
+      "color": {
+        "a": 1,
+        "rgb": 12383756
+      }
+    },
+    {
+      "query": "tag:#community/Salida_VFX_y_Validador",
+      "color": {
+        "a": 1,
+        "rgb": 16432830
+      }
+    },
+    {
+      "query": "tag:#community/UI_de_Diagnostico",
+      "color": {
+        "a": 1,
+        "rgb": 32896
+      }
+    },
+    {
+      "query": "tag:#community/Editor_y_Diagnostico",
+      "color": {
+        "a": 1,
+        "rgb": 15122175
+      }
+    },
+    {
+      "query": "tag:#community/Harness_Test_Runner",
+      "color": {
+        "a": 1,
+        "rgb": 10117924
+      }
+    }
+  ],
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": false,
+  "showOrphans": true,
+  "showArrow": true,
+  "nodeSizeMultiplier": 1,
+  "lineSizeMultiplier": 1
+}

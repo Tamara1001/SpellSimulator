@@ -117,27 +117,13 @@ Para maximizar la inmersión sin depender de Interfaces de Usuario (UI) tradicio
 
 ---
 
-## 📁 Estructura de Carpetas (Assets/)
+## 📁 Estructura de Carpetas
 
-```
-Assets/
-├── Scripts/
-│   ├── Canvas/          # Módulo 1: DrawingCanvas.cs, BrushStamper.cs
-│   ├── Input/           # Módulo 2: MouseInputHandler.cs, VRInputHandler.cs
-│   ├── Inference/       # Módulo 3: SentisInferenceEngine.cs, TensorUtils.cs
-│   ├── Compiler/        # Módulo 4: SpellCompiler.cs, SpellDescriptor.cs, AST/
-│   └── Output/          # Módulo 5: SpellOutputController.cs
-├── Models/              # Archivos .onnx (ResNet18 y variantes)
-├── VFX/                 # VFX Graph assets (Fire, Air, etc.)
-├── Shaders/             # Shader Graph: BrushMaterial, CanvasComposite
-├── Scenes/
-│   ├── PrototypePC.unity
-│   └── VRDeployment.unity
-├── Settings/            # URP Renderer, Pipeline Assets
-└── Tests/               # PlayMode y EditMode tests por módulo
-```
+Todo el código y assets propios viven en `Assets/_Project/` (scripts en `Scripts/<Modulo>/`, asmdef `SpellSimulator.Runtime`).
+Mapa completo y actualizado en [`Docs/STRUCTURE.md`](Docs/STRUCTURE.md). Arquitectura detallada en [`Docs/ARCHITECTURE.md`](Docs/ARCHITECTURE.md).
 
-> ⚠️ Esta estructura es la **convención objetivo**. Las carpetas se crearán a medida que se implementen los módulos.
+> 📚 La documentación completa está en [`Docs/`](Docs/Home.md) (se puede abrir como vault de Obsidian).
+> Reglas para agentes de IA: [`CLAUDE.md`](CLAUDE.md).
 
 ---
 
@@ -154,26 +140,19 @@ Estas reglas aplican a **todos** los scripts del proyecto:
 
 ## 🗺️ Roadmap
 
-| Fase | Objetivo | Estado |
-|---|---|---|
-| **Fase 0** | Setup del proyecto, URP, estructura de carpetas | ✅ Completado |
-| **Fase 1** | Módulo Canvas + Input (PC) funcional | ✅ Completado |
-| **Fase 2** | Herramientas Físicas, Dual Wielding y UI Diegética | ✅ Completado |
-| **Fase 3** | Integración Sentis, ResNet18 y Compilador Lógico | 🔄 En curso |
-| **Fase 4** | Dummies Ragdoll y Proyectiles Mágicos Físicos | ⬜ Pendiente |
-| **Fase 5** | Grimorio, Sellos en Blanco y Diccionario | ⬜ Pendiente |
-| **Fase 6** | VFX Graph parametrizados y Reacciones del Entorno | ⬜ Pendiente |
-| **Fase 7** | Port a XR Interaction Toolkit (Oculus Quest) | ⬜ Pendiente |
+PC y VR (Quest) se desarrollan en paralelo. Roadmap detallado y vivo en [`Docs/ROADMAP.md`](Docs/ROADMAP.md);
+bugs y deuda técnica en [`Docs/KNOWN_ISSUES.md`](Docs/KNOWN_ISSUES.md).
 
 ---
 
-## 🚀 Cómo correr el prototipo (PC)
+## 🚀 Cómo correr el prototipo
 
-1. Abrir el proyecto en **Unity 6** (o la versión LTS compatible con Sentis).
-2. Cargar la escena `Assets/Scenes/PrototypePC.unity`.
-3. Asegurarse de que el modelo `.onnx` está en `Assets/Models/`.
-4. Presionar **Play**. Hacer clic y arrastrar sobre el plano del lienzo para dibujar.
-5. Soltar el botón para disparar la inferencia y ver el efecto compilado.
+1. Abrir el proyecto con **Unity 6000.3.14f1**.
+2. Cargar `Assets/_Project/Scenes/Escena.unity`.
+3. **Play**. En PC: `WASD` + mouse, `E` agarra/suelta (lápiz a la derecha, lienzo a la izquierda),
+   click izquierdo dibuja, click derecho con el lápiz **castea** (con la goma: deshacer).
+4. En VR (Quest Link/OpenXR): grip agarra, gatillo dibuja, botón A castea/deshace.
+5. Tests: menú `SpellSimulator > Harness > Run EditMode Tests` (resultado en `Logs/harness-editmode.txt`).
 
 ---
 

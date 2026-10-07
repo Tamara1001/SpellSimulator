@@ -105,3 +105,10 @@ InitTestScene*.unity*
 
 # Auto-generated scenes by play mode tests
 /[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# --- SpellSimulator: harness / docs ---
+graphify-out/
+Docs/Graph/
+Docs/.obsidian/workspace*.json
+Docs/.obsidian/cache
+.claude/settings.local.json

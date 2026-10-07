@@ -1,8 +1,11 @@
 ﻿<Solution>
   <Project Path="Unity.RenderPipelines.Core.Samples.Runtime.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="SpellSimulator.Runtime.csproj" />
+  <Project Path="SpellSimulator.Editor.csproj" />
   <Project Path="Assembly-CSharp-Editor.csproj" />
   <Project Path="Unity.RenderPipelines.Core.Samples.Editor.csproj" />
   <Project Path="Unity.XR.Interaction.Toolkit.Samples.StarterAssets.csproj" />
+  <Project Path="SpellSimulator.Tests.EditMode.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="Unity.XR.Interaction.Toolkit.Samples.StarterAssets.Editor.csproj" />
 </Solution>

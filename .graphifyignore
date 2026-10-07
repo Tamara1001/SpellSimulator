@@ -1,0 +1,29 @@
+# Sólo indexar código y docs propios
+Library/
+Temp/
+Logs/
+Build/
+Builds/
+UserSettings/
+Packages/
+ProjectSettings/
+GeneratedAssets/
+Assets/Samples/
+Assets/TextMesh Pro/
+Assets/TutorialInfo/
+Assets/XR/
+Assets/XRI/
+Assets/Settings/
+Assets/_Recovery/
+Docs/Graph/
+*.csproj
+*.slnx
+*.meta
+*.unity
+*.prefab
+*.asset
+*.mat
+*.vfx
+*.onnx
+*.onnx.data
+*.png
