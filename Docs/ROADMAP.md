@@ -59,10 +59,12 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 ### M5 — La torre y la pradera
 *Objetivo: el escenario final del modo Libre.*
 - [x] Blockout del mapa (escena `Pradera`, generada por `MapBuilder`): valle con montañas, lago, pinos, rocas, caminos,
-      torre de 3 pisos con rampas (biblioteca, estudio, terraza), campo de práctica. Falta: cascada, más props, puerta.
+      torre de 3 pisos con rampas (biblioteca, estudio, terraza), campo de práctica, cascada + arroyo, pasto y flores,
+      puerta, velas, motas mágicas, atril.
 - [~] Arte estilizado: low-poly con sombreado plano (`StylizedLit`: bandas, sombras, luces puntuales, niebla), cielo y
-      ambiente. Falta post-proceso, texturas de detalle y medir en Quest (~45k triángulos el mapa).
-- [ ] Papeles fijos en atriles y paredes; papeles agarrables S/M/L.
+      ambiente, cascada (`Waterfall`), post-proceso (bloom, tonemapping neutral, color, viñeta). Falta medir en Quest
+      (~76k triángulos) y decidir qué post-proceso queda en VR (KI-049).
+- [x] Papeles fijos (atril del campo, pared exterior de la torre, escritorio) y agarrables S/M/L (mesa de lectura + atril).
 - [ ] Música (ambiental) + SFX diegéticos (pluma, tinta, viento, fuego, agua, roturas).
 
 ### M6 — Aprender magia: libro-menú, libros y sellos

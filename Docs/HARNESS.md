@@ -87,7 +87,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 **Física en tiempo real**: guardar posiciones (cultura invariante: `Vector3.ToString` usa coma decimal), lanzar,
 `sleep 4` en Bash y medir. Los blancos están en `TestProps` (plataforma a la altura del chorro).
 
-## Tests (113 al 2026-10-07)
+## Tests (114 al 2026-10-07)
 | Archivo | Cubre |
 |---|---|
 | `ParsingTests` | RingDetector (cerrado/abierto/dos arcos/ajuste), StrokeGrouper (transitividad), SymbolCandidate, capas, StrokeCleaner, GeometryUtils |

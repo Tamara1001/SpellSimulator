@@ -68,6 +68,10 @@ Pre-fractura Voronoi pendiente (M5, mesas y paredes).
 🟢 `abierto` — **Agua sin simulación de altura**: las ondas son analíticas (16 a la vez) y el nivel no baja al evaporar
 ni al succionar. El vapor usa el look del viento. Suficiente para Quest; revisar si el lago grande de M5 lo pide.
 
+### KI-049
+🟠 `abierto` — **Post-proceso en Quest**: bloom + tonemapping + viñeta cuestan en GPU móvil y en VR la viñeta molesta.
+Decidir con la medición de M7 (probablemente: solo tonemapping y color en Quest). El pasto es estático (sin viento).
+
 ## Resueltos (2026-10-07, reestructura del pipeline)
 
 | KI | Problema | Resolución |
@@ -104,6 +108,7 @@ ni al succionar. El vapor usa el look del viento. Suficiente para Quest; revisar
 | KI-041 🟠 | **Nuevo (plan):** el ruido de pose creaba chorros o giros fantasma en sellos simétricos | Zona muerta hacia las clases canónicas + umbral relativo de primitivas (20%). |
 | KI-037 🟢 | La succión (pull) atraía cualquier Rigidbody | Solo atrae `IElementMatter` de su elemento (piedra = tierra, lo que arde = fuego); el pull de agua tira un chorro desde un `WaterVolume`. |
 | KI-047 🟢 | **Nuevo (M4):** el estanque se armó a y=0 y el piso real está a 0.5 (cubo) | Estanque subido. Ojo al ubicar props: la cara de arriba del `Floor` es y=0.5. |
+| KI-050 🟢 | **Nuevo (M5):** la cascada quedaba tapada: en laderas empinadas la malla del terreno se aparta varios metros de la altura teórica | La cinta sigue la malla real (raycast contra `Terrain`). |
 | KI-045 🟠 | **Nuevo (M4):** el calor de lo que ardía crecía sin tope y el agua se evaporaba antes de apagarlo | Tope de calor (2× ignición) + test `Water_ExtinguishesALongFire_StillUnderFire`. |
 | KI-046 🟢 | **Nuevo (M4):** el reinicio movía cuerpos cinemáticos (herramienta en la mano) | `RespawnAll` ignora cinemáticos. |
 | KI-031 🟢 | **Nuevo:** suelo detectaba triggers (lienzo sostenido) | `QueryTriggerInteraction.Ignore`. |

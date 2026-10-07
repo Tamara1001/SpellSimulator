@@ -27,6 +27,12 @@ namespace SpellSimulator.World.Map
         /// <summary>Altura de la superficie del lago.</summary>
         public const float WaterLevel = -1.3f;
 
+        /// <summary>Cascada: baja por la montaña desde WaterfallTop hasta WaterfallBase y sigue en arroyo hasta el lago.</summary>
+        public static readonly Vector2 WaterfallTop = new Vector2(-79f, -37.5f);
+        public static readonly Vector2 WaterfallBase = new Vector2(-57f, -27f);
+        public static readonly Vector2 RiverEnd = new Vector2(-46f, -21.5f);
+        public const float RiverHalfWidth = 2.2f;
+
         public static readonly Vector2 FieldCenter = new Vector2(28f, -6f);
         public const float FieldRadius = 11f;
 
@@ -62,6 +68,10 @@ namespace SpellSimulator.World.Map
             float lake = LakeFactor(x, z);
             h -= LakeDepth * Smooth(1.15f, 0.45f, lake);
 
+            // Arroyo: cauce desde el pie de la cascada hasta el lago.
+            float river = 1f - Smooth(RiverHalfWidth, RiverHalfWidth + 2.5f, SegmentDistance(p, WaterfallBase, RiverEnd));
+            h = Mathf.Lerp(h, WaterLevel - 1.2f, river);
+
             // Montañas: anillo que sube fuerte despues del area jugable.
             float r = p.magnitude;
             float m = Smooth(PlayableRadius - 4f, MountainEnd, r);
@@ -75,6 +85,13 @@ namespace SpellSimulator.World.Map
         {
             Vector2 d = new Vector2(x, z) - LakeCenter;
             return Mathf.Sqrt((d.x * d.x) / (LakeRadii.x * LakeRadii.x) + (d.y * d.y) / (LakeRadii.y * LakeRadii.y));
+        }
+
+        /// <summary>Distancia (m) al cauce del arroyo y a la cascada.</summary>
+        public static float RiverDistance(float x, float z)
+        {
+            var p = new Vector2(x, z);
+            return Mathf.Min(SegmentDistance(p, WaterfallBase, RiverEnd), SegmentDistance(p, WaterfallTop, WaterfallBase));
         }
 
         /// <summary>Distancia (m) al camino mas cercano.</summary>
@@ -105,6 +122,8 @@ namespace SpellSimulator.World.Map
 
             float lake = LakeFactor(x, z);
             if (lake < 1.25f) c = Color.Lerp(Sand, c, Smooth(1.0f, 1.25f, lake));
+            float bank = SegmentDistance(new Vector2(x, z), WaterfallBase, RiverEnd);
+            if (bank < RiverHalfWidth + 3f) c = Color.Lerp(Sand, c, Smooth(RiverHalfWidth, RiverHalfWidth + 3f, bank));
 
             float path = PathDistance(x, z);
             if (path < PathWidth) c = Color.Lerp(Dirt, c, Smooth(PathWidth * 0.5f, PathWidth, path));
@@ -122,6 +141,7 @@ namespace SpellSimulator.World.Map
             if (p.magnitude > MountainEnd - 18f) return false;
             if (Vector2.Distance(p, TowerCenter) < HillRadius - 2f) return false;
             if (LakeFactor(x, z) < 1.3f) return false;
+            if (RiverDistance(x, z) < RiverHalfWidth + 4f) return false;
             if (Vector2.Distance(p, FieldCenter) < FieldRadius + 2f) return false;
             if (Vector2.Distance(p, Spawn) < 8f) return false;
             return PathDistance(x, z) > PathWidth + 2f;

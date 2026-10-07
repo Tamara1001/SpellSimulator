@@ -31,6 +31,15 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
+        public void RiverBedIsUnderWater_WaterfallComesFromTheMountain()
+        {
+            Vector2 mid = (ValleyShape.WaterfallBase + ValleyShape.RiverEnd) / 2f;
+            Assert.Less(ValleyShape.Height(mid.x, mid.y), ValleyShape.WaterLevel);
+            var top = ValleyShape.WaterfallTop;
+            Assert.Greater(ValleyShape.Height(top.x, top.y), 15f, "La cascada nace alto en la montaña.");
+        }
+
+        [Test]
         public void MountainsCloseTheValley()
         {
             for (int a = 0; a < 360; a += 20)
@@ -51,6 +60,7 @@ namespace SpellSimulator.Tests
             {
                 if (new Vector2(x, z).magnitude > ValleyShape.PlayableRadius - 8f) continue;
                 if (ValleyShape.LakeFactor(x, z) < 1.2f) continue;
+                if (ValleyShape.RiverDistance(x, z) < ValleyShape.RiverHalfWidth + 5f) continue;
                 float dx = ValleyShape.Height(x + step, z) - ValleyShape.Height(x - step, z);
                 float dz = ValleyShape.Height(x, z + step) - ValleyShape.Height(x, z - step);
                 float slope = Mathf.Sqrt(dx * dx + dz * dz) / (2f * step);

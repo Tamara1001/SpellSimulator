@@ -72,6 +72,9 @@ loma: planta baja **biblioteca** (estantes, mesas, escritorio con un papel apoya
 **estudio**, segundo piso y **terraza** almenada bajo el techo cónico violeta; los pisos se unen con rampas en espiral.
 Al oeste, el **lago** con orilla de arena; al este, el **campo de práctica** (atril con papel, mesa de herramientas,
 blancos y muñecos). Caminos de tierra unen el spawn (al sur de la torre) con todo. Bosque de pinos hacia las montañas.
+Al oeste, una **cascada** cae de la montaña y sigue en arroyo hasta el lago. **Papeles**: atril del campo (1 m), pared
+exterior de la torre mirando al campo (emite hacia afuera), escritorio de la biblioteca (emite hacia arriba) y dos
+agarrables chico y mediano en la mesa de lectura.
 
 ## Controles
 

@@ -45,8 +45,14 @@ namespace SpellSimulator.EditorTools.Map
             tris += BuildTrees(map);
             tris += BuildRocks(map);
             tris += TowerBuilder.Build(map, lit, TowerOrigin());
+            var output = Object.FindFirstObjectByType<Output.SpellOutputController>();
+            MapDetails.BuildWaterfall(map, output);
+            tris += MapDetails.BuildGrass(map, lit, rng);
+            MapDetails.TowerAmbience(GameObject.Find("Tower").transform, lit, output);
             SetupLighting();
             RelocateGameplay();
+            MapDetails.Papers(TowerOrigin(), lit, map);
+            MapDetails.PostProcess();
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

@@ -17,10 +17,11 @@ SpellSimulator/
 │   │   │   ├── Elements/         #   ElementLook: Fire, Water, Wind, Earth, Light
 │   │   │   ├── Materials/        #   MaterialProfile: Madera, Papel, Piedra, Tela (+ ReactionTable.asset en Data/)
 │   │   │   ├── Tools/            #   ToolDefinition: Lapiz, Pincel, Goma, Trapo
+│   │   │   ├── PostProcess.asset #   VolumeProfile (bloom, tonemapping, color, viñeta) de Pradera
 │   │   │   └── GlyphDictionary.asset
 │   │   ├── Editor/               #   SpellSimulator.Editor.asmdef — harness, sync del diccionario, chequeos
-│   │   │   └── Map/              #   MapBuilder, TowerBuilder, LowPolyMesh (generador del mapa)
-│   │   ├── Materials/            #   Canvas, BrushMaterial, Pen, Eraser, Rag, Inkwell, Crate, VRPointer, SpellParticle(.shader) + Additive/Alpha, StylizedWater(.shader) + Water, GroundMark(.shader) + GroundMark, StylizedLit(.shader) + Stylized, Sky, Stone, Cloth, Binarize(.shader)
+│   │   │   └── Map/              #   MapBuilder, TowerBuilder, MapDetails, LowPolyMesh (generador del mapa)
+│   │   ├── Materials/            #   Canvas, BrushMaterial, Pen, Eraser, Rag, Inkwell, Crate, VRPointer, SpellParticle(.shader) + Additive/Alpha, StylizedWater(.shader) + Water, GroundMark(.shader) + GroundMark, StylizedLit(.shader) + Stylized, Waterfall(.shader) + Waterfall, Sky, Stone, Cloth, Binarize(.shader)
 │   │   ├── Prefabs/
 │   │   │   ├── Objects/          #   PaperCanvas, Pen, Eraser, Tool
 │   │   │   ├── Player/           #   Player (PCRIG + VRRIG)

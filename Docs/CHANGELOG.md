@@ -5,6 +5,16 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — M5: cascada, pasto, detalles de la torre, papeles y post-proceso
+- Cascada (`Waterfall.shader`: vetas que caen, espuma) que sigue la ladera real + arroyo con `WaterVolume` hasta el
+  lago, salpicaduras y bruma al pie. `ValleyShape`: cauce del arroyo (+1 test).
+- Pasto y flores agrupados en hasta 36 mallas (sin colliders ni sombras). Puerta de tablones abierta, velas con llama, motas
+  mágicas en biblioteca y estudio, atril con libro abierto.
+- Papeles: fijo en la pared exterior de la torre (emite hacia el campo), chico y mediano agarrables en la mesa de lectura.
+- Post-proceso global (bloom, tonemapping neutral, saturación/contraste, viñeta) y cámaras con post-proceso.
+- Verificado en Play: partículas vivas, papeles en su lugar, el papel de la pared lanza hacia el campo. 114 tests.
+  Mapa: ~76k triángulos.
+
 ## 2026-10-07 — M5: blockout del mapa (Pradera)
 - Nueva escena `Pradera.unity` (build index 0) generada por `MapBuilder`: terreno low-poly de 208 m con montañas, lago
   con `WaterVolume`, ~250 pinos, 45 rocas, caminos, campo de práctica con mesa de herramientas, y la **torre**

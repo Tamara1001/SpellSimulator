@@ -49,6 +49,7 @@ namespace SpellSimulator.EditorTools.Map
             for (int f = 0; f < Floors; f++) tris += Solid(root, $"TowerRamp_{f}", RampMesh(f), material);
             tris += Solid(root, "TowerTop", TopMesh(), material);
             tris += Visual(root, "TowerRoof", RoofMesh(), material);
+            tris += Door(root, material);
             tris += Interior(root, material);
             Lights(root);
             return tris;
@@ -232,6 +233,32 @@ namespace SpellSimulator.EditorTools.Map
             b.Frustum(orb, 0.3f, 0f, 0f, 0.35f, 8, Gold, false, true);
             b.Frustum(orb, 0.3f, 0f, 0f, -0.35f, 8, Gold, false);
             return b;
+        }
+
+        // ---------------------------------------------------------------- puerta
+
+        /// <summary>Puerta de tablones con herrajes, abierta hacia adentro contra el muro.</summary>
+        private static int Door(Transform root, Material material)
+        {
+            var b = new LowPolyMesh();
+            const float width = 1.6f, height = 2.9f;
+            for (int i = 0; i < 4; i++)
+            {
+                float x = width / 8f + i * width / 4f;
+                b.Box(Matrix4x4.Translate(new Vector3(x, height / 2f, 0f)), new Vector3(width / 4f - 0.02f, height, 0.08f),
+                    LowPolyMesh.Jitter(new Color(0.52f, 0.33f, 0.2f), 0.1f, i * 13));
+            }
+            foreach (float y in new[] { 0.5f, 2.3f })
+                b.Box(Matrix4x4.Translate(new Vector3(width / 2f, y, 0.05f)), new Vector3(width * 0.95f, 0.1f, 0.03f), new Color(0.2f, 0.2f, 0.22f));
+            b.Box(Matrix4x4.Translate(new Vector3(width - 0.2f, 1.2f, -0.07f)), new Vector3(0.06f, 0.12f, 0.06f), Gold);
+            var mesh = MapBuilder.SaveMesh(b.Build("TowerDoor"));
+            // Bisagra en el borde oeste del hueco (segmento 15, centrado en 270 grados), girada hacia adentro.
+            Vector3 hinge = root.position + Polar(InnerRadius - 0.05f, 270f - 360f / Sides * 0.5f, 0.05f);
+            var go = MapBuilder.Place("TowerDoor", root, mesh, material, hinge, Quaternion.Euler(0f, -80f, 0f));
+            var col = go.AddComponent<BoxCollider>();
+            col.center = new Vector3(width / 2f, height / 2f, 0f);
+            col.size = new Vector3(width, height, 0.1f);
+            return b.TriangleCount;
         }
 
         // ---------------------------------------------------------------- interior
