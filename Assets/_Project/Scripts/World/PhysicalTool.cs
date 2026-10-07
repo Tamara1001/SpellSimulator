@@ -48,6 +48,9 @@ namespace SpellSimulator.World
         [SerializeField, Tooltip("[VR] Radio (m) alrededor de la punta para mojarla en un tintero.")]
         private float vrDipRadius = 0.04f;
 
+        [SerializeField, Tooltip("Parte del modelo que se tiñe segun la tinta que queda (cristal de la pluma). Si falta, todo el cuerpo.")]
+        private Renderer inkIndicator;
+
         [Header("Tinta (solo lapiz)")]
         [SerializeField] private InkReservoir ink = new InkReservoir(100f, 100f);
         [SerializeField, Tooltip("Tinta gastada por metro de trazo sobre el papel.")]
@@ -70,6 +73,7 @@ namespace SpellSimulator.World
         private IDrawingTool tool;
         private DrawingCanvas currentCanvas;
         private Vector2 lastUv;
+        private Vector3 lastRayOrigin;
         private Camera cachedCamera;
         private bool held;
 
@@ -89,7 +93,7 @@ namespace SpellSimulator.World
         {
             rb = GetComponent<Rigidbody>();
             col = GetComponent<Collider>();
-            bodyRenderer = GetComponentInChildren<Renderer>();
+            bodyRenderer = inkIndicator != null ? inkIndicator : GetComponentInChildren<Renderer>();
             block = new MaterialPropertyBlock();
             if (raycastOrigin == null) raycastOrigin = transform;
             ApplyDefinition();
@@ -168,7 +172,7 @@ namespace SpellSimulator.World
 
         public void OnUseStart()
         {
-            if (!TryShootLaser(out Vector2 uv, out DrawingCanvas canvas)) return;
+            if (!TryShootLaser(out Vector2 uv, out DrawingCanvas canvas, allowInscribe: kind == ToolKind.Pen)) return;
             if (UsesInk && ink.IsEmpty)
             {
                 ReportNoInk();
@@ -177,6 +181,7 @@ namespace SpellSimulator.World
 
             currentCanvas = canvas;
             lastUv = uv;
+            if (kind == ToolKind.Pen && lastRayOrigin != Vector3.zero) canvas.NoteInkViewer(lastRayOrigin);
             tool.OnPointerDown(uv, canvas);
             UseChanged?.Invoke(this, true);
         }
@@ -269,7 +274,7 @@ namespace SpellSimulator.World
             bodyRenderer.SetPropertyBlock(block);
         }
 
-        private bool TryShootLaser(out Vector2 uv, out DrawingCanvas canvas)
+        private bool TryShootLaser(out Vector2 uv, out DrawingCanvas canvas, bool allowInscribe = false)
         {
             uv = Vector2.zero;
             canvas = null;
@@ -285,13 +290,28 @@ namespace SpellSimulator.World
             {
                 if (cachedCamera == null) cachedCamera = Camera.main;
                 if (cachedCamera == null) return false;
-                ray = new Ray(cachedCamera.transform.position, cachedCamera.transform.forward);
+                ray = FocusMode.GetRay(cachedCamera);
                 distance = pcMaxDrawDistance;
             }
 
+            lastRayOrigin = ray.origin;
             // Los lienzos sostenidos son triggers: hay que pedir que el rayo los detecte.
-            if (!Physics.Raycast(ray, out RaycastHit hit, distance, canvasLayer, QueryTriggerInteraction.Collide)) return false;
-            if (!hit.collider.TryGetComponent(out canvas)) return false;
+            if (Physics.Raycast(ray, out RaycastHit hit, distance, canvasLayer, QueryTriggerInteraction.Collide) &&
+                hit.collider.TryGetComponent(out canvas))
+            {
+                uv = canvas.GetUVFromWorldPosition(hit.point);
+                return true;
+            }
+            canvas = null;
+
+            // Sin lienzo a la vista: si se mira una superficie del entorno (piso, caja, pared), al empezar un trazo la
+            // lapicera deja ahi una calcomania de tinta.
+            if (!allowInscribe) return false;
+            if (!Physics.Raycast(ray, out hit, distance, ~0, QueryTriggerInteraction.Ignore)) return false;
+            var surface = hit.collider.GetComponentInParent<Inscribable>();
+            if (surface == null) return false;
+            canvas = surface.CreateDecal(hit, ray.direction);
+            if (canvas == null) return false;
             uv = canvas.GetUVFromWorldPosition(hit.point);
             return true;
         }

@@ -37,7 +37,7 @@ namespace SpellSimulator.Player
 
         private void Update()
         {
-            if (IsVR || Keyboard.current == null) return;
+            if (IsVR || Keyboard.current == null || FocusMode.Active) return;
 
             // PC: Escape libera el cursor (para el Inspector o salir), click lo vuelve a capturar.
             if (Keyboard.current.escapeKey.wasPressedThisFrame) SetCursorLocked(false);

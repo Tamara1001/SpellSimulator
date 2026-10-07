@@ -45,7 +45,7 @@ Todo entre `SpellCaster` y `SpellIR` es **lógica pura** (estática, testeada) e
 | `Player` (acciones) | `IPressable` (en `Interfaces`), `PlayerInteractor.HoverPrompt`, `InteractionPromptUI` | Agarrar (E / grip) aprieta primero lo `IPressable` (páginas, libros, botones). El texto de ayuda y los avisos van bajo la mira. |
 | `Player` | `PlatformDetector`, `PlayerInputReader`, `PlayerMovement`, `PlayerLook`, `PlayerInteractor` (recarga de tinta), `InkSupply`, `Haptics` | Rig PC/VR, input por código, agarrar/soltar/usar por mano. |
 | `World.Map` | `ValleyShape` (puro) | Forma del mapa del modo Libre: alturas, lago, loma de la torre, caminos, colores del suelo y dónde van árboles. La usa `MapBuilder` (editor) y sirve en runtime para ubicar cosas. |
-| `World` | `PhysicalTool` (lápiz, pincel, goma, trapo; tinta; lee un `ToolDefinition`), `ToolDefinition` (SO), `PhysicalCanvas`, `Inkwell`, `Respawnable`, `SealBreaker` | Objetos agarrables/usables. `SealBreaker`: el papel mojado o en llamas pierde el sello. `SealTrigger` (+ `ISealTrigger`): sello en un objeto que queda *armado* (`SealPhase.Armed`) y se lanza por impacto o presión vía `SpellCaster.Trigger`. `Stamp`: estampa S/M/L que se carga del grimorio (`Grimoire.CurrentGlyph`) y estampa en un `DrawingCanvas`. |
+| `World` | `PhysicalTool` (lápiz, pincel, goma, trapo; tinta; lee un `ToolDefinition`), `ToolDefinition` (SO), `PhysicalCanvas`, `Inkwell`, `Respawnable`, `SealBreaker` | Objetos agarrables/usables. `SealBreaker`: el papel mojado o en llamas pierde el sello. `Movable` (objetos que se llevan con un resorte), `Inscribable` + `InscribedDecal` (calcomanías de tinta sobre el entorno), `PhysicalCanvas` (apoyar/flotar/arrojar/dar vuelta/fijar a la cámara). `SealTrigger` (+ `ISealTrigger`): sello en un objeto que queda *armado* (`SealPhase.Armed`) y se lanza por impacto o presión vía `SpellCaster.Trigger`. `Stamp`: estampa S/M/L que se carga del grimorio (`Grimoire.CurrentGlyph`) y estampa en un `DrawingCanvas`. |
 | `Learning` | `GlyphLore` y `DiscoveryState` (puros), `Discovery`, `LibraryBook`, `Grimoire`, `GrimoireButton` | Aprendizaje: qué glifos conoce el jugador (guardado local), libros que enseñan, descubrimiento al dibujar bien un glifo nuevo (`SpellCaster.SealAnalyzed`) y el grimorio. Eventos `Discovery.Discovered`, `Grimoire.Opened/Closed/PageTurned/ResetWorldRequested`. Nada bloquea la magia: un glifo sin descubrir igual funciona. |
 | `Audio` | `AudioLibrary` (SO de cues), `AudioDirector` (pool, loops, fondo, pájaros), `GameAudio`, `AmbientEmitter`, `FootstepAudio`, `CollisionAudio` | Escucha eventos de los demás módulos (`SpellCaster`, `PhysicalTool.UseChanged/Refilled/PickedUp`, `ElementReactive.AnyReacted`, `WaterVolume.Splashed`, `GroundMarks.Marked`, `SealBreaker.SealBroken`, `Health.AnyDied`, `MagicWorld.WorldReset`) y pide sonidos por id. Nadie depende de `Audio`. |
 | `Combat` | `Health`, `DamageTable` (SO), `DamageModel` (puro), `ImpactDamage`, `DamageNumbers` | Vida y daño (muñecos en Libre, jugadores en Duelo). `MagicWorld` aplica el daño de los hechizos (por intensidad en el blanco) y la quemadura; los golpes físicos, `ImpactDamage`. |
@@ -86,8 +86,9 @@ Dependencias (sin ciclos): `Core` ← `Parsing` ← `Compiler` → `Recognition`
 4. **Manifestación**: una pista de partículas por primitiva, nacida en el **centro del anillo**, escalada por el
    **radio real del sello en metros** × `effectScale`. Tiempos: carga 0.45 s · golpe 0.32 s · cuerpo
    `clamp(duration − 1.5, 0.6, 6)` (×1.5 con fuga de dispersión) · liberación 0.76 s · resplandor 0.42 s.
-5. **Cara de emisión**: papeles = `AwayFromViewer` (la magia sale por el lado opuesto a quien mira, hacia el objetivo);
-   paredes y mesas, a futuro = `InkSide` (canon).
+5. **Cara de emisión**: todos los lienzos = `InkSide` (canon, ADR-027): la magia sale por la cara con tinta, la que miraba
+   al jugador al empezar a dibujar (`DrawingCanvas.NoteInkViewer`). Dar vuelta la hoja (`IFlippable`) cambia la dirección.
+   `AwayFromViewer` queda como opción.
 6. **Física (`MagicField`)**: cada primitiva define una velocidad de flujo y los cuerpos se aceleran **hacia** ella.
    - La forma fija la velocidad: `2 + 8·force` m/s × elemento.
    - El área del sello fija el acople (canon §2 de ground-truth).
@@ -125,7 +126,7 @@ Dependencias (sin ciclos): `Core` ← `Parsing` ← `Compiler` → `Recognition`
 CinemachineCamera · Directional Light · EventSystem
 Canvas (UI) ─ HUD (Crosshair) ─ DEBUG [DiagnosticUIController]
 SystemManagers [SentisGlyphClassifier, SpellCaster, SpellOutputController]
-PaperCanvas (layer 6) [DrawingCanvas (AwayFromViewer), PhysicalCanvas, SealFeedback]
+PaperCanvas (layer 6) [DrawingCanvas (InkSide), PhysicalCanvas, SealFeedback]
 TestProps (cajas, plataforma con 9 blancos, pesada) [Respawnable]
 Player [PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor, InkSupply] ─ PCRIG / VRRIG
 Pen, Eraser, Rag (layer 7) [PhysicalTool → SpellCaster] ─ RaycastTool

@@ -64,6 +64,10 @@ ignorada por git). Verificar arrancándola con `-logFile` unos segundos: debe lo
 excepciones fuera de `[XR]` (OpenXR sin casco loguea `XR_ERROR_FORM_FACTOR_UNAVAILABLE`: esperado). Los ~500 warnings
 de la build son shaders del paquete de inferencia.
 
+## Menús de Interaction y Map
+`SpellSimulator > Interaction > Setup Current Scene` deja movibles y rayables las cosas del mundo. `Map > Build Pradera`
+reconstruye todo el mapa (incluye herramientas con modelo nuevo, mesas de la torre, lienzos y contraptions) y llama a ese setup.
+
 ## Errores de compilación que no aparecen
 Si una clase nueva no aparece (`Type.GetType` da null) y la consola por MCP no muestra errores, buscar `error CS` en
 `%LOCALAPPDATA%/Unity/Editor/Editor.log`: los errores de un asmdef (p. ej. el de Editor sin referencia a

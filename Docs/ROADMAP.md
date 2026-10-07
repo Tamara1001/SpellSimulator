@@ -80,6 +80,9 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 - [x] Contraptions parciales: `SealTrigger` con `Impact` (piedra arrojada) y `Pressure` (placa con peso); el anillo cerrado deja el sello *armado*.
 - [x] Sello permanente (piedra de rayar): `SealTrigger` con usos y enfriamiento; la placa de presión tiene 5 usos y 3 s.
 - [ ] Contraptions: `SplitJoin` (sello partido en dos objetos).
+- [x] Tanda de la prueba manual: correr y agacharse, objetos movibles (E, rueda, Q), lienzos que flotan o se apoyan, dar vuelta
+      la hoja (F), emisión por la cara con tinta, modo de escritorio (V), sellos en el piso/torre/cajas, cuadernos, caballetes
+      y demás lienzos, mesas de trabajo con herramientas nuevas, cielo, grimorio movible con flechas y páginas de ayuda, agua.
 - [x] Borrado por agua (mojar rompe sellos) y por fuego (quemar el papel) — hecho en M4 (`SealBreaker`).
 - [ ] Superficies inscribibles generales (decals en paredes y mesas) y piedra de rayar (sellos permanentes, cooldown y 5 usos).
 - [ ] Semántica para los 6 glifos sin entrada.

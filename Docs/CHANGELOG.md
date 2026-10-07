@@ -5,6 +5,22 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — Prueba manual: movilidad, lienzos, entorno, torre y herramientas
+- **Cielo:** la cámara de PC usaba un color liso marrón; ahora Skybox (`MapBuilder.SetupLighting`).
+- **Movimiento:** correr (Shift), agacharse (Ctrl/C, con chequeo de altura libre) y saltar; velocidades caminar 4,2 / correr 7,4 / agachado 2.
+- **Objetos:** `Movable` (resorte hacia la mano, sin empujar al jugador), rueda para acercar/alejar, Q arrojar (`IThrowable`),
+  E ignora lo que llevás y los triggers inútiles (`PickHit`); `Movable` en todo lo reactivo.
+- **Lienzos:** `PhysicalCanvas` reescrito: suelta = apoya (mesa/piso/pared) o flota; arrojado aterriza cara arriba; F da vuelta
+  la hoja (`IFlippable`); V fija a la cámara con mouse como puntero (`FocusMode`, `IFocusable`). Emisión `InkSide` en todos
+  (`DrawingCanvas.NoteInkViewer`/`FaceNormal`). Cuadernos, lienzos grandes con marco, pergaminos flotantes, pizarra, caballetes y
+  mesa de dibujo (`CanvasDesigns`). Corregida la orientación de piedras de impacto y placa (emitían hacia abajo).
+- **Entorno:** `Inscribable` + `InscribedDecal` + shader `InkDecal`: se dibuja sobre el piso, la torre y las cajas; la calcomanía
+  sigue al objeto y se rompe con cráter/quemadura/charco (menos los de su propio hechizo), agua, fuego o fractura.
+- **Grimorio:** flechas y rueda pasan página, se puede llevar (agarradera inferior) y queda flotando; páginas de Controles y Sellos.
+- **Torre:** mesas de trabajo con herramientas, cajas y baúles; **modelos nuevos** de pluma, pincel, goma, trapo y tintero (`ToolModels`).
+- **Audio:** salpicadura, chorro de agua y cascada resintetizados (burbujas con subida de tono, murmullo grave y ruido con variación lenta).
+- Docs: ADR-027/028/029, KI-060 a KI-065. 126 tests (sin cambios), build y smoke test OK.
+
 ## 2026-10-07 — M6: sellos en objetos (impacto y presión)
 - `SealPhase.Armed`: con un `SealTrigger` en el objeto, cerrar el anillo arma el sello en vez de lanzarlo
   (`SealActivation.Evaluate` con `deferred`, `ShouldFire`). `SpellCaster.Trigger(canvas)` lo lanza; `ISealTrigger` evita

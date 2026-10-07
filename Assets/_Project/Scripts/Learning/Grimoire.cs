@@ -81,6 +81,13 @@ namespace SpellSimulator.Learning
                 else Open();
             }
             if (!IsOpen) return;
+            if (input != null)
+            {
+                // Teclado: flechas / cruceta; la rueda del mouse tambien pasa paginas.
+                int delta = input.PageDelta;
+                if (delta == 0 && input.Scroll != 0f) delta = input.Scroll > 0f ? -1 : 1;
+                if (delta != 0) Turn(delta);
+            }
             if (viewer != null && Vector3.Distance(viewer.transform.position, root.position) > closeDistance) Close();
             AnimateStroke();
         }
@@ -92,6 +99,7 @@ namespace SpellSimulator.Learning
             if (viewer == null) viewer = Camera.main;
             if (viewer == null) return;
             Transform cam = viewer.transform;
+            root.SetParent(transform, true); // por si se cerro mientras estaba en la mano
             Vector3 flat = Vector3.ProjectOnPlane(cam.forward, Vector3.up).normalized;
             if (flat.sqrMagnitude < 0.01f) flat = Vector3.forward;
             root.position = cam.position + flat * openDistance + Vector3.down * 0.28f;
@@ -112,12 +120,14 @@ namespace SpellSimulator.Learning
 
         // ---------------------------------------------------------------- paginas
 
-        private const string Cover = "#portada", Options = "#opciones";
+        private const string Cover = "#portada", Options = "#opciones", HelpControls = "#controles", HelpSeals = "#sellos";
 
         private void Rebuild()
         {
             pages.Clear();
             pages.Add(Cover);
+            pages.Add(HelpControls);
+            pages.Add(HelpSeals);
             var discovery = Discovery.Instance;
             if (discovery != null && dictionary != null)
             {
@@ -129,6 +139,8 @@ namespace SpellSimulator.Learning
             }
             pages.Add(Options);
         }
+
+        private static readonly string NL = "\n";
 
         private void Turn(int delta)
         {
@@ -148,15 +160,34 @@ namespace SpellSimulator.Learning
             resetButton.gameObject.SetActive(id == Options);
             resetProgressButton.gameObject.SetActive(id == Options);
             var discovery = Discovery.Instance;
-            int known = pages.Count - 2;
+            int known = pages.FindAll(p => !p.StartsWith("#")).Count;
             int total = discovery != null ? CountLore(discovery.Lore) : known;
             string footer = $"\n\n<size=60%><color=#7a5a3a>Pagina {index + 1} de {pages.Count}</color></size>";
 
             if (id == Cover)
             {
-                leftCaption.text = "<size=140%>Grimorio</size>\n\n<size=80%>Apunta a una pagina y presiona\nAgarrar (E) para pasarla.\n\nTab: cerrar</size>";
+                leftCaption.text = "<size=140%>Grimorio</size>\n\n<size=75%>Flechas o rueda: pasar pagina\nApuntar + E: pasar pagina\nE en el borde de abajo: moverlo\nTab: cerrar</size>";
                 rightText.text = $"<b>Glifos descubiertos</b>\n{known} de {total}\n\n<size=80%>Lee los libros de la biblioteca o dibuja bien un glifo nuevo para descubrirlo.</size>{footer}";
                 QueueRing();
+                return;
+            }
+            if (id == HelpControls)
+            {
+                leftCaption.text = "<size=130%>Controles</size>" + NL + NL + "<size=70%>PC / VR</size>";
+                rightText.text = "<size=62%>WASD mover   Shift correr   Ctrl o C agacharse" + NL + "Espacio saltar" + NL + NL +
+                    "E agarrar y soltar (tambien objetos: cajas, pesas)" + NL + "Rueda: acercar o alejar lo que llevas" + NL + "Q arrojar   F dar vuelta la hoja" + NL +
+                    "V fijar el lienzo a la camara y dibujar con el mouse" + NL + NL +
+                    "Clic izq. dibujar / usar   Clic der. deshacer" + NL + "R recargar tinta   Tab grimorio   Retroceso reiniciar" + NL + NL +
+                    "VR: gatillo dibujar, agarre agarrar, A deshacer, click del stick correr, Y reiniciar, girar la mano da vuelta la hoja</size>" + footer;
+                return;
+            }
+            if (id == HelpSeals)
+            {
+                leftCaption.text = "<size=130%>Sellos</size>";
+                rightText.text = "<size=62%>Dibuja un sigilo, signos alrededor y cierra el anillo: el hechizo sale por la cara CON TINTA. Da vuelta la hoja (F) para apuntar." + NL + NL +
+                    "Se puede dibujar sobre el piso, la torre y las cajas: el sello se pega ahi y sale hacia afuera de la superficie. Un crater, fuego o agua encima lo rompen." + NL + NL +
+                    "Estampas (mesa del campo y escritorio): con el grimorio abierto en un glifo, apunta al libro con la estampa en mano y clic derecho. Clic izq. sobre un papel estampa el glifo (5 usos)." + NL + NL +
+                    "Piedras de impacto y placa de presion: dibuja el sello cerrado y quedan armados; se lanzan al golpe o con peso encima.</size>" + footer;
                 return;
             }
             if (id == Options)
@@ -258,6 +289,16 @@ namespace SpellSimulator.Learning
             Zone("Prev", new Vector3(-PageWidth / 2f, 0f, -0.005f), new Vector3(PageWidth, PageHeight, 0.01f)).Configure("Pagina anterior", () => Turn(-1));
             Zone("Next", new Vector3(PageWidth / 2f, -PageHeight * 0.3f, -0.005f), new Vector3(PageWidth, PageHeight * 0.4f, 0.01f)).Configure("Pagina siguiente", () => Turn(1));
             Zone("NextTop", new Vector3(PageWidth / 2f, PageHeight * 0.3f, -0.005f), new Vector3(PageWidth, PageHeight * 0.4f, 0.01f)).Configure("Pagina siguiente", () => Turn(1));
+            // Agarradera: tira bajo las paginas para llevar el libro.
+            var handle = new GameObject("Handle");
+            handle.transform.SetParent(root, false);
+            handle.transform.localPosition = new Vector3(0f, -PageHeight / 2f - 0.03f, 0f);
+            var handleBox = handle.AddComponent<BoxCollider>();
+            handleBox.size = new Vector3(PageWidth * 2f, 0.05f, 0.03f);
+            handleBox.isTrigger = true;
+            handle.AddComponent<GrimoireGrab>().Configure(this, root, transform);
+            Box("Ribbon", new Vector3(0f, -PageHeight / 2f - 0.012f, 0.012f), new Vector3(PageWidth * 2f + 0.04f, 0.012f, 0.022f), coverMaterial);
+
             resetButton = Button("ResetWorld", new Vector3(PageWidth / 2f, 0.05f, -0.01f), "Reiniciar el mundo", () =>
             {
                 ResetWorldRequested?.Invoke();

@@ -28,6 +28,29 @@ namespace SpellSimulator.Player
         /// <summary>Abrir/cerrar el grimorio: Tab, Y del gamepad, boton de menu del control izquierdo.</summary>
         public bool IsTogglingBook { get; private set; }
 
+        /// <summary>Correr: Shift, click del stick izquierdo (gamepad y VR).</summary>
+        public bool IsRunning { get; private set; }
+        /// <summary>Agacharse (mantener): Ctrl o C, click del stick derecho.</summary>
+        public bool IsCrouching { get; private set; }
+        /// <summary>Arrojar lo que se tiene en la mano: Q, hombro izquierdo.</summary>
+        public bool IsThrowing { get; private set; }
+        /// <summary>Dar vuelta la hoja en la mano (o la que se mira): F, hombro derecho. En VR se gira con la mano.</summary>
+        public bool IsFlipping { get; private set; }
+        /// <summary>Fijar el lienzo en mano a la camara para dibujar comodo (alterna): V.</summary>
+        public bool IsTogglingFocus { get; private set; }
+        /// <summary>Pasar pagina del grimorio abierto: -1 / +1 (flechas, cruceta).</summary>
+        public int PageDelta { get; private set; }
+        /// <summary>Rueda del mouse (acerca/aleja lo que se sostiene; pasa paginas con el grimorio abierto).</summary>
+        public float Scroll { get; private set; }
+
+        private InputAction runAction;
+        private InputAction crouchAction;
+        private InputAction throwAction;
+        private InputAction flipAction;
+        private InputAction focusAction;
+        private InputAction pagePrevAction;
+        private InputAction pageNextAction;
+        private InputAction scrollAction;
         private InputAction moveAction;
         private InputAction lookAction;
         private InputAction jumpAction;
@@ -89,6 +112,39 @@ namespace SpellSimulator.Player
             resetWorldAction.AddBinding("<Gamepad>/select");
             resetWorldAction.AddBinding("<XRController>{LeftHand}/secondaryButton");
 
+            runAction = new InputAction("Run", InputActionType.Button);
+            runAction.AddBinding("<Keyboard>/leftShift");
+            runAction.AddBinding("<Gamepad>/leftStickPress");
+            runAction.AddBinding("<XRController>{LeftHand}/thumbstickClicked");
+
+            crouchAction = new InputAction("Crouch", InputActionType.Button);
+            crouchAction.AddBinding("<Keyboard>/leftCtrl");
+            crouchAction.AddBinding("<Keyboard>/c");
+            crouchAction.AddBinding("<Gamepad>/rightStickPress");
+
+            throwAction = new InputAction("Throw", InputActionType.Button);
+            throwAction.AddBinding("<Keyboard>/q");
+            throwAction.AddBinding("<Gamepad>/leftShoulder");
+            throwAction.AddBinding("<XRController>{RightHand}/secondaryButton"); // VR: boton B
+
+            flipAction = new InputAction("Flip", InputActionType.Button);
+            flipAction.AddBinding("<Keyboard>/f");
+            flipAction.AddBinding("<Gamepad>/rightShoulder");
+            flipAction.AddBinding("<XRController>{RightHand}/thumbstickClicked"); // VR: click del stick derecho
+
+            focusAction = new InputAction("Focus", InputActionType.Button);
+            focusAction.AddBinding("<Keyboard>/v");
+
+            pagePrevAction = new InputAction("PagePrev", InputActionType.Button);
+            pagePrevAction.AddBinding("<Keyboard>/leftArrow");
+            pagePrevAction.AddBinding("<Gamepad>/dpad/left");
+            pageNextAction = new InputAction("PageNext", InputActionType.Button);
+            pageNextAction.AddBinding("<Keyboard>/rightArrow");
+            pageNextAction.AddBinding("<Gamepad>/dpad/right");
+
+            scrollAction = new InputAction("Scroll", InputActionType.Value);
+            scrollAction.AddBinding("<Mouse>/scroll/y");
+
             bookAction = new InputAction("Book", InputActionType.Button);
             bookAction.AddBinding("<Keyboard>/tab");
             bookAction.AddBinding("<Gamepad>/buttonNorth");
@@ -98,6 +154,14 @@ namespace SpellSimulator.Player
         private void OnEnable()
         {
             reloadAction.Enable();
+            runAction.Enable();
+            crouchAction.Enable();
+            throwAction.Enable();
+            flipAction.Enable();
+            focusAction.Enable();
+            pagePrevAction.Enable();
+            pageNextAction.Enable();
+            scrollAction.Enable();
             resetWorldAction.Enable();
             bookAction.Enable();
             moveAction.Enable();
@@ -111,6 +175,14 @@ namespace SpellSimulator.Player
         private void OnDisable()
         {
             reloadAction.Disable();
+            runAction.Disable();
+            crouchAction.Disable();
+            throwAction.Disable();
+            flipAction.Disable();
+            focusAction.Disable();
+            pagePrevAction.Disable();
+            pageNextAction.Disable();
+            scrollAction.Disable();
             resetWorldAction.Disable();
             bookAction.Disable();
             moveAction.Disable();
@@ -136,6 +208,13 @@ namespace SpellSimulator.Player
             IsReloading = reloadAction.triggered;
             IsResettingWorld = resetWorldAction.triggered;
             IsTogglingBook = bookAction.triggered;
+            IsRunning = runAction.IsPressed();
+            IsCrouching = crouchAction.IsPressed();
+            IsThrowing = throwAction.triggered;
+            IsFlipping = flipAction.triggered;
+            IsTogglingFocus = focusAction.triggered;
+            PageDelta = (pageNextAction.triggered ? 1 : 0) - (pagePrevAction.triggered ? 1 : 0);
+            Scroll = scrollAction.ReadValue<float>();
         }
     }
 }

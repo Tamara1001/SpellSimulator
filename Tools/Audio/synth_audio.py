@@ -82,6 +82,28 @@ def bell(freq, seconds, decay=3.0, partials=((1, 1), (2.0, 0.5), (2.76, 0.3), (5
     return out * np.clip(t / 0.003, 0, 1)
 
 
+def bubble(f0, d=0.1):
+    """Burbuja: un tono que SUBE de frecuencia mientras se apaga (asi suena una burbuja real; un seno plano suena a pitido)."""
+    k = t_axis(d)
+    phase = 2 * np.pi * f0 * (k + 3.0 * k * k)
+    return np.sin(phase) * np.exp(-k * 38) * np.minimum(k / 0.004, 1.0)
+
+
+def add_bubbles(s, count, f_low, f_high, start, end, amp):
+    for _ in range(count):
+        b = bubble(rng.uniform(f_low, f_high), rng.uniform(0.06, 0.14))
+        i = int(rng.uniform(start, end) * SR)
+        if i + len(b) < len(s):
+            s[i:i + len(b)] += b * amp * rng.uniform(0.5, 1.0)
+    return s
+
+
+def slow_noise(seconds, rate_hz):
+    """Ruido que varia lento en [-1, 1] (para que un rio no suene a ruido blanco fijo)."""
+    x = spectral(noise(seconds), high=rate_hz)
+    return x / (np.max(np.abs(x)) + 1e-9)
+
+
 def crackle(seconds, density=40, low=1500):
     """Chisporroteo: impulsos al azar filtrados."""
     n = int(seconds * SR)
@@ -133,14 +155,10 @@ def cast(element):
         s = sweep_filter(noise(d), 300, 2500, 0.8) * env(d, 0.05, 1.2) + crackle(d, 60) * env(d, 0.1, 1.0) * 0.6
         s += np.sin(2 * np.pi * 70 * t) * env(d, 0.01, 0.6) * 0.5
     elif element == "water":
-        s = sweep_filter(noise(d), 1800, 400, 0.7) * env(d, 0.04, 1.2)
-        for _ in range(18):
-            p = rng.uniform(0.1, 1.2)
-            f = rng.uniform(500, 1400)
-            k = t_axis(0.08)
-            blob = np.sin(2 * np.pi * (f + 3000 * k) * k) * np.exp(-k * 50)
-            i = int(p * SR)
-            s[i:i + len(blob)] += blob * 0.3
+        # Chorro: ruido suave que baja de tono, un murmullo grave y pocas burbujas.
+        s = sweep_filter(noise(d), 1500, 500, 0.9) * env(d, 0.06, 1.2) * 0.9
+        s += spectral(noise(d), low=120, high=650) * env(d, 0.08, 1.1) * 0.9
+        s = add_bubbles(s, 10, 350, 900, 0.1, 1.3, 0.12)
     elif element == "wind":
         s = sweep_filter(noise(d), 400, 1600, 0.5) * env(d, 0.25, 1.0) * 1.2
     elif element == "earth":
@@ -231,13 +249,13 @@ def hiss():
 
 
 def splash():
-    d = 0.9
-    s = spectral(noise(d), low=300, high=5000) * env(d, 0.005, 0.8, 3)
-    for _ in range(10):
-        k = t_axis(0.06)
-        blob = np.sin(2 * np.pi * rng.uniform(700, 1600) * k) * np.exp(-k * 60)
-        p = int(rng.uniform(0.05, 0.6) * SR)
-        s[p:p + len(blob)] += blob * 0.4
+    d = 1.0
+    t = t_axis(d)
+    body = spectral(noise(d), low=180, high=3200, tilt=-4) * env(d, 0.004, 0.95, 3)
+    # "Plop" de la caida: un golpe grave que baja rapido de tono.
+    plop = np.sin(2 * np.pi * (80 * t + 170 * (1 - np.exp(-t * 18)) / 18)) * np.exp(-t * 11) * 0.9
+    s = body * 0.8 + plop
+    s = add_bubbles(s, 9, 300, 1000, 0.04, 0.7, 0.16)
     return s
 
 
@@ -286,9 +304,11 @@ def wind_loop():
 
 
 def waterfall_loop():
-    d = 8.0
-    s = spectral(noise(d), low=80, high=6000, tilt=-3) + spectral(noise(d), low=1500, high=8000) * 0.3
-    return loop_close(s, 1.0)
+    d = 12.0
+    wash = spectral(noise(d), low=140, high=6500, tilt=-4.5) * (0.85 + 0.15 * slow_noise(d, 1.6))
+    rumble = spectral(noise(d), low=40, high=240) * 1.4 * (0.8 + 0.2 * slow_noise(d, 0.7))
+    spray = spectral(noise(d), low=3500, high=9000) * 0.12 * (0.7 + 0.3 * slow_noise(d, 3.0))
+    return loop_close(wash + rumble + spray, 1.5)
 
 
 def bird(seed):

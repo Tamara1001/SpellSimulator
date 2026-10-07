@@ -57,6 +57,10 @@ namespace SpellSimulator.EditorTools.Map
             MapDetails.Stamps(map, lit, stampTable, TowerOrigin() + new Vector3(0.5f, 0.9f, 0.3f));
             MapContraptions.Build(map, lit, stampTable + new Vector3(-5f, 0f, 0f));
             MapDetails.PostProcess();
+            ToolModels.Apply(lit);
+            TowerProps.Build(map, lit, TowerOrigin());
+            CanvasDesigns.Build(map, lit, TowerOrigin(), stampTable);
+            InteractionSetup.Apply();
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
@@ -341,6 +345,9 @@ namespace SpellSimulator.EditorTools.Map
             sky.SetFloat("_AtmosphereThickness", 0.8f);
             sky.SetFloat("_Exposure", 1.2f);
             RenderSettings.skybox = sky;
+            // La camara de PC dibujaba un color liso (marron): el cielo solo se ve con Skybox.
+            foreach (var cam in Object.FindObjectsByType<Camera>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                cam.clearFlags = CameraClearFlags.Skybox;
 
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
             RenderSettings.ambientSkyColor = new Color(0.62f, 0.72f, 0.92f);

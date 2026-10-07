@@ -85,3 +85,25 @@ namespace SpellSimulator.Interfaces
     /// </summary>
     public interface ISealTrigger { }
 }
+
+namespace SpellSimulator.Interfaces
+{
+    /// <summary>Objeto que se puede arrojar: recibe la velocidad con que sale de la mano.</summary>
+    public interface IThrowable
+    {
+        void Throw(UnityEngine.Vector3 velocity);
+    }
+
+    /// <summary>Hoja o libro que se puede dar vuelta (F en PC, girar la mano en VR).</summary>
+    public interface IFlippable
+    {
+        void Flip();
+    }
+
+    /// <summary>Objeto sostenido que pide quedar fijo delante de la camara para dibujar (PC).</summary>
+    public interface IFocusable
+    {
+        bool Focused { get; }
+        void SetFocus(UnityEngine.Transform camera, bool on);
+    }
+}

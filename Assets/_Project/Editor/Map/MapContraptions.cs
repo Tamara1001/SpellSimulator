@@ -36,7 +36,7 @@ namespace SpellSimulator.EditorTools.Map
             if (old != null) Object.DestroyImmediate(old);
             var go = Object.Instantiate(template);
             go.name = name;
-            go.transform.SetPositionAndRotation(position, Quaternion.Euler(-90f, 0f, 0f));
+            go.transform.SetPositionAndRotation(position, Quaternion.Euler(90f, 0f, 0f));
             float depth = template.transform.localScale.z;
             go.transform.localScale = new Vector3(size, size, depth);
 
@@ -49,7 +49,7 @@ namespace SpellSimulator.EditorTools.Map
             visual.AddComponent<MeshRenderer>().sharedMaterial = material;
             float childZ = thickness / depth;
             visual.transform.localScale = new Vector3(1f, 1f, childZ);
-            visual.transform.localPosition = new Vector3(0f, 0f, -childZ * 0.5f - 0.002f / depth);
+            visual.transform.localPosition = new Vector3(0f, 0f, childZ * 0.5f + 0.002f / depth);
             var box = visual.AddComponent<BoxCollider>();
             box.size = Vector3.one;
 
@@ -65,6 +65,7 @@ namespace SpellSimulator.EditorTools.Map
             {
                 var gso = new SerializedObject(grab);
                 gso.FindProperty("settleFlat").boolValue = false;
+                gso.FindProperty("floatOnDrop").boolValue = false;
                 gso.FindProperty("objectName").stringValue = "piedra con sello";
                 gso.ApplyModifiedProperties();
             }

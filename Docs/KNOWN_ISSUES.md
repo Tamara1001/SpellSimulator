@@ -119,6 +119,12 @@ Tamara; con muchas cosas ardiendo suenan muchos loops de fuego a la vez (poner u
 | KI-047 🟢 | **Nuevo (M4):** el estanque se armó a y=0 y el piso real está a 0.5 (cubo) | Estanque subido. Ojo al ubicar props: la cara de arriba del `Floor` es y=0.5. |
 | KI-056 🟠 | **Prueba manual:** no se podía entrar a la torre sin saltar (el zócalo subía 60 cm en la puerta) | Zócalo cortado en la puerta y bajado a 25 cm; umbral de 5 cm. |
 | KI-057 🟠 | **Prueba manual:** el jugador se trababa con muebles y bordes (cápsula de 1 m de ancho, esfera extra, fricción) | Cápsula de radio 0.3, sin la esfera, material sin fricción, subida automática de escalones (≤ 35 cm) y gravedad contra el piso cuando está quieto (no resbala en rampas). Silla y atril fuera del paso puerta → rampa. |
+| KI-065 🟢 | **Prueba manual:** el cielo se veía marrón | La cámara de PC tenía el fondo en color liso; ahora `Skybox` (lo fija `MapBuilder`). |
+| KI-064 🟢 | **Prueba manual:** no se podía pasar de página en el grimorio | El rayo chocaba con lo que se llevaba en la mano (papel trigger) y con volúmenes; ahora ignora lo llevado y los triggers inútiles y hay flechas / rueda. |
+| KI-063 🟢 | **Prueba manual:** los lienzos siempre caían boca abajo | Soltar apoya o flota; arrojar aterriza cara arriba (ADR-028). |
+| KI-062 🟢 | Las piedras de impacto y la placa emitían hacia abajo (la cara visible del lienzo es -Z) | Rotación corregida: cara hacia arriba. |
+| KI-061 🟡 | Sin test automático de agacharse, correr, arrojar ni del modo de escritorio (solo se verificó la lógica en Play con llamadas directas) | Probar a mano; pasarlo a PlayMode en M7. |
+| KI-060 🟡 | Las calcomanías de tinta no tienen anotaciones ni pulso de "preparado" como el papel, y las estampas no estampan sobre ellas | `SealFeedback` y `Stamp` solo buscan lienzos de la capa Canvas con material de papel. |
 | KI-059 🟡 | **Pendiente:** `SplitJoin` (sello partido en dos objetos que se activa al juntarlos) no está hecho; las piedras y placas solo cubren `Impact` y `Pressure` | Fusionar las sesiones de dos lienzos al alinearlos. |
 | KI-058 🟢 | **Prueba manual:** el dorso de los lienzos no se veía | `Canvas.mat` de doble cara. |
 | KI-055 🟢 | **Nuevo (M6):** los textos de ayuda ("Agarrar …") se armaban en cada frame al mirarlos (GC por frame) | Se arman una vez y se guardan. |

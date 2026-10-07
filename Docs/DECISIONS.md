@@ -97,6 +97,22 @@ por código (VFX Graph no). El viejo `Fire_VFX.vfx` queda sin uso.
 hechizo le explotaría en la cara. `DrawingCanvas.EmissionSide = AwayFromViewer` en papeles (la magia sale hacia el
 objetivo, como cuando los personajes giran el papel); `InkSide` queda para sellos en paredes, mesas y piedras.
 
+## ADR-029 — Dibujar en el entorno con calcomanías, no con UV del mesh
+**2026-10-07.** El piso, la torre y las cajas no tienen UV útiles ni forma plana. Al empezar un trazo sobre una
+`Inscribable` se crea un lienzo transparente (quad en la capa Canvas, shader `InkDecal`) pegado a la superficie. Así el
+pipeline de lectura/compilación es el mismo de siempre (`DrawingCanvas`), la calcomanía sigue al objeto si se mueve, y el
+sello se rompe con las mismas reglas del papel (agua, fuego, fractura) más las marcas del suelo. Máximo 10 a la vez.
+
+## ADR-028 — Un lienzo suelto flota o se apoya; arrojarlo es otra acción
+**2026-10-07.** Caer boca abajo hacía incómodo dibujar siempre. Soltar apoya el lienzo en una superficie cercana o lo deja
+flotando; la física solo entra al arrojarlo (Q) y entonces se acuesta con la cara hacia arriba. Modo de escritorio (V):
+lienzo fijo a la cámara y mouse como puntero (`FocusMode`), solo en PC.
+
+## ADR-027 — La magia sale por la cara con tinta; dar vuelta la hoja es la puntería
+**2026-10-07.** Reemplaza ADR-020. Con `AwayFromViewer` el hechizo salía hacia un lado que no dependía del dibujo, algo
+que se sentía arbitrario. Ahora todos los lienzos emiten por la cara con tinta (la que miraba al jugador al empezar a
+dibujar) y **F** da vuelta la hoja para apuntar (en VR, girar la mano), como cuando los personajes del canon giran el papel.
+
 ## ADR-026 — El grimorio aparece en el mundo, no pegado a la cámara
 **2026-10-07.** El libro-menú se abre flotando frente al jugador (fijo en el mundo) en lugar de seguir a la cámara o
 vivir en la HUD: así se apunta a sus páginas con la misma mira/rayo que a cualquier objeto y funciona igual en PC y en

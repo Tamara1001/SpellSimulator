@@ -47,6 +47,21 @@ namespace SpellSimulator.Canvas
         /// <summary>Trazos de este lienzo, en UV [0,1].</summary>
         public DrawingSession Session { get; } = new DrawingSession();
 
+        private float inkSign = 1f;
+
+        /// <summary>Normal de la cara visible del lienzo, en mundo.</summary>
+        public Vector3 FaceNormal => transform.TransformDirection(surfaceNormalLocal).normalized;
+
+        /// <summary>
+        /// Anota desde que lado se empieza a dibujar: si el lienzo esta vacio, esa cara pasa a ser la cara con tinta
+        /// (la magia sale por ahi, como en el canon). Dar vuelta la hoja cambia hacia donde apunta el hechizo.
+        /// </summary>
+        public void NoteInkViewer(Vector3 viewerPosition)
+        {
+            if (!Session.IsEmpty) return;
+            inkSign = Vector3.Dot(FaceNormal, viewerPosition - transform.position) >= 0f ? 1f : -1f;
+        }
+
         /// <summary>Normal "hacia afuera del papel" en espacio local (la cara visible del mesh).</summary>
         public Vector3 SurfaceNormalLocal => surfaceNormalLocal;
 
@@ -82,7 +97,7 @@ namespace SpellSimulator.Canvas
         public Vector3 EmissionNormal(Vector3 viewerPosition)
         {
             Vector3 ink = transform.TransformDirection(surfaceNormalLocal).normalized;
-            if (emissionSide == EmissionSide.InkSide) return ink;
+            if (emissionSide == EmissionSide.InkSide) return ink * inkSign;
             return Vector3.Dot(ink, viewerPosition - transform.position) > 0f ? -ink : ink;
         }
 
@@ -123,8 +138,8 @@ namespace SpellSimulator.Canvas
             // Resolucion proporcional a la escala fisica para no pixelar lienzos estirados.
             float scaleX = Mathf.Max(0.01f, transform.localScale.x);
             float scaleY = Mathf.Max(0.01f, transform.localScale.y);
-            int width = Mathf.Max(16, Mathf.RoundToInt(resolution * scaleX));
-            int height = Mathf.Max(16, Mathf.RoundToInt(resolution * scaleY));
+            int width = resolutionIsAbsolute ? resolution : Mathf.Max(16, Mathf.RoundToInt(resolution * scaleX));
+            int height = resolutionIsAbsolute ? resolution : Mathf.Max(16, Mathf.RoundToInt(resolution * scaleY));
 
             renderTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32) { filterMode = FilterMode.Bilinear };
             renderTexture.Create();
@@ -135,6 +150,23 @@ namespace SpellSimulator.Canvas
 
             ClearTexture();
         }
+
+        /// <summary>
+        /// Prepara un lienzo creado por codigo ANTES de que despierte (el objeto debe estar inactivo): resolucion de la
+        /// textura, pincel, fondo y cara de emision. Lo usan las calcomanias sobre el entorno.
+        /// </summary>
+        public void Prepare(int textureResolution, Material brush, Color background, float relativeBrushSize, EmissionSide side)
+        {
+            resolution = Mathf.Max(32, textureResolution);
+            // La textura se dimensiona con la escala: aqui la resolucion ya es por lado en pixeles.
+            resolutionIsAbsolute = true;
+            brushMaterial = brush;
+            clearColor = background;
+            brushSize = relativeBrushSize;
+            emissionSide = side;
+        }
+
+        private bool resolutionIsAbsolute;
 
         /// <summary>Configura un lienzo creado por codigo (paginas del grimorio): pincel, fondo y tamanio.</summary>
         public void Configure(Material brush, Color background, float relativeBrushSize)

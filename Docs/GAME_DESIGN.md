@@ -82,6 +82,25 @@ Se empieza conociendo **Fuego, Columna y Levitación**. Los libros de la torre e
 del estudio) y *Signos raros* (pedestal en la terraza, premio por subir). Dibujar bien un glifo desconocido también lo
 descubre. El grimorio muestra cada glifo dibujándose solo, con su explicación. El progreso se guarda.
 
+## Lienzos y dibujo cómodo (M6)
+Un lienzo que se suelta **no cae**: si hay una mesa, el piso o una pared a 30 cm se apoya (pegado y derecho) y si no queda
+**flotando** a esa altura, parado, con un leve vaivén. Con **Q** se arroja y cae con física, aterrizando siempre con la
+cara hacia arriba. **F** da vuelta la hoja: el hechizo sale por la **cara con tinta** (la que miraba al jugador cuando
+empezó a dibujar), así que girarla cambia hacia dónde apunta. **V** fija el lienzo delante de la cámara y el mouse pasa
+a ser un puntero (se congela la vista; V o E para volver). Hay cuadernos (S), lienzos grandes con marco, pergaminos
+flotantes, pizarra de pared, caballetes (torre y campo) y una mesa de dibujo inclinada.
+
+## Dibujar en el entorno (M6)
+Con la pluma se puede dibujar sobre el **piso, la torre y las cajas/pesas**: al empezar el trazo se pega una calcomanía de
+tinta (lienzo transparente de 1,2–1,3 m, o del tamaño del objeto) y el hechizo sale hacia afuera de esa superficie. La
+calcomanía sigue al objeto si se mueve y desaparece si se rompe o al reiniciar. Un **cráter, una quemadura o un charco**
+encima del sello lo rompen (menos los de su propio hechizo), igual que mojar o prender fuego el objeto.
+
+## Objetos movibles (M6)
+Cajas, bloques, pesas y baúles son `Movable`: E los lleva con un resorte (chocan con el mundo y no empujan al jugador),
+la rueda los acerca o aleja y Q los arroja. Los de más de 40 kg no se levantan. La torre tiene mesas de trabajo con
+plumas, pinceles, gomas, trapos y tinteros, cajas y baúles.
+
 ## Sellos en objetos (M6)
 Un objeto con `SealTrigger` no lanza el sello al cerrar el anillo: lo deja **armado** (el papel pulsa igual que uno
 preparado) y se lanza cuando algo lo activa. En el campo de práctica, junto a la mesa de estampas: dos **piedras de
@@ -106,7 +125,13 @@ rocas que emergen, pasos según el piso (pasto, madera, piedra). Créditos: soni
 | Acción | PC | VR |
 |---|---|---|
 | Moverse / mirar | WASD + mouse | Stick izquierdo + cabeza |
-| Agarrar / soltar | E | Grip |
+| Correr / agacharse / saltar | Shift / Ctrl o C / Espacio | Click del stick izquierdo / — / — |
+| Agarrar / soltar (herramientas, lienzos, cajas, pesas, el grimorio por el borde de abajo) | E | Grip |
+| Acercar / alejar lo que llevás | Rueda del mouse | Mover la mano |
+| Arrojar | Q | B (control derecho) |
+| Dar vuelta la hoja | F | Girar la mano / click del stick derecho |
+| Fijar el lienzo a la cámara (dibujar de escritorio, mouse libre) | V | — |
+| Pasar página del grimorio | Flechas, rueda o mirar + E | Apuntar + grip |
 | Usar herramienta (dibujar, estampar, borrar) | Click izquierdo | Gatillo |
 | Secundario (deshacer, cargar estampa) | Click derecho | A |
 | Recargar tinta | R | Mojar la punta en un tintero |
@@ -114,7 +139,6 @@ rocas que emergen, pasos según el piso (pasto, madera, piedra). Créditos: soni
 | Pasar página, leer un libro, apretar un botón | Mirar + E | Apuntar + grip |
 | Cargar una estampa (grimorio abierto en un glifo) | Estampa en mano + mirar el libro + clic derecho | Apuntar al libro + A |
 | Estampar | Clic izquierdo sobre un papel | Gatillo |
-| Lanzar | Soltar mientras te movés / Q | Soltar con velocidad (física) |
 | Liberar cursor | Escape | — |
 | Reiniciar el mundo (Libre) | Backspace (gamepad: Select) | Y (control izquierdo) |
 

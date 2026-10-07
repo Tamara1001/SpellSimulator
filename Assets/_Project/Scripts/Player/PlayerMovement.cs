@@ -8,7 +8,9 @@ namespace SpellSimulator.Player
     {
         [Header("Movement Settings")]
         [SerializeField] private float moveForce = 50f;
-        [SerializeField] private float maxSpeed = 6f;
+        [SerializeField, Tooltip("Velocidad al caminar (m/s).")] private float walkSpeed = 4.2f;
+        [SerializeField, Tooltip("Velocidad al correr (Shift).")] private float runSpeed = 7.4f;
+        [SerializeField, Tooltip("Velocidad agachado.")] private float crouchSpeed = 2f;
         [SerializeField, Range(0f, 1f)] private float friction = 0.175f;
         [SerializeField] private float jumpForce = 5f;
         
@@ -24,8 +26,18 @@ namespace SpellSimulator.Player
         [SerializeField, Tooltip("Radio del cuerpo para detectar escalones (m).")]
         private float bodyRadius = 0.3f;
 
+        [Header("Agacharse")]
+        [SerializeField, Tooltip("Altura del cuerpo agachado (m).")] private float crouchHeight = 1.1f;
+        [SerializeField, Tooltip("Cuanto baja la camara agachado (m).")] private float crouchCameraDrop = 0.5f;
+        [SerializeField, Tooltip("Rapidez de la transicion (1/s).")] private float crouchBlend = 12f;
+
         private Rigidbody rb;
         private PlayerInputReader inputReader;
+        private CapsuleCollider body;
+        private Transform cameraRoot;
+        private float standHeight, standCameraY;
+        private float crouchT;
+        private bool crouching;
 
         private bool isGrounded;
         private Vector3 groundNormal = Vector3.up;
@@ -42,13 +54,58 @@ namespace SpellSimulator.Player
             rb.useGravity = false;    // Usaremos gravedad matematica personalizada
             rb.mass = 1f;            
             rb.linearDamping = 0f;
+
+            // El cuerpo real es la capsula activa (la del objeto raiz puede estar apagada).
+            foreach (var capsule in GetComponentsInChildren<CapsuleCollider>())
+                if (capsule.enabled && !capsule.isTrigger) { body = capsule; break; }
+            if (body != null) standHeight = body.height;
+            var cam = Camera.main;
+            if (cam != null && !PlatformDetector.IsVR && cam.transform.parent != null)
+            {
+                cameraRoot = cam.transform.parent;
+                standCameraY = cameraRoot.localPosition.y;
+            }
         }
 
         private void Update()
         {
             CheckGrounded();
+            HandleCrouch();
             HandleJump();
         }
+
+        /// <summary>Agacharse (PC): achica el cuerpo y baja la camara; solo se para si hay lugar arriba.</summary>
+        private void HandleCrouch()
+        {
+            if (body == null || PlatformDetector.IsVR) return;
+            bool wants = inputReader.IsCrouching;
+            if (wants) crouching = true;
+            else if (crouching && HasHeadroom()) crouching = false;
+
+            float previousT = crouchT;
+            crouchT = Mathf.MoveTowards(crouchT, crouching ? 1f : 0f, crouchBlend * Time.deltaTime);
+            if (crouchT == previousT) return; // quieto: no se toca el collider ni la camara
+            float height = Mathf.Lerp(standHeight, crouchHeight, crouchT);
+            body.height = height;
+            // Los pies quedan en el mismo lugar: el centro baja la mitad de lo que se achica.
+            body.center = new Vector3(0f, (height - standHeight) * 0.5f, 0f);
+            if (cameraRoot != null)
+            {
+                var p = cameraRoot.localPosition;
+                p.y = standCameraY - crouchCameraDrop * crouchT;
+                cameraRoot.localPosition = p;
+            }
+        }
+
+        private bool HasHeadroom()
+        {
+            float radius = body.radius * 0.9f;
+            Vector3 from = transform.position + Vector3.up * (crouchHeight * 0.5f - radius);
+            float room = standHeight - crouchHeight + 0.05f;
+            return !Physics.SphereCast(from, radius, Vector3.up, out _, room, groundLayer, QueryTriggerInteraction.Ignore);
+        }
+
+        private float CurrentMaxSpeed => crouching ? crouchSpeed : inputReader.IsRunning ? runSpeed : walkSpeed;
 
         private void FixedUpdate()
         {
@@ -107,6 +164,7 @@ namespace SpellSimulator.Player
 
             // Limitar velocidad maxima para no acelerar infinitamente
             flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
+            float maxSpeed = CurrentMaxSpeed;
             if (flatVel.magnitude > maxSpeed)
             {
                 Vector3 limitedVel = flatVel.normalized * maxSpeed;
@@ -116,7 +174,7 @@ namespace SpellSimulator.Player
 
         private void HandleJump()
         {
-            if (inputReader.IsJumping && isGrounded && readyToJump)
+            if (inputReader.IsJumping && isGrounded && readyToJump && !crouching)
             {
                 readyToJump = false;
                 

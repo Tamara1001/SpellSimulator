@@ -104,6 +104,7 @@ namespace SpellSimulator.World
             if (entry == null || entry.TemplateStrokes.Count == 0) return;
 
             Vector2 uv = canvas.GetUVFromWorldPosition(hit.point);
+            canvas.NoteInkViewer(cam != null ? cam.transform.position : hit.point + hit.normal);
             Vector2 size = canvas.WorldSize;
             float width = Mathf.Max(0.004f, diameter * 0.03f);
             var strokes = entry.Kind == GlyphKind.Sigil
@@ -169,7 +170,7 @@ namespace SpellSimulator.World
             {
                 if (cam == null) cam = Camera.main;
                 if (cam == null) { hit = default; return false; }
-                ray = new Ray(cam.transform.position, cam.transform.forward);
+                ray = FocusMode.GetRay(cam);
                 reach = pcReach;
             }
             return Physics.Raycast(ray, out hit, reach, mask, QueryTriggerInteraction.Collide);

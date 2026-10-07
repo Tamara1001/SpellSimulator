@@ -16,6 +16,9 @@ namespace SpellSimulator.World
         /// <summary>(lienzo) cuando un sello se pierde por agua o fuego.</summary>
         public static event System.Action<DrawingCanvas> SealBroken;
 
+        /// <summary>Para quien rompe un sello sin ser un SealBreaker (calcomanias sobre el entorno).</summary>
+        public static void NotifyBroken(DrawingCanvas canvas) => SealBroken?.Invoke(canvas);
+
         [SerializeField] private SpellCaster caster;
 
         private DrawingCanvas canvas;
