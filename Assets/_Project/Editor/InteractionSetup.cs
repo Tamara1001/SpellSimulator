@@ -16,7 +16,7 @@ namespace SpellSimulator.EditorTools
         private const string DecalMaterialPath = "Assets/_Project/Materials/InkDecal.mat";
 
         [MenuItem("SpellSimulator/Interaction/Setup Current Scene")]
-        public static string Apply() => FixInteractMask() + " " + FixHoldPoints() + " " + MakePropsMovable() + " " + MakeSurfacesInscribable();
+        public static string Apply() => FixInteractMask() + " " + FixHoldPoints() + " " + FixInkAndStance() + " " + MakePropsMovable() + " " + MakeSurfacesInscribable();
 
         /// <summary>
         /// El rayo de E solo veia las capas Canvas e Interactable: libro, estampas y cajas (capa Default) no se podian apuntar.
@@ -60,6 +60,53 @@ namespace SpellSimulator.EditorTools
             so.ApplyModifiedProperties();
             if (player.GetComponent<Player.ObjectMover>() == null) player.AddComponent<Player.ObjectMover>();
             return "Manos en la camara y movedor de objetos.";
+        }
+
+        /// <summary>
+        /// Tinta lisa (el pincel pasa al shader InkBrush con Min/Max: sin circulos apilados) y agacharse que baja bastante mas
+        /// (la camara a la mitad de la altura de pie).
+        /// </summary>
+        public static string FixInkAndStance()
+        {
+            var brush = AssetDatabase.LoadAssetAtPath<Material>("Assets/_Project/Materials/BrushMaterial.mat");
+            var shader = Shader.Find("SpellSimulator/InkBrush");
+            if (brush != null && shader != null && brush.shader != shader)
+            {
+                Color ink = brush.HasProperty("_BaseColor") ? brush.GetColor("_BaseColor") : new Color(0.368f, 0.085f, 0.085f, 1f);
+                brush.shader = shader;
+                brush.SetColor("_InkColor", ink);
+                EditorUtility.SetDirty(brush);
+            }
+            var movement = Object.FindFirstObjectByType<Player.PlayerMovement>();
+            if (movement != null)
+            {
+                var so = new SerializedObject(movement);
+                so.FindProperty("crouchHeight").floatValue = 1f;
+                so.FindProperty("crouchCameraDrop").floatValue = 0.95f;
+                so.ApplyModifiedProperties();
+            }
+            // Grosores de la pluma y resolucion de los lienzos (para que los trazos finos no se corten).
+            float[] presets = { 0.04f, 0.09f, 0.2f, 0.45f, 1f, 2.2f };
+            string[] names = { "finisimo", "muy fino", "fino", "medio", "normal", "grueso" };
+            foreach (var tool in Object.FindObjectsByType<World.PhysicalTool>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (tool.Kind != World.PhysicalTool.ToolKind.Pen) continue;
+                var tso = new SerializedObject(tool);
+                var pp = tso.FindProperty("widthPresets");
+                pp.arraySize = presets.Length;
+                for (int i = 0; i < presets.Length; i++) pp.GetArrayElementAtIndex(i).floatValue = presets[i];
+                var np = tso.FindProperty("widthNames");
+                np.arraySize = names.Length;
+                for (int i = 0; i < names.Length; i++) np.GetArrayElementAtIndex(i).stringValue = names[i];
+                tso.ApplyModifiedProperties();
+            }
+            foreach (var canvas in Object.FindObjectsByType<DrawingCanvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                var cso = new SerializedObject(canvas);
+                var res = cso.FindProperty("resolution");
+                if (res != null && res.intValue < 1024) { res.intValue = 1024; cso.ApplyModifiedProperties(); }
+            }
+            return "Tinta lisa, grosores y agacharse mas bajo.";
         }
 
         public static string MakePropsMovable()

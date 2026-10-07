@@ -17,7 +17,7 @@ namespace SpellSimulator.World
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(Collider))]
-    public class PhysicalTool : MonoBehaviour, IInteractable, IUsable, IInkUser
+    public class PhysicalTool : MonoBehaviour, IInteractable, IUsable, IInkUser, IHudInfo, IWidthSelectable
     {
         public enum ToolKind { Pen, Eraser, Rag }
 
@@ -40,10 +40,10 @@ namespace SpellSimulator.World
         [SerializeField, Tooltip("Ancho del trazo en metros (0 = el del lienzo).")]
         private float strokeWidth;
 
-        [Header("Grosor (teclas 1 a 4)")]
-        [SerializeField, Tooltip("Multiplicadores del ancho base de la pluma o el pincel para las teclas 1, 2, 3 y 4.")]
-        private float[] widthPresets = { 0.25f, 0.5f, 1f, 2.2f };
-        [SerializeField] private string[] widthNames = { "muy fino", "fino", "normal", "grueso" };
+        [Header("Grosor (teclas 5 a 0)")]
+        [SerializeField, Tooltip("Multiplicadores del ancho base de la pluma o el pincel para las teclas 5, 6, 7, 8, 9 y 0.")]
+        private float[] widthPresets = { 0.04f, 0.09f, 0.2f, 0.45f, 1f, 2.2f };
+        [SerializeField] private string[] widthNames = { "finisimo", "muy fino", "fino", "medio", "normal", "grueso" };
 
         [Header("VR")]
         [SerializeField, Tooltip("[VR] Dibujar solo cuando la punta toca el papel (en vez del laser). Experimental.")]
@@ -83,7 +83,7 @@ namespace SpellSimulator.World
         private bool held;
         private PlayerInputReader input;
         private float baseStrokeWidth;
-        private int widthIndex = 2;
+        private int widthIndex = 4;
 
         /// <summary>(herramienta, usando) al empezar y terminar de dibujar/borrar/limpiar sobre un lienzo.</summary>
         public static event System.Action<PhysicalTool, bool> UseChanged;
@@ -101,6 +101,17 @@ namespace SpellSimulator.World
         private float PcHoldPitch => kind == ToolKind.Pen ? -72f : 72f;
         public ToolKind Kind => kind;
         public bool UsesInk => kind == ToolKind.Pen;
+
+        // ---- Interfaz (HUD de abajo)
+        public string HudName => toolName;
+        public Color HudColor => kind == ToolKind.Pen ? fullInkColor : kind == ToolKind.Eraser ? new Color(0.93f, 0.62f, 0.66f) : new Color(0.92f, 0.87f, 0.74f);
+        public string HudHints => kind == ToolKind.Pen ? "Clic: dibujar | Clic der.: deshacer | 5-0: grosor | R: tinta | Q: arrojar"
+            : kind == ToolKind.Eraser ? "Clic: borrar | Clic der.: deshacer | Q: arrojar" : "Clic: limpiar el lienzo | Q: arrojar";
+        public float HudGauge => kind == ToolKind.Pen ? ink.Fraction : -1f;
+        public int WidthIndex => widthIndex;
+        public int WidthCount => kind == ToolKind.Pen ? widthPresets.Length : 0;
+        public float WidthSample(int index) => widthPresets[Mathf.Clamp(index, 0, widthPresets.Length - 1)] / widthPresets[widthPresets.Length - 1];
+        public string WidthLabel(int index) => index >= 0 && index < widthNames.Length ? widthNames[index] : (index + 1).ToString();
         public InkReservoir Ink => ink;
 
         private void Awake()
@@ -152,8 +163,7 @@ namespace SpellSimulator.World
             widthIndex = preset;
             float stabilizer = PlatformDetector.IsVR ? vrStabilizerSpeed : pcStabilizerSpeed;
             tool = new PenTool(stabilizer, baseStrokeWidth * widthPresets[preset]);
-            string label = preset < widthNames.Length ? widthNames[preset] : (preset + 1).ToString();
-            DiagnosticBus.OnDiagnosticsUpdated?.Invoke($"<b>[Pluma]</b> Grosor: {label}.");
+            Hud.Notify("width", "Grosor: " + WidthLabel(preset), 2f);
         }
 
         private void ApplyDefinition()
@@ -277,7 +287,7 @@ namespace SpellSimulator.World
             if (!UsesInk) return 0f;
             float amount = source.Refill(ink);
             RefreshInkVisual();
-            if (amount > 0f) Refilled?.Invoke(this);
+            if (amount > 0f) { Refilled?.Invoke(this); if (ink.Fraction > 0.05f) Hud.Clear("ink"); }
             return amount;
         }
 
@@ -291,7 +301,7 @@ namespace SpellSimulator.World
 
         private void ReportNoInk()
         {
-            DiagnosticBus.OnDiagnosticsUpdated?.Invoke($"<b>[Tinta]</b> {toolName}: sin tinta. Recarga en un tintero (R en PC).");
+            Hud.Notify("ink", $"Sin tinta ({toolName}): recarga con R junto a un tintero", 0f); // permanente hasta recargar
             Haptics.Pulse(HandType.Right, 0.5f, 0.15f);
         }
 

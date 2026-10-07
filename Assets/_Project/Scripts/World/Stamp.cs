@@ -21,7 +21,7 @@ namespace SpellSimulator.World
     /// Cargas limitadas por carga (decision de diseño): al agotarse hay que volver a cargarla.
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(Collider))]
-    public class Stamp : MonoBehaviour, IInteractable, IUsable, IResettable
+    public class Stamp : MonoBehaviour, IInteractable, IUsable, IResettable, IHudInfo
     {
         /// <summary>(estampa, lienzo) al estampar.</summary>
         public static event Action<Stamp, DrawingCanvas> Stamped;
@@ -51,6 +51,16 @@ namespace SpellSimulator.World
         private string prompt;
 
         public string Glyph => glyph;
+
+        // ---- Interfaz (HUD de abajo)
+        public string HudName => string.IsNullOrEmpty(glyph) ? $"Estampa {sizeName}" : $"Estampa {sizeName}: {(Discovery.Instance != null ? Discovery.Instance.Lore.Name(glyph) : glyph)} ({charges})";
+        public Color HudColor => new Color(0.65f, 0.4f, 0.85f);
+        public string HudHints => string.IsNullOrEmpty(glyph) ? "Vacia: abri un glifo en el grimorio (Tab) y 'Cargar en la estampa' | Q: arrojar" : "Clic: estampar | Q: arrojar";
+        public float HudGauge => -1f;
+
+        // En la mano una estampa enorme taparia la camara: se ve a un tamaño comodo (estampa igual al tamaño real).
+        private const float HeldVisualRadius = 0.07f;
+        private float HeldScale => Mathf.Min(1f, HeldVisualRadius / Mathf.Max(0.01f, diameter * 0.5f));
         public int Charges => charges;
         public HandType PreferredHand => HandType.Right;
 
@@ -83,6 +93,7 @@ namespace SpellSimulator.World
             col.enabled = false;
             transform.SetParent(holdPoint);
             transform.localPosition = Vector3.zero;
+            transform.localScale = Vector3.one * HeldScale;
             // En PC se sostiene con la base hacia adelante, como para estampar; en VR sigue al control.
             transform.localRotation = PlatformDetector.IsVR ? Quaternion.identity : Quaternion.Euler(-70f, 0f, 0f);
         }
@@ -99,6 +110,7 @@ namespace SpellSimulator.World
         {
             if (Held == this) Held = null;
             transform.SetParent(null);
+            transform.localScale = Vector3.one;
             rb.isKinematic = false;
             col.enabled = true;
         }

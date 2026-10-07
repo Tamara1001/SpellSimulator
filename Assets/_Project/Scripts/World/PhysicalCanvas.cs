@@ -15,7 +15,7 @@ namespace SpellSimulator.World
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(Collider))]
-    public class PhysicalCanvas : MonoBehaviour, IInteractable, IThrowable, IFlippable, IFocusable, IPinnable, IRemoteGrabbable, IResettable
+    public class PhysicalCanvas : MonoBehaviour, IInteractable, IThrowable, IFlippable, IFocusable, IPinnable, IRemoteGrabbable, IResettable, IHudInfo
     {
         [Header("Settings")]
         [SerializeField] private string objectName = "Lienzo Mágico";
@@ -68,6 +68,12 @@ namespace SpellSimulator.World
 
         public HandType PreferredHand => HandType.Left;
         public bool Focused => focused;
+
+        // ---- Interfaz (HUD de abajo)
+        public string HudName => objectName;
+        public Color HudColor => new Color(0.93f, 0.85f, 0.6f);
+        public string HudHints => "Clic: dibujar con una herramienta | F: dar vuelta | V: a pantalla | T: dejar flotando | Q: arrojar";
+        public float HudGauge => -1f;
 
         private void Awake()
         {

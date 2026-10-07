@@ -4,10 +4,10 @@ using SpellSimulator.Interfaces;
 namespace SpellSimulator.Player
 {
     /// <summary>
-    /// Mover objetos a distancia estilo Garry's Mod (PC): mantener G apunta a un objeto con Rigidbody y lo sostiene
-    /// con fisica delante de la camara. Rueda = distancia, Shift + rueda = girar sobre el eje de la mira, clic derecho
-    /// + mouse = rotar el objeto (la vista queda quieta). Al soltar G puede quedar flotando (T).
-    /// Es distinto de E (agarrar en la mano, <see cref="PlayerInteractor"/>), que no se toca. En VR no hace nada.
+    /// Mover objetos a distancia estilo Garry's Mod (PC): el interactor (E sobre algo movible) llama a <see cref="TryBegin"/>
+    /// y el objeto se sostiene con fisica delante de la camara. Rueda = distancia, Shift + rueda = girar sobre el eje de la
+    /// mira, clic derecho + mouse = rotar el objeto (la vista queda quieta). Otra E lo suelta; el clic de la rueda lo deja
+    /// flotando donde esta (<see cref="End"/>). En VR no hace nada.
     /// </summary>
     [RequireComponent(typeof(PlayerInputReader))]
     public class ObjectMover : MonoBehaviour
@@ -66,11 +66,7 @@ namespace SpellSimulator.Player
         {
             if (PlatformDetector.IsVR || cam == null) return;
 
-            if (!holding)
-            {
-                if (inputReader.IsRemoteGrabbing) TryGrab();
-                return;
-            }
+            if (!holding) return;
 
             // Objeto destruido o desactivado: se suelta sin callbacks.
             if (held == null || !held.gameObject.activeInHierarchy)
@@ -78,14 +74,6 @@ namespace SpellSimulator.Player
                 ClearHeld();
                 return;
             }
-
-            if (!inputReader.IsRemoteGrabbing)
-            {
-                Release();
-                return;
-            }
-
-            if (inputReader.IsPinning) pinRequested = true;
 
             float scroll = inputReader.Scroll;
             if (scroll != 0f)
@@ -122,29 +110,23 @@ namespace SpellSimulator.Player
             held.angularVelocity = Vector3.ClampMagnitude(angular, MaxAngularSpeed);
         }
 
-        /// <summary>Raycast desde la mira (o el puntero en modo dibujo) buscando el golpe util mas cercano.</summary>
-        private void TryGrab()
+        /// <summary>Cuerpo que se esta moviendo (null si ninguno).</summary>
+        public Rigidbody HeldBody => holding ? held : null;
+
+        /// <summary>Empieza a mover el cuerpo a la distancia dada. Devuelve false si ya se esta moviendo algo.</summary>
+        public bool TryBegin(Rigidbody rb, float distance)
         {
-            Ray ray = FocusMode.GetRay(cam);
-            int count = Physics.RaycastNonAlloc(ray, pickHits, PickRange, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide);
+            if (holding || rb == null || PlatformDetector.IsVR || cam == null) return false;
+            Begin(rb, distance);
+            return true;
+        }
 
-            float bestDistance = float.MaxValue;
-            Rigidbody best = null;
-            for (int i = 0; i < count; i++)
-            {
-                RaycastHit hit = pickHits[i];
-                if (hit.distance >= bestDistance) continue;
-
-                Rigidbody rb = hit.collider.GetComponentInParent<Rigidbody>();
-                if (rb == null || rb == playerBody || rb.GetComponent<PlayerMovement>() != null) continue;
-                // Lo que ya esta en la mano (bajo la camara) no se toma a distancia.
-                if (hit.collider.transform.IsChildOf(cam.transform)) continue;
-
-                bestDistance = hit.distance;
-                best = rb;
-            }
-
-            if (best != null) Begin(best, bestDistance);
+        /// <summary>Suelta lo que se mueve: cae, o queda flotando donde esta si pin es true.</summary>
+        public void End(bool pin)
+        {
+            if (!holding) return;
+            pinRequested = pin;
+            Release();
         }
 
         private void Begin(Rigidbody rb, float distance)

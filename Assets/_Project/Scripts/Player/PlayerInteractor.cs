@@ -5,8 +5,9 @@ using SpellSimulator.Interfaces;
 namespace SpellSimulator.Player
 {
     /// <summary>
-    /// Mirar / agarrar / soltar / usar objetos. Mano derecha = herramientas, izquierda = lienzos.
-    /// En PC el rayo sale de la camara; en VR del controlador derecho.
+    /// Mirar / agarrar / soltar / usar objetos. Cada mano tiene 2 slots (barra de objetos: teclas 1-2 derecha, 3-4 izquierda)
+    /// y uno activo en la mano. E agarra: herramientas, lienzos y estampas van a la mano; las cosas movibles (cajas, pesas)
+    /// se sostienen a distancia (ObjectMover). En PC el rayo sale de la camara; en VR del controlador derecho.
     /// </summary>
     [RequireComponent(typeof(PlayerInputReader))]
     public class PlayerInteractor : MonoBehaviour
@@ -30,8 +31,6 @@ namespace SpellSimulator.Player
 
         [Header("Settings")]
         [SerializeField] private float interactRange = 3f;
-        [SerializeField, Tooltip("[PC] Distancia minima y maxima (m) a la que se sostiene lo agarrado (rueda del mouse).")]
-        private Vector2 holdDistanceRange = new Vector2(0.45f, 1.8f);
         [SerializeField, Tooltip("Velocidad (m/s) con que sale lo que se arroja (Q).")]
         private float throwSpeed = 7f;
         [SerializeField] private LayerMask interactLayer = Physics.DefaultRaycastLayers;
@@ -44,7 +43,13 @@ namespace SpellSimulator.Player
         private IPressable hoveredPressable;
         private IFlippable hoveredFlippable;
         private Rigidbody body;
-        private float holdDistance = 1f;
+        private float hoverDistance;
+        private ObjectMover mover;
+
+        public const int SlotsPerHand = 2;
+        private readonly GameObject[] slotsRight = new GameObject[SlotsPerHand];
+        private readonly GameObject[] slotsLeft = new GameObject[SlotsPerHand];
+        private int activeRight, activeLeft;
 
         /// <summary>Texto de ayuda de lo que se esta mirando ("Agarrar Lapiz", "Pagina siguiente"...). Vacio si nada.</summary>
         public string HoverPrompt { get; private set; } = "";
@@ -67,15 +72,12 @@ namespace SpellSimulator.Player
             inputReader = GetComponent<PlayerInputReader>();
             inkSupply = GetComponent<InkSupply>();
             body = GetComponent<Rigidbody>();
+            mover = GetComponent<ObjectMover>();
         }
 
         private void Start()
         {
-            if (!PlatformDetector.IsVR)
-            {
-                if (leftHoldPoint != null) holdDistance = leftHoldPoint.localPosition.z;
-                return;
-            }
+            if (!PlatformDetector.IsVR) return;
 
             if (vrRightController != null) rightHoldPoint = vrRightController;
             if (vrLeftController != null) leftHoldPoint = vrLeftController;
@@ -101,13 +103,13 @@ namespace SpellSimulator.Player
             // Lo que se tenia en la mano y ya no esta (libro cerrado, objeto destruido) se suelta solo.
             if (heldLeft != null && !heldLeft.activeInHierarchy) Drop(HandType.Left);
             if (heldRight != null && !heldRight.activeInHierarchy) Drop(HandType.Right);
+            HandleHotbar();
             HandleHover();
             HandleInteraction();
             HandlePin();
             HandleClickPress();
             HandleThrow();
             HandleFlip();
-            HandleHoldDistance();
             HandleUsage();
             if (inputReader.IsReloading) Reload();
             if (inputReader.IsTogglingFocus) ToggleFocus();
@@ -129,6 +131,7 @@ namespace SpellSimulator.Player
             if (PickHit(origin.position, direction, out RaycastHit hit))
             {
                 end = hit.point;
+                hoverDistance = hit.distance;
                 hoveredInkSource = hit.collider.GetComponentInParent<IInkSource>();
                 hoveredPressable = hit.collider.GetComponentInParent<IPressable>();
                 hoveredFlippable = hit.collider.GetComponentInParent<IFlippable>();
@@ -189,6 +192,13 @@ namespace SpellSimulator.Player
         private void HandleThrow()
         {
             if (!inputReader.IsThrowing) return;
+            if (mover != null && mover.IsHolding)
+            {
+                Rigidbody thrown = mover.HeldBody;
+                mover.End(false);
+                if (thrown != null) thrown.linearVelocity = cameraTransform.forward * throwSpeed + Vector3.up * 1.2f;
+                return;
+            }
             HandType hand = heldRight != null ? HandType.Right : HandType.Left;
             GameObject obj = hand == HandType.Right ? heldRight : heldLeft;
             if (obj == null) return;
@@ -208,29 +218,11 @@ namespace SpellSimulator.Player
             (target ?? hoveredFlippable)?.Flip();
         }
 
-        /// <summary>[PC] La rueda acerca o aleja lo que se sostiene (no si el grimorio esta abierto: ahi pasa paginas).</summary>
-        private void HandleHoldDistance()
-        {
-            if (PlatformDetector.IsVR || inputReader.Scroll == 0f || (heldLeft == null && heldRight == null)) return;
-            var book = Learning.Grimoire.Instance;
-            if (book != null && book.IsOpen) return;
-            holdDistance = Mathf.Clamp(holdDistance + Mathf.Sign(inputReader.Scroll) * 0.1f, holdDistanceRange.x, holdDistanceRange.y);
-            ApplyHoldDistance(leftHoldPoint);
-            ApplyHoldDistance(rightHoldPoint);
-        }
-
-        private void ApplyHoldDistance(Transform point)
-        {
-            if (point == null) return;
-            var p = point.localPosition;
-            p.z = holdDistance;
-            point.localPosition = p;
-        }
-
-        /// <summary>G: fija lo que se sostiene. Prioridad: mano izquierda (lienzos) y luego derecha.</summary>
+        /// <summary>Clic de la rueda (o T): deja flotando lo que se mueve a distancia, o el lienzo de la mano.</summary>
         private void HandlePin()
         {
             if (!inputReader.IsPinning) return;
+            if (mover != null && mover.IsHolding) { mover.End(true); return; }
             if (!TryPin(HandType.Left)) TryPin(HandType.Right);
         }
 
@@ -247,7 +239,11 @@ namespace SpellSimulator.Player
         {
             if (!inputReader.IsInteracting) return;
 
+            // Otra E suelta lo que se mueve a distancia.
+            if (mover != null && mover.IsHolding) { mover.End(false); return; }
+
             if (hoveredPressable != null) { if (!hoveredPressable.PressWithClick) hoveredPressable.Press(); }
+            else if (currentHovered is World.Movable movable) GrabRemote(movable);
             else if (currentHovered != null) Grab(currentHovered);
             else if (heldRight != null) Drop(HandType.Right);
             else if (heldLeft != null) Drop(HandType.Left);
@@ -283,8 +279,8 @@ namespace SpellSimulator.Player
             // Si se recargo de un tintero, tambien se repone la reserva personal.
             if (inkSupply != null && !ReferenceEquals(source, inkSupply)) amount += inkSupply.Stock(source);
             if (amount > 0f) Haptics.Pulse(HandType.Right, 0.3f, 0.08f);
-            DiagnosticBus.OnDiagnosticsUpdated?.Invoke(
-                $"<b>[Tinta]</b> Lapiz {user.Ink.Fraction:P0}" + (inkSupply != null ? $" | reserva {inkSupply.Reserve.Level:F0}" : ""));
+            Hud.Notify("inkinfo", $"Tinta {user.Ink.Fraction:P0}" + (inkSupply != null ? $" | reserva {inkSupply.Reserve.Level:F0}" : ""), 2.5f);
+            if (user.Ink.Fraction > 0.05f) Hud.Clear("ink");
         }
 
         /// <summary>V: fija el lienzo de la mano delante de la camara para dibujar sin sostener la mira.</summary>
@@ -299,6 +295,85 @@ namespace SpellSimulator.Player
             return held != null && held.TryGetComponent(out IInkSource source) ? source : null;
         }
 
+        /// <summary>E sobre algo movible (caja, pesa): se sostiene a distancia con fisica.</summary>
+        private void GrabRemote(World.Movable movable)
+        {
+            if (mover == null || !movable.CanLift) return;
+            if (movable.TryGetComponent(out Rigidbody rb)) mover.TryBegin(rb, Mathf.Max(hoverDistance, 0.9f));
+        }
+
+        // ---------------------------------------------------------------- slots de las manos
+
+        /// <summary>Objeto guardado en un slot de la mano (null si esta vacio).</summary>
+        public GameObject SlotItem(HandType hand, int index)
+        {
+            var slots = hand == HandType.Left ? slotsLeft : slotsRight;
+            return index >= 0 && index < slots.Length ? slots[index] : null;
+        }
+
+        /// <summary>Slot activo (el que esta en la mano) de cada mano.</summary>
+        public int ActiveSlot(HandType hand) => hand == HandType.Left ? activeLeft : activeRight;
+
+        /// <summary>Lo que se sostiene a distancia (null si nada).</summary>
+        public GameObject RemoteHeld => mover != null && mover.HeldBody != null ? mover.HeldBody.gameObject : null;
+
+        /// <summary>Lo que se esta mirando y se puede agarrar o usar (null si nada).</summary>
+        public GameObject HoveredObject => currentHovered is MonoBehaviour mb ? mb.gameObject : hoveredPressable is MonoBehaviour pb ? pb.gameObject : null;
+
+        /// <summary>Teclas 1-2 = mano derecha, 3-4 = mano izquierda.</summary>
+        private void HandleHotbar()
+        {
+            int key = inputReader.HotbarKey;
+            if (key < 0) return;
+            HandType hand = key < SlotsPerHand ? HandType.Right : HandType.Left;
+            SelectSlot(hand, key % SlotsPerHand);
+        }
+
+        /// <summary>Pasa lo que hay en la mano a su slot (se esconde) y saca lo del slot elegido.</summary>
+        private void SelectSlot(HandType hand, int index)
+        {
+            bool left = hand == HandType.Left;
+            var slots = left ? slotsLeft : slotsRight;
+            int active = left ? activeLeft : activeRight;
+            if (index == active) return;
+
+            if (left ? heldLeft != null : heldRight != null) Stow(hand);
+            if (left) activeLeft = index; else activeRight = index;
+
+            GameObject next = slots[index];
+            if (next == null) return;
+            next.SetActive(true);
+            next.TryGetComponent(out IUsable usable);
+            if (left) { heldLeft = next; leftUsable = usable; }
+            else { heldRight = next; rightUsable = usable; }
+        }
+
+        /// <summary>Esconde lo que hay en la mano (sigue siendo del jugador, en su slot).</summary>
+        private void Stow(HandType hand)
+        {
+            GameObject obj = hand == HandType.Left ? heldLeft : heldRight;
+            IUsable usable = hand == HandType.Left ? leftUsable : rightUsable;
+            if (usable != null && usable == ActiveUsable && wasUsingTool) usable.OnUseEnd();
+            if (obj != null && obj.TryGetComponent(out IFocusable focusable) && focusable.Focused) focusable.SetFocus(cameraTransform, false);
+            if (obj != null) obj.SetActive(false);
+            if (hand == HandType.Left) { heldLeft = null; leftUsable = null; }
+            else { heldRight = null; rightUsable = null; }
+            wasUsingTool = false;
+        }
+
+        /// <summary>Agarra un objeto como si se apuntara y apretara E (la usan el harness y los tests de Play).</summary>
+        public void GrabItem(GameObject item)
+        {
+            if (item != null && item.TryGetComponent(out IInteractable interactable)) Grab(interactable);
+        }
+
+        /// <summary>Elige un slot como si se apretara su tecla (0-1 mano derecha, 2-3 izquierda).</summary>
+        public void SelectHotbar(int key)
+        {
+            HandType hand = key < SlotsPerHand ? HandType.Right : HandType.Left;
+            SelectSlot(hand, key % SlotsPerHand);
+        }
+
         private void Grab(IInteractable interactable)
         {
             if (!(interactable is MonoBehaviour mb)) return;
@@ -306,22 +381,28 @@ namespace SpellSimulator.Player
             // "Both" va a la izquierda solo si la derecha esta ocupada y la izquierda libre; si ambas estan ocupadas, la derecha.
             bool left = interactable.PreferredHand == HandType.Left ||
                         (interactable.PreferredHand == HandType.Both && heldRight != null && heldLeft == null);
+            HandType hand = left ? HandType.Left : HandType.Right;
+            var slots = left ? slotsLeft : slotsRight;
+            int active = left ? activeLeft : activeRight;
 
-            // Intercambio: si la mano destino esta ocupada, lo que tiene se suelta primero.
-            if (left ? heldLeft != null : heldRight != null) Drop(left ? HandType.Left : HandType.Right);
+            // Si la mano esta ocupada: lo que tiene va al otro slot si esta libre; si no, se suelta (intercambio).
+            if (slots[active] != null)
+            {
+                int other = (active + 1) % SlotsPerHand;
+                if (slots[other] == null)
+                {
+                    GameObject stowed = slots[active];
+                    Stow(hand);
+                    slots[other] = stowed;
+                    slots[active] = null;
+                }
+                else Drop(hand);
+            }
 
             mb.TryGetComponent(out IUsable usable);
-
-            if (left)
-            {
-                heldLeft = mb.gameObject;
-                leftUsable = usable;
-            }
-            else
-            {
-                heldRight = mb.gameObject;
-                rightUsable = usable;
-            }
+            slots[active] = mb.gameObject;
+            if (left) { heldLeft = mb.gameObject; leftUsable = usable; }
+            else { heldRight = mb.gameObject; rightUsable = usable; }
 
             interactable.OnInteract(left ? leftHoldPoint : rightHoldPoint);
             currentHovered = null;
@@ -337,11 +418,13 @@ namespace SpellSimulator.Player
 
             if (hand == HandType.Left)
             {
+                slotsLeft[activeLeft] = null;
                 heldLeft = null;
                 leftUsable = null;
             }
             else
             {
+                slotsRight[activeRight] = null;
                 heldRight = null;
                 rightUsable = null;
             }

@@ -8,155 +8,154 @@ using SpellSimulator.Learning;
 namespace SpellSimulator.Player
 {
     /// <summary>
-    /// Texto bajo la mira: que se puede hacer con lo que se mira ("Leer ...", "Pagina siguiente", "Agarrar Lapiz") y
-    /// avisos breves ("Descubriste: Agua") y mensajes del juego (estampa, sello roto, tinta...) que llegan por
-    /// DiagnosticBus. Los avisos se apilan arriba del prompt (hasta 3, cada uno dura unos segundos y se desvanece).
-    /// Se crea solo dentro del Canvas de la HUD.
+    /// Avisos del juego arriba a la derecha (cambio de grosor, falta de tinta, sello roto, "Descubriste: ...") y creacion de la
+    /// HUD de abajo (<see cref="PlayerHud"/>). Los temporales se apagan solos (se desvanecen el ultimo medio segundo) y los
+    /// permanentes (por ejemplo "sin tinta") quedan hasta que se resuelven. Los textos solo se reasignan al cambiar la lista
+    /// (sin allocations por frame). Los mensajes de DiagnosticBus que no son del hechizo pasan a ser avisos; el informe del
+    /// hechizo va al panel de depuracion (F3).
     /// </summary>
     public class InteractionPromptUI : MonoBehaviour
     {
         [SerializeField] private PlayerInteractor interactor;
         [SerializeField] private RectTransform hud;
-        [SerializeField] private float toastSeconds = 3.5f;
 
-        private const int ToastSlots = 3;
-        private const float ToastFadeSeconds = 0.5f;
-        private const float ToastBaseY = -4f;
-        private const float ToastStepY = 36f;
-        private const int ToastMaxRawLength = 200;
+        private const int Slots = 6;
+        private const float FadeSeconds = 0.5f;
+        private const float PruneInterval = 0.25f;
+        private const int MaxRawLength = 200;
         private const string HechizoTag = "<b>[Hechizo]";
         private const string DiscoveredPrefix = "Descubriste";
-        private static readonly Color ToastColor = new Color(1f, 0.9f, 0.55f);
+        private static readonly Color TemporaryColor = new Color(1f, 0.93f, 0.6f);
+        private static readonly Color PermanentColor = new Color(1f, 0.6f, 0.25f);
         private static readonly Regex RichTextTag = new Regex("<[^>]+>", RegexOptions.Compiled);
 
-        private TextMeshProUGUI prompt;
-        // Pool preasignado. Indice 0 = aviso mas nuevo (el mas cercano al prompt); los anteriores suben.
-        private TextMeshProUGUI[] toastViews;
-        private readonly float[] toastUntil = new float[ToastSlots];
-        private string lastPrompt;
+        private TextMeshProUGUI[] views;
+        private readonly float[] until = new float[Slots];
+        private readonly Color[] baseColor = new Color[Slots];
+        private bool dirty = true;
+        private float pruneTimer;
+        private string lastDiscovered;
+        private float lastDiscoveredAt;
 
         private void Awake()
         {
             if (hud == null) return;
-            prompt = Make("Prompt", new Vector2(0f, -40f), 22f, new Color(1f, 1f, 1f, 0.9f));
-            toastViews = new TextMeshProUGUI[ToastSlots];
-            for (int i = 0; i < ToastSlots; i++)
-            {
-                toastViews[i] = Make("Toast" + i, new Vector2(0f, ToastBaseY + i * ToastStepY), 24f, ToastColor);
-                toastViews[i].text = "";
-                toastViews[i].enabled = false;
-            }
+            views = new TextMeshProUGUI[Slots];
+            for (int i = 0; i < Slots; i++) views[i] = MakeNotice(i);
+            var bar = gameObject.GetComponent<PlayerHud>() ?? gameObject.AddComponent<PlayerHud>();
+            bar.Init(interactor, hud);
+        }
+
+        private TextMeshProUGUI MakeNotice(int index)
+        {
+            var go = new GameObject("Aviso" + index, typeof(RectTransform));
+            go.transform.SetParent(hud, false);
+            var rt = (RectTransform)go.transform;
+            rt.anchorMin = rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.anchoredPosition = new Vector2(-24f, -24f - index * 30f);
+            rt.sizeDelta = new Vector2(620f, 28f);
+            var t = go.AddComponent<TextMeshProUGUI>();
+            t.alignment = TextAlignmentOptions.TopRight;
+            t.fontSize = 20f;
+            t.textWrappingMode = TextWrappingModes.NoWrap;
+            t.overflowMode = TextOverflowModes.Ellipsis;
+            t.outlineWidth = 0.25f;
+            t.outlineColor = new Color32(0, 0, 0, 200);
+            t.raycastTarget = false;
+            t.text = "";
+            t.enabled = false;
+            return t;
         }
 
         private void OnEnable()
         {
             Discovery.Discovered += OnDiscovered;
             DiagnosticBus.OnDiagnosticsUpdated += HandleDiagnostics;
+            Hud.Changed += MarkDirty;
         }
 
         private void OnDisable()
         {
             Discovery.Discovered -= OnDiscovered;
             DiagnosticBus.OnDiagnosticsUpdated -= HandleDiagnostics;
+            Hud.Changed -= MarkDirty;
         }
 
-        private TextMeshProUGUI Make(string name, Vector2 offset, float size, Color color)
-        {
-            var go = new GameObject(name, typeof(RectTransform));
-            go.transform.SetParent(hud, false);
-            var rt = (RectTransform)go.transform;
-            rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f);
-            rt.anchoredPosition = offset;
-            rt.sizeDelta = new Vector2(900f, 80f);
-            var t = go.AddComponent<TextMeshProUGUI>();
-            t.alignment = TextAlignmentOptions.Center;
-            t.fontSize = size;
-            t.color = color;
-            t.outlineWidth = 0.25f;
-            t.outlineColor = new Color32(0, 0, 0, 200);
-            t.raycastTarget = false;
-            return t;
-        }
+        private void MarkDirty() => dirty = true;
 
         private void Update()
         {
-            if (prompt != null)
+            if (views == null) return;
+            pruneTimer += Time.unscaledDeltaTime;
+            if (pruneTimer >= PruneInterval)
             {
-                string current = interactor != null ? interactor.HoverPrompt : "";
-                // Solo se reasigna el texto cuando cambia (sin GC por frame).
-                if (!ReferenceEquals(current, lastPrompt))
-                {
-                    lastPrompt = current;
-                    prompt.text = string.IsNullOrEmpty(current) ? "" : (interactor.HoverUsesClick ? $"[Clic] {current}" : $"[E] {current}");
-                }
+                pruneTimer = 0f;
+                Hud.Prune();
             }
-            if (toastViews != null) UpdateToasts();
+            if (dirty) Rebuild();
+            Fade();
         }
 
-        /// <summary>Oculta los avisos vencidos y aplica el desvanecido de los ultimos segundos. Sin allocations.</summary>
-        private void UpdateToasts()
+        /// <summary>Reasigna los textos desde la lista de avisos (solo cuando cambia). El mas nuevo va arriba.</summary>
+        private void Rebuild()
         {
-            float now = Time.time;
-            for (int i = 0; i < ToastSlots; i++)
+            dirty = false;
+            var notices = Hud.Notices;
+            int shown = Mathf.Min(notices.Count, Slots);
+            for (int i = 0; i < Slots; i++)
             {
-                TextMeshProUGUI view = toastViews[i];
-                float left = toastUntil[i] - now;
-                if (left <= 0f)
+                TextMeshProUGUI view = views[i];
+                if (i >= shown)
                 {
                     if (view.enabled) view.enabled = false;
+                    until[i] = -1f;
                     continue;
                 }
-                if (!view.enabled) view.enabled = true;
-                float alpha = left < ToastFadeSeconds ? left / ToastFadeSeconds : 1f;
-                view.color = new Color(ToastColor.r, ToastColor.g, ToastColor.b, alpha);
+                Hud.Notice notice = notices[notices.Count - 1 - i];
+                bool permanent = notice.Until <= 0f;
+                view.text = permanent ? "• " + notice.Text : notice.Text;
+                baseColor[i] = permanent ? PermanentColor : TemporaryColor;
+                until[i] = permanent ? float.MaxValue : notice.Until;
+                view.color = baseColor[i];
+                view.enabled = true;
             }
         }
 
-        /// <summary>Muestra un aviso arriba del prompt. Si es igual al mas nuevo y sigue visible, solo renueva su tiempo.</summary>
-        private void ShowToast(string message)
+        /// <summary>Desvanece los temporales en el ultimo medio segundo. Sin tocar textos ni allocations.</summary>
+        private void Fade()
         {
-            float now = Time.time;
-            if (toastUntil[0] > now && toastViews[0].text == message)
+            float now = Time.unscaledTime;
+            for (int i = 0; i < Slots; i++)
             {
-                toastUntil[0] = now + toastSeconds;
-                return;
+                if (!views[i].enabled || until[i] == float.MaxValue) continue;
+                float left = until[i] - now;
+                if (left > FadeSeconds) continue;
+                Color c = baseColor[i];
+                c.a = Mathf.Clamp01(left / FadeSeconds);
+                views[i].color = c;
             }
-            // Los avisos suben una posicion; el mas viejo del tope se descarta.
-            for (int i = ToastSlots - 1; i > 0; i--)
-            {
-                toastViews[i].text = toastViews[i - 1].text;
-                toastUntil[i] = toastUntil[i - 1];
-            }
-            toastViews[0].text = message;
-            toastUntil[0] = now + toastSeconds;
         }
 
         private void HandleDiagnostics(string log)
         {
-            if (toastViews == null || string.IsNullOrEmpty(log)) return;
-            // Los logs del hechizo son para el panel de depuracion, no para el jugador.
-            if (log.StartsWith(HechizoTag, StringComparison.Ordinal) || log.Length >= ToastMaxRawLength) return;
+            if (views == null || string.IsNullOrEmpty(log)) return;
+            // El informe del hechizo es para el panel de depuracion, no para el jugador.
+            if (log.StartsWith(HechizoTag, StringComparison.Ordinal) || log.Length >= MaxRawLength) return;
             string clean = RichTextTag.Replace(log, "").Trim().Replace("\r", "").Replace("\n", " - ");
             if (clean.Length == 0) return;
-            ShowToast(clean);
+            Hud.Notify("diag:" + clean, clean, 3.5f);
         }
 
         private void OnDiscovered(string glyph, string source)
         {
-            if (toastViews == null || glyph == null || Discovery.Instance == null) return;
+            if (views == null || glyph == null || Discovery.Instance == null) return;
             string name = Discovery.Instance.Lore.Name(glyph);
             // Varios descubrimientos juntos (un libro) se suman en el mismo aviso.
-            bool recent = toastViews[0].text.StartsWith(DiscoveredPrefix, StringComparison.Ordinal)
-                          && Time.time < toastUntil[0] - toastSeconds + 1f;
-            if (recent)
-            {
-                toastViews[0].text = $"{toastViews[0].text}, {name}";
-                toastUntil[0] = Time.time + toastSeconds;
-            }
-            else
-            {
-                ShowToast($"{DiscoveredPrefix}: {name}");
-            }
+            bool recent = lastDiscovered != null && Time.unscaledTime - lastDiscoveredAt < 1f;
+            lastDiscovered = recent ? lastDiscovered + ", " + name : DiscoveredPrefix + ": " + name;
+            lastDiscoveredAt = Time.unscaledTime;
+            Hud.Notify("disc", lastDiscovered, 4f);
         }
     }
 }

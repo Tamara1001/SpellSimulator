@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — Cuarta prueba manual: HUD tipo Minecraft, tinta lisa, agarre unificado (SIN VERIFICAR EN PLAY)
+- Tinta lisa: shader `InkBrush` (Min/Max) sin circulos apilados (verificado con captura); lienzos a 1024 px/m (tope 2048); 6 grosores en teclas 5-0 (1,6 mm a 8,8 cm).
+- HUD (`PlayerHud`, `Hud`, `IHudInfo`, `IWidthSelectable`): barra de 4 slots (1-2 mano derecha, 3-4 izquierda), barra de contexto con teclas
+  de uso, fila de grosores y barra de tinta; avisos arriba a la derecha (permanentes para "sin tinta"). Compila; no se vio en Play.
+- Interactor con slots por mano, E sostiene a distancia lo movible (ObjectMover.TryBegin/End), clic de la rueda deja flotando, se quito la
+  rueda de distancia de las herramientas, estampas se ven chicas en la mano, agacharse mas bajo.
+- Pendiente: probar todo en Play, tests 131 (pasaban antes de los ultimos cambios), build, docs de controles (GAME_DESIGN aun dice G/1-4 grosor).
+
 ## 2026-10-07 — Tercera prueba manual: mover objetos, controles, fuego contenido y más
 - **Mover objetos (G)** estilo Garry's Mod (`ObjectMover`, `IRemoteGrabbable`): rueda, clic derecho + mouse para rotar, Shift + rueda, T para
   dejarlo flotando. Las manos de PC cuelgan de la cámara y las herramientas se sostienen inclinadas (pluma/pincel/goma/trapo/estampa).

@@ -143,8 +143,9 @@ namespace SpellSimulator.Canvas
             // Resolucion proporcional a la escala fisica para no pixelar lienzos estirados.
             float scaleX = Mathf.Max(0.01f, transform.localScale.x);
             float scaleY = Mathf.Max(0.01f, transform.localScale.y);
-            int width = resolutionIsAbsolute ? resolution : Mathf.Max(16, Mathf.RoundToInt(resolution * scaleX));
-            int height = resolutionIsAbsolute ? resolution : Mathf.Max(16, Mathf.RoundToInt(resolution * scaleY));
+            // Tope de 2048 para que un lienzo gigante no pida una textura enorme.
+            int width = resolutionIsAbsolute ? resolution : Mathf.Clamp(Mathf.RoundToInt(resolution * scaleX), 16, 2048);
+            int height = resolutionIsAbsolute ? resolution : Mathf.Clamp(Mathf.RoundToInt(resolution * scaleY), 16, 2048);
 
             renderTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32) { filterMode = FilterMode.Bilinear };
             renderTexture.Create();

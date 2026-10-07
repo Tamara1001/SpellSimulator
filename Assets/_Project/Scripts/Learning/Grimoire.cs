@@ -309,11 +309,12 @@ namespace SpellSimulator.Learning
 
                 case GrimoireScreen.Controls:
                     leftCaption.text = "<size=130%>Controles</size>" + NL + NL + "<size=70%>PC / VR</size>";
-                    rightText.text = "<size=58%><b>Moverse</b>: WASD, Shift correr, C o Ctrl agacharse, Z tumbarse, Espacio saltar, X zoom (mantener)" + NL +
-                        "<b>Manos</b>: E agarrar o soltar (herramientas, lienzos, estampas), Q arrojar, T dejar flotando, F dar vuelta la hoja, V lienzo a pantalla (dibujar con el mouse)" + NL +
-                        "<b>Mover objetos</b>: mantene G sobre algo; rueda acerca o aleja, clic der. + mouse lo gira, Shift + rueda lo inclina; T mientras tanto lo deja flotando" + NL +
-                        "<b>Dibujar</b>: clic izq. dibuja, clic der. deshace, 1 a 4 grosor de la pluma, R recarga tinta" + NL +
-                        "<b>Menu</b>: Tab grimorio, B grimorio a pantalla, F3 panel de depuracion, Retroceso reiniciar el mundo" + NL +
+                    rightText.text = "<size=56%><b>Moverse</b>: WASD, Shift correr, C o Ctrl agacharse, Z tumbarse, Espacio saltar, X zoom (mantener)" + NL +
+                        "<b>Objetos</b>: 1-2 slots de la mano derecha, 3-4 de la izquierda (la barra de abajo)" + NL +
+                        "<b>Agarrar</b>: E herramientas, lienzos y estampas a la mano; E sobre cajas y pesas las sostiene a distancia (rueda: acercar o alejar, clic der. + mouse: girar, Shift + rueda: inclinar, clic de la rueda: dejar flotando, E: soltar)" + NL +
+                        "<b>Mano</b>: Q arrojar, T dejar el lienzo flotando, F dar vuelta la hoja, V lienzo a pantalla" + NL +
+                        "<b>Dibujar</b>: clic izq. dibuja, clic der. deshace, 5 a 0 grosor de la pluma, R recarga tinta" + NL +
+                        "<b>Menu</b>: Tab grimorio, B grimorio a pantalla, F3 depuracion, Retroceso reiniciar el mundo" + NL +
                         "<b>VR</b>: gatillo dibuja, agarre agarra, A deshace, B arroja, click del stick izq. corre, click del stick der. da vuelta la hoja, Y reinicia</size>";
                     break;
 
