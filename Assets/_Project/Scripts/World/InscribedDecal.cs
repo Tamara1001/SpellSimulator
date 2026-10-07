@@ -27,6 +27,9 @@ namespace SpellSimulator.World
         private Quaternion lastTargetRotation;
 
         public DrawingCanvas Canvas => canvas;
+        /// <summary>La superficie que creo esta calcomania (para poner otra mas chica encima).</summary>
+        public Inscribable Owner { get; private set; }
+        public void SetOwner(Inscribable owner) => Owner = owner;
 
         public void Init(DrawingCanvas decalCanvas, SpellCaster spellCaster, Transform surface, float size)
         {

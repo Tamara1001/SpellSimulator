@@ -148,14 +148,15 @@ rocas que emergen, pasos según el piso (pasto, madera, piedra). Créditos: soni
 | Dejar el lienzo flotando / tumbarse | G / Z | — |
 | Dar vuelta la hoja | F | Girar la mano / click del stick derecho |
 | Fijar el lienzo a la cámara (dibujar de escritorio, mouse libre) | V | — |
-| Pasar página del grimorio | Flechas, rueda o mirar + E | Apuntar + grip |
+| Botones del grimorio (menú, índice, cargar estampa) | Apuntar + clic izquierdo | Apuntar + gatillo |
+| Pasar de glifo en el grimorio | Flechas o rueda | — |
 | Usar herramienta (dibujar, estampar, borrar) | Click izquierdo | Gatillo |
 | Secundario (deshacer, cargar estampa) | Click derecho | A |
 | Recargar tinta | R | Mojar la punta en un tintero |
 | Abrir/cerrar el grimorio | Tab (gamepad: Y) | Botón de menú del control izquierdo |
 | Pasar página, leer un libro, apretar un botón | Mirar + E | Apuntar + grip |
-| Cargar una estampa (grimorio abierto en un glifo) | Estampa en mano + mirar el libro + clic derecho | Apuntar al libro + A |
-| Estampar | Clic izquierdo sobre un papel | Gatillo |
+| Cargar una estampa | Estampa en mano (E) + abrir un glifo en el grimorio + clic en "Cargar en la estampa" | igual con el gatillo |
+| Estampar | Clic izquierdo sobre un papel o el piso | Gatillo |
 | Liberar cursor | Escape | — |
 | Reiniciar el mundo (Libre) | Backspace (gamepad: Select) | Y (control izquierdo) |
 

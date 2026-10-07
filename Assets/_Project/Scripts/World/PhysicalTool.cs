@@ -307,6 +307,9 @@ namespace SpellSimulator.World
             // Sin lienzo a la vista: si se mira una superficie del entorno (piso, caja, pared), al empezar un trazo la
             // lapicera deja ahi una calcomania de tinta.
             if (!allowInscribe) return false;
+            // Un boton (del grimorio) delante no deja dibujar en lo que tiene detras.
+            if (Physics.Raycast(ray, out RaycastHit front, distance, ~0, QueryTriggerInteraction.Collide) &&
+                front.collider.GetComponentInParent<IPressable>() != null) return false;
             if (!Physics.Raycast(ray, out hit, distance, ~0, QueryTriggerInteraction.Ignore)) return false;
             var surface = hit.collider.GetComponentInParent<Inscribable>();
             if (surface == null) return false;

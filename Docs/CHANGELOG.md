@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — Grimorio con clic y estampas arregladas
+- Los botones del grimorio se aprietan con **clic izquierdo** (`IPressable.PressWithClick`, `PlayerInteractor.HandleClickPress`); el aviso dice "[Clic]".
+- Estampas: botón **"Cargar en la estampa"** en el detalle de cada glifo (`Stamp.Held`/`Stamp.Load`); estampan también sobre el piso y
+  objetos (`AimAtCanvas`), con una calcomanía a su medida (`Inscribable.CreateDecal(.., sizeOverride)`); causa del fallo en el piso: el
+  anillo de 10 cm quedaba bajo el radio mínimo relativo (6 %) de una calcomanía de 3,4 m. Calcomanías grandes bajan a 2,4/2/1,8 m.
+- Un botón delante ya no permite dibujar o estampar en lo que tiene detrás. KI-074, KI-075.
+
 ## 2026-10-07 — M6: sellos partidos (SplitJoin)
 - `SplitJoinMath` (puro): `Merge` fusiona dos sesiones UV por el ancho de cada mitad; `IsRightNeighbour` decide si B está pegada a la
   derecha de A (tolerancia 8 cm, misma cara). `SplitSealHalf`: al estar pegadas 0,4 s crea un lienzo temporal del tamaño de las dos,

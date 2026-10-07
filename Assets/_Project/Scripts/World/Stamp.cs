@@ -40,6 +40,9 @@ namespace SpellSimulator.World
         [SerializeField, Tooltip("Etiqueta con el glifo cargado y las cargas.")]
         private TextMeshPro label;
 
+        /// <summary>La estampa que se lleva en la mano (la usa el boton del grimorio para cargarla).</summary>
+        public static Stamp Held { get; private set; }
+
         private Rigidbody rb;
         private Collider col;
         private Camera cam;
@@ -75,6 +78,7 @@ namespace SpellSimulator.World
 
         public void OnInteract(Transform holdPoint)
         {
+            Held = this;
             rb.isKinematic = true;
             col.enabled = false;
             transform.SetParent(holdPoint);
@@ -84,6 +88,7 @@ namespace SpellSimulator.World
 
         public void OnDrop()
         {
+            if (Held == this) Held = null;
             transform.SetParent(null);
             rb.isKinematic = false;
             col.enabled = true;
@@ -93,8 +98,7 @@ namespace SpellSimulator.World
 
         public void OnUseStart()
         {
-            if (!Aim(out RaycastHit hit)) return;
-            if (!hit.collider.TryGetComponent(out DrawingCanvas canvas)) return;
+            if (!AimAtCanvas(out RaycastHit hit, out DrawingCanvas canvas)) return;
             if (string.IsNullOrEmpty(glyph) || charges <= 0)
             {
                 Say("La estampa esta vacia. Abri el grimorio en un glifo y cargala (clic derecho / A apuntando al libro).");
@@ -144,10 +148,16 @@ namespace SpellSimulator.World
         public void OnSecondaryUseStart()
         {
             var book = Grimoire.Instance;
-            if (book == null || !book.IsOpen) { Say("Abri el grimorio (Tab) en la pagina de un glifo para cargar la estampa."); return; }
+            if (book == null || !book.IsOpen) { Say("Abri el grimorio (Tab) en un glifo y apreta el boton Cargar en la estampa."); return; }
             if (!Aim(out RaycastHit hit, ~0) || !book.Owns(hit.collider)) { Say("Apunta al grimorio para cargar la estampa."); return; }
             string g = book.CurrentGlyph;
-            if (g == null) { Say("Esa pagina no tiene un glifo."); return; }
+            if (g == null) { Say("Abri un glifo en el grimorio y apreta el boton Cargar en la estampa."); return; }
+            Load(g);
+        }
+
+        /// <summary>Carga el glifo (5 usos). Lo llama el boton del grimorio o el clic derecho apuntando al libro.</summary>
+        public void Load(string g)
+        {
             glyph = g;
             charges = chargesPerLoad;
             RefreshLabel();
@@ -157,7 +167,31 @@ namespace SpellSimulator.World
 
         private bool Aim(out RaycastHit hit) => Aim(out hit, canvasLayer);
 
-        private bool Aim(out RaycastHit hit, LayerMask mask)
+        /// <summary>Lienzo bajo la mira; si no hay, una superficie del entorno (piso, caja, pared) donde crear una calcomania.</summary>
+        private bool AimAtCanvas(out RaycastHit hit, out DrawingCanvas canvas)
+        {
+            canvas = null;
+            if (Aim(out hit) && hit.collider.TryGetComponent(out canvas))
+            {
+                // Sobre una calcomania enorme del piso la estampa no se leeria: se pone otra a su medida encima.
+                var big = canvas.GetComponent<InscribedDecal>();
+                if (big == null || big.Owner == null || canvas.WorldSize.x <= diameter * 5f) return true;
+                var small = big.Owner.CreateDecal(hit, cam != null ? cam.transform.forward : -hit.normal, Mathf.Max(0.6f, diameter * 3f));
+                if (small == null) return true;
+                canvas = small;
+                return true;
+            }
+            // Un boton (del grimorio) delante no deja estampar en lo que tiene detras.
+            if (Aim(out RaycastHit front, ~0) && front.collider.GetComponentInParent<IPressable>() != null) return false;
+            if (!Aim(out hit, ~0, QueryTriggerInteraction.Ignore)) return false;
+            var surface = hit.collider.GetComponentInParent<Inscribable>();
+            if (surface == null) return false;
+            Vector3 view = cam != null ? cam.transform.forward : -hit.normal;
+            canvas = surface.CreateDecal(hit, view, Mathf.Max(0.6f, diameter * 3f));
+            return canvas != null;
+        }
+
+        private bool Aim(out RaycastHit hit, LayerMask mask, QueryTriggerInteraction triggers = QueryTriggerInteraction.Collide)
         {
             Ray ray;
             float reach;
@@ -173,7 +207,7 @@ namespace SpellSimulator.World
                 ray = FocusMode.GetRay(cam);
                 reach = pcReach;
             }
-            return Physics.Raycast(ray, out hit, reach, mask, QueryTriggerInteraction.Collide);
+            return Physics.Raycast(ray, out hit, reach, mask, triggers);
         }
 
         private void RefreshLabel()

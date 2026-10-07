@@ -16,6 +16,8 @@ namespace SpellSimulator.Learning
             action = onPress;
         }
 
+        public bool PressWithClick => true;
+
         public string GetPressPrompt() => prompt ?? "";
 
         public void Press() => action?.Invoke();

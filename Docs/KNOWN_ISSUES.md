@@ -119,6 +119,8 @@ Tamara; con muchas cosas ardiendo suenan muchos loops de fuego a la vez (poner u
 | KI-047 🟢 | **Nuevo (M4):** el estanque se armó a y=0 y el piso real está a 0.5 (cubo) | Estanque subido. Ojo al ubicar props: la cara de arriba del `Floor` es y=0.5. |
 | KI-056 🟠 | **Prueba manual:** no se podía entrar a la torre sin saltar (el zócalo subía 60 cm en la puerta) | Zócalo cortado en la puerta y bajado a 25 cm; umbral de 5 cm. |
 | KI-057 🟠 | **Prueba manual:** el jugador se trababa con muebles y bordes (cápsula de 1 m de ancho, esfera extra, fricción) | Cápsula de radio 0.3, sin la esfera, material sin fricción, subida automática de escalones (≤ 35 cm) y gravedad contra el piso cuando está quieto (no resbala en rampas). Silla y atril fuera del paso puerta → rampa. |
+| KI-075 🟢 | **Prueba manual:** los botones del grimorio se apretaban con E | Ahora con clic (`IPressable.PressWithClick`); la ayuda dice "[Clic]". |
+| KI-074 🟢 | **Prueba manual:** las estampas no funcionaban (cargarlas era confuso y, sobre el piso, el sello no se leia) | Boton "Cargar en la estampa" en cada glifo; la estampa crea su propia calcomania chica (el anillo tiene un radio minimo relativo al lienzo); estampar sobre el entorno; un boton delante ya no deja dibujar detras. |
 | KI-072 🟡 | Los pinos arden pero quedan en pie carbonizados; el pasto quemado se dibuja con discos oscuros (no desaparecen las briznas) | Mejorable con una malla de pasto por parcelas que se pueda ocultar. |
 | KI-071 🟢 | **Prueba manual:** sellos grandes en el piso se cortaban y no se detectaban | Las calcomanias medían 1,2 m; ahora 3,4 m (piso), 2,6 m (torre) y 2 m (plataforma). |
 | KI-070 🟢 | **Prueba manual:** la tinta del piso se veia azul | La calcomania usa la tinta oscura del papel. |

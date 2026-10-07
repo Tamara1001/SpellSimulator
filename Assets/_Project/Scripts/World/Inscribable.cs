@@ -37,8 +37,11 @@ namespace SpellSimulator.World
         }
 
         /// <summary>Crea la calcomania en el punto golpeado. viewDirection = hacia donde mira quien dibuja.</summary>
-        public DrawingCanvas CreateDecal(RaycastHit hit, Vector3 viewDirection)
+        public DrawingCanvas CreateDecal(RaycastHit hit, Vector3 viewDirection, float sizeOverride = 0f)
         {
+            // Un sello chico en una calcomania enorme no se lee (el anillo tiene un radio minimo relativo al lienzo):
+            // las estampas piden una calcomania a su medida.
+            float size = sizeOverride > 0f ? sizeOverride : decalSize;
             if (decalMaterial == null || brushMaterial == null) return null;
 
             Vector3 normal = hit.normal;
@@ -50,7 +53,7 @@ namespace SpellSimulator.World
             var go = new GameObject("InkDecal") { layer = LayerMask.NameToLayer("Canvas") };
             go.SetActive(false); // los componentes se despiertan al activarlo, con todo ya configurado
             go.transform.SetPositionAndRotation(hit.point + normal * 0.006f, rotation);
-            go.transform.localScale = new Vector3(decalSize, decalSize, 0.02f);
+            go.transform.localScale = new Vector3(size, size, 0.02f);
 
             go.AddComponent<MeshFilter>().sharedMesh = Quad();
             var renderer = go.AddComponent<MeshRenderer>();
@@ -60,9 +63,10 @@ namespace SpellSimulator.World
             go.AddComponent<BoxCollider>().size = Vector3.one;
 
             var canvas = go.AddComponent<DrawingCanvas>();
-            canvas.Prepare(Mathf.Clamp(Mathf.RoundToInt(pixelsPerMeter * decalSize), 128, 1024), brushMaterial, new Color(0f, 0f, 0f, 0f), 0.02f, EmissionSide.InkSide);
+            canvas.Prepare(Mathf.Clamp(Mathf.RoundToInt(Mathf.Max(pixelsPerMeter * size, 384f)), 128, 1024), brushMaterial, new Color(0f, 0f, 0f, 0f), 0.02f, EmissionSide.InkSide);
             var decal = go.AddComponent<InscribedDecal>();
-            decal.Init(canvas, caster, hit.collider.transform, decalSize);
+            decal.Init(canvas, caster, hit.collider.transform, size);
+            decal.SetOwner(this);
             go.SetActive(true);
 
             Register(decal);

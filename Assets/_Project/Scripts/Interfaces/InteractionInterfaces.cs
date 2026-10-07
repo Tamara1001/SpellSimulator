@@ -74,6 +74,8 @@ namespace SpellSimulator.Interfaces
     {
         string GetPressPrompt();
         void Press();
+        /// <summary>True para botones de menu (grimorio): se aprietan con clic, no con E.</summary>
+        bool PressWithClick => false;
     }
 }
 

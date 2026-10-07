@@ -56,7 +56,7 @@ namespace SpellSimulator.Player
             if (!ReferenceEquals(current, lastPrompt))
             {
                 lastPrompt = current;
-                prompt.text = string.IsNullOrEmpty(current) ? "" : $"[E] {current}";
+                prompt.text = string.IsNullOrEmpty(current) ? "" : (interactor.HoverUsesClick ? $"[Clic] {current}" : $"[E] {current}");
             }
             if (toast.text.Length > 0 && Time.time > toastUntil) toast.text = "";
         }

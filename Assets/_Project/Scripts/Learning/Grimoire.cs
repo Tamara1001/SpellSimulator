@@ -17,7 +17,7 @@ namespace SpellSimulator.Learning
     /// <summary>
     /// Libro-menu diegetico (SYSTEMS_DESIGN 9). Tab / Y / menu izquierdo lo abre flotando frente al jugador.
     /// Es un hub: la portada tiene botones a Glifos (indice), Controles, Sellos y Opciones; cada pantalla tiene un
-    /// boton "Menu" para volver. Las pantallas se navegan apuntando y apretando E / clic (o con el mouse en modo fijo).
+    /// boton "Menu" para volver. Las pantallas se navegan apuntando y haciendo clic (o con el mouse en modo fijo).
     /// No se cierra al alejarse. Con V (con el libro abierto) se fija delante de la camara para usarlo a pantalla completa.
     /// </summary>
     public class Grimoire : MonoBehaviour
@@ -320,7 +320,7 @@ namespace SpellSimulator.Learning
                     leftCaption.text = "<size=130%>Sellos</size>";
                     rightText.text = "<size=62%>Dibuja un sigilo, signos alrededor y cierra el anillo: el hechizo sale por la cara CON TINTA. Da vuelta la hoja (F) para apuntar." + NL + NL +
                         "Se puede dibujar sobre el piso, la torre y las cajas: el sello se pega ahi y sale hacia afuera de la superficie. Un crater, fuego o agua encima lo rompen." + NL + NL +
-                        "Estampas (mesa del campo y escritorio): con el grimorio abierto en un glifo, apunta al libro con la estampa en mano y clic derecho. Clic izq. sobre un papel estampa el glifo (5 usos)." + NL + NL +
+                        "Estampas (mesa del campo y escritorio): agarra una estampa (E), abri un glifo en el grimorio y hace clic en Cargar en la estampa. Despues clic izq. sobre un papel o el piso estampa el glifo (5 usos)." + NL + NL +
                         "Piedras de impacto y placa de presion: dibuja el sello cerrado y quedan armados; se lanzan al golpe o con peso encima.</size>";
                     break;
 
@@ -389,6 +389,12 @@ namespace SpellSimulator.Learning
             // Anterior / siguiente entre los glifos descubiertos, en el orden del indice.
             if (i > 0) Place("<- Anterior", 0.065f, -0.135f, 0.1f, 0.035f, 0.065f, () => Go(GrimoireScreen.GlyphDetail, glyphs[i - 1]));
             if (i >= 0 && i < glyphs.Count - 1) Place("Siguiente ->", 0.175f, -0.135f, 0.1f, 0.035f, 0.065f, () => Go(GrimoireScreen.GlyphDetail, glyphs[i + 1]));
+            // Cargar el glifo que se ve en la estampa que se lleva en la mano.
+            Place("Cargar en la estampa", 0.12f, -0.085f, 0.2f, 0.04f, 0.07f, () =>
+            {
+                if (World.Stamp.Held != null) World.Stamp.Held.Load(id);
+                else DebugTools.DiagnosticBus.OnDiagnosticsUpdated?.Invoke("<b>[Estampa]</b> Agarra una estampa (E) y volve a apretar el boton.");
+            });
             Place("Indice", -0.07f, -0.135f, 0.08f, 0.035f, 0.065f, () =>
             {
                 indexPage = i >= 0 ? i / IndexPageSize : 0;
