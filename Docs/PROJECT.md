@@ -7,27 +7,35 @@ tags: [doc]
 Inspirado en el sistema de magia de *Witch Hat Atelier* (vía el fan-project [[REFERENCE|wha-spell-simulator]]).
 
 ## Visión
-Sandbox de hechicería donde la magia **se dibuja**: el jugador traza un anillo, un sigilo en el centro y
-signos alrededor; una red neuronal local reconoce cada glifo, un compilador arma el hechizo y el entorno
-reacciona con físicas (fuego que quema, viento que empuja, ragdolls que vuelan). Foco en maestría mecánica
-e interactividad emergente, no en RPG. Interfaz **diegética** (lienzo, lápiz, goma, grimorio físicos).
+Simulador de hechicería inspirado en *Witch Hat Atelier*: **la magia se dibuja**. El jugador traza un anillo, un sigilo
+en el centro y signos alrededor; una red neuronal local reconoce cada glifo, un compilador arma el hechizo y el mundo
+reacciona (quema, moja, rompe, empuja). Interfaz **diegética**: libro-menú, papeles, plumas, pinceles, estampas y
+tinteros físicos. Estilo de ilustración WHA. Diseño completo en [[GAME_DESIGN]].
+
+## Modos
+| Modo | Descripción | Prioridad |
+|---|---|---|
+| **Libre** | Torre con bibliotecas + pradera + lago, rodeados de montañas. Se aprenden glifos leyendo libros y se experimenta. Mundo reactivo. | **Evaluación de Simuladores** |
+| **Duelo** | Arena con tiempo y vida; los hechizos hacen daño. Rival IA primero, online después. | Posterior |
 
 ## Plataformas
 | Plataforma | Estado | Input |
 |---|---|---|
-| PC | Funcional (FPS, agarrar con E, dibujar con click izq., castear con click der.) | Mouse/teclado, gamepad |
-| Meta Quest (OpenXR) | En progreso (head tracking, manos, agarrar, dibujar) | Grip = agarrar, Trigger = dibujar, A = cast/undo |
+| PC | Funcional | Mouse/teclado (gamepad parcial) |
+| Meta Quest (OpenXR) | En progreso | Grip = agarrar, gatillo = dibujar, A = secundario |
 
-Ambas se desarrollan **en paralelo**; toda feature debe funcionar en las dos (ver [[DECISIONS#ADR-002]]).
+Ambas se desarrollan **en paralelo** (ver [[DECISIONS#ADR-002]]).
 
-## Alcance MVP
-- Un anillo, un sigilo primario, N signos exteriores.
-- Elementos con VFX: Fuego (VFX Graph), Agua, Aire, Tierra, Luz (prefabs).
-- Parámetros compilados (`force`, `spread`, `focus`, `range`, `gravity`, `duration`…) alimentan el VFX Graph.
-- Sandbox: Rigidbodies, fuerzas radiales, inflamables, ragdolls.
+## Decisiones de alcance (2026-10-07)
+- Simulación **espectacular pero acotada**: pre-fracturados, cráteres con decals, agua por shader, fuego por propagación.
+  Tiene que correr en Quest.
+- **Tinta como recurso** en ambos modos (tinteros como objetos; `R` recarga en PC).
+- Glifos **descubiertos leyendo libros**; los no descubiertos igual funcionan si se dibujan bien.
+- **Contraptions**, sellos lanzables y borrado por agua: sí. Magia prohibida (dibujar en el cuerpo): no por ahora.
+- Duelo con **sellos preparados de cargas limitadas**.
 
 ## Fuera de alcance (por ahora)
-Multiplayer, IA enemiga, múltiples anillos/sigilos, entrenamiento del modelo dentro de Unity.
+Online (hasta D3), entrenamiento del modelo dentro de Unity, terreno voxel, fluidos simulados.
 
 ## Glosario
 | Término | Significado |

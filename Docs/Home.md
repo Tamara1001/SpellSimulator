@@ -7,10 +7,13 @@ Vault de Obsidian del proyecto. Abrí la carpeta `Docs/` como vault.
 
 ## Documentos
 - [[PROJECT]] — visión, alcance, glosario.
+- [[GAME_DESIGN]] — **diseño del juego**: modos Libre/Duelo, mapa, objetos, controles.
+- [[MAGIC_SYSTEM]] — sistema mágico de Witch Hat Atelier y su traducción a reglas jugables.
+- [[SYSTEMS_DESIGN]] — arquitectura objetivo de los sistemas nuevos (superficies, tinta, sellos, mundo reactivo, IA).
 - [[ARCHITECTURE]] — pipeline, módulos, contratos, escena.
 - [[STRUCTURE]] — mapa de carpetas y archivos.
 - [[GLYPHS]] — diccionario de los 26 glifos del modelo (rol, elemento, deltas).
-- [[ROADMAP]] — fases y tareas (dos tracks en paralelo: Hechizos y VR).
+- [[ROADMAP]] — hitos jugables: modo Libre (M2–M7) y luego Duelo (D1–D3).
 - [[CODESTYLE]] — convenciones de código C#/Unity.
 - [[HARNESS]] — cómo verificar cambios (Unity MCP, tests, Graphify).
 - [[KNOWN_ISSUES]] — bugs y deuda técnica.

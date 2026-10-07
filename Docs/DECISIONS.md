@@ -56,3 +56,32 @@ sonido se enganchen sin acoplarse. `MouseInputHandler` y el HUD de botones se el
 ## ADR-011 — Espacio isotrópico para el reconocimiento
 **2026-10-07.** Los trazos se guardan en UV del lienzo, pero el pipeline trabaja en un espacio donde el lado mayor mide 1
 (`DrawingCanvas.UvToIsotropic`), para que lienzos no cuadrados no deformen anillos ni glifos.
+
+## ADR-012 — Dos modos: Libre primero, Duelo después
+**2026-10-07.** La visión final tiene dos modos: Libre (torre + pradera + lago, sandbox) y Duelo (arena, tiempo y vida).
+La evaluación de Simuladores exige un modo Libre sólido; el Duelo va después, con un rival IA que juega con las mismas
+reglas (pasa por `SpellCaster`) y online recién al final. Ver [[GAME_DESIGN]].
+
+## ADR-013 — Mundo reactivo "espectacular pero acotado"
+**2026-10-07.** Nada de fluidos ni terreno voxel: objetos pre-fracturados, cráteres con decals, agua estilizada con
+ripples por GPU y fuego por propagación entre objetos marcados. Todo por ticks y con presupuestos, para que corra en Quest.
+
+## ADR-014 — Estilo visual de ilustración WHA
+**2026-10-07.** Toon/acuarela, líneas de tinta y paleta pastel. Fiel a la inspiración y más barato en Quest que PBR realista.
+
+## ADR-015 — La tinta es un recurso
+**2026-10-07.** En ambos modos. Cada herramienta tiene un depósito que se recarga con tinteros (objetos que se llevan
+y se mueven). En PC, `R` recarga desde el tintero que tengas encima. El costo depende de la longitud del trazo en metros
+y de la herramienta.
+
+## ADR-016 — Progresión por libros, sin bloqueo de reconocimiento
+**2026-10-07.** Los glifos se agregan al libro-menú al leer libros o al dibujarlos bien por primera vez. El
+reconocimiento nunca se bloquea por progresión: experimentar también descubre.
+
+## ADR-017 — Contraptions, lanzables y borrado por agua; sin magia prohibida
+**2026-10-07.** Sellos en objetos con triggers (cerrar el anillo, juntar dos mitades, impacto, presión). El agua y el
+fuego rompen sellos (canon). Dibujar en el propio cuerpo no se modela por ahora.
+
+## ADR-018 — El tamaño físico del sello importa
+**2026-10-07.** Por la ley extensiva del canon (`ground-truth.md` §2), el radio del anillo en metros escala el caudal y
+la fuerza total, mientras que la forma de los signos define la velocidad. Justifica papeles y estampas de varios tamaños.

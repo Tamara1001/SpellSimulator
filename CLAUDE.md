@@ -9,7 +9,8 @@ Idioma del proyecto: **español** (docs, commits, logs, comentarios). Identifica
 
 ## Antes de tocar nada
 
-1. Leé [Docs/Home.md](Docs/Home.md) (índice). Para una tarea concreta, como mínimo:
+1. Leé [Docs/Home.md](Docs/Home.md) (índice). Para entender **qué** se construye: [Docs/GAME_DESIGN.md](Docs/GAME_DESIGN.md),
+   [Docs/MAGIC_SYSTEM.md](Docs/MAGIC_SYSTEM.md) y [Docs/SYSTEMS_DESIGN.md](Docs/SYSTEMS_DESIGN.md). Para una tarea concreta, como mínimo:
    - [Docs/ARCHITECTURE.md](Docs/ARCHITECTURE.md) — pipeline y contratos entre módulos.
    - [Docs/CODESTYLE.md](Docs/CODESTYLE.md) — convenciones C#/Unity obligatorias.
    - [Docs/KNOWN_ISSUES.md](Docs/KNOWN_ISSUES.md) — bugs y deuda técnica ya detectados.
@@ -57,7 +58,9 @@ Idioma del proyecto: **español** (docs, commits, logs, comentarios). Identifica
 | Glifos, diccionario, deltas semánticos | `Docs/GLYPHS.md` |
 | Arreglaste o descubriste un bug/deuda | `Docs/KNOWN_ISSUES.md` |
 | Decisión de diseño no obvia | `Docs/DECISIONS.md` (ADR corto) |
-| Avance de fase / tarea | `Docs/ROADMAP.md` |
+| Avance de hito / tarea | `Docs/ROADMAP.md` |
+| Mecánica, objeto o regla de juego | `Docs/GAME_DESIGN.md` (y `MAGIC_SYSTEM.md` si toca el canon) |
+| Sistema nuevo o cambio de su diseño | `Docs/SYSTEMS_DESIGN.md` |
 | Siempre | `Docs/CHANGELOG.md` y re-generar grafo (`graphify update .`) si cambió código |
 
 ## Comandos útiles
