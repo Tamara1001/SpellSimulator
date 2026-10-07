@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — Arreglos: entrar a la torre, moverse y dorso de los lienzos
+- KI-056: zócalo de la torre cortado en la puerta (se entra caminando).
+- KI-057: `PlayerMovement` sube escalones bajos y no resbala quieto en rampas; cápsula del jugador más angosta y sin
+  fricción; muebles fuera del camino de la puerta a la rampa. Verificado: cápsula pasa por la puerta y llega a la rampa.
+- KI-058: lienzos visibles por detrás.
+
 ## 2026-10-07 — M6: grimorio, libros y descubrimiento
 - Nuevo módulo `Learning`: `GlyphLore` (textos en `Data/Lore/glifos.json`), `DiscoveryState` (puro), `Discovery`
   (guardado local + descubrir por experimentación), `LibraryBook`, `Grimoire` (libro-menú que flota frente al jugador,

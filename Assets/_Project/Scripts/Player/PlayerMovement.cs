@@ -18,10 +18,18 @@ namespace SpellSimulator.Player
         [SerializeField, Tooltip("Altura total del jugador para calcular cuando toca el suelo")] 
         private float playerHeight = 2f;
 
+        [Header("Escalones y pendientes")]
+        [SerializeField, Tooltip("Altura maxima (m) que se sube sola al caminar contra un borde (umbral, escalon, roca chica).")]
+        private float maxStepHeight = 0.35f;
+        [SerializeField, Tooltip("Radio del cuerpo para detectar escalones (m).")]
+        private float bodyRadius = 0.3f;
+
         private Rigidbody rb;
         private PlayerInputReader inputReader;
 
         private bool isGrounded;
+        private Vector3 groundNormal = Vector3.up;
+        private bool hasInput;
         private bool readyToJump = true;
 
         private void Awake()
@@ -51,7 +59,8 @@ namespace SpellSimulator.Player
         private void CheckGrounded()
         {
             // Raycast desde el centro hacia abajo. La mitad de la altura + 0.1f de margen.
-            isGrounded = Physics.Raycast(transform.position, Vector3.down, (playerHeight * 0.5f) + 0.1f, groundLayer, QueryTriggerInteraction.Ignore);
+            isGrounded = Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, (playerHeight * 0.5f) + 0.1f, groundLayer, QueryTriggerInteraction.Ignore);
+            groundNormal = isGrounded ? hit.normal : Vector3.up;
         }
 
         private void HandleMovement()
@@ -73,6 +82,8 @@ namespace SpellSimulator.Player
 
             Vector3 moveDir = right * input.x + forward * input.y;
             moveDir.Normalize();
+            hasInput = input.magnitude >= 0.1f;
+            if (hasInput) TryStepUp(moveDir);
 
             // Velocidad actual plana (ignorando la Y de gravedad)
             Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
@@ -123,9 +134,31 @@ namespace SpellSimulator.Player
             readyToJump = true;
         }
 
+        /// <summary>
+        /// Sube bordes bajos (umbral de la torre, inicio de una rampa, roca chica) sin saltar: si a la altura de los pies
+        /// hay una pared casi vertical y a la altura maxima de escalon no, se sube el cuerpo a la cima del borde.
+        /// </summary>
+        private void TryStepUp(Vector3 moveDir)
+        {
+            if (!isGrounded) return;
+            float reach = bodyRadius + 0.2f;
+            Vector3 feet = transform.position + Vector3.down * (playerHeight * 0.5f - 0.04f);
+            if (!Physics.Raycast(feet, moveDir, out RaycastHit low, reach, groundLayer, QueryTriggerInteraction.Ignore)) return;
+            if (Vector3.Angle(low.normal, Vector3.up) < 50f) return; // es una pendiente, no un escalon
+            Vector3 top = feet + Vector3.up * maxStepHeight;
+            if (Physics.Raycast(top, moveDir, reach, groundLayer, QueryTriggerInteraction.Ignore)) return; // muy alto
+            if (!Physics.Raycast(top + moveDir * reach, Vector3.down, out RaycastHit landing, maxStepHeight, groundLayer, QueryTriggerInteraction.Ignore)) return;
+            float rise = landing.point.y - (feet.y - 0.04f);
+            if (rise <= 0.01f || rise > maxStepHeight) return;
+            rb.position += Vector3.up * (rise + 0.02f);
+        }
+
         private void ApplyCustomGravity()
         {
-            rb.AddForce(Vector3.up * customGravity, ForceMode.Acceleration);
+            // Quieto sobre una rampa: la gravedad empuja contra el piso (no a lo largo) para no resbalar.
+            Vector3 gravity = Vector3.up * customGravity;
+            if (isGrounded && !hasInput) gravity = -groundNormal * Mathf.Abs(customGravity);
+            rb.AddForce(gravity, ForceMode.Acceleration);
         }
     }
 }

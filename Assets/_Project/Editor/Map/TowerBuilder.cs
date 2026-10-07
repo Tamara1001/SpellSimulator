@@ -121,8 +121,16 @@ namespace SpellSimulator.EditorTools.Map
                 if (r + 1 < rows && IsOpening(s, r + 1))
                     b.Quad(Polar(InnerRadius, a0, y1), Polar(InnerRadius, a1, y1), Polar(OuterRadius, a1, y1), Polar(OuterRadius, a0, y1), StoneB);
             }
-            // Zocalo: un anillo un poco mas ancho abajo, como base de piedra.
-            b.Frustum(Matrix4x4.identity, OuterRadius + 0.35f, OuterRadius + 0.15f, -1.5f, 0.6f, Sides, StoneB, false);
+            // Zocalo: base de piedra un poco mas ancha, cortada en la puerta y baja (prueba manual: subia 60 cm en la
+            // entrada y solo se podia pasar saltando).
+            for (int s = 0; s < Sides; s++)
+            {
+                if (s == 15) continue;
+                float a0 = s * step - step * 0.5f, a1 = a0 + step;
+                const float top = 0.25f, r0 = OuterRadius + 0.35f, r1 = OuterRadius + 0.15f;
+                b.Quad(Polar(r0, a0, -1.5f), Polar(r1, a0, top), Polar(r1, a1, top), Polar(r0, a1, -1.5f), StoneB);
+                b.Quad(Polar(r1, a0, top), Polar(OuterRadius, a0, top), Polar(OuterRadius, a1, top), Polar(r1, a1, top), StoneB);
+            }
             return b;
         }
 
@@ -281,7 +289,8 @@ namespace SpellSimulator.EditorTools.Map
 
             tris += Table(props, material, "LibraryDesk", new Vector3(0f, 0f, 0.6f), 0f, 1.8f, 0.9f);
             tris += Table(props, material, "ReadingTable", new Vector3(-1.4f, 0f, -1.2f), 30f, 1.3f, 0.8f);
-            tris += Chair(props, material, new Vector3(0f, 0f, -0.4f), 0f);
+            // Silla detras del escritorio (lado norte): el paso entre la puerta y la rampa queda libre.
+            tris += Chair(props, material, new Vector3(0f, 0f, 1.45f), 180f);
             tris += Chair(props, material, new Vector3(-1.9f, 0f, -0.4f), 200f);
             tris += Table(props, material, "StudyTable", new Vector3(0.6f, FloorHeight, 0.4f), 75f, 2f, 1f);
             tris += Chair(props, material, new Vector3(1.6f, FloorHeight, 0.9f), 255f);
