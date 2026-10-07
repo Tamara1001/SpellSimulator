@@ -51,8 +51,9 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 - [~] Fractura: versión simple por grilla (`Shatter`, presupuesto de 160 fragmentos). Falta pre-fractura Voronoi para mesas y paredes.
 - [x] Agua: estanque estilizado (`StylizedWater`: olas + ondas analíticas), salpicaduras, flotación por material, vapor
       con fuego, lo sumergido se moja y se apaga. Pull de agua tira un chorro del estanque (`WaterVolume`). Falta el lago de M5.
-- [ ] Suelo: cráteres (decals) y rocas emergentes.
-- [ ] Dummies de prueba (ragdoll) y barriles, cajas y estantes destructibles.
+- [x] Suelo: cráteres con rocas que emergen (tierra), quemaduras (fuego) y charcos que se secan (agua) (`GroundReactions`, `GroundMarks`).
+- [x] Muñecos de práctica (`TrainingDummy`: tela sobre un poste con resorte, vida, se rompen y reaparecen) + daño (`Combat`).
+- [ ] Barriles y estantes destructibles (con la pre-fractura de M5).
 - [x] Reinicio del mundo (Backspace / Select / Y izquierdo).
 
 ### M5 — La torre y la pradera

@@ -5,6 +5,17 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — M4: suelo y muñecos de práctica
+- Suelo (`GroundReactions` + `GroundMarks`): donde un hechizo toca el piso deja cráter con 3-5 rocas que emergen
+  (tierra; las rocas son piedra y las atrae el pull de tierra), quemadura (fuego) o charco que se seca en 20 s (agua).
+  Shader `GroundMark` (ADR-023). Presupuestos: 24 marcas, 30 rocas. El reinicio las borra.
+- Nuevo módulo `Combat`: `Health`, `DamageTable` (valores del Duelo), `DamageModel` (puro, tests), `ImpactDamage`,
+  números de daño flotantes. `MagicWorld` aplica el daño de los hechizos y la quemadura.
+- `TrainingDummy`: muñeco de tela sobre un poste con resorte (se balancea), arde, se rompe y reaparece a los 4 s.
+  Dos en la escena: detrás de los blancos y a la izquierda.
+- Verificado en Play Mode: tierra al piso → cráter + 4 rocas; fuego al muñeco → 26 de daño, arde, se consume y
+  reaparece con 100. 108 tests.
+
 ## 2026-10-07 — M4: agua y pull canónico
 - `StylizedWater.shader`: olas suaves por vértice y hasta 16 ondas de impacto calculadas en el fragmento, con espuma
   (sin render textures: apto Quest).

@@ -1,4 +1,5 @@
 using UnityEngine;
+using SpellSimulator.Combat;
 using SpellSimulator.Compiler;
 using SpellSimulator.Output;
 
@@ -20,6 +21,8 @@ namespace SpellSimulator.Reactions
         private float spreadReach = 0.35f;
         [SerializeField, Tooltip("Impulso de los fragmentos al romperse.")]
         private float shatterImpulse = 2.5f;
+        [SerializeField, Tooltip("Daño de los hechizos y la quemadura sobre lo que tiene vida (muñecos, jugadores en Duelo).")]
+        private DamageTable damage;
 
         private static readonly Collider[] hits = new Collider[MaxHits];
         private static readonly ElementReactive[] found = new ElementReactive[MaxHits];
@@ -42,6 +45,7 @@ namespace SpellSimulator.Reactions
             ExposeToSpells();
             ExposeToWater();
             SpreadFire();
+            DamageHealth(dt);
 
             var all = ElementReactive.All;
             for (int i = all.Count - 1; i >= 0; i--)
@@ -69,6 +73,30 @@ namespace SpellSimulator.Reactions
                     if (intensity <= 0f) continue;
                     reactive.AddExposure(reactions.For(field.Element, reactive.Profile), intensity);
                 }
+            }
+        }
+
+        /// <summary>Daño de los hechizos (segun su intensidad en el blanco) y de la quemadura a cada Health viva.</summary>
+        private void DamageHealth(float dt)
+        {
+            if (damage == null) return;
+            var healths = Health.All;
+            var fields = MagicField.Active;
+            for (int h = 0; h < healths.Count; h++)
+            {
+                var health = healths[h];
+                if (health == null || !health.isActiveAndEnabled || health.IsDead) continue;
+                Vector3 center = health.Center;
+                float total = 0f;
+                for (int f = 0; f < fields.Count; f++)
+                {
+                    var field = fields[f];
+                    if (field.Source != null && field.Source == health.gameObject) continue;
+                    total += DamageModel.SpellDamage(damage.values, field.Element, field.ExposureAt(center), dt);
+                }
+                var reactive = health.GetComponent<ElementReactive>();
+                total += DamageModel.BurnDamage(damage.values, reactive != null && reactive.State.Burning, dt);
+                health.Damage(total);
             }
         }
 
@@ -153,7 +181,10 @@ namespace SpellSimulator.Reactions
         {
             if (output != null) output.ClearAll();
             Shatter.ClearAll();
+            GroundMarks.ClearAll();
             foreach (var reactive in ElementReactive.All) if (reactive != null) reactive.ResetState();
+            foreach (var health in Health.All) if (health != null) health.ResetHealth();
+            foreach (var dummy in World.TrainingDummy.All) if (dummy != null) dummy.Restore();
             World.Respawnable.RespawnAll();
             Debug.Log("[Mundo] Reinicio.");
         }

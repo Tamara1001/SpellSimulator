@@ -38,6 +38,8 @@ namespace SpellSimulator.Output
         /// <summary>Objeto que lo emitio (el papel): no se afecta a si mismo.</summary>
         public GameObject Source { get; private set; }
         public SealFrame Frame => frame;
+        /// <summary>Hacia donde va la magia: el chorro si hay, si no la normal del sello.</summary>
+        public Vector3 MainDirection => plan != null && plan.Has(PlanPrimitive.Jet) ? frame.Direction(plan.Aim) : frame.Normal;
         /// <summary>Tiene succion (pull): atrae materia de su elemento.</summary>
         public bool HasIntake => plan != null && plan.Has(PlanPrimitive.Intake);
         /// <summary>Esfera que contiene todo el alcance del hechizo.</summary>

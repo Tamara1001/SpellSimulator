@@ -97,6 +97,11 @@ por código (VFX Graph no). El viejo `Fire_VFX.vfx` queda sin uso.
 hechizo le explotaría en la cara. `DrawingCanvas.EmissionSide = AwayFromViewer` en papeles (la magia sale hacia el
 objetivo, como cuando los personajes giran el papel); `InkSide` queda para sellos en paredes, mesas y piedras.
 
+## ADR-023 — Marcas de suelo con quads, no con decals de URP
+**2026-10-07.** Cráteres, quemaduras y charcos son quads con un shader procedural (`GroundMark`) apoyados sobre el
+suelo, en vez del Decal Projector de URP: no requiere activar el renderer feature (configuración del proyecto), cuesta
+poco en Quest y alcanza para un piso plano. Si el terreno de M5 es irregular, migrar a decals.
+
 ## ADR-022 — Mundo reactivo por ticks y fractura por grilla
 **2026-10-07.** Las reacciones (fuego, agua, viento, impacto) no corren por frame ni por colisión: `MagicWorld` hace ticks
 a 15 Hz y consulta la misma geometría que la física (`MagicField.ExposureAt`). Las reglas son lógica pura

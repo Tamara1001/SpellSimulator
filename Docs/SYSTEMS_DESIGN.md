@@ -97,7 +97,7 @@ flowchart TB
 ## 5. Mundo reactivo
 > **Estado (M4, 2026-10-07):** hecho el núcleo — `MagicWorld`, `ElementReactive`, `MaterialProfile`, `ReactionTable`,
 > fuego, agua, viento, impacto, fractura por grilla y reinicio; estanque (`WaterVolume`) con ondas analíticas en shader
-> (sin RT, 16 ondas), flotación por material, vapor y succión. Faltan el lago grande, suelo, dummies y pre-fractura.
+> (sin RT, 16 ondas), flotación por material, vapor y succión. Suelo: marcas por elemento y rocas que emergen. Muñecos con vida (`Combat`). Faltan el lago grande y la pre-fractura.
 
 - `MagicField` no busca objetos por frame: un **MagicWorld** hace *ticks* a 10–20 Hz con `Physics.OverlapXNonAlloc`
   (buffers preasignados) y despacha a los componentes reactivos.
@@ -116,6 +116,8 @@ flowchart TB
 - **Viento**: `MagicField` de tipo flujo ⇒ `AddForce` a Rigidbodies, olas en el agua y fuego avivado.
 
 ## 6. Daño y vida (Duelo, y dummies en Libre)
+> **Estado (M4):** `Health`, `DamageTable`, `DamageModel`, `ImpactDamage`, números flotantes y `TrainingDummy`.
+> Faltan escudos (`MagicBlocker`) y la vida del jugador (Duelo).
 - `Health` + `DamageReceiver`. Daño = f(elemento, intensidad del campo, tiempo de exposición o impacto, quality).
   La tabla de daño es un SO para balancear sin tocar código.
 - Escudos: manifestaciones de tierra o agua que bloquean campos (el campo se recorta contra colliders "MagicBlocker").

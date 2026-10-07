@@ -86,7 +86,8 @@ Mismo sistema mágico, en una arena de combate.
    inválido, cada trazo nuevo vuelve a intentar el lanzamiento. Un sello lanzado queda **gastado** hasta que se borre
    o se vuelva a abrir el anillo.
 2. **Hechizos activos simultáneos**: se define midiendo rendimiento en Quest (tarea de M3/M7). Valor provisorio: 6.
-3. **El personaje recibe efectos** en el modo Libre: empujones, viento y salpicaduras. No recibe daño.
+3. **El personaje recibe efectos** en el modo Libre: empujones, viento y salpicaduras. No recibe daño. Para probar
+   el daño hay **muñecos de práctica** (tela, arden; vuelven a aparecer a los 4 s).
 4. **Sellos grabados en piedra** (definido):
    - Son permanentes y se reactivan tocándolos (secundario sobre el sello) o con su trigger.
    - Cooldown = `max(5 s, 2 × duración del hechizo)`.

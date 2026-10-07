@@ -50,6 +50,13 @@ namespace SpellSimulator.Reactions
 
         private void OnDestroy() => All.Remove(this);
 
+        /// <summary>Asigna el material (objetos creados en runtime, ej. rocas que emergen).</summary>
+        public void SetProfile(MaterialProfile material)
+        {
+            profile = material;
+            RefreshLook();
+        }
+
         public void AddExposure(in Exposure exposure, float scale) => pending.Add(exposure, scale);
 
         /// <summary>Avanza el estado con lo acumulado desde el ultimo tick. Lo llama MagicWorld.</summary>
