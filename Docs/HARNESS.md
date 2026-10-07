@@ -59,10 +59,15 @@ El Editor **auto-refresca** mientras se editan archivos desde afuera: si un `.cs
 Al agregar un `using` de un paquete nuevo en runtime, sumar su asmdef a `references` de `SpellSimulator.Runtime.asmdef`.
 
 ## Build de Windows
-`Unity_RunCommand` con `BuildPipeline.BuildPlayer` (escena `Escena.unity`, `StandaloneWindows64`, salida `Build/SpellSimulator.exe`,
+`Unity_RunCommand` con `BuildPipeline.BuildPlayer` (escenas `Pradera.unity` y `Escena.unity`, en ese orden; `StandaloneWindows64`, salida `Build/SpellSimulator.exe`,
 ignorada por git). Verificar arrancándola con `-logFile` unos segundos: debe loguear `[PlatformDetector] Modo: PC` y 0
 excepciones fuera de `[XR]` (OpenXR sin casco loguea `XR_ERROR_FORM_FACTOR_UNAVAILABLE`: esperado). Los ~500 warnings
 de la build son shaders del paquete de inferencia.
+
+## Mapa (M5)
+`SpellSimulator > Map > Build Pradera` (o `MapBuilder.Build()` por MCP) regenera el mapa en `Pradera.unity`: borra el
+objeto `Map` y lo vuelve a crear, guarda las mallas en `Art/Generated` y reubica jugador, papeles, herramientas,
+blancos y muñecos. Determinista. Para cambiar el mapa: tocar `ValleyShape` (forma) o `TowerBuilder` (torre) y regenerar.
 
 ## Sellos de plantilla (Play Mode)
 `SpellSimulator.EditorTools.HarnessSeals.Cast("PaperCanvas", "fire", ("column", 270f), ("column", 90f))` dibuja sigilo,
@@ -82,7 +87,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 **Física en tiempo real**: guardar posiciones (cultura invariante: `Vector3.ToString` usa coma decimal), lanzar,
 `sleep 4` en Bash y medir. Los blancos están en `TestProps` (plataforma a la altura del chorro).
 
-## Tests (108 al 2026-10-07)
+## Tests (113 al 2026-10-07)
 | Archivo | Cubre |
 |---|---|
 | `ParsingTests` | RingDetector (cerrado/abierto/dos arcos/ajuste), StrokeGrouper (transitividad), SymbolCandidate, capas, StrokeCleaner, GeometryUtils |
@@ -95,6 +100,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 | `SealFixtureTests` | **Sellos reales grabados** (`Tests/Fixtures/*.json`) reproducidos con el modelo (hoy: `fire_columnas_bien`, `fire_columnas_mal`); ida y vuelta del formato; anotaciones sobre el papel |
 | `ReactionTests` | Fuego (enciende, se sostiene, se consume, rompe), agua (apaga, moja, bloquea ignición, apaga aun bajo fuego), viento (aviva/enfría), tierra (rompe madera, no piedra), secado, tabla por material |
 | `DamageTests` | Daño de hechizo en rango de referencia, agua/viento casi no dañan, quemadura 4/s, impacto con umbral y tope 25 |
+| `ValleyShapeTests` | Mapa: torre en meseta plana, lago bajo el agua, montañas cierran el valle, pendiente caminable, sin árboles en spawn/campo/torre |
 | `CompilerTests` | Gates (sin anillo, baja confianza, sin sigilo, varios sigilos), activo/preparado, levitation, dirección inward, cancelación, fuerza, escala |
 
 ## Sellos grabados (fixtures de pruebas manuales)

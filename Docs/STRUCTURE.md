@@ -19,13 +19,15 @@ SpellSimulator/
 │   │   │   ├── Tools/            #   ToolDefinition: Lapiz, Pincel, Goma, Trapo
 │   │   │   └── GlyphDictionary.asset
 │   │   ├── Editor/               #   SpellSimulator.Editor.asmdef — harness, sync del diccionario, chequeos
-│   │   ├── Materials/            #   Canvas, BrushMaterial, Pen, Eraser, Rag, Inkwell, Crate, VRPointer, SpellParticle(.shader) + Additive/Alpha, StylizedWater(.shader) + Water, GroundMark(.shader) + GroundMark, Stone, Cloth, Binarize(.shader)
+│   │   │   └── Map/              #   MapBuilder, TowerBuilder, LowPolyMesh (generador del mapa)
+│   │   ├── Materials/            #   Canvas, BrushMaterial, Pen, Eraser, Rag, Inkwell, Crate, VRPointer, SpellParticle(.shader) + Additive/Alpha, StylizedWater(.shader) + Water, GroundMark(.shader) + GroundMark, StylizedLit(.shader) + Stylized, Sky, Stone, Cloth, Binarize(.shader)
 │   │   ├── Prefabs/
 │   │   │   ├── Objects/          #   PaperCanvas, Pen, Eraser, Tool
 │   │   │   ├── Player/           #   Player (PCRIG + VRRIG)
 │   │   │   ├── System/           #   SystemManagers, Canvas (UI), camaras, luz, EventSystem
 │   │   │   └── VFX/              #   Fire (+Fire_VFX.vfx), Air, Earth, Light, Water, FireSpell_VFX.vfx
-│   │   ├── Scenes/Escena.unity   #   unica escena (Build index 0)
+│   │   ├── Scenes/               #   Pradera.unity (mapa del modo Libre, build index 0) y Escena.unity (laboratorio de pruebas)
+│   │   ├── Art/Generated/        #   mallas generadas por MapBuilder (terreno, pinos, rocas, torre, muebles); no editar a mano
 │   │   ├── Scripts/              #   SpellSimulator.Runtime.asmdef
 │   │   │   ├── Canvas/           #   DrawingCanvas
 │   │   │   ├── Casting/          #   SpellCaster, SealActivation, SealReader, SealRecord
@@ -41,7 +43,7 @@ SpellSimulator/
 │   │   │   ├── Player/           #   PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor, InkSupply, Haptics
 │   │   │   ├── Reactions/        #   ReactionModel, MaterialProfile, ReactionTable, ElementReactive, MagicWorld, BurnEffect, Shatter, WorldResetter, WaterVolume, WaterEffects, GroundSurface, GroundReactions, GroundMarks, RockRise, MarkFade
 │   │   │   ├── Recognition/      #   TensorRasterizer, GlyphClassifier, SentisGlyphClassifier, GlyphPrediction (+ClassificationMath), PoseMath
-│   │   │   └── World/            #   PhysicalTool, ToolDefinition, PhysicalCanvas, Inkwell, Respawnable, SealBreaker, TrainingDummy
+│   │   │   └── World/            #   PhysicalTool, ToolDefinition, PhysicalCanvas, Inkwell, Respawnable, SealBreaker, TrainingDummy; Map/ValleyShape
 │   │   ├── Tests/EditMode/       #   SpellSimulator.Tests.EditMode.asmdef — Parsing, Recognition, Compiler, modelo
 │   │   └── Tests/Fixtures/       #   Sellos reales grabados (SealRecord .json) para SealFixtureTests
 │   ├── Settings/                 # URP assets (PC_RPAsset, renderers, volume profiles)

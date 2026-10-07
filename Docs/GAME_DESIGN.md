@@ -66,6 +66,13 @@ Mismo sistema mágico, en una arena de combate.
    Si el anillo queda abierto, el sello está **preparado**: brilla y espera a que lo cierres.
 4. El mundo reacciona. Los diagnósticos (en el papel o en el libro) explican qué se reconoció.
 
+## Mapa del modo Libre (M5, blockout)
+Valle de ~140 m cerrado por montañas (se recorre en menos de un minuto caminando). En el centro, la **torre** sobre una
+loma: planta baja **biblioteca** (estantes, mesas, escritorio con un papel apoyado que emite hacia arriba), primer piso
+**estudio**, segundo piso y **terraza** almenada bajo el techo cónico violeta; los pisos se unen con rampas en espiral.
+Al oeste, el **lago** con orilla de arena; al este, el **campo de práctica** (atril con papel, mesa de herramientas,
+blancos y muñecos). Caminos de tierra unen el spawn (al sur de la torre) con todo. Bosque de pinos hacia las montañas.
+
 ## Controles
 
 | Acción | PC | VR |

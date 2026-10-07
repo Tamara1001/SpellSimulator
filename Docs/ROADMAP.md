@@ -58,8 +58,10 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 
 ### M5 — La torre y la pradera
 *Objetivo: el escenario final del modo Libre.*
-- [ ] Blockout del mapa: torre (bibliotecas, mesas, atriles), pradera, lago y montañas de borde.
-- [ ] Arte estilizado (toon/acuarela), iluminación y post-proceso. Presupuesto Quest.
+- [x] Blockout del mapa (escena `Pradera`, generada por `MapBuilder`): valle con montañas, lago, pinos, rocas, caminos,
+      torre de 3 pisos con rampas (biblioteca, estudio, terraza), campo de práctica. Falta: cascada, más props, puerta.
+- [~] Arte estilizado: low-poly con sombreado plano (`StylizedLit`: bandas, sombras, luces puntuales, niebla), cielo y
+      ambiente. Falta post-proceso, texturas de detalle y medir en Quest (~45k triángulos el mapa).
 - [ ] Papeles fijos en atriles y paredes; papeles agarrables S/M/L.
 - [ ] Música (ambiental) + SFX diegéticos (pluma, tinta, viento, fuego, agua, roturas).
 

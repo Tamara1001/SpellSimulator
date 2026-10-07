@@ -5,6 +5,15 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — M5: blockout del mapa (Pradera)
+- Nueva escena `Pradera.unity` (build index 0) generada por `MapBuilder`: terreno low-poly de 208 m con montañas, lago
+  con `WaterVolume`, ~250 pinos, 45 rocas, caminos, campo de práctica con mesa de herramientas, y la **torre**
+  (`TowerBuilder`): muro de piedra con puerta y ventanas, 3 pisos con rampas en espiral y barandas, almenas, techo cónico
+  violeta con aro dorado, biblioteca y estudio con estantes, libros, mesas, sillas y luces cálidas/violetas.
+- Shader `StylizedLit`: color por vértice, luz en bandas, sombras de URP, luces puntuales, niebla. Cielo procedural,
+  ambiente trilight y niebla celeste.
+- `ValleyShape` (puro) + 5 tests. `Escena.unity` queda como laboratorio. ADR-024. 113 tests.
+
 ## 2026-10-07 — M4: suelo y muñecos de práctica
 - Suelo (`GroundReactions` + `GroundMarks`): donde un hechizo toca el piso deja cráter con 3-5 rocas que emergen
   (tierra; las rocas son piedra y las atrae el pull de tierra), quemadura (fuego) o charco que se seca en 20 s (agua).

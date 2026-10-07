@@ -97,6 +97,13 @@ por código (VFX Graph no). El viejo `Fire_VFX.vfx` queda sin uso.
 hechizo le explotaría en la cara. `DrawingCanvas.EmissionSide = AwayFromViewer` en papeles (la magia sale hacia el
 objetivo, como cuando los personajes giran el papel); `InkSide` queda para sellos en paredes, mesas y piedras.
 
+## ADR-024 — Mapa generado por código, low-poly y laboratorio aparte
+**2026-10-07.** El mapa del modo Libre (`Pradera.unity`) lo genera `MapBuilder` (editor) a partir de `ValleyShape` (puro,
+con tests): terreno low-poly con colores por triángulo, pinos y rocas facetados, torre con rampas. Sin assets externos:
+se itera cambiando números, es determinista y liviano para Quest (~45k triángulos, un material con color por vértice).
+El estilo visual sale del shader `StylizedLit` (bandas de luz, sombras, luces puntuales, niebla). La escena `Escena` queda
+como laboratorio de pruebas. Pisos unidos por **rampas en espiral**, no escaleras: el jugador es un Rigidbody.
+
 ## ADR-023 — Marcas de suelo con quads, no con decals de URP
 **2026-10-07.** Cráteres, quemaduras y charcos son quads con un shader procedural (`GroundMark`) apoyados sobre el
 suelo, en vez del Decal Projector de URP: no requiere activar el renderer feature (configuración del proyecto), cuesta
