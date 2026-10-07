@@ -7,6 +7,7 @@ using Unity.InferenceEngine;
 using SpellSimulator.Casting;
 using SpellSimulator.Compiler;
 using SpellSimulator.Core;
+using SpellSimulator.Output;
 using SpellSimulator.Recognition;
 
 namespace SpellSimulator.Tests
@@ -56,6 +57,26 @@ namespace SpellSimulator.Tests
 
             if (record.ExpectSigil != null) Assert.AreEqual(record.ExpectSigil, reading.Ast.PrimarySigil?.Id, got);
             if (record.ExpectPrimitives != null) Assert.AreEqual(record.ExpectPrimitives, spell.plan?.Primitives.ToString(), got);
+        }
+
+        [Test]
+        public void Annotations_MarkSigilSignsAndWarnings()
+        {
+            var record = SealRecord.FromJson(File.ReadAllText(Path.Combine(FixturesFolder, "fire_columnas_bien.json")));
+            var cleaned = StrokeCleaner.CleanSession(record.IsotropicSession(), StrokeCleaner.DefaultTolerance, StrokeCleaner.DefaultSplineResolution);
+            var reading = SealReader.Read(cleaned, classifier, TestAssets.Dictionary, 0f);
+
+            var items = SealAnnotationLayout.Build(reading.Ast, reading.Spell);
+
+            Assert.AreEqual(AnnotationKind.Sigil, items[0].Kind);
+            StringAssert.StartsWith("fire", items[0].Label);
+            Assert.AreEqual(3, items.Count, "sigilo + 2 signos");
+            foreach (var item in items)
+                Assert.Less((item.Position - reading.Ast.Ring.Center).magnitude, reading.Ast.Ring.Radius, $"{item.Label} dentro del anillo");
+            // La columna de la derecha apunta hacia afuera (barra del lado del sigilo).
+            var right = items.Find(i => i.Label.StartsWith("column"));
+            Assert.Greater(right.Facing.x, 0.7f);
+            CollectionAssert.IsNotEmpty(SealAnnotationLayout.Warnings(reading.Spell));
         }
 
         [Test]

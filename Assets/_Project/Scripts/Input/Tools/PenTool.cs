@@ -14,21 +14,24 @@ namespace SpellSimulator.Input.Tools
 
         // Mayor = sigue mas rapido a la mano (menos lag, mas temblor).
         private readonly float stabilizerSpeed;
+        private readonly float widthMeters;
         private Stroke currentStroke;
         private Vector2 smoothedUV;
 
-        public PenTool(float stabilizerSpeed = 8f)
+        /// <param name="widthMeters">Ancho de la tinta (0 = el del lienzo). Lapiz y pincel difieren en esto y en la tinta.</param>
+        public PenTool(float stabilizerSpeed = 8f, float widthMeters = 0f)
         {
             this.stabilizerSpeed = stabilizerSpeed;
+            this.widthMeters = widthMeters;
         }
 
         public void OnPointerDown(Vector2 uv, DrawingCanvas canvas)
         {
-            currentStroke = new Stroke();
+            currentStroke = new Stroke { Width = widthMeters };
             currentStroke.AddPoint(uv);
             canvas.Session.AddStroke(currentStroke);
             smoothedUV = uv;
-            canvas.DrawAt(uv, true);
+            canvas.DrawAt(uv, true, widthMeters);
         }
 
         public void OnPointerDrag(Vector2 uv, DrawingCanvas canvas)
@@ -43,7 +46,7 @@ namespace SpellSimulator.Input.Tools
             if (Vector2.Distance(last, smoothedUV) > MinPointSpacing)
             {
                 currentStroke.AddPoint(smoothedUV);
-                canvas.DrawAt(smoothedUV, false);
+                canvas.DrawAt(smoothedUV, false, widthMeters);
             }
         }
 

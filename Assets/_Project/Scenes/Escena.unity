@@ -385,6 +385,198 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 37318149}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &56540399
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 56540406}
+  - component: {fileID: 56540405}
+  - component: {fileID: 56540404}
+  - component: {fileID: 56540403}
+  - component: {fileID: 56540402}
+  - component: {fileID: 56540401}
+  - component: {fileID: 56540400}
+  m_Layer: 7
+  m_Name: Brush
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &56540400
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 56540399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1b8c3829cf5daf4e896e3149064f9e4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
+  killHeight: -20
+--- !u!114 &56540401
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 56540399}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ac27b27125462cc4bafb9c549aab74c1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.World.PhysicalTool
+  definition: {fileID: 11400000, guid: 722fd739c1c57df48ac064bd3fbd14a1, type: 2}
+  toolName: "L\xE1piz"
+  kind: 0
+  canvasLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  pcMaxDrawDistance: 5
+  vrMaxDrawDistance: 10
+  raycastOrigin: {fileID: 1933547268}
+  pcStabilizerSpeed: 40
+  vrStabilizerSpeed: 14
+  strokeWidth: 0
+  vrContactDrawing: 0
+  vrContactReach: 0.04
+  vrDipRadius: 0.04
+  ink:
+    capacity: 100
+    level: 100
+  inkPerMeter: 8
+  fullInkColor: {r: 0.12, g: 0.08, b: 0.06, a: 1}
+  emptyInkColor: {r: 0.75, g: 0.72, b: 0.68, a: 1}
+  spellCaster: {fileID: 5652826552516281050}
+--- !u!54 &56540402
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 56540399}
+  serializedVersion: 5
+  m_Mass: 1
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!136 &56540403
+CapsuleCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 56540399}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Radius: 0.5000001
+  m_Height: 2
+  m_Direction: 1
+  m_Center: {x: 0.000000059604645, y: 0, z: -0.00000008940697}
+--- !u!23 &56540404
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 56540399}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
+  m_ForceMeshLod: -1
+  m_MeshLodSelectionBias: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: 6585ca49f3fc371488f89d252a2c0703, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_GlobalIlluminationMeshLod: 0
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_MaskInteraction: 0
+  m_AdditionalVertexStreams: {fileID: 0}
+--- !u!33 &56540405
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 56540399}
+  m_Mesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!4 &56540406
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 56540399}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.456, y: 1, z: -1.36282}
+  m_LocalScale: {x: 0.045, y: 0.18, z: 0.045}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1933547268}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &80836776
 GameObject:
   m_ObjectHideFlags: 0
@@ -706,6 +898,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1867410708376636955, guid: f9e06e9005c218b4d8a87d3ee8fb4de6, type: 3}
+      propertyPath: definition
+      value: 
+      objectReference: {fileID: 11400000, guid: 99fb539f385fb764d9160ca10e593c4b, type: 2}
     - target: {fileID: 1867410708376636955, guid: f9e06e9005c218b4d8a87d3ee8fb4de6, type: 3}
       propertyPath: spellCaster
       value: 
@@ -2823,6 +3019,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4665974575741207286, guid: 1c35391a68063564097abe5bc67a74b3, type: 3}
   m_PrefabInstance: {fileID: 6309653383193446360}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1382141580 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8555206103252705276, guid: 4536faff054cbc843906605db2d025dd, type: 3}
+  m_PrefabInstance: {fileID: 5652826552516281049}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1516424707
 GameObject:
   m_ObjectHideFlags: 0
@@ -3200,6 +3401,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Pen
       objectReference: {fileID: 0}
+    - target: {fileID: 6466874696462171765, guid: 60e6fed39e5c11d4eb6771c314942bb1, type: 3}
+      propertyPath: definition
+      value: 
+      objectReference: {fileID: 11400000, guid: 324b2217dfc706f49abdf340a18c4d1b, type: 2}
     - target: {fileID: 6466874696462171765, guid: 60e6fed39e5c11d4eb6771c314942bb1, type: 3}
       propertyPath: spellCaster
       value: 
@@ -3764,6 +3969,37 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.World.Respawnable
   killHeight: -20
+--- !u!1 &1933547267
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1933547268}
+  m_Layer: 7
+  m_Name: RaycastTool
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1933547268
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1933547267}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
+  m_LocalPosition: {x: 0, y: -1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 56540406}
+  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!1 &1961812949
 GameObject:
   m_ObjectHideFlags: 0
@@ -4653,19 +4889,43 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 8555206103252705276, guid: 4536faff054cbc843906605db2d025dd, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 5652826552516281054}
   m_SourcePrefab: {fileID: 100100000, guid: 4536faff054cbc843906605db2d025dd, type: 3}
 --- !u!114 &5652826552516281050 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 6153617415144828001, guid: 4536faff054cbc843906605db2d025dd, type: 3}
   m_PrefabInstance: {fileID: 5652826552516281049}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 1382141580}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: c4047c122a5ef5e438c3ed074c19cc96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Compiler.SpellCompiler
+--- !u!114 &5652826552516281054
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1382141580}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 433292b5cc625884e8a7095dc6e03458, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Output.SealAnnotations
+  caster: {fileID: 5652826552516281050}
+  lineMaterial: {fileID: 2100000, guid: 8326a591824c7e843a62f5916879c936, type: 2}
+  show: 1
+  textHeightPerMeter: 0.035
+  sigilColor: {r: 0.2, g: 0.75, b: 0.35, a: 1}
+  signColor: {r: 0.2, g: 0.5, b: 0.95, a: 1}
+  ambiguousColor: {r: 0.95, g: 0.65, b: 0.15, a: 1}
+  unknownColor: {r: 0.9, g: 0.2, b: 0.2, a: 1}
+  surfaceOffset: 0.004
 --- !u!54 &6302587454721905793
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -4913,6 +5173,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac27b27125462cc4bafb9c549aab74c1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.World.PhysicalTool
+  definition: {fileID: 11400000, guid: 7bee09af446560f41ac52a8e1fd9c6a0, type: 2}
   toolName: Trapo
   kind: 2
   canvasLayer:
@@ -4923,6 +5184,7 @@ MonoBehaviour:
   raycastOrigin: {fileID: 3480501215916612613}
   pcStabilizerSpeed: 40
   vrStabilizerSpeed: 14
+  strokeWidth: 0
   vrContactDrawing: 0
   vrContactReach: 0.04
   vrDipRadius: 0.04
@@ -5044,3 +5306,4 @@ SceneRoots:
   - {fileID: 4801708796097659609}
   - {fileID: 1516424713}
   - {fileID: 966683817}
+  - {fileID: 56540406}

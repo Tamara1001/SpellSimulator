@@ -40,6 +40,7 @@ namespace SpellSimulator.Canvas
         private RenderTexture renderTexture;
         private Material canvasMaterialInstance;
         private Vector2 lastDrawPosition;
+        private float currentWidth;
         private Bounds meshBounds = new Bounds(Vector3.zero, new Vector3(1f, 1f, 0f));
         private Vector3 surfaceNormalLocal = Vector3.back;
 
@@ -150,15 +151,22 @@ namespace SpellSimulator.Canvas
 
             BeginDraw();
             foreach (var stroke in Session.Strokes)
+            {
+                currentWidth = stroke.Width;
                 for (int i = 0; i < stroke.Points.Count; i++)
                     StampTo(stroke.Points[i], i == 0);
+            }
             EndDraw();
         }
 
-        /// <summary>Estampa tinta en uv, interpolando desde el punto anterior si no es el inicio de un trazo.</summary>
-        public void DrawAt(Vector2 uv, bool isNewStroke)
+        /// <summary>
+        /// Estampa tinta en uv, interpolando desde el punto anterior si no es el inicio de un trazo.
+        /// widthMeters = ancho del trazo (0 = el pincel por defecto del lienzo).
+        /// </summary>
+        public void DrawAt(Vector2 uv, bool isNewStroke, float widthMeters = 0f)
         {
             if (brushMaterial == null) return;
+            currentWidth = widthMeters;
             BeginDraw();
             StampTo(uv, isNewStroke);
             EndDraw();
@@ -199,17 +207,33 @@ namespace SpellSimulator.Canvas
             }
             else
             {
-                int steps = Mathf.Max(1, Mathf.CeilToInt(Vector2.Distance(lastDrawPosition, uv) * lerpStepsPerUnit));
+                // Espaciado entre sellos: el menor entre el fijo y un cuarto del pincel (si no, un trazo rapido o un
+                // pincel ancho queda punteado).
+                Vector2 stamp = StampSizeUV();
+                float spacing = Mathf.Min(1f / lerpStepsPerUnit, Mathf.Max(1e-4f, Mathf.Min(stamp.x, stamp.y) * StampSpacingFraction));
+                int steps = Mathf.Max(1, Mathf.CeilToInt(Vector2.Distance(lastDrawPosition, uv) / spacing));
                 for (int i = 1; i <= steps; i++) Stamp(Vector2.Lerp(lastDrawPosition, uv, (float)i / steps));
             }
             lastDrawPosition = uv;
         }
 
+        private const float StampSpacingFraction = 0.2f;
+
+        /// <summary>Tamanio del sello en UV. Se compensa por la escala para que siga siendo redondo en lienzos estirados.</summary>
+        private Vector2 StampSizeUV()
+        {
+            if (currentWidth > 0f)
+            {
+                Vector2 size = WorldSize;
+                return new Vector2(currentWidth / Mathf.Max(1e-4f, size.x), currentWidth / Mathf.Max(1e-4f, size.y));
+            }
+            return new Vector2(brushSize / Mathf.Max(0.01f, transform.localScale.x), brushSize / Mathf.Max(0.01f, transform.localScale.y));
+        }
+
         private void Stamp(Vector2 uv)
         {
-            // El pincel se compensa por la escala para que siga siendo redondo en lienzos estirados.
-            float sizeX = brushSize / Mathf.Max(0.01f, transform.localScale.x);
-            float sizeY = brushSize / Mathf.Max(0.01f, transform.localScale.y);
+            Vector2 stamp = StampSizeUV();
+            float sizeX = stamp.x, sizeY = stamp.y;
             var rect = new Rect(uv.x - sizeX * 0.5f, 1f - uv.y - sizeY * 0.5f, sizeX, sizeY);
             Graphics.DrawTexture(rect, Texture2D.whiteTexture, brushMaterial);
         }

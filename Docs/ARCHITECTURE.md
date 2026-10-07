@@ -41,9 +41,9 @@ Todo entre `SpellCaster` y `SpellIR` es **lógica pura** (estática, testeada) e
 | `Glyphs` | `GlyphDictionary`, `GlyphEntry`, `GlyphSemantic`, `GlyphDictionaryAsset` | Diccionario como **datos** (JSON de la referencia) → rol, elemento, tamaño de referencia, capas permitidas, semántica, plantillas. |
 | `Compiler` | `GlyphAST`, `GlyphAstBuilder`, `GlyphWarnings`, `SpellCompiler`, `SemanticRules`, `SpellQuality`, `SpellDirection`, `SpellIR`, `SpellPlan`, `PlanResolver` | Port de `compiler/` de la referencia, incluida la lectura (orientación por pose) y el plan (R‑05 a R‑21). Region, weave y orb todavía aportan solo potencia. |
 | `Casting` | `SpellCaster`, `SealActivation`, `SealReader` (lectura guiada: prueba agrupaciones —afinidad, fusión de la capa media, sigilo sin partes sueltas, radial— y elige la que el modelo entiende) | **Único punto de entrada** para lanzar: auto-activación al cerrar el anillo, fases del sello, orquesta el pipeline, diagnósticos (incluye la lectura de cada signo: lado y hacia dónde apunta), eventos `SpellCompiled` / `SealPhaseChanged`. `SealRecord` graba cada sello lanzado para reproducirlo como fixture. |
-| `Output` | `SpellOutputController`, `SpellManifestation` (pistas de partículas + tiempos R‑01), `MagicField` (física por arrastre al flujo), `ElementLook` (SO por elemento), `SealFrame`, `SealFeedback` | Prefab por elemento, sobre el lienzo, orientado por `direction` (papel → mundo), parámetros al VFX Graph. |
+| `Output` | `SpellOutputController`, `SpellManifestation` (pistas de partículas + tiempos R‑01), `MagicField` (física por arrastre al flujo), `ElementLook` (SO por elemento), `SealFrame`, `SealFeedback`, `SealAnnotations` + `SealAnnotationLayout` (qué se leyó, escrito sobre el papel) | Prefab por elemento, sobre el lienzo, orientado por `direction` (papel → mundo), parámetros al VFX Graph. |
 | `Player` | `PlatformDetector`, `PlayerInputReader`, `PlayerMovement`, `PlayerLook`, `PlayerInteractor` (recarga de tinta), `InkSupply`, `Haptics` | Rig PC/VR, input por código, agarrar/soltar/usar por mano. |
-| `World` | `PhysicalTool` (lápiz, goma, trapo; tinta), `PhysicalCanvas`, `Inkwell`, `Respawnable` | Objetos agarrables/usables. |
+| `World` | `PhysicalTool` (lápiz, pincel, goma, trapo; tinta; lee un `ToolDefinition`), `ToolDefinition` (SO), `PhysicalCanvas`, `Inkwell`, `Respawnable` | Objetos agarrables/usables. |
 | `Interfaces` | `IInteractable`, `IUsable`, `HandType`, `IInkUser`, `IInkSource` | Contratos jugador ↔ objetos. |
 | `Debug` (`DebugTools`) | `DiagnosticBus`, `DiagnosticUIController` | Tensor, top‑3 y log del compilador en la UI. |
 
@@ -133,3 +133,4 @@ Floor
 - **Otro reconocedor** (CPU, otro modelo): implementar `IGlyphClassifier`.
 - **Nueva herramienta**: `IDrawingTool` + `PhysicalTool.ToolKind`.
 - **Reaccionar a hechizos** (sandbox, hápticos, sonido): suscribirse a `SpellCaster.SpellCompiled`.
+- **Mostrar la lectura del sello** (overlays, tutorial, libro): `SpellCaster.SealAnalyzed` trae el `GlyphAST` además del hechizo.

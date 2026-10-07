@@ -21,6 +21,10 @@ namespace SpellSimulator.World
     {
         public enum ToolKind { Pen, Eraser, Rag }
 
+        [Header("Definicion")]
+        [SerializeField, Tooltip("Datos de la herramienta. Si esta asignado, pisa los campos de abajo.")]
+        private ToolDefinition definition;
+
         [Header("Drawing Settings")]
         [SerializeField] private string toolName = "Lapiz";
         [SerializeField] private ToolKind kind = ToolKind.Pen;
@@ -33,6 +37,8 @@ namespace SpellSimulator.World
         private float pcStabilizerSpeed = 40f;
         [SerializeField, Tooltip("Velocidad del estabilizador en VR. Bajo = mas suave contra el temblor, mas retraso.")]
         private float vrStabilizerSpeed = 14f;
+        [SerializeField, Tooltip("Ancho del trazo en metros (0 = el del lienzo).")]
+        private float strokeWidth;
 
         [Header("VR")]
         [SerializeField, Tooltip("[VR] Dibujar solo cuando la punta toca el papel (en vez del laser). Experimental.")]
@@ -79,13 +85,14 @@ namespace SpellSimulator.World
             bodyRenderer = GetComponentInChildren<Renderer>();
             block = new MaterialPropertyBlock();
             if (raycastOrigin == null) raycastOrigin = transform;
+            ApplyDefinition();
 
             float stabilizer = PlatformDetector.IsVR ? vrStabilizerSpeed : pcStabilizerSpeed;
             switch (kind)
             {
-                case ToolKind.Pen: tool = new PenTool(stabilizer); break;
-                case ToolKind.Eraser: tool = new EraserTool(); break;
-                default: tool = new RagTool(); break;
+                case ToolKind.Pen: tool = new PenTool(stabilizer, strokeWidth); break;
+                case ToolKind.Eraser: tool = new EraserTool(definition != null ? definition.eraseRadius : 0.025f); break;
+                default: tool = new RagTool(definition != null ? definition.wipeLengthToClear : 1.2f); break;
             }
             RefreshInkVisual();
         }
@@ -106,6 +113,20 @@ namespace SpellSimulator.World
                 }
                 break;
             }
+        }
+
+        private void ApplyDefinition()
+        {
+            if (definition == null) return;
+            toolName = definition.displayName;
+            kind = definition.kind;
+            strokeWidth = definition.strokeWidth;
+            pcStabilizerSpeed = definition.pcStabilizerSpeed;
+            vrStabilizerSpeed = definition.vrStabilizerSpeed;
+            ink = new InkReservoir(definition.inkCapacity, definition.inkCapacity);
+            inkPerMeter = definition.inkPerMeter;
+            fullInkColor = definition.fullInkColor;
+            emptyInkColor = definition.emptyInkColor;
         }
 
         // --- IInteractable ---
@@ -221,7 +242,7 @@ namespace SpellSimulator.World
 
         private void ReportNoInk()
         {
-            DiagnosticBus.OnDiagnosticsUpdated?.Invoke("<b>[Tinta]</b> El lapiz esta seco. Recarga en un tintero (R en PC).");
+            DiagnosticBus.OnDiagnosticsUpdated?.Invoke($"<b>[Tinta]</b> {toolName}: sin tinta. Recarga en un tintero (R en PC).");
             Haptics.Pulse(HandType.Right, 0.5f, 0.15f);
         }
 

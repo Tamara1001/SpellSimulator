@@ -26,9 +26,9 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 - [x] Hápticos (trazo, cast, sin tinta, recarga).
 - [ ] Dibujo por **contacto de la punta** en VR: implementado detrás de un toggle, falta probar en el Quest (KI-034).
 - [x] Feedback en el papel: pulso de "preparado", destello al lanzar o fallar (`SealFeedback`).
-- [ ] Advertencias y glifos reconocidos mostrados en el papel (hoy en el panel DEBUG).
+- [x] Advertencias y glifos reconocidos mostrados en el papel (`SealAnnotations`: nombre, confianza, flecha por signo).
 - [x] Trapo (limpiar el lienzo) (KI-021).
-- [ ] `ToolDefinition` como SO; pincel (grosor por herramienta).
+- [x] `ToolDefinition` como SO (`Data/Tools`: Lápiz, Pincel, Goma, Trapo); pincel con trazo ancho y más gasto de tinta.
 - [x] **Tinta como recurso**: depósito en el lápiz (indicador por color), tinteros físicos, reserva personal, `R` en PC y mojar la punta en VR.
 
 ### M3 — El hechizo tiene forma y fuerza

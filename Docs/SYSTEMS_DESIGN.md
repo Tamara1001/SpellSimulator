@@ -61,7 +61,8 @@ flowchart TB
 ## 2. Herramientas y tinta
 - `ToolDefinition` (SO): tipo (`Pen | Brush | Chisel | Eraser | Rag | Stamp`), ancho de trazo, costo de tinta por
   metro, estabilizador, precisión (ruido) y si requiere superficie de piedra.
-- `IDrawingTool` actual se mantiene. `PhysicalTool` pasa a leer un `ToolDefinition`.
+- `IDrawingTool` actual se mantiene. `PhysicalTool` lee un `ToolDefinition` (hecho en M2: ancho, tinta, estabilizador;
+  falta precisión/ruido y los tipos Chisel/Stamp). Cada `Stroke` guarda su ancho en metros: el reconocimiento no lo usa.
 - `InkReservoir` (en la herramienta): capacidad y nivel. Dibujar consume según la **longitud en metros**; sin tinta
   no se dibuja (el trazo "se seca").
 - `Inkwell` (objeto): reserva grande. Recarga por contacto de la punta (VR) o con `R` si está en el inventario (PC).

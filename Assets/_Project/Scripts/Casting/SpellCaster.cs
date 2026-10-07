@@ -37,6 +37,12 @@ namespace SpellSimulator.Casting
         /// <summary>Ultimo hechizo compilado (valido o no). Util para UI y tests.</summary>
         public SpellIR LastSpell { get; private set; }
 
+        /// <summary>
+        /// Se emite tras cada cast con la lectura completa (AST) ademas del hechizo: para overlays sobre el papel y
+        /// herramientas de aprendizaje. Para reaccionar al hechizo en si, usar SpellCompiled.
+        /// </summary>
+        public event System.Action<GlyphAST, SpellIR, DrawingCanvas> SealAnalyzed;
+
         /// <summary>Se emite tras cada cast con el resultado compilado.</summary>
         public event System.Action<SpellIR, DrawingCanvas> SpellCompiled;
 
@@ -127,6 +133,7 @@ namespace SpellSimulator.Casting
             LastSpell = spell;
             string summary = PublishDiagnostics(ast, spell, predictions, dictionary.Dictionary);
             if (recordSeals) Record(canvas, iso, summary);
+            SealAnalyzed?.Invoke(ast, spell, canvas);
             SpellCompiled?.Invoke(spell, canvas);
 
             if (spell.valid && spell.active && output != null)

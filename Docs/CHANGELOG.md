@@ -5,6 +5,16 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — M2: pincel y lectura del sello sobre el papel
+- `ToolDefinition` (SO) para cada herramienta; `PhysicalTool` lo lee. Assets en `Data/Tools`: Lápiz (4 cm),
+  **Pincel** (10 cm, 20 tinta/m, 150 de capacidad) — nuevo objeto `Brush` en la escena —, Goma y Trapo.
+- `Stroke.Width` (metros): cada trazo se repinta con su ancho. El espaciado de sellos depende del ancho (antes un trazo
+  rápido o ancho quedaba punteado).
+- `SealAnnotations`: tras cada lectura escribe sobre el papel el nombre y la confianza de cada glifo (verde sigilo,
+  azul signo, naranja ambiguo, rojo desconocido), una flecha por signo y las advertencias debajo. Se borran al tocar
+  el lienzo. Nuevo evento `SpellCaster.SealAnalyzed` (AST + hechizo).
+- 91 tests. Docs: ROADMAP, STRUCTURE, ARCHITECTURE, SYSTEMS_DESIGN.
+
 ## 2026-10-07 — Primeras fixtures reales y sigilo sin partes sueltas
 - Dos sellos grabados por Tamara (mismo dibujo, uno prolijo y uno a propósito desprolijo) pasan a `Tests/Fixtures`.
 - El desprolijo fallaba porque una columna cercana se fusionaba con el fuego (confianza 0.43). Nueva hipótesis del

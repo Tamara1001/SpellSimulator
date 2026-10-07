@@ -15,6 +15,7 @@ SpellSimulator/
 │   │   ├── Data/                 #   glyph-recognizer.onnx(+.data), glyph-class-to-idx.json,
 │   │   │   ├── Dictionary/       #   sigils/*.json, signs/*.json (copiados de la referencia)
 │   │   │   ├── Elements/         #   ElementLook: Fire, Water, Wind, Earth, Light
+│   │   │   ├── Tools/            #   ToolDefinition: Lapiz, Pincel, Goma, Trapo
 │   │   │   └── GlyphDictionary.asset
 │   │   ├── Editor/               #   SpellSimulator.Editor.asmdef — harness, sync del diccionario, chequeos
 │   │   ├── Materials/            #   Canvas, BrushMaterial, Pen, Eraser, Rag, Inkwell, Crate, VRPointer, SpellParticle(.shader) + Additive/Alpha, Binarize(.shader)
