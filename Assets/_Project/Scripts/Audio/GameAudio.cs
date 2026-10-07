@@ -47,6 +47,8 @@ namespace SpellSimulator.Audio
             Grimoire.PageTurned += OnPageTurned;
             LibraryBook.BookRead += OnBookRead;
             Discovery.Discovered += OnDiscovered;
+            Stamp.Stamped += OnStamped;
+            Stamp.Loaded += OnStampLoaded;
         }
 
         private void OnDisable()
@@ -70,6 +72,8 @@ namespace SpellSimulator.Audio
             Grimoire.PageTurned -= OnPageTurned;
             LibraryBook.BookRead -= OnBookRead;
             Discovery.Discovered -= OnDiscovered;
+            Stamp.Stamped -= OnStamped;
+            Stamp.Loaded -= OnStampLoaded;
         }
 
         private void Update()
@@ -191,6 +195,16 @@ namespace SpellSimulator.Audio
         private void OnDiscovered(string glyph, string source)
         {
             if (Director != null && glyph != null) Director.Play("ui_confirm", ListenerPosition());
+        }
+
+        private void OnStamped(Stamp stamp, DrawingCanvas canvas)
+        {
+            if (Director != null) Director.Play("stamp", canvas.transform.position);
+        }
+
+        private void OnStampLoaded(Stamp stamp, string glyph)
+        {
+            if (Director != null) Director.Play("ui_select", stamp.transform.position);
         }
 
         private void OnReset()

@@ -64,6 +64,11 @@ ignorada por git). Verificar arrancándola con `-logFile` unos segundos: debe lo
 excepciones fuera de `[XR]` (OpenXR sin casco loguea `XR_ERROR_FORM_FACTOR_UNAVAILABLE`: esperado). Los ~500 warnings
 de la build son shaders del paquete de inferencia.
 
+## Errores de compilación que no aparecen
+Si una clase nueva no aparece (`Type.GetType` da null) y la consola por MCP no muestra errores, buscar `error CS` en
+`%LOCALAPPDATA%/Unity/Editor/Editor.log`: los errores de un asmdef (p. ej. el de Editor sin referencia a
+`Unity.TextMeshPro`) frenan toda la recarga y a veces no llegan a la consola.
+
 ## Mapa (M5)
 `SpellSimulator > Map > Build Pradera` (o `MapBuilder.Build()` por MCP) regenera el mapa en `Pradera.unity`: borra el
 objeto `Map` y lo vuelve a crear, guarda las mallas en `Art/Generated` y reubica jugador, papeles, herramientas,
@@ -97,7 +102,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 **Física en tiempo real**: guardar posiciones (cultura invariante: `Vector3.ToString` usa coma decimal), lanzar,
 `sleep 4` en Bash y medir. Los blancos están en `TestProps` (plataforma a la altura del chorro).
 
-## Tests (119 al 2026-10-07)
+## Tests (122 al 2026-10-07)
 | Archivo | Cubre |
 |---|---|
 | `ParsingTests` | RingDetector (cerrado/abierto/dos arcos/ajuste), StrokeGrouper (transitividad), SymbolCandidate, capas, StrokeCleaner, GeometryUtils |
@@ -113,6 +118,7 @@ luz + 1 columna a la izquierda = chorro lateral.
 | `ValleyShapeTests` | Mapa: torre en meseta plana, lago bajo el agua, montañas cierran el valle, pendiente caminable, sin árboles en spawn/campo/torre |
 | `AudioTests` | Todos los cues que usa el código existen y tienen clips; pasos según superficie |
 | `LearningTests` | Textos para todos los glifos del diccionario, todo glifo se puede aprender, progreso ida y vuelta |
+| `StampTests` | Con el modelo: el sigilo estampado deja el anillo abierto (preparado), cerrado a mano lanza su elemento, columnas estampadas forman un chorro |
 | `CompilerTests` | Gates (sin anillo, baja confianza, sin sigilo, varios sigilos), activo/preparado, levitation, dirección inward, cancelación, fuerza, escala |
 
 ## Sellos grabados (fixtures de pruebas manuales)

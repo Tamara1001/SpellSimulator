@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — M6: estampas
+- `StampPattern` (puro): sigilo + anillo abierto del diámetro de la estampa; signo del tamaño del anillo existente,
+  orientado hacia su centro. `Stamp`: se agarra, se carga del grimorio abierto (`Grimoire.CurrentGlyph`, 5 usos) y
+  estampa sobre papeles; etiqueta flotante con el glifo y las cargas (`FaceCamera`). Sonidos de estampar y cargar.
+- Estampas S/M/L en una mesa del campo + una M en el escritorio de la biblioteca (`MapDetails.Stamps`).
+- 3 tests con el modelo (`StampTests`). Verificado en Play: grimorio → cargar → estampar → sello preparado. 122 tests.
+- Harness: el asmdef de Editor necesitaba `Unity.TextMeshPro`; nota sobre errores que no llegan a la consola.
+
 ## 2026-10-07 — Arreglos: entrar a la torre, moverse y dorso de los lienzos
 - KI-056: zócalo de la torre cortado en la puerta (se entra caminando).
 - KI-057: `PlayerMovement` sube escalones bajos y no resbala quieto en rampas; cápsula del jugador más angosta y sin

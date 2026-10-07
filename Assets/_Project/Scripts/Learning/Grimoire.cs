@@ -48,7 +48,17 @@ namespace SpellSimulator.Learning
         private int strokeIndex;
         private float strokeBudget;
 
+        public static Grimoire Instance { get; private set; }
+
         public bool IsOpen => root != null && root.gameObject.activeSelf;
+
+        /// <summary>Glifo de la pagina abierta (null en portada u opciones). Lo usan las estampas para cargarse.</summary>
+        public string CurrentGlyph => IsOpen && page < pages.Count && !pages[page].StartsWith("#") ? pages[page] : null;
+
+        /// <summary>True si el collider es parte del libro (paginas, botones).</summary>
+        public bool Owns(Collider c) => c != null && root != null && c.transform.IsChildOf(root);
+
+        private void Awake() => Instance = this;
 
         private void Start()
         {
@@ -57,7 +67,11 @@ namespace SpellSimulator.Learning
             Discovery.Discovered += OnDiscovered;
         }
 
-        private void OnDestroy() => Discovery.Discovered -= OnDiscovered;
+        private void OnDestroy()
+        {
+            Discovery.Discovered -= OnDiscovered;
+            if (Instance == this) Instance = null;
+        }
 
         private void Update()
         {

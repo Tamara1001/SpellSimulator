@@ -300,6 +300,70 @@ namespace SpellSimulator.EditorTools.Map
             }
         }
 
+        // ---------------------------------------------------------------- estampas
+
+        /// <summary>Estampas S/M/L en una mesa del campo de practica y una M en el escritorio de la biblioteca.</summary>
+        public static void Stamps(Transform map, Material material, Vector3 fieldTable, Vector3 libraryDesk)
+        {
+            var caster = Object.FindFirstObjectByType<Casting.SpellCaster>();
+            var dictionary = AssetDatabase.LoadAssetAtPath<Glyphs.GlyphDictionaryAsset>("Assets/_Project/Data/GlyphDictionary.asset");
+            TowerBuilder.Table(map, material, "StampTable", fieldTable - map.position, 0f, 1.2f, 0.6f);
+            var sizes = new (string name, float diameter, Vector3 at)[]
+            {
+                ("S", 0.08f, fieldTable + new Vector3(-0.4f, 0.86f, 0f)),
+                ("M", 0.2f, fieldTable + new Vector3(0f, 0.86f, 0f)),
+                ("L", 0.34f, fieldTable + new Vector3(0.42f, 0.86f, 0f)),
+                ("M", 0.2f, libraryDesk),
+            };
+            int i = 0;
+            foreach (var (name, diameter, at) in sizes)
+            {
+                string id = $"Stamp_{name}_{i++}";
+                var old = GameObject.Find(id);
+                if (old != null) Object.DestroyImmediate(old);
+                var root = new GameObject(id);
+                root.layer = 0;
+                root.transform.position = at;
+
+                // Base ancha (la cara que estampa) y mango.
+                float r = Mathf.Max(diameter * 0.5f, 0.04f);
+                var b = new LowPolyMesh();
+                b.Frustum(Matrix4x4.identity, r, r, 0f, 0.035f, 12, new Color(0.36f, 0.22f, 0.15f), true, true);
+                b.Frustum(Matrix4x4.identity, r * 0.92f, r * 0.92f, -0.006f, 0f, 12, new Color(0.32f, 0.18f, 0.42f), false, true);
+                b.Frustum(Matrix4x4.Translate(new Vector3(0f, 0.035f, 0f)), 0.025f, 0.02f, 0f, 0.1f, 8, new Color(0.45f, 0.3f, 0.2f));
+                b.Frustum(Matrix4x4.Translate(new Vector3(0f, 0.135f, 0f)), 0.035f, 0f, 0f, 0.03f, 8, new Color(0.95f, 0.78f, 0.35f), false, true);
+                var mesh = MapBuilder.SaveMesh(b.Build($"Stamp_{name}"));
+                var visual = new GameObject("Visual");
+                visual.transform.SetParent(root.transform, false);
+                visual.AddComponent<MeshFilter>().sharedMesh = mesh;
+                visual.AddComponent<MeshRenderer>().sharedMaterial = material;
+
+                var col = root.AddComponent<BoxCollider>();
+                col.center = new Vector3(0f, 0.07f, 0f);
+                col.size = new Vector3(r * 2f, 0.16f, r * 2f);
+                var rb = root.AddComponent<Rigidbody>();
+                rb.mass = 0.3f + diameter;
+                root.AddComponent<World.Respawnable>();
+
+                var labelGo = new GameObject("Label");
+                labelGo.transform.SetParent(root.transform, false);
+                labelGo.transform.localPosition = new Vector3(0f, 0.22f, 0f);
+                var label = labelGo.AddComponent<TMPro.TextMeshPro>();
+                label.fontSize = 0.35f;
+                label.alignment = TMPro.TextAlignmentOptions.Center;
+                label.rectTransform.sizeDelta = new Vector2(0.4f, 0.2f);
+                label.color = new Color(0.98f, 0.92f, 0.75f);
+                labelGo.AddComponent<World.FaceCamera>();
+
+                var stamp = root.AddComponent<World.Stamp>();
+                stamp.Configure(name, diameter, caster, dictionary, label);
+                var so = new SerializedObject(stamp);
+                so.FindProperty("canvasLayer").intValue = LayerMask.GetMask("Canvas");
+                so.ApplyModifiedProperties();
+                Undo.RegisterCreatedObjectUndo(root, id);
+            }
+        }
+
         // ---------------------------------------------------------------- papeles
 
         /// <summary>

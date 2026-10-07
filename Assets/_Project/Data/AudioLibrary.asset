@@ -337,6 +337,22 @@ MonoBehaviour:
     spatialBlend: 1
     minDistance: 1.5
     maxDistance: 30
+  - id: stamp
+    clips:
+    - {fileID: 8300000, guid: ac485409c585bee4493c8f1c36fee7ad, type: 3}
+    - {fileID: 8300000, guid: c9d0d0985a8d41a429108be34eac4da2, type: 3}
+    - {fileID: 8300000, guid: 214b8eabf04d9574e8cb143bee5a7dcf, type: 3}
+    - {fileID: 8300000, guid: 51c3707da7f45fc418563a988758507a, type: 3}
+    - {fileID: 8300000, guid: fdf830f9b2836cf4ba281a6d7d8b4ff5, type: 3}
+    - {fileID: 8300000, guid: 0d19227763bac5b42afb990213423bb5, type: 3}
+    - {fileID: 8300000, guid: e4d48f6e748f0f143957f658ddc55c4e, type: 3}
+    - {fileID: 8300000, guid: f4264a7007f02da46bb10f5c2499e793, type: 3}
+    category: 0
+    volume: 0.7
+    pitch: {x: 0.92, y: 1.08}
+    spatialBlend: 1
+    minDistance: 1.5
+    maxDistance: 30
   - id: book_close
     clips:
     - {fileID: 8300000, guid: 13bec41d991b5b14991b851ab217290d, type: 3}

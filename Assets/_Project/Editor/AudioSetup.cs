@@ -88,6 +88,7 @@ namespace SpellSimulator.EditorTools
                 Cue("step_stone", Clips(impact, "footstep_concrete"), 0.35f, maxDistance: 12f, pitchSpread: 0.08f),
                 // Libro (M6) e interfaz.
                 Cue("book_open", Clips(rpg, "bookOpen"), 0.6f),
+                Cue("stamp", Join(Clips(rpg, "bookPlace"), Clips(impact, "impactSoft_medium")), 0.7f, pitchSpread: 0.08f),
                 Cue("book_close", Clips(rpg, "bookClose"), 0.6f),
                 Cue("book_flip", Clips(rpg, "bookFlip"), 0.6f, pitchSpread: 0.1f),
                 Cue("ui_select", Clips(ui, "select_"), 0.5f, spatial: 0f),

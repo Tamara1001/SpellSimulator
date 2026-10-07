@@ -53,6 +53,8 @@ namespace SpellSimulator.EditorTools.Map
             SetupLighting();
             RelocateGameplay();
             MapDetails.Papers(TowerOrigin(), lit, map);
+            Vector3 stampTable = Ground(ValleyShape.FieldCenter.x + 2f, ValleyShape.FieldCenter.y - 10.5f);
+            MapDetails.Stamps(map, lit, stampTable, TowerOrigin() + new Vector3(0.5f, 0.9f, 0.3f));
             MapDetails.PostProcess();
 
             EditorSceneManager.MarkSceneDirty(scene);

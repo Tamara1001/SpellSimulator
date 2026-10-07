@@ -82,6 +82,12 @@ Se empieza conociendo **Fuego, Columna y Levitación**. Los libros de la torre e
 del estudio) y *Signos raros* (pedestal en la terraza, premio por subir). Dibujar bien un glifo desconocido también lo
 descubre. El grimorio muestra cada glifo dibujándose solo, con su explicación. El progreso se guarda.
 
+## Estampas (M6)
+Tres tamaños en la mesa del campo de práctica (S 8 cm, M 20 cm, L 34 cm) y una M en el escritorio de la biblioteca. Se
+cargan desde la página de un glifo del grimorio (5 usos por carga). Un **sigilo** se estampa con su anillo **abierto**:
+el sello queda preparado y se lanza al cerrarlo con la pluma (el tamaño de la estampa es el tamaño del sello y su
+potencia). Un **signo** se estampa del tamaño del anillo que ya hay en el papel, apuntando a su centro.
+
 ## Audio (M5)
 Música ambiental suave (pads + campanitas), viento y pájaros de fondo, cascada que se oye al acercarse. Cada acción
 suena: pluma/pincel al dibujar, goma, trapo, tintero, campanita de sello **preparado**, lanzamiento distinto por
@@ -99,6 +105,8 @@ rocas que emergen, pasos según el piso (pasto, madera, piedra). Créditos: soni
 | Recargar tinta | R | Mojar la punta en un tintero |
 | Abrir/cerrar el grimorio | Tab (gamepad: Y) | Botón de menú del control izquierdo |
 | Pasar página, leer un libro, apretar un botón | Mirar + E | Apuntar + grip |
+| Cargar una estampa (grimorio abierto en un glifo) | Estampa en mano + mirar el libro + clic derecho | Apuntar al libro + A |
+| Estampar | Clic izquierdo sobre un papel | Gatillo |
 | Lanzar | Soltar mientras te movés / Q | Soltar con velocidad (física) |
 | Liberar cursor | Escape | — |
 | Reiniciar el mundo (Libre) | Backspace (gamepad: Select) | Y (control izquierdo) |
