@@ -1,0 +1,241 @@
+using UnityEngine;
+using SpellSimulator.Interfaces;
+
+namespace SpellSimulator.Player
+{
+    /// <summary>
+    /// Mover objetos a distancia estilo Garry's Mod (PC): mantener G apunta a un objeto con Rigidbody y lo sostiene
+    /// con fisica delante de la camara. Rueda = distancia, Shift + rueda = girar sobre el eje de la mira, clic derecho
+    /// + mouse = rotar el objeto (la vista queda quieta). Al soltar G puede quedar flotando (T).
+    /// Es distinto de E (agarrar en la mano, <see cref="PlayerInteractor"/>), que no se toca. En VR no hace nada.
+    /// </summary>
+    [RequireComponent(typeof(PlayerInputReader))]
+    public class ObjectMover : MonoBehaviour
+    {
+        private const float PickRange = 12f;
+        private const float MinDistance = 0.8f;
+        private const float MaxDistance = 14f;
+        private const float DistanceStep = 0.35f;
+        private const float RollStep = 15f;
+        private const float RotateDegreesPerUnit = 0.25f;
+        private const float FollowGain = 18f;
+        private const float MaxLinearSpeed = 25f;
+        private const float RotationGain = 12f;
+        private const float MaxAngularSpeed = 20f;
+        private const float GenericDamping = 3f;
+
+        private static readonly RaycastHit[] pickHits = new RaycastHit[16];
+
+        private PlayerInputReader inputReader;
+        private Camera cam;
+        private Rigidbody playerBody;
+
+        private bool holding;
+        private bool pinRequested;
+        private Rigidbody held;
+        private IRemoteGrabbable grabbable;
+        private float holdDistance;
+        private Quaternion relativeRotation;
+
+        // Valores originales del objeto genérico (sin IRemoteGrabbable), para restaurarlos al soltar.
+        private bool savedGravity, savedKinematic;
+        private float savedLinearDamping, savedAngularDamping;
+
+        // Colliders del objeto y del jugador que se ignoraron mientras se sostiene (se revierte al soltar).
+        private Collider[] heldColliders;
+        private Collider[] playerColliders;
+
+        /// <summary>True mientras se sostiene un objeto a distancia.</summary>
+        public bool IsHolding => holding;
+        /// <summary>True si se sostiene y el clic derecho esta apretado: el mouse rota el objeto y no la vista.</summary>
+        public bool IsRotating => holding && inputReader.IsRotateHeld;
+
+        private void Awake()
+        {
+            inputReader = GetComponent<PlayerInputReader>();
+            cam = Camera.main;
+            playerBody = GetComponent<Rigidbody>();
+        }
+
+        private void OnDisable()
+        {
+            if (holding) ClearHeld();
+        }
+
+        private void Update()
+        {
+            if (PlatformDetector.IsVR || cam == null) return;
+
+            if (!holding)
+            {
+                if (inputReader.IsRemoteGrabbing) TryGrab();
+                return;
+            }
+
+            // Objeto destruido o desactivado: se suelta sin callbacks.
+            if (held == null || !held.gameObject.activeInHierarchy)
+            {
+                ClearHeld();
+                return;
+            }
+
+            if (!inputReader.IsRemoteGrabbing)
+            {
+                Release();
+                return;
+            }
+
+            if (inputReader.IsPinning) pinRequested = true;
+
+            float scroll = inputReader.Scroll;
+            if (scroll != 0f)
+            {
+                float step = Mathf.Sign(scroll);
+                if (inputReader.IsRunning)
+                    relativeRotation = Quaternion.AngleAxis(step * RollStep, Vector3.forward) * relativeRotation;
+                else
+                    holdDistance = Mathf.Clamp(holdDistance + step * DistanceStep, MinDistance, MaxDistance);
+            }
+
+            if (inputReader.IsRotateHeld)
+            {
+                Vector2 look = inputReader.LookValue * RotateDegreesPerUnit;
+                // Multiplicar por la izquierda rota alrededor de los ejes de la camara (la rotacion relativa vive en ese espacio).
+                relativeRotation = Quaternion.AngleAxis(look.x, Vector3.up) * relativeRotation;
+                relativeRotation = Quaternion.AngleAxis(-look.y, Vector3.right) * relativeRotation;
+            }
+        }
+
+        private void FixedUpdate()
+        {
+            if (!holding || held == null || cam == null) return;
+            if (held.isKinematic) return;
+
+            Vector3 point = cam.transform.position + cam.transform.forward * holdDistance;
+            held.linearVelocity = Vector3.ClampMagnitude((point - held.position) * FollowGain, MaxLinearSpeed);
+
+            Quaternion targetRotation = cam.transform.rotation * relativeRotation;
+            Quaternion delta = targetRotation * Quaternion.Inverse(held.rotation);
+            delta.ToAngleAxis(out float angle, out Vector3 axis);
+            if (angle > 180f) angle -= 360f;
+            Vector3 angular = axis * (angle * Mathf.Deg2Rad * RotationGain);
+            held.angularVelocity = Vector3.ClampMagnitude(angular, MaxAngularSpeed);
+        }
+
+        /// <summary>Raycast desde la mira (o el puntero en modo dibujo) buscando el golpe util mas cercano.</summary>
+        private void TryGrab()
+        {
+            Ray ray = FocusMode.GetRay(cam);
+            int count = Physics.RaycastNonAlloc(ray, pickHits, PickRange, Physics.DefaultRaycastLayers, QueryTriggerInteraction.Collide);
+
+            float bestDistance = float.MaxValue;
+            Rigidbody best = null;
+            for (int i = 0; i < count; i++)
+            {
+                RaycastHit hit = pickHits[i];
+                if (hit.distance >= bestDistance) continue;
+
+                Rigidbody rb = hit.collider.GetComponentInParent<Rigidbody>();
+                if (rb == null || rb == playerBody || rb.GetComponent<PlayerMovement>() != null) continue;
+                // Lo que ya esta en la mano (bajo la camara) no se toma a distancia.
+                if (hit.collider.transform.IsChildOf(cam.transform)) continue;
+
+                bestDistance = hit.distance;
+                best = rb;
+            }
+
+            if (best != null) Begin(best, bestDistance);
+        }
+
+        private void Begin(Rigidbody rb, float distance)
+        {
+            held = rb;
+            holding = true;
+            pinRequested = false;
+            holdDistance = Mathf.Clamp(distance, MinDistance, PickRange);
+            relativeRotation = Quaternion.Inverse(cam.transform.rotation) * rb.rotation;
+
+            grabbable = rb.GetComponentInParent<IRemoteGrabbable>();
+            if (grabbable != null)
+            {
+                grabbable.OnRemoteGrab();
+            }
+            else
+            {
+                savedGravity = rb.useGravity;
+                savedKinematic = rb.isKinematic;
+                savedLinearDamping = rb.linearDamping;
+                savedAngularDamping = rb.angularDamping;
+                rb.useGravity = false;
+                rb.isKinematic = false;
+                rb.linearDamping = GenericDamping;
+                rb.angularDamping = GenericDamping;
+            }
+
+            IgnorePlayerCollisions(true);
+        }
+
+        /// <summary>Suelta el objeto: avisa a IRemoteGrabbable, o restaura los valores originales del generico.</summary>
+        private void Release()
+        {
+            bool pin = pinRequested;
+            Rigidbody rb = held;
+            IRemoteGrabbable target = grabbable;
+            ClearHeld();
+
+            if (rb == null) return;
+            if (target != null)
+            {
+                target.OnRemoteRelease(pin);
+                return;
+            }
+
+            rb.useGravity = savedGravity;
+            rb.linearDamping = savedLinearDamping;
+            rb.angularDamping = savedAngularDamping;
+            if (pin)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+                rb.isKinematic = true;
+            }
+            else
+            {
+                rb.isKinematic = savedKinematic;
+            }
+        }
+
+        /// <summary>Limpia el estado de sujecion y revierte las colisiones ignoradas. No llama callbacks.</summary>
+        private void ClearHeld()
+        {
+            IgnorePlayerCollisions(false);
+            holding = false;
+            pinRequested = false;
+            held = null;
+            grabbable = null;
+        }
+
+        private void IgnorePlayerCollisions(bool ignore)
+        {
+            if (ignore)
+            {
+                heldColliders = held != null ? held.GetComponentsInChildren<Collider>() : null;
+                playerColliders = GetComponentsInChildren<Collider>();
+            }
+            if (heldColliders == null || playerColliders == null) return;
+
+            foreach (var mine in heldColliders)
+            {
+                if (mine == null) continue;
+                foreach (var theirs in playerColliders)
+                    if (theirs != null) Physics.IgnoreCollision(mine, theirs, ignore);
+            }
+
+            if (!ignore)
+            {
+                heldColliders = null;
+                playerColliders = null;
+            }
+        }
+    }
+}

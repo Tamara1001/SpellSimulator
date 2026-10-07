@@ -9,8 +9,11 @@ namespace SpellSimulator.Reactions
     /// Incendio del pasto (SYSTEMS_DESIGN 5, "Suelo"). El campo es una grilla de celdas de 2 m sobre [-70,70]^2
     /// (70x70 = 4900 celdas). Cada celda es pasto (0), ardiendo (1), quemada (2) o no inflamable (3: lago, rio, camino
     /// o fuera de PlayableRadius+4). El fuego se enciende con las marcas de suelo de fuego, con los hechizos de fuego
-    /// cerca del piso y con los objetos que arden; se propaga a los 8 vecinos con probabilidad spreadChance cada 0.5 s;
-    /// cada celda arde burnSeconds y queda quemada. El agua apaga las celdas que arden (no revive las quemadas).
+    /// cerca del piso y con los objetos que arden; se propaga a los 8 vecinos cada 0.5 s con probabilidad
+    /// spreadChance * generationDecay^g, donde g es la generacion de la celda que propaga (las encendidas por fuente
+    /// directa son g = 0 y cada salto suma 1; desde maxGenerations en adelante ya no propagan). Asi el incendio es local
+    /// y se apaga solo, salvo que se lo alimente. Cada celda arde burnSeconds y queda quemada. El agua apaga las celdas
+    /// que arden (no revive las quemadas).
     /// Logica a pasos fijos de 0.25 s (sin Coroutines). Dibujo: quads quemados con DrawMeshInstanced (las tandas se
     /// reconstruyen solo cuando cambia el conjunto) y un pool de llamas (ParticleSystem de BurnEffect) que se reasigna
     /// cada 0.5 s a las celdas ardiendo mas cercanas a la camara.
@@ -40,15 +43,32 @@ namespace SpellSimulator.Reactions
         /// <summary>Pasos maximos por frame: si el juego va lento, el fuego avanza mas lento (no en rafagas).</summary>
         private const int MaxStepsPerFrame = 4;
         /// <summary>Radio de ignicion de una marca de fuego (m).</summary>
-        private const float IgniteMarkRadius = 1.5f;
+        private const float IgniteMarkRadius = 0.9f;
         /// <summary>Radio de apagado de una marca de agua (m).</summary>
         private const float WaterMarkRadius = 3f;
         /// <summary>Un hechizo de fuego enciende el pasto solo si su origen esta a menos de esta altura del suelo (m).</summary>
         private const float FireSpellHeight = 2.5f;
         /// <summary>Maximo de celdas que enciende cada hechizo de fuego por revision.</summary>
-        private const int FieldFireBudget = 25;
+        private const int FieldFireBudget = 12;
+        /// <summary>Radio (fraccion del ReachRadius) dentro del cual un hechizo de fuego enciende celdas.</summary>
+        private const float FieldFireRadiusFactor = 0.35f;
         /// <summary>Un objeto ardiendo enciende el pasto si esta a menos de esta altura del suelo (m).</summary>
         private const float ReactiveFireHeight = 1.5f;
+        /// <summary>
+        /// Un objeto ardiendo enciende la celda bajo el solo si lleva ardiendo mas de esto. Se usa ElementReactive.State.BurnProgress
+        /// (avance = tiempo / burnSeconds del perfil): 0.15 equivale a ~2 s cuando el perfil arde ~13 s; con perfiles de otra
+        /// duracion el umbral es proporcional, no fijo en segundos.
+        /// </summary>
+        private const float ReactiveBurnThreshold = 0.15f;
+        /// <summary>Tabla precalculada de potencias generationDecay^g para g = 0..DecayTableSize-1 (sin Pow por frame).</summary>
+        private const int DecayTableSize = 33;
+
+        // Defaults. Los valores serializados de la escena pisan estos; ApplyDefaults() los restablece.
+        private const float DefaultSpreadChance = 0.07f;
+        private const float DefaultBurnSeconds = 5f;
+        private const float DefaultHeatPerSecond = 5f;
+        private const float DefaultGenerationDecay = 0.78f;
+        private const int DefaultMaxGenerations = 9;
         /// <summary>Celdas ardiendo que dañan objetos por pasada (round-robin).</summary>
         private const int DamageCellsPerPass = 16;
         private const float DamageRadius = 1.4f;
@@ -59,12 +79,16 @@ namespace SpellSimulator.Reactions
         private const float BurnLift = 0.05f;
         private const float FlameLift = 0.05f;
 
-        [SerializeField, Tooltip("Probabilidad, por vecino y cada 0.5 s, de que una celda ardiendo encienda el pasto de al lado.")]
-        private float spreadChance = 0.03f;
+        [SerializeField, Tooltip("Probabilidad base, por vecino y cada 0.5 s, de que una celda ardiendo encienda el pasto de al lado. Se multiplica por generationDecay^g.")]
+        private float spreadChance = DefaultSpreadChance;
         [SerializeField, Tooltip("Segundos que arde una celda antes de quedar quemada.")]
-        private float burnSeconds = 7f;
+        private float burnSeconds = DefaultBurnSeconds;
         [SerializeField, Tooltip("Calor por segundo que recibe lo que esta sobre el fuego. ElementReactive lo consume en el siguiente tick de MagicWorld (15 Hz), asi que cada pasada aporta poco: valor chico a proposito.")]
-        private float heatPerSecond = 9f;
+        private float heatPerSecond = DefaultHeatPerSecond;
+        [SerializeField, Range(0.01f, 1f), Tooltip("Factor por generacion: la probabilidad de propagar desde una celda de generacion g es spreadChance * generationDecay^g. Menor = el incendio se apaga antes.")]
+        private float generationDecay = DefaultGenerationDecay;
+        [SerializeField, Min(0), Tooltip("Generacion maxima que propaga: una celda de generacion mayor no enciende vecinas (la generacion se cuenta desde la fuente directa).")]
+        private int maxGenerations = DefaultMaxGenerations;
         [SerializeField, Tooltip("Material de las celdas quemadas (debe tener enableInstancing).")]
         private Material burnMaterial;
         [SerializeField, Tooltip("Look de las llamas (de aca salen material y gravedad).")]
@@ -79,6 +103,10 @@ namespace SpellSimulator.Reactions
         private byte[] baseState;
         /// <summary>Segundos de combustion que le quedan a cada celda ardiendo.</summary>
         private float[] timers;
+        /// <summary>Generacion de cada celda encendida: 0 = fuente directa; el propagado suma 1 al de su origen.</summary>
+        private byte[] generation;
+        /// <summary>Potencias generationDecay^g precalculadas (indice g, con tope en DecayTableSize-1).</summary>
+        private float[] decayPowers;
         /// <summary>Altura del suelo en el centro de cada celda.</summary>
         private float[] groundY;
 
@@ -124,6 +152,9 @@ namespace SpellSimulator.Reactions
             state = new byte[Cells];
             baseState = new byte[Cells];
             timers = new float[Cells];
+            generation = new byte[Cells];
+            decayPowers = new float[DecayTableSize];
+            RebuildDecayTable();
             groundY = new float[Cells];
             inList = new bool[Cells];
             burning = new int[Cells];
@@ -192,6 +223,20 @@ namespace SpellSimulator.Reactions
             IgniteArea(worldPoint, radius, int.MaxValue);
         }
 
+        /// <summary>
+        /// Restablece spreadChance, burnSeconds, heatPerSecond, generationDecay y maxGenerations a los defaults del codigo.
+        /// Pensado para que un script de editor pise los valores serializados viejos de la escena.
+        /// </summary>
+        public void ApplyDefaults()
+        {
+            spreadChance = DefaultSpreadChance;
+            burnSeconds = DefaultBurnSeconds;
+            heatPerSecond = DefaultHeatPerSecond;
+            generationDecay = DefaultGenerationDecay;
+            maxGenerations = DefaultMaxGenerations;
+            RebuildDecayTable();
+        }
+
         /// <summary>Reinicio: el pasto vuelve a estar sano (las no inflamables siguen asi), sin llamas.</summary>
         public void ResetAll()
         {
@@ -253,7 +298,7 @@ namespace SpellSimulator.Reactions
                 if (field.Element == ElementType.Fire)
                 {
                     if (origin.y - ValleyShape.Height(origin.x, origin.z) < FireSpellHeight)
-                        IgniteArea(origin, field.ReachRadius * 0.5f, FieldFireBudget);
+                        IgniteArea(origin, field.ReachRadius * FieldFireRadiusFactor, FieldFireBudget);
                 }
                 else if (field.Element == ElementType.Water)
                 {
@@ -267,7 +312,9 @@ namespace SpellSimulator.Reactions
                 var reactive = all[i];
                 if (reactive == null || !reactive.isActiveAndEnabled || !reactive.State.Burning) continue;
                 Vector3 p = reactive.WorldBounds.center;
-                if (InGrid(p) && p.y - ValleyShape.Height(p.x, p.z) < ReactiveFireHeight) TryIgnite(CellOf(p));
+                // Solo la celda bajo el objeto (sin vecinas), y solo tras arder mas de ReactiveBurnThreshold de su avance.
+                if (reactive.State.BurnProgress <= ReactiveBurnThreshold) continue;
+                if (InGrid(p) && p.y - ValleyShape.Height(p.x, p.z) < ReactiveFireHeight) TryIgnite(CellOf(p), 0);
             }
         }
 
@@ -303,7 +350,10 @@ namespace SpellSimulator.Reactions
             listCount = kept;
         }
 
-        /// <summary>Cada celda ardiendo intenta encender a sus 8 vecinos con pasto. Solo recorre la lista de ardientes.</summary>
+        /// <summary>
+        /// Cada celda ardiendo intenta encender a sus 8 vecinos con pasto, con probabilidad spreadChance * generationDecay^g
+        /// (g = su generacion). Las de generacion mayor que maxGenerations no propagan. Solo recorre la lista de ardientes.
+        /// </summary>
         private void SpreadStep()
         {
             // Snapshot: las celdas nuevas se agregan al final y arden desde la proxima pasada.
@@ -312,6 +362,9 @@ namespace SpellSimulator.Reactions
             {
                 int c = burning[r];
                 if (state[c] != Burning) continue;
+                int g = generation[c];
+                if (g > maxGenerations) continue;
+                float chance = spreadChance * decayPowers[Mathf.Min(g, DecayTableSize - 1)];
                 int cx = c % GridSize;
                 int cz = c / GridSize;
                 for (int dz = -1; dz <= 1; dz++)
@@ -324,7 +377,7 @@ namespace SpellSimulator.Reactions
                         if ((dx == 0 && dz == 0) || nx < 0 || nx >= GridSize) continue;
                         int n = nz * GridSize + nx;
                         if (state[n] != Grass) continue;
-                        if (NextUnit() < spreadChance) TryIgnite(n);
+                        if (NextUnit() < chance) TryIgnite(n, (byte)(g + 1));
                     }
                 }
             }
@@ -363,10 +416,12 @@ namespace SpellSimulator.Reactions
 
         // ---------------------------------------------------------------- celdas
 
-        private bool TryIgnite(int c)
+        /// <summary>Enciende una celda de pasto con la generacion dada (0 = fuente directa, g+1 = propagada desde g).</summary>
+        private bool TryIgnite(int c, byte gen)
         {
             if (state[c] != Grass) return false;
             state[c] = Burning;
+            generation[c] = gen;
             timers[c] = burnSeconds;
             burningCells++;
             if (!inList[c])
@@ -401,7 +456,7 @@ namespace SpellSimulator.Reactions
                 {
                     int c = cz * GridSize + cx;
                     if (c != own && CenterDistanceSq(cx, cz, p) > r2) continue;
-                    if (TryIgnite(c) && ++done >= budget) return done;
+                    if (TryIgnite(c, 0) && ++done >= budget) return done;
                 }
             }
             return done;
@@ -458,6 +513,18 @@ namespace SpellSimulator.Reactions
             if (ValleyShape.LakeFactor(x, z) < 1f) return true;
             if (ValleyShape.RiverDistance(x, z) < ValleyShape.RiverHalfWidth) return true;
             return ValleyShape.PathDistance(x, z) < ValleyShape.PathWidth;
+        }
+
+        /// <summary>Recalcula la tabla de potencias generationDecay^g (g = 0..DecayTableSize-1). Se llama en Awake y ApplyDefaults.</summary>
+        private void RebuildDecayTable()
+        {
+            if (decayPowers == null) decayPowers = new float[DecayTableSize];
+            float p = 1f;
+            for (int g = 0; g < DecayTableSize; g++)
+            {
+                decayPowers[g] = p;
+                p *= generationDecay;
+            }
         }
 
         /// <summary>Xorshift32 propio: sin allocations y reproducible.</summary>

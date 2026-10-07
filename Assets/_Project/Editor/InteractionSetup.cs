@@ -16,7 +16,7 @@ namespace SpellSimulator.EditorTools
         private const string DecalMaterialPath = "Assets/_Project/Materials/InkDecal.mat";
 
         [MenuItem("SpellSimulator/Interaction/Setup Current Scene")]
-        public static string Apply() => FixInteractMask() + " " + MakePropsMovable() + " " + MakeSurfacesInscribable();
+        public static string Apply() => FixInteractMask() + " " + FixHoldPoints() + " " + MakePropsMovable() + " " + MakeSurfacesInscribable();
 
         /// <summary>
         /// El rayo de E solo veia las capas Canvas e Interactable: libro, estampas y cajas (capa Default) no se podian apuntar.
@@ -29,6 +29,37 @@ namespace SpellSimulator.EditorTools
             so.FindProperty("interactLayer").intValue = Physics.DefaultRaycastLayers;
             so.ApplyModifiedProperties();
             return "Mascara de interaccion: todo salvo Ignore Raycast.";
+        }
+
+        /// <summary>
+        /// Las manos de PC cuelgan de la camara (antes del cuerpo): lo que se lleva sigue a la mirada como si estuviera en
+        /// la mano, y el jugador tiene el movedor de objetos a distancia (G).
+        /// </summary>
+        public static string FixHoldPoints()
+        {
+            var player = GameObject.Find("Player");
+            var cameraRoot = GameObject.Find("CameraRootPC");
+            if (player == null || cameraRoot == null) return "Sin jugador.";
+            // Las manos originales viven dentro de un prefab (no se pueden mover de padre): se crean manos nuevas
+            // colgando de la camara y el interactor pasa a usarlas.
+            Transform Hand(string name, Vector3 local)
+            {
+                var existing = cameraRoot.transform.Find(name);
+                var hand = existing != null ? existing : new GameObject(name).transform;
+                hand.SetParent(cameraRoot.transform, false);
+                hand.localPosition = local;
+                hand.localRotation = Quaternion.identity;
+                return hand;
+            }
+            var right = Hand("ManoDerechaCamara", new Vector3(0.28f, -0.24f, 0.55f));
+            var left = Hand("ManoIzquierdaCamara", new Vector3(-0.3f, -0.15f, 0.62f));
+            var interactor = player.GetComponent<Player.PlayerInteractor>();
+            var so = new SerializedObject(interactor);
+            so.FindProperty("rightHoldPoint").objectReferenceValue = right;
+            so.FindProperty("leftHoldPoint").objectReferenceValue = left;
+            so.ApplyModifiedProperties();
+            if (player.GetComponent<Player.ObjectMover>() == null) player.AddComponent<Player.ObjectMover>();
+            return "Manos en la camara y movedor de objetos.";
         }
 
         public static string MakePropsMovable()

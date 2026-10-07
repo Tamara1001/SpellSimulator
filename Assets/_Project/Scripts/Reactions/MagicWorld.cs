@@ -186,6 +186,14 @@ namespace SpellSimulator.Reactions
             if (output != null) output.ClearAll();
             Shatter.ClearAll();
             GroundMarks.ClearAll();
+            // Todos los lienzos vuelven a quedar en blanco (menos las paginas del grimorio).
+            var caster = Object.FindFirstObjectByType<Casting.SpellCaster>();
+            foreach (var canvas in Object.FindObjectsByType<SpellSimulator.Canvas.DrawingCanvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                if (canvas == null || canvas.GetComponentInParent<Learning.Grimoire>() != null) continue;
+                canvas.Clear();
+                if (caster != null) caster.OnSealEdited(canvas);
+            }
             foreach (var reactive in ElementReactive.All) if (reactive != null) reactive.ResetState();
             foreach (var health in Health.All) if (health != null) health.ResetHealth();
             foreach (var dummy in World.TrainingDummy.All) if (dummy != null) dummy.Restore();

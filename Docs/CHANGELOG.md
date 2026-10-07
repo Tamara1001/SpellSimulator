@@ -5,6 +5,16 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — Tercera prueba manual: mover objetos, controles, fuego contenido y más
+- **Mover objetos (G)** estilo Garry's Mod (`ObjectMover`, `IRemoteGrabbable`): rueda, clic derecho + mouse para rotar, Shift + rueda, T para
+  dejarlo flotando. Las manos de PC cuelgan de la cámara y las herramientas se sostienen inclinadas (pluma/pincel/goma/trapo/estampa).
+- **Zoom (X)**, **grosor de la pluma (1–4)**, **tumbarse (Z)** ya existía; esquema de controles reordenado (ADR-032) y documentado en el
+  grimorio. Panel de depuración oculto (F3) y avisos como toasts. V = lienzo, B = grimorio a pantalla.
+- **Fuego contenido** (`GrassFire`: decaimiento por generación; árboles más difíciles) y **reinicio total** (lienzos, flotantes, estampas).
+- **Sellos chicos** se leen mejor (agrandado alrededor del centro), **estampas XL y XXL**, **lienzos gigantes**, caballete corregido,
+  sin avisos sobre los botones del grimorio. KI-076 a KI-083.
+- Trabajo repartido con agentes Haiku (GrassFire, ObjectMover/zoom, HUD/depuración); corregí un error de compilación suyo.
+
 ## 2026-10-07 — Grimorio con clic y estampas arregladas
 - Los botones del grimorio se aprietan con **clic izquierdo** (`IPressable.PressWithClick`, `PlayerInteractor.HandleClickPress`); el aviso dice "[Clic]".
 - Estampas: botón **"Cargar en la estampa"** en el detalle de cada glifo (`Stamp.Held`/`Stamp.Load`); estampan también sobre el piso y

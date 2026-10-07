@@ -65,9 +65,9 @@ namespace SpellSimulator.EditorTools
             var so = new SerializedObject(grass);
             so.FindProperty("burnMaterial").objectReferenceValue = burnt;
             so.FindProperty("fireLook").objectReferenceValue = fire;
-            so.FindProperty("spreadChance").floatValue = 0.03f;
-            so.FindProperty("heatPerSecond").floatValue = 9f;
             so.ApplyModifiedProperties();
+            grass.ApplyDefaults(); // los valores guardados en la escena pisan los del codigo
+            EditorUtility.SetDirty(grass);
             return "GrassFire listo.";
         }
 
@@ -86,8 +86,8 @@ namespace SpellSimulator.EditorTools
             p.FindPropertyRelative("burnSeconds").floatValue = 30f;
             p.FindPropertyRelative("burnDestroys").boolValue = false;
             p.FindPropertyRelative("fracturable").boolValue = false;
-            p.FindPropertyRelative("ignitionHeat").floatValue = 1.4f;
-            p.FindPropertyRelative("spreadHeatPerSecond").floatValue = 1.1f;
+            p.FindPropertyRelative("ignitionHeat").floatValue = 2.2f;
+            p.FindPropertyRelative("spreadHeatPerSecond").floatValue = 0.35f;
             var name = so.FindProperty("displayName");
             if (name != null) name.stringValue = "Arbol";
             so.ApplyModifiedProperties();

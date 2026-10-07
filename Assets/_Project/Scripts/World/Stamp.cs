@@ -21,7 +21,7 @@ namespace SpellSimulator.World
     /// Cargas limitadas por carga (decision de diseño): al agotarse hay que volver a cargarla.
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(Collider))]
-    public class Stamp : MonoBehaviour, IInteractable, IUsable
+    public class Stamp : MonoBehaviour, IInteractable, IUsable, IResettable
     {
         /// <summary>(estampa, lienzo) al estampar.</summary>
         public static event Action<Stamp, DrawingCanvas> Stamped;
@@ -83,7 +83,16 @@ namespace SpellSimulator.World
             col.enabled = false;
             transform.SetParent(holdPoint);
             transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
+            // En PC se sostiene con la base hacia adelante, como para estampar; en VR sigue al control.
+            transform.localRotation = PlatformDetector.IsVR ? Quaternion.identity : Quaternion.Euler(-70f, 0f, 0f);
+        }
+
+        /// <summary>Reinicio del mundo: la estampa vuelve a quedar vacia.</summary>
+        public void ResetToInitial()
+        {
+            glyph = null;
+            charges = 0;
+            RefreshLabel();
         }
 
         public void OnDrop()

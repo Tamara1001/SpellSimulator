@@ -40,6 +40,11 @@ namespace SpellSimulator.World
         [SerializeField, Tooltip("Ancho del trazo en metros (0 = el del lienzo).")]
         private float strokeWidth;
 
+        [Header("Grosor (teclas 1 a 4)")]
+        [SerializeField, Tooltip("Multiplicadores del ancho base de la pluma o el pincel para las teclas 1, 2, 3 y 4.")]
+        private float[] widthPresets = { 0.25f, 0.5f, 1f, 2.2f };
+        [SerializeField] private string[] widthNames = { "muy fino", "fino", "normal", "grueso" };
+
         [Header("VR")]
         [SerializeField, Tooltip("[VR] Dibujar solo cuando la punta toca el papel (en vez del laser). Experimental.")]
         private bool vrContactDrawing;
@@ -76,6 +81,9 @@ namespace SpellSimulator.World
         private Vector3 lastRayOrigin;
         private Camera cachedCamera;
         private bool held;
+        private PlayerInputReader input;
+        private float baseStrokeWidth;
+        private int widthIndex = 2;
 
         /// <summary>(herramienta, usando) al empezar y terminar de dibujar/borrar/limpiar sobre un lienzo.</summary>
         public static event System.Action<PhysicalTool, bool> UseChanged;
@@ -85,6 +93,12 @@ namespace SpellSimulator.World
         public static event System.Action<PhysicalTool> PickedUp;
 
         public HandType PreferredHand => HandType.Right;
+
+        /// <summary>
+        /// Inclinacion en PC para que parezca sostenida: pluma y pincel (punta en -Y) con la punta hacia adelante y un poco
+        /// abajo; goma y trapo (punta en +Y) con la punta hacia adelante.
+        /// </summary>
+        private float PcHoldPitch => kind == ToolKind.Pen ? -72f : 72f;
         public ToolKind Kind => kind;
         public bool UsesInk => kind == ToolKind.Pen;
         public InkReservoir Ink => ink;
@@ -97,6 +111,7 @@ namespace SpellSimulator.World
             block = new MaterialPropertyBlock();
             if (raycastOrigin == null) raycastOrigin = transform;
             ApplyDefinition();
+            baseStrokeWidth = strokeWidth;
 
             float stabilizer = PlatformDetector.IsVR ? vrStabilizerSpeed : pcStabilizerSpeed;
             switch (kind)
@@ -110,6 +125,7 @@ namespace SpellSimulator.World
 
         private void Update()
         {
+            if (held && kind == ToolKind.Pen && currentCanvas == null) HandleWidthKeys();
             // VR: mojar la punta dentro de un tintero recarga.
             if (!held || !UsesInk || !PlatformDetector.IsVR || ink.Missing <= 0f) return;
             int count = Physics.OverlapSphereNonAlloc(raycastOrigin.position, vrDipRadius, dipHits, ~0, QueryTriggerInteraction.Collide);
@@ -125,6 +141,19 @@ namespace SpellSimulator.World
                 }
                 break;
             }
+        }
+
+        /// <summary>Teclas 1 a 4: grosor de la pluma. Fino para sellos chicos, grueso para sellos enormes.</summary>
+        private void HandleWidthKeys()
+        {
+            if (input == null) input = FindFirstObjectByType<PlayerInputReader>();
+            int preset = input != null ? input.WidthPreset : -1;
+            if (preset < 0 || preset >= widthPresets.Length || preset == widthIndex) return;
+            widthIndex = preset;
+            float stabilizer = PlatformDetector.IsVR ? vrStabilizerSpeed : pcStabilizerSpeed;
+            tool = new PenTool(stabilizer, baseStrokeWidth * widthPresets[preset]);
+            string label = preset < widthNames.Length ? widthNames[preset] : (preset + 1).ToString();
+            DiagnosticBus.OnDiagnosticsUpdated?.Invoke($"<b>[Pluma]</b> Grosor: {label}.");
         }
 
         private void ApplyDefinition()
@@ -156,7 +185,7 @@ namespace SpellSimulator.World
             col.enabled = false;
             transform.SetParent(holdPoint);
             transform.localPosition = Vector3.zero;
-            transform.localRotation = Quaternion.identity;
+            transform.localRotation = PlatformDetector.IsVR ? Quaternion.identity : Quaternion.Euler(PcHoldPitch, 0f, 0f);
         }
 
         public void OnDrop()

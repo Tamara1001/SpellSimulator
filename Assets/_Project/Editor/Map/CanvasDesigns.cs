@@ -45,6 +45,10 @@ namespace SpellSimulator.EditorTools.Map
             Easel(template, material, "Easel_Study", towerOrigin + new Vector3(1.5f, floor, -1.0f), 250f);
             Grabbable(template, material, "FloatingScroll_Study", towerOrigin + new Vector3(-0.2f, floor + 1.5f, -1.8f), Quaternion.Euler(0f, 180f, 0f), 0.8f, 1.0f, Dressing.Scroll, startFloating: true);
 
+            // Lienzos gigantes para sellos enormes: uno flotante enmarcado y un papel enorme en el piso del campo.
+            Grabbable(template, material, "GiantCanvas_Field", fieldOrigin + new Vector3(-14f, 2.2f, 2f), Quaternion.Euler(0f, 160f, 0f), 3f, 2.2f, Dressing.Framed, startFloating: true);
+            Grabbable(template, material, "GiantPaper_Field", fieldOrigin + new Vector3(-6f, 0.15f, 5f), Quaternion.Euler(90f, 20f, 0f), 3.5f, 3.5f, Dressing.None);
+
             // Campo de practica: caballete con un lienzo grande y un pergamino flotante.
             Easel(template, material, "Easel_Field", fieldOrigin + new Vector3(-9f, 0f, -2f), 200f);
             Grabbable(template, material, "FloatingScroll_Field", fieldOrigin + new Vector3(-9f, 1.3f, -5f), Quaternion.Euler(0f, 0f, 0f), 0.8f, 1.0f, Dressing.Scroll, startFloating: true);
@@ -182,21 +186,25 @@ namespace SpellSimulator.EditorTools.Map
                 Vector3 axis = top - bottom;
                 b.Box(Matrix4x4.TRS((bottom + top) / 2f, Quaternion.FromToRotation(Vector3.up, axis), Vector3.one), new Vector3(0.06f, axis.magnitude, 0.05f), color);
             }
-            Leg(new Vector3(-0.5f, 0f, 0.25f), new Vector3(-0.38f, 1.9f, 0f), Wood);
-            Leg(new Vector3(0.5f, 0f, 0.25f), new Vector3(0.38f, 1.9f, 0f), Wood);
-            Leg(new Vector3(0f, 0f, -0.9f), new Vector3(0f, 1.9f, -0.1f), DarkWood);
-            b.Box(Matrix4x4.TRS(new Vector3(0f, 0.55f, 0f), Quaternion.identity, Vector3.one), new Vector3(1.0f, 0.06f, 0.07f), DarkWood); // reposa-lienzo
-            b.Box(Matrix4x4.TRS(new Vector3(0f, 1.95f, 0.02f), Quaternion.identity, Vector3.one), new Vector3(0.9f, 0.05f, 0.06f), DarkWood);
+            // Patas delanteras inclinadas hacia atras (arriba mas atras que abajo) y una trasera de apoyo.
+            const float frontBottomZ = 0.3f, frontTopZ = -0.05f, legHeight = 1.9f;
+            Leg(new Vector3(-0.5f, 0f, frontBottomZ), new Vector3(-0.4f, legHeight, frontTopZ), Wood);
+            Leg(new Vector3(0.5f, 0f, frontBottomZ), new Vector3(0.4f, legHeight, frontTopZ), Wood);
+            Leg(new Vector3(0f, 0f, -0.95f), new Vector3(0f, legHeight, -0.12f), DarkWood);
+            b.Box(Matrix4x4.TRS(new Vector3(0f, 0.55f, frontBottomZ + (frontTopZ - frontBottomZ) * 0.55f / legHeight + 0.06f), Quaternion.identity, Vector3.one), new Vector3(1.0f, 0.05f, 0.14f), DarkWood); // reposa-lienzo
+            b.Box(Matrix4x4.TRS(new Vector3(0f, 1.95f, frontTopZ), Quaternion.identity, Vector3.one), new Vector3(0.95f, 0.05f, 0.07f), DarkWood);
             var mesh = MapBuilder.SaveMesh(b.Build($"Easel_{name}"));
             root.AddComponent<MeshFilter>().sharedMesh = mesh;
             root.AddComponent<MeshRenderer>().sharedMaterial = material;
-            // El lienzo se apoya en el reposa-lienzo, de cara a quien mira el caballete (-Z local del caballete).
-            // La cara mira a +Z del caballete y un poco hacia arriba (inclinado hacia atras ~15 grados); la cara visible es -forward.
-            const float lean = 15f * Mathf.Deg2Rad;
-            Vector3 face = root.transform.rotation * new Vector3(0f, Mathf.Sin(lean), Mathf.Cos(lean));
-            Vector3 top = root.transform.rotation * new Vector3(0f, Mathf.Cos(lean), -Mathf.Sin(lean));
-            var canvas = Fixed(template, material, name + "_Canvas", root.transform.TransformPoint(new Vector3(0f, 1.3f, -0.05f)),
-                Quaternion.LookRotation(-face, top), 0.9f, 1.2f, Dressing.None);
+            // El lienzo se apoya sobre el plano de las patas delanteras, inclinado lo mismo que ellas.
+            float lean = Mathf.Atan2(frontBottomZ - frontTopZ, legHeight);
+            Vector3 faceLocal = new Vector3(0f, Mathf.Sin(lean), Mathf.Cos(lean));
+            Vector3 topLocal = new Vector3(0f, Mathf.Cos(lean), -Mathf.Sin(lean));
+            const float canvasY = 1.3f;
+            Vector3 onPlane = new Vector3(0f, canvasY, frontBottomZ + (frontTopZ - frontBottomZ) * canvasY / legHeight);
+            Vector3 center = onPlane + faceLocal * 0.035f;
+            var canvas = Fixed(template, material, name + "_Canvas", root.transform.TransformPoint(center),
+                Quaternion.LookRotation(-(root.transform.rotation * faceLocal), root.transform.rotation * topLocal), 0.9f, 1.2f, Dressing.None);
             canvas.transform.SetParent(root.transform, true);
             Undo.RegisterCreatedObjectUndo(root, name);
         }

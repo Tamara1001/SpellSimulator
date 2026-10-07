@@ -97,6 +97,12 @@ por código (VFX Graph no). El viejo `Fire_VFX.vfx` queda sin uso.
 hechizo le explotaría en la cara. `DrawingCanvas.EmissionSide = AwayFromViewer` en papeles (la magia sale hacia el
 objetivo, como cuando los personajes giran el papel); `InkSide` queda para sellos en paredes, mesas y piedras.
 
+## ADR-032 — Dos modos de manipular: agarrar (E) y mover (G)
+**2026-10-07.** Llevar un objeto en la mano (E) no permite rotarlo ni acomodarlo, y sin eso es imposible unir dos mitades de un
+sello. Se separan: **E** = agarrar en la mano (herramientas, lienzos, estampas; las manos cuelgan de la cámara) y **G** = mover a
+distancia estilo Garry's Mod (`ObjectMover`: rueda, rotar con clic derecho + mouse, T para dejarlo flotando). Se reorganizó todo el
+mapa de teclas por grupos (movimiento, manos, mover objetos, dibujar, menú). V queda solo para el lienzo y B para el grimorio.
+
 ## ADR-030 — El fuego se propaga por una grilla de pasto y por objetos reactivos
 **2026-10-07.** Quemar "la casa entera" no es simular cada brizna: el pasto es una grilla de 2 m (`GrassFire`, 70x70) con
 automata celular (ardiendo, quemado, inflamable) que enciende lo reactivo cercano (pinos, mobiliario); los objetos que

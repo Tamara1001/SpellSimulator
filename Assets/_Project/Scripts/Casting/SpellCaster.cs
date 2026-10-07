@@ -121,10 +121,32 @@ namespace SpellSimulator.Casting
             SealPhaseChanged?.Invoke(canvas, phase);
         }
 
-        private DrawingSession Clean(DrawingCanvas canvas)
+        /// <summary>Extension (espacio isotropico) bajo la cual un dibujo se considera chico y se agranda para leerlo.</summary>
+        private const float SmallDrawingExtent = 0.3f;
+        private const float BoostedExtent = 0.42f;
+        private const float MaxBoost = 8f;
+
+        private DrawingSession Clean(DrawingCanvas canvas) => Clean(canvas, out _, out _);
+
+        private DrawingSession Clean(DrawingCanvas canvas, out float boost, out Vector2 pivot)
         {
             // Los trazos estan en UV; en un lienzo no cuadrado se pasan a un espacio isotropico.
-            return StrokeCleaner.CleanSession(canvas.Session.Scaled(canvas.UvToIsotropic), simplificationTolerance, splineResolution);
+            var scaled = canvas.Session.Scaled(canvas.UvToIsotropic);
+            boost = 1f;
+            pivot = Vector2.zero;
+            if (scaled.GetBounds(out Vector2 min, out Vector2 max))
+            {
+                float extent = Mathf.Max(max.x - min.x, max.y - min.y);
+                if (extent > 1e-4f && extent < SmallDrawingExtent)
+                {
+                    boost = Mathf.Min(BoostedExtent / extent, MaxBoost);
+                    pivot = (min + max) * 0.5f;
+                    foreach (var stroke in scaled.Strokes)
+                        for (int i = 0; i < stroke.Points.Count; i++)
+                            stroke.Points[i] = pivot + (stroke.Points[i] - pivot) * boost;
+                }
+            }
+            return StrokeCleaner.CleanSession(scaled, simplificationTolerance, splineResolution);
         }
 
         /// <summary>Compila y lanza lo que haya en el lienzo, sin mirar la fase. Lo usan la auto-activacion y los tests.</summary>
@@ -141,15 +163,19 @@ namespace SpellSimulator.Casting
                 return SpellIR.Invalid("Sin reconocedor", null);
             }
 
-            SealReading reading = SealReader.Read(Clean(canvas), classifier, dictionary.Dictionary, Time.time);
+            SealReading reading = SealReader.Read(Clean(canvas, out float boost, out Vector2 pivot), classifier, dictionary.Dictionary, Time.time);
             GlyphAST ast = reading.Ast;
             SpellIR spell = reading.Spell;
 
             // Tamanio real del sello: el pipeline trabaja en espacio isotropico (lado mayor del lienzo = 1).
             Vector2 iso = canvas.UvToIsotropic;
             Vector2 worldSize = canvas.WorldSize;
-            spell.sealRadius = ast.Ring.Radius * Mathf.Max(worldSize.x, worldSize.y);
-            Vector2 ringCenterUV = new Vector2(ast.Ring.Center.x / Mathf.Max(iso.x, 1e-6f), ast.Ring.Center.y / Mathf.Max(iso.y, 1e-6f));
+            spell.analysisBoost = boost;
+            spell.analysisPivot = pivot;
+            spell.sealRadius = ast.Ring.Radius * Mathf.Max(worldSize.x, worldSize.y) / boost;
+            // Centro del anillo en el espacio original (deshace el agrandado alrededor del pivote).
+            Vector2 ringCenter = boost > 1f ? pivot + (ast.Ring.Center - pivot) / boost : ast.Ring.Center;
+            Vector2 ringCenterUV = new Vector2(ringCenter.x / Mathf.Max(iso.x, 1e-6f), ringCenter.y / Mathf.Max(iso.y, 1e-6f));
             GlyphPrediction[] predictions = reading.Predictions;
 
             LastSpell = spell;

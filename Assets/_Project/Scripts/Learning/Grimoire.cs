@@ -18,7 +18,7 @@ namespace SpellSimulator.Learning
     /// Libro-menu diegetico (SYSTEMS_DESIGN 9). Tab / Y / menu izquierdo lo abre flotando frente al jugador.
     /// Es un hub: la portada tiene botones a Glifos (indice), Controles, Sellos y Opciones; cada pantalla tiene un
     /// boton "Menu" para volver. Las pantallas se navegan apuntando y haciendo clic (o con el mouse en modo fijo).
-    /// No se cierra al alejarse. Con V (con el libro abierto) se fija delante de la camara para usarlo a pantalla completa.
+    /// No se cierra al alejarse. Con B (con el libro abierto) se fija delante de la camara para usarlo a pantalla completa.
     /// </summary>
     public class Grimoire : MonoBehaviour
     {
@@ -111,7 +111,7 @@ namespace SpellSimulator.Learning
             }
             if (!IsOpen) return;
 
-            if (input.IsTogglingFocus)
+            if (input.IsTogglingBookFocus)
             {
                 if (focused) ExitFocus();
                 else EnterFocus();
@@ -309,11 +309,12 @@ namespace SpellSimulator.Learning
 
                 case GrimoireScreen.Controls:
                     leftCaption.text = "<size=130%>Controles</size>" + NL + NL + "<size=70%>PC / VR</size>";
-                    rightText.text = "<size=62%>WASD mover   Shift correr   Ctrl o C agacharse" + NL + "Espacio saltar" + NL + NL +
-                        "E agarrar y soltar (tambien objetos: cajas, pesas)" + NL + "Rueda: acercar o alejar lo que llevas" + NL + "Q arrojar   F dar vuelta la hoja" + NL +
-                        "V fijar el lienzo a la camara y dibujar con el mouse" + NL + NL +
-                        "Clic izq. dibujar / usar   Clic der. deshacer" + NL + "R recargar tinta   Tab grimorio   Retroceso reiniciar" + NL + NL +
-                        "VR: gatillo dibujar, agarre agarrar, A deshacer, click del stick correr, Y reiniciar, girar la mano da vuelta la hoja</size>";
+                    rightText.text = "<size=58%><b>Moverse</b>: WASD, Shift correr, C o Ctrl agacharse, Z tumbarse, Espacio saltar, X zoom (mantener)" + NL +
+                        "<b>Manos</b>: E agarrar o soltar (herramientas, lienzos, estampas), Q arrojar, T dejar flotando, F dar vuelta la hoja, V lienzo a pantalla (dibujar con el mouse)" + NL +
+                        "<b>Mover objetos</b>: mantene G sobre algo; rueda acerca o aleja, clic der. + mouse lo gira, Shift + rueda lo inclina; T mientras tanto lo deja flotando" + NL +
+                        "<b>Dibujar</b>: clic izq. dibuja, clic der. deshace, 1 a 4 grosor de la pluma, R recarga tinta" + NL +
+                        "<b>Menu</b>: Tab grimorio, B grimorio a pantalla, F3 panel de depuracion, Retroceso reiniciar el mundo" + NL +
+                        "<b>VR</b>: gatillo dibuja, agarre agarra, A deshace, B arroja, click del stick izq. corre, click del stick der. da vuelta la hoja, Y reinicia</size>";
                     break;
 
                 case GrimoireScreen.Seals:

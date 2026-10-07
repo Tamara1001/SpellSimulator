@@ -15,7 +15,7 @@ namespace SpellSimulator.World
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(Collider))]
-    public class PhysicalCanvas : MonoBehaviour, IInteractable, IThrowable, IFlippable, IFocusable, IPinnable
+    public class PhysicalCanvas : MonoBehaviour, IInteractable, IThrowable, IFlippable, IFocusable, IPinnable, IRemoteGrabbable, IResettable
     {
         [Header("Settings")]
         [SerializeField] private string objectName = "Lienzo Mágico";
@@ -75,6 +75,49 @@ namespace SpellSimulator.World
             col = GetComponent<Collider>();
             canvas = GetComponent<DrawingCanvas>();
             bobPhase = Random.value * 6.28f;
+            initialKinematic = rb.isKinematic;
+            initialGravity = rb.useGravity;
+            initialDrag = rb.linearDamping;
+        }
+
+        private bool initialKinematic, initialGravity;
+        private float initialDrag;
+
+        // ---------------------------------------------------------------- agarre a distancia (G) y reinicio
+
+        public void OnRemoteGrab()
+        {
+            if (focused) SetFocus(null, false);
+            floating = false;
+            animating = false;
+            holdParent = null;
+            transform.SetParent(null);
+            col.isTrigger = false;
+            rb.isKinematic = false;
+            rb.useGravity = false;
+            rb.linearDamping = 3f;
+        }
+
+        public void OnRemoteRelease(bool pin)
+        {
+            if (pin) StartFloating();
+            else Fall();
+        }
+
+        /// <summary>Reinicio del mundo: vuelve a su estado de fisica inicial (la pose la repone Respawnable).</summary>
+        public void ResetToInitial()
+        {
+            if (focused) SetFocus(null, false);
+            holdParent = null;
+            floating = false;
+            animating = false;
+            transform.SetParent(null);
+            col.isTrigger = false;
+            if (!rb.isKinematic) { rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+            rb.isKinematic = initialKinematic;
+            rb.useGravity = initialGravity;
+            rb.linearDamping = initialDrag;
+            if (startFloating) StartFloating();
         }
 
         private void Start()

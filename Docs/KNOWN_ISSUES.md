@@ -119,6 +119,14 @@ Tamara; con muchas cosas ardiendo suenan muchos loops de fuego a la vez (poner u
 | KI-047 🟢 | **Nuevo (M4):** el estanque se armó a y=0 y el piso real está a 0.5 (cubo) | Estanque subido. Ojo al ubicar props: la cara de arriba del `Floor` es y=0.5. |
 | KI-056 🟠 | **Prueba manual:** no se podía entrar a la torre sin saltar (el zócalo subía 60 cm en la puerta) | Zócalo cortado en la puerta y bajado a 25 cm; umbral de 5 cm. |
 | KI-057 🟠 | **Prueba manual:** el jugador se trababa con muebles y bordes (cápsula de 1 m de ancho, esfera extra, fricción) | Cápsula de radio 0.3, sin la esfera, material sin fricción, subida automática de escalones (≤ 35 cm) y gravedad contra el piso cuando está quieto (no resbala en rampas). Silla y atril fuera del paso puerta → rampa. |
+| KI-083 🟡 | Mover a distancia (G), zoom (X), grosor 1-4 y tumbarse (Z) no tienen test automatico (solo se verifico la logica en el editor) | PlayMode en M7. |
+| KI-082 🟢 | **Prueba manual:** reiniciar el mundo no limpiaba los lienzos ni reponia lienzos flotantes y estampas | `MagicWorld.ResetWorld` borra todos los lienzos; `Respawnable` repone tambien lo flotante; `IResettable` (lienzo, estampa). |
+| KI-081 🟢 | **Prueba manual:** un fuego basico quemaba todo el mundo | `GrassFire` con decaimiento por generacion (0,78) y tope de 9, menos probabilidad y calor; arboles mas dificiles de encender y de contagiar. |
+| KI-080 🟢 | **Prueba manual:** V ponia el grimorio a pantalla en vez del lienzo | El grimorio usa B; V es solo del lienzo. |
+| KI-079 🟢 | **Prueba manual:** sellos muy chicos se leian mal | `SpellCaster.Clean` agranda los dibujos chicos alrededor de su centro (`SpellIR.analysisBoost`); las anotaciones lo deshacen. |
+| KI-078 🟢 | **Prueba manual:** el caballete tenia el lienzo mal acomodado | Geometria coherente: el lienzo se apoya en el plano de las patas delanteras con su misma inclinacion. |
+| KI-077 🟢 | **Prueba manual:** el aviso "[Clic] Menu" sobraba sobre los botones del grimorio | Los botones de clic no muestran aviso. |
+| KI-076 🟢 | **Prueba manual:** el panel de depuracion estaba siempre visible y los avisos del juego iban ahi | Panel oculto por defecto (F3); los avisos salen como toasts (`InteractionPromptUI`). |
 | KI-075 🟢 | **Prueba manual:** los botones del grimorio se apretaban con E | Ahora con clic (`IPressable.PressWithClick`); la ayuda dice "[Clic]". |
 | KI-074 🟢 | **Prueba manual:** las estampas no funcionaban (cargarlas era confuso y, sobre el piso, el sello no se leia) | Boton "Cargar en la estampa" en cada glifo; la estampa crea su propia calcomania chica (el anillo tiene un radio minimo relativo al lienzo); estampar sobre el entorno; un boton delante ya no deja dibujar detras. |
 | KI-072 🟡 | Los pinos arden pero quedan en pie carbonizados; el pasto quemado se dibuja con discos oscuros (no desaparecen las briznas) | Mejorable con una malla de pasto por parcelas que se pueda ocultar. |

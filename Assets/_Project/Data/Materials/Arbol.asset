@@ -15,7 +15,7 @@ MonoBehaviour:
   displayName: Arbol
   parameters:
     flammable: 1
-    ignitionHeat: 1.4
+    ignitionHeat: 2.2
     burnSeconds: 30
     burnDestroys: 0
     coolingPerSecond: 0.25
@@ -23,7 +23,7 @@ MonoBehaviour:
     dryingPerSecond: 0.04
     fracturable: 0
     strength: 1
-    spreadHeatPerSecond: 1.1
+    spreadHeatPerSecond: 0.35
   element: 0
   buoyancy: 1.6
   charColor: {r: 0.08, g: 0.06, b: 0.05, a: 1}

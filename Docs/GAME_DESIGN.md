@@ -82,10 +82,18 @@ Se empieza conociendo **Fuego, Columna y Levitación**. Los libros de la torre e
 del estudio) y *Signos raros* (pedestal en la terraza, premio por subir). Dibujar bien un glifo desconocido también lo
 descubre. El grimorio muestra cada glifo dibujándose solo, con su explicación. El progreso se guarda.
 
+## Mover objetos a gusto (M6)
+**E** agarra en la mano (herramientas, lienzos, estampas: quedan delante de la vista y las herramientas se ven sostenidas).
+**G** (mantener) es el modo "mover": sujeta lo apuntado a distancia como en Garry's Mod; la rueda lo acerca o aleja, **clic
+derecho + mouse** lo gira (la vista se congela), **Shift + rueda** lo inclina y **T** lo deja flotando donde está. Sirve para
+juntar las mitades de un sello partido o apilar cajas con precisión. **X** hace zoom para ver de cerca; **1–4** cambian el grosor de la
+pluma (muy fino a grueso) para sellos chicos o enormes.
+
 ## Mundo inflamable (M6)
 Los **pinos** y el **mobiliario de la torre** (mesas, sillas, estantes, libros, caballetes) son de madera: arden, contagian a
-lo que tienen cerca y se rompen o quedan carbonizados. El **pasto** arde en una grilla de 2 m: el fuego se propaga solo
-(≈1 m/s), deja el suelo negro y enciende los arboles; el agua lo apaga. La piedra de la torre no arde. Reiniciar el mundo
+lo que tienen cerca y se rompen o quedan carbonizados. El **pasto** arde en una grilla de 2 m: el fuego se propaga pero **se debilita
+con cada generación** (un fuego básico quema unos 200 m² y se apaga solo; uno alimentado, más), deja el suelo negro y puede encender
+árboles; el agua lo apaga. La piedra de la torre no arde. Reiniciar el mundo
 (Backspace o el menú del grimorio) lo devuelve todo.
 
 ## Lienzos y dibujo cómodo (M6)
@@ -138,27 +146,36 @@ rocas que emergen, pasos según el piso (pasto, madera, piedra). Créditos: soni
 
 ## Controles
 
-| Acción | PC | VR |
-|---|---|---|
-| Moverse / mirar | WASD + mouse | Stick izquierdo + cabeza |
-| Correr / agacharse / saltar | Shift / Ctrl o C / Espacio | Click del stick izquierdo / — / — |
-| Agarrar / soltar (herramientas, lienzos, cajas, pesas, el grimorio por el borde de abajo) | E | Grip |
-| Acercar / alejar lo que llevás | Rueda del mouse | Mover la mano |
-| Arrojar | Q | B (control derecho) |
-| Dejar el lienzo flotando / tumbarse | G / Z | — |
-| Dar vuelta la hoja | F | Girar la mano / click del stick derecho |
-| Fijar el lienzo a la cámara (dibujar de escritorio, mouse libre) | V | — |
-| Botones del grimorio (menú, índice, cargar estampa) | Apuntar + clic izquierdo | Apuntar + gatillo |
-| Pasar de glifo en el grimorio | Flechas o rueda | — |
-| Usar herramienta (dibujar, estampar, borrar) | Click izquierdo | Gatillo |
-| Secundario (deshacer, cargar estampa) | Click derecho | A |
-| Recargar tinta | R | Mojar la punta en un tintero |
-| Abrir/cerrar el grimorio | Tab (gamepad: Y) | Botón de menú del control izquierdo |
-| Pasar página, leer un libro, apretar un botón | Mirar + E | Apuntar + grip |
-| Cargar una estampa | Estampa en mano (E) + abrir un glifo en el grimorio + clic en "Cargar en la estampa" | igual con el gatillo |
-| Estampar | Clic izquierdo sobre un papel o el piso | Gatillo |
-| Liberar cursor | Escape | — |
-| Reiniciar el mundo (Libre) | Backspace (gamepad: Select) | Y (control izquierdo) |
+Esquema (ADR-032): una tecla por idea, las parecidas juntas. Todo se puede repasar en el grimorio (Tab → Controles).
+
+| Grupo | Acción | PC | VR |
+|---|---|---|---|
+| Moverse | Caminar / mirar | WASD + mouse | Stick izquierdo + cabeza |
+| | Correr | Shift | Click del stick izquierdo |
+| | Agacharse (mantener) | C o Ctrl | — |
+| | Tumbarse (alterna) | Z | — |
+| | Saltar | Espacio | — |
+| | Zoom (mantener) | X | — |
+| Manos | Agarrar / soltar (herramientas, lienzos, estampas) | E | Grip |
+| | Arrojar | Q | B |
+| | Dejar el lienzo flotando | T | — |
+| | Dar vuelta la hoja | F | Girar la mano / click del stick derecho |
+| | Lienzo a pantalla (dibujar con el mouse) | V | — |
+| Mover objetos | Sujetar a distancia (mantener) | G | — |
+| | Acercar / alejar | Rueda | — |
+| | Rotar | Clic derecho + mouse | — |
+| | Inclinar sobre el eje de la mira | Shift + rueda | — |
+| | Dejarlo flotando donde está | T mientras lo sostenés | — |
+| Dibujar | Dibujar / estampar / usar | Clic izquierdo | Gatillo |
+| | Deshacer | Clic derecho | A |
+| | Grosor de la pluma | 1, 2, 3, 4 | — |
+| | Recargar tinta | R | Mojar en un tintero |
+| Menú | Grimorio | Tab (a pantalla: B) | Botón de menú izquierdo |
+| | Botones del grimorio | Apuntar + clic izquierdo | Apuntar + gatillo |
+| | Cargar una estampa | Estampa en mano + glifo abierto + "Cargar en la estampa" | igual con el gatillo |
+| | Panel de depuración | F3 | — |
+| | Reiniciar el mundo | Retroceso | Y |
+| | Liberar el cursor | Escape | — |
 
 ## Decisiones (2026-10-07)
 1. **Auto-activación**: el hechizo se lanza solo al **cerrar el anillo**. El secundario de las herramientas es deshacer.

@@ -307,12 +307,14 @@ namespace SpellSimulator.EditorTools.Map
         {
             var caster = Object.FindFirstObjectByType<Casting.SpellCaster>();
             var dictionary = AssetDatabase.LoadAssetAtPath<Glyphs.GlyphDictionaryAsset>("Assets/_Project/Data/GlyphDictionary.asset");
-            TowerBuilder.Table(map, material, "StampTable", fieldTable - map.position, 0f, 1.2f, 0.6f);
+            TowerBuilder.Table(map, material, "StampTable", fieldTable - map.position, 0f, 2.6f, 0.7f);
             var sizes = new (string name, float diameter, Vector3 at)[]
             {
                 ("S", 0.08f, fieldTable + new Vector3(-0.4f, 0.86f, 0f)),
                 ("M", 0.2f, fieldTable + new Vector3(0f, 0.86f, 0f)),
                 ("L", 0.34f, fieldTable + new Vector3(0.42f, 0.86f, 0f)),
+                ("XL", 0.7f, fieldTable + new Vector3(1.0f, 0.86f, 0f)),
+                ("XXL", 1.4f, fieldTable + new Vector3(2.4f, 0.3f, 0.9f)),
                 ("M", 0.2f, libraryDesk),
             };
             int i = 0;

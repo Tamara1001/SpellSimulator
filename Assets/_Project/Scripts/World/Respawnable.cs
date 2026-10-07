@@ -37,6 +37,7 @@ namespace SpellSimulator.World
             rb.position = startPosition;
             rb.rotation = startRotation;
             transform.SetPositionAndRotation(startPosition, startRotation);
+            if (TryGetComponent(out Interfaces.IResettable resettable)) resettable.ResetToInitial();
         }
 
         /// <summary>
@@ -46,7 +47,8 @@ namespace SpellSimulator.World
         public static void RespawnAll()
         {
             foreach (var r in FindObjectsByType<Respawnable>(FindObjectsSortMode.None))
-                if (r.rb != null && !r.rb.isKinematic) r.Respawn();
+                // Los cinematicos con padre (en mano, fijos a la camara) no se tocan; los que flotan sueltos si.
+                if (r.rb != null && (!r.rb.isKinematic || r.transform.parent == null)) r.Respawn();
         }
     }
 }

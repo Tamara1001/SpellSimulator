@@ -84,7 +84,9 @@ namespace SpellSimulator.Output
             for (int i = 0; i < items.Count; i++)
             {
                 var item = items[i];
-                Vector2 uv = new Vector2(item.Position.x / iso.x, item.Position.y / iso.y);
+                Vector2 position = item.Position;
+                if (spell.analysisBoost > 1f) position = spell.analysisPivot + (position - spell.analysisPivot) / spell.analysisBoost;
+                Vector2 uv = new Vector2(position.x / iso.x, position.y / iso.y);
                 Vector3 at = canvas.UVToWorld(uv) + normal * surfaceOffset;
                 Color color = ColorOf(item.Kind);
 
@@ -97,7 +99,7 @@ namespace SpellSimulator.Output
 
                 if (item.Facing.sqrMagnitude > 0f && lineMaterial != null)
                 {
-                    float length = ast.Ring.Radius * Mathf.Max(size.x, size.y) * 0.3f;
+                    float length = spell.sealRadius * 0.3f;
                     var arrow = Arrow(m, i, canvas);
                     Vector3 dir = (canvas.transform.right * item.Facing.x + up * item.Facing.y).normalized;
                     Vector3 side = Vector3.Cross(normal, dir);

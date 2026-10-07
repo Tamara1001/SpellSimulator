@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using SpellSimulator.Player;
 
 namespace SpellSimulator.DebugTools
 {
@@ -19,6 +20,36 @@ namespace SpellSimulator.DebugTools
 
         [SerializeField, Tooltip("Referencia al texto que mostrara los resultados de compilacion")]
         private TextMeshProUGUI spellCompilerText;
+
+        private PlayerInputReader input;
+        private bool visible;
+
+        private void Awake()
+        {
+            // Arranca oculto. Los textos siguen llegando y quedan guardados en sus componentes para mostrarlos al activar.
+            SetVisible(false);
+        }
+
+        private void Start()
+        {
+            input = FindFirstObjectByType<PlayerInputReader>();
+        }
+
+        private void LateUpdate()
+        {
+            // LateUpdate: asi se lee IsTogglingDebug ya actualizado por PlayerInputReader, sin depender del orden de scripts.
+            if (input != null && input.IsTogglingDebug)
+                SetVisible(!visible);
+        }
+
+        private void SetVisible(bool value)
+        {
+            visible = value;
+            // Se apaga el render de cada elemento y no el GameObject: el controlador sigue recibiendo eventos.
+            if (tensorViewer != null) tensorViewer.enabled = value;
+            if (predictionsText != null) predictionsText.enabled = value;
+            if (spellCompilerText != null) spellCompilerText.enabled = value;
+        }
 
         private void OnEnable()
         {

@@ -48,6 +48,25 @@ namespace SpellSimulator.Player
         /// <summary>Dejar lo que llevas flotando en el aire (en vez de soltarlo): G.</summary>
         public bool IsPinning { get; private set; }
 
+        /// <summary>Zoom (mantener): X.</summary>
+        public bool IsZooming { get; private set; }
+        /// <summary>Mover a distancia estilo Garry's Mod (mantener): G. Rueda = distancia, clic derecho + mouse = rotar, Shift + rueda = girar sobre el eje.</summary>
+        public bool IsRemoteGrabbing { get; private set; }
+        /// <summary>Clic derecho mantenido (con G: rotar el objeto con el mouse en vez de la vista).</summary>
+        public bool IsRotateHeld { get; private set; }
+        /// <summary>Mostrar u ocultar el panel de depuracion: F3.</summary>
+        public bool IsTogglingDebug { get; private set; }
+        /// <summary>Fijar el grimorio abierto a la camara: B.</summary>
+        public bool IsTogglingBookFocus { get; private set; }
+        /// <summary>Grosor de la pluma: teclas 1 a 4 (0 a 3). -1 si no se apreto ninguna.</summary>
+        public int WidthPreset { get; private set; } = -1;
+
+        private InputAction zoomAction;
+        private InputAction remoteAction;
+        private InputAction rotateAction;
+        private InputAction debugAction;
+        private InputAction bookFocusAction;
+        private InputAction[] widthActions;
         private InputAction proneAction;
         private InputAction pinAction;
         private InputAction runAction;
@@ -123,7 +142,25 @@ namespace SpellSimulator.Player
             proneAction.AddBinding("<Keyboard>/z");
             proneAction.AddBinding("<Gamepad>/dpad/down");
             pinAction = new InputAction("Pin", InputActionType.Button);
-            pinAction.AddBinding("<Keyboard>/g");
+            pinAction.AddBinding("<Keyboard>/t");
+
+            zoomAction = new InputAction("Zoom", InputActionType.Button);
+            zoomAction.AddBinding("<Keyboard>/x");
+            zoomAction.AddBinding("<Gamepad>/dpad/up");
+            remoteAction = new InputAction("RemoteGrab", InputActionType.Button);
+            remoteAction.AddBinding("<Keyboard>/g");
+            rotateAction = new InputAction("RotateHeld", InputActionType.Button);
+            rotateAction.AddBinding("<Mouse>/rightButton");
+            debugAction = new InputAction("Debug", InputActionType.Button);
+            debugAction.AddBinding("<Keyboard>/f3");
+            bookFocusAction = new InputAction("BookFocus", InputActionType.Button);
+            bookFocusAction.AddBinding("<Keyboard>/b");
+            widthActions = new InputAction[4];
+            for (int i = 0; i < widthActions.Length; i++)
+            {
+                widthActions[i] = new InputAction("Width" + (i + 1), InputActionType.Button);
+                widthActions[i].AddBinding("<Keyboard>/" + (i + 1));
+            }
 
             runAction = new InputAction("Run", InputActionType.Button);
             runAction.AddBinding("<Keyboard>/leftShift");
@@ -169,6 +206,12 @@ namespace SpellSimulator.Player
             reloadAction.Enable();
             runAction.Enable();
             proneAction.Enable();
+            zoomAction.Enable();
+            remoteAction.Enable();
+            rotateAction.Enable();
+            debugAction.Enable();
+            bookFocusAction.Enable();
+            foreach (var w in widthActions) w.Enable();
             pinAction.Enable();
             crouchAction.Enable();
             throwAction.Enable();
@@ -192,6 +235,12 @@ namespace SpellSimulator.Player
             reloadAction.Disable();
             runAction.Disable();
             proneAction.Disable();
+            zoomAction.Disable();
+            remoteAction.Disable();
+            rotateAction.Disable();
+            debugAction.Disable();
+            bookFocusAction.Disable();
+            foreach (var w in widthActions) w.Disable();
             pinAction.Disable();
             crouchAction.Disable();
             throwAction.Disable();
@@ -227,6 +276,13 @@ namespace SpellSimulator.Player
             IsTogglingBook = bookAction.triggered;
             IsRunning = runAction.IsPressed();
             IsTogglingProne = proneAction.triggered;
+            IsZooming = zoomAction.IsPressed();
+            IsRemoteGrabbing = remoteAction.IsPressed();
+            IsRotateHeld = rotateAction.IsPressed();
+            IsTogglingDebug = debugAction.triggered;
+            IsTogglingBookFocus = bookFocusAction.triggered;
+            WidthPreset = -1;
+            for (int i = 0; i < widthActions.Length; i++) if (widthActions[i].triggered) WidthPreset = i;
             IsPinning = pinAction.triggered;
             IsCrouching = crouchAction.IsPressed();
             IsThrowing = throwAction.triggered;

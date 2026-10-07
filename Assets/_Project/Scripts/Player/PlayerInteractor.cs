@@ -135,7 +135,7 @@ namespace SpellSimulator.Player
                 var interactable = hit.collider.GetComponentInParent<IInteractable>();
                 if (interactable != null) currentHovered = interactable;
             }
-            HoverPrompt = hoveredPressable != null ? hoveredPressable.GetPressPrompt()
+            HoverPrompt = hoveredPressable != null ? (hoveredPressable.PressWithClick ? "" : hoveredPressable.GetPressPrompt())
                 : currentHovered != null ? currentHovered.GetInteractionPrompt() : "";
 
             if (vrPointerLine != null)
@@ -290,9 +290,6 @@ namespace SpellSimulator.Player
         /// <summary>V: fija el lienzo de la mano delante de la camara para dibujar sin sostener la mira.</summary>
         private void ToggleFocus()
         {
-            // Con el grimorio abierto, V lo fija a el (lo maneja el propio libro).
-            var book = Learning.Grimoire.Instance;
-            if (book != null && book.IsOpen) return;
             if (PlatformDetector.IsVR || heldLeft == null || !heldLeft.TryGetComponent(out IFocusable focusable)) return;
             focusable.SetFocus(cameraTransform, !focusable.Focused);
         }

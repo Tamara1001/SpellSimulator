@@ -91,6 +91,13 @@ namespace SpellSimulator.Compiler
         /// <summary>Radio del anillo en metros (lo completa SpellCaster). El caudal escala con su area (ley extensiva).</summary>
         public float sealRadius;
 
+        /// <summary>
+        /// Los sellos chicos se agrandan alrededor de su centro antes de leerse (la limpieza de trazos y el detector de
+        /// anillos tienen umbrales absolutos). 1 = sin cambio. Las anotaciones deshacen este escalado.
+        /// </summary>
+        public float analysisBoost;
+        public Vector2 analysisPivot;
+
         public static SpellIR Invalid(string status, string[] warnings, float neatness = 0f)
         {
             return new SpellIR

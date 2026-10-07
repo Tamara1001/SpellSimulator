@@ -116,3 +116,26 @@ namespace SpellSimulator.Interfaces
         void SetFocus(UnityEngine.Transform camera, bool on);
     }
 }
+
+namespace SpellSimulator.Interfaces
+{
+    /// <summary>
+    /// Objeto que reacciona al agarre a distancia (G): al tomarlo deja de flotar/estar fijo y se mueve con fisica;
+    /// al soltarlo puede quedar flotando donde esta (pin) o caer. Si un objeto con Rigidbody no la implementa,
+    /// el movedor usa un comportamiento generico (sin gravedad mientras se sostiene).
+    /// </summary>
+    public interface IRemoteGrabbable
+    {
+        void OnRemoteGrab();
+        void OnRemoteRelease(bool pin);
+    }
+}
+
+namespace SpellSimulator.Interfaces
+{
+    /// <summary>Objeto con estado propio que vuelve a su estado inicial al reiniciar el mundo (tras recolocarlo Respawnable).</summary>
+    public interface IResettable
+    {
+        void ResetToInitial();
+    }
+}

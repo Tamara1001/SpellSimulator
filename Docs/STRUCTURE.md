@@ -45,7 +45,7 @@ SpellSimulator/
 │   │   │   ├── Interfaces/       #   IInteractable, IUsable, HandType
 │   │   │   ├── Output/           #   SpellOutputController, SpellManifestation, MagicField, ElementLook, SealFrame, SealFeedback
 │   │   │   ├── Parsing/          #   RingDetector, StrokeGrouper, SymbolCandidate, SealParser
-│   │   │   ├── Player/           #   PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor, InkSupply, Haptics
+│   │   │   ├── Player/           #   PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor, ObjectMover, FocusMode, InkSupply, Haptics
 │   │   │   ├── Reactions/        #   ReactionModel, MaterialProfile, ReactionTable, ElementReactive, MagicWorld, BurnEffect, Shatter, WorldResetter, WaterVolume, WaterEffects, GroundSurface, GroundReactions, GroundMarks, RockRise, MarkFade
 │   │   │   ├── Recognition/      #   TensorRasterizer, GlyphClassifier, SentisGlyphClassifier, GlyphPrediction (+ClassificationMath), PoseMath
 │   │   │   └── World/            #   PhysicalTool, ToolDefinition, PhysicalCanvas, Inkwell, Respawnable, SealBreaker, TrainingDummy, Stamp, FaceCamera, SealTrigger, Movable, Inscribable, InscribedDecal, SplitSealHalf; Map/ValleyShape
