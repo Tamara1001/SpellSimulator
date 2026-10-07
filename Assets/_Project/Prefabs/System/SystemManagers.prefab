@@ -9,7 +9,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4969087890381720214}
-  - component: {fileID: 4966400286414474145}
   - component: {fileID: 4451363313589860109}
   - component: {fileID: 6153617415144828001}
   - component: {fileID: 2256094165641764747}
@@ -35,27 +34,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4966400286414474145
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8555206103252705276}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd3e167ec8951cb48b831065e72bb010, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Input.MouseInputHandler
-  mainCamera: {fileID: 0}
-  canvasLayerMask:
-    serializedVersion: 2
-    m_Bits: 51
-  maxRaycastDistance: 100
-  inferenceEngine: {fileID: 4451363313589860109}
-  fallbackCanvas: {fileID: 0}
-  simplificationTolerance: 0.005
-  splineResolution: 3
 --- !u!114 &4451363313589860109
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -69,10 +47,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Inference.SentisInferenceEngine
   modelAsset: {fileID: 5022602860645237092, guid: eb9628477d47d784d981f9611d7cc92d, type: 3}
-  spellCompiler: {fileID: 6153617415144828001}
-  outputController: {fileID: 2256094165641764747}
-  saveDebugPng: 1
-  debugStrokeRadius: 1
+  backend: 256
+  useRotationTta: 1
+  publishDebugImage: 1
 --- !u!114 &6153617415144828001
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -85,7 +62,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c4047c122a5ef5e438c3ed074c19cc96, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Compiler.SpellCompiler
-  dictionaryJson: {fileID: 4900000, guid: 7c9416d1ed7db8f429703a44e6324382, type: 3}
+  classifier: {fileID: 4451363313589860109}
+  dictionary: {fileID: 11400000, guid: dcbff51013e624d41bf303165d2d0236, type: 2}
+  output: {fileID: 2256094165641764747}
+  simplificationTolerance: 0.005
+  splineResolution: 3
 --- !u!114 &2256094165641764747
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -103,3 +84,5 @@ MonoBehaviour:
   windVFXPrefab: {fileID: 4268524353424583305, guid: b687c5ac87f0a8143b2e556c12abb043, type: 3}
   earthVFXPrefab: {fileID: 4877043286424220123, guid: c267fefe4a4260d47bd3fdf75adc0fb3, type: 3}
   lightVFXPrefab: {fileID: 4268524353424583305, guid: 064504107942584458158ad38289c9c5, type: 3}
+  surfaceOffset: 0.05
+  fadeMargin: 0.5

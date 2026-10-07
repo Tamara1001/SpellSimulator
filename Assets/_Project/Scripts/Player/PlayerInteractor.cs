@@ -3,21 +3,29 @@ using SpellSimulator.Interfaces;
 
 namespace SpellSimulator.Player
 {
+    /// <summary>
+    /// Mirar / agarrar / soltar / usar objetos. Mano derecha = herramientas, izquierda = lienzos.
+    /// En PC el rayo sale de la camara; en VR del controlador derecho.
+    /// </summary>
     [RequireComponent(typeof(PlayerInputReader))]
     public class PlayerInteractor : MonoBehaviour
     {
         [Header("References")]
         [SerializeField] private Transform cameraTransform;
-        [SerializeField, Tooltip("Punto de agarre para la mano derecha (Herramientas)")] 
-        private Transform rightHoldPoint; 
-        [SerializeField, Tooltip("Punto de agarre para la mano izquierda (Lienzos/Escudos)")] 
+        [SerializeField, Tooltip("Punto de agarre de la mano derecha (herramientas).")]
+        private Transform rightHoldPoint;
+        [SerializeField, Tooltip("Punto de agarre de la mano izquierda (lienzos).")]
         private Transform leftHoldPoint;
-        
+
         [Header("VR References")]
-        [SerializeField, Tooltip("[VR] Transform del controlador derecho. De acá sale el rayo y se agarran herramientas.")]
+        [SerializeField, Tooltip("[VR] Controlador derecho: origen del rayo y punto de agarre.")]
         private Transform vrRightController;
-        [SerializeField, Tooltip("[VR] Transform del controlador izquierdo. Acá se agarran lienzos.")]
+        [SerializeField, Tooltip("[VR] Controlador izquierdo: punto de agarre de lienzos.")]
         private Transform vrLeftController;
+        [SerializeField, Tooltip("[VR] Rotacion (grados, sobre el eje X del controlador) para alinear el rayo con la mano.")]
+        private float vrRayPitchOffset = 90f;
+        [SerializeField, Tooltip("[VR] Material del puntero laser. Si falta se usa Sprites/Default.")]
+        private Material vrPointerMaterial;
 
         [Header("Settings")]
         [SerializeField] private float interactRange = 3f;
@@ -25,17 +33,15 @@ namespace SpellSimulator.Player
 
         private PlayerInputReader inputReader;
         private IInteractable currentHovered;
-        
-        // Manos
-        private GameObject heldRightObject;
-        private GameObject heldLeftObject;
-        
-        // La herramienta usable (Lapiz/Goma) que este en cualquier mano, usualmente la derecha
-        private IUsable currentUsable;
+        private GameObject heldRight;
+        private GameObject heldLeft;
+        private IUsable rightUsable;
+        private IUsable leftUsable;
         private bool wasUsingTool;
-        
-        // Puntero visual para VR
         private LineRenderer vrPointerLine;
+
+        /// <summary>El usable que responde al gatillo/click: la mano derecha manda.</summary>
+        private IUsable ActiveUsable => rightUsable ?? leftUsable;
 
         private void Awake()
         {
@@ -44,27 +50,25 @@ namespace SpellSimulator.Player
 
         private void Start()
         {
-            if (PlatformDetector.IsVR)
-            {
-                // Reasignar los puntos de agarre a las manos reales de VR
-                if (vrRightController != null) rightHoldPoint = vrRightController;
-                if (vrLeftController != null) leftHoldPoint = vrLeftController;
-                
-                // Crear el rayo laser visual para VR automáticamente si no existe
-                if (vrRightController != null)
-                {
-                    vrPointerLine = vrRightController.gameObject.AddComponent<LineRenderer>();
-                    vrPointerLine.startWidth = 0.005f;
-                    vrPointerLine.endWidth = 0.005f;
-                    vrPointerLine.material = new Material(Shader.Find("Sprites/Default"));
-                    vrPointerLine.startColor = Color.white;
-                    vrPointerLine.endColor = new Color(1f, 1f, 1f, 0f); // Fade out
-                    vrPointerLine.useWorldSpace = true;
-                    
-                    vrPointerLine.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    vrPointerLine.receiveShadows = false;
-                }
-            }
+            if (!PlatformDetector.IsVR) return;
+
+            if (vrRightController != null) rightHoldPoint = vrRightController;
+            if (vrLeftController != null) leftHoldPoint = vrLeftController;
+            if (vrRightController != null) vrPointerLine = CreatePointer(vrRightController.gameObject);
+        }
+
+        private LineRenderer CreatePointer(GameObject host)
+        {
+            var line = host.AddComponent<LineRenderer>();
+            line.startWidth = 0.005f;
+            line.endWidth = 0.005f;
+            line.material = vrPointerMaterial != null ? vrPointerMaterial : new Material(Shader.Find("Sprites/Default"));
+            line.startColor = Color.white;
+            line.endColor = new Color(1f, 1f, 1f, 0f);
+            line.useWorldSpace = true;
+            line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            line.receiveShadows = false;
+            return line;
         }
 
         private void Update()
@@ -76,153 +80,106 @@ namespace SpellSimulator.Player
 
         private void HandleHover()
         {
-            // Si miramos a algo, vemos si lo podemos agarrar.
-            // En VR el rayo sale del controlador derecho; en PC, de la camara (mira).
-            Transform rayOrigin = (PlatformDetector.IsVR && vrRightController != null)
-                ? vrRightController
-                : cameraTransform;
+            bool vrRay = PlatformDetector.IsVR && vrRightController != null;
+            Transform origin = vrRay ? vrRightController : cameraTransform;
+            if (origin == null) return;
 
-            Vector3 rayDirection = rayOrigin.forward;
-            if (PlatformDetector.IsVR && rayOrigin == vrRightController)
+            Vector3 direction = vrRay ? Quaternion.AngleAxis(vrRayPitchOffset, origin.right) * origin.forward : origin.forward;
+            Vector3 end = origin.position + direction * interactRange;
+
+            currentHovered = null;
+            if (Physics.Raycast(origin.position, direction, out RaycastHit hit, interactRange, interactLayer))
             {
-                // El usuario solicitó rotarlo 90 grados por código sin tocar el Transform original
-                rayDirection = Quaternion.AngleAxis(90f, rayOrigin.right) * rayOrigin.forward;
+                end = hit.point;
+                var interactable = hit.collider.GetComponentInParent<IInteractable>();
+                if (interactable != null && HasFreeHandFor(interactable)) currentHovered = interactable;
             }
 
-            Ray ray = new Ray(rayOrigin.position, rayDirection);
-            
-            // Dibujar linea si estamos en VR
             if (vrPointerLine != null)
             {
-                vrPointerLine.SetPosition(0, rayOrigin.position);
-                vrPointerLine.SetPosition(1, rayOrigin.position + rayDirection * interactRange);
+                vrPointerLine.SetPosition(0, origin.position);
+                vrPointerLine.SetPosition(1, end);
             }
+        }
 
-            if (Physics.Raycast(ray, out RaycastHit hit, interactRange, interactLayer))
+        private bool HasFreeHandFor(IInteractable interactable)
+        {
+            switch (interactable.PreferredHand)
             {
-                // Cortar la linea visual en el punto de impacto
-                if (vrPointerLine != null) vrPointerLine.SetPosition(1, hit.point);
-                
-                IInteractable interactable = hit.collider.GetComponentInParent<IInteractable>();
-                if (interactable != null)
-                {
-                    // Solo podemos hacer hover si tenemos la mano correspondiente libre
-                    bool canHold = (interactable.PreferredHand == HandType.Right && heldRightObject == null) ||
-                                   (interactable.PreferredHand == HandType.Left && heldLeftObject == null) ||
-                                   interactable.PreferredHand == HandType.Both;
-                    
-                    if (canHold)
-                    {
-                        currentHovered = interactable;
-                        return;
-                    }
-                }
+                case HandType.Right: return heldRight == null;
+                case HandType.Left: return heldLeft == null;
+                default: return heldRight == null || heldLeft == null;
             }
-            
-            currentHovered = null;
         }
 
         private void HandleInteraction()
         {
-            if (inputReader.IsInteracting)
-            {
-                // Prioridad: Si miramos algo agarrable y tenemos mano libre, lo agarramos.
-                if (currentHovered != null)
-                {
-                    GrabObject(currentHovered);
-                }
-                // Si miramos al vacio, tiramos las cosas. (Primero la derecha, si esta vacia, tiramos la izquierda)
-                else
-                {
-                    if (heldRightObject != null)
-                        DropObject(heldRightObject, HandType.Right);
-                    else if (heldLeftObject != null)
-                        DropObject(heldLeftObject, HandType.Left);
-                }
-            }
+            if (!inputReader.IsInteracting) return;
+
+            if (currentHovered != null) Grab(currentHovered);
+            else if (heldRight != null) Drop(HandType.Right);
+            else if (heldLeft != null) Drop(HandType.Left);
         }
 
         private void HandleUsage()
         {
-            if (currentUsable == null)
-            {
-                if (inputReader.IsUsingTool && !wasUsingTool)
-                {
-                    Debug.LogWarning("[PlayerInteractor] Intentaste usar herramienta pero currentUsable es NULL. ¿Agarraste el lápiz?");
-                    wasUsingTool = true;
-                }
-                else if (!inputReader.IsUsingTool && wasUsingTool)
-                {
-                    wasUsingTool = false;
-                }
-                return;
-            }
+            IUsable usable = ActiveUsable;
+            bool using_ = inputReader.IsUsingTool;
 
-            if (inputReader.IsUsingTool && !wasUsingTool)
+            if (usable != null)
             {
-                Debug.Log("[PlayerInteractor] Iniciando trazo (OnUseStart) con: " + currentUsable.GetType().Name);
-                currentUsable.OnUseStart();
-                wasUsingTool = true;
-            }
-            else if (inputReader.IsUsingTool && wasUsingTool)
-            {
-                currentUsable.OnUseHold();
-            }
-            else if (!inputReader.IsUsingTool && wasUsingTool)
-            {
-                Debug.Log("[PlayerInteractor] Finalizando trazo (OnUseEnd)");
-                currentUsable.OnUseEnd();
-                wasUsingTool = false;
-            }
+                if (using_ && !wasUsingTool) usable.OnUseStart();
+                else if (using_) usable.OnUseHold();
+                else if (wasUsingTool) usable.OnUseEnd();
 
-            // Uso Secundario (Cast/Undo)
-            if (inputReader.IsSecondaryUsingTool)
-            {
-                currentUsable.OnSecondaryUseStart();
+                if (inputReader.IsSecondaryUsingTool) usable.OnSecondaryUseStart();
             }
+            wasUsingTool = using_;
         }
 
-        private void GrabObject(IInteractable interactable)
+        private void Grab(IInteractable interactable)
         {
-            MonoBehaviour mb = interactable as MonoBehaviour;
-            if (mb != null)
+            if (!(interactable is MonoBehaviour mb)) return;
+
+            // "Both" va a la mano que este libre, prefiriendo la derecha.
+            bool left = interactable.PreferredHand == HandType.Left ||
+                        (interactable.PreferredHand == HandType.Both && heldRight != null);
+            mb.TryGetComponent(out IUsable usable);
+
+            if (left)
             {
-                Transform targetHoldPoint = (interactable.PreferredHand == HandType.Left) ? leftHoldPoint : rightHoldPoint;
-                
-                if (interactable.PreferredHand == HandType.Left)
-                {
-                    heldLeftObject = mb.gameObject;
-                }
-                else
-                {
-                    heldRightObject = mb.gameObject;
-                }
-
-                // Si es un IUsable (como el Lapiz), nos lo guardamos
-                IUsable usable = mb.GetComponent<IUsable>();
-                if (usable != null) currentUsable = usable;
-                
-                interactable.OnInteract(targetHoldPoint);
-                currentHovered = null;
+                heldLeft = mb.gameObject;
+                leftUsable = usable;
             }
-        }
-
-        private void DropObject(GameObject obj, HandType hand)
-        {
-            IInteractable interactable = obj.GetComponent<IInteractable>();
-            interactable?.OnDrop();
-            
-            if (hand == HandType.Left)
-                heldLeftObject = null;
             else
-                heldRightObject = null;
-            
-            IUsable usable = obj.GetComponent<IUsable>();
-            if (usable != null && currentUsable == usable)
             {
-                currentUsable = null;
-                wasUsingTool = false;
+                heldRight = mb.gameObject;
+                rightUsable = usable;
             }
+
+            interactable.OnInteract(left ? leftHoldPoint : rightHoldPoint);
+            currentHovered = null;
+        }
+
+        private void Drop(HandType hand)
+        {
+            GameObject obj = hand == HandType.Left ? heldLeft : heldRight;
+            IUsable usable = hand == HandType.Left ? leftUsable : rightUsable;
+            if (usable != null && usable == ActiveUsable && wasUsingTool) usable.OnUseEnd();
+
+            if (obj != null && obj.TryGetComponent(out IInteractable interactable)) interactable.OnDrop();
+
+            if (hand == HandType.Left)
+            {
+                heldLeft = null;
+                leftUsable = null;
+            }
+            else
+            {
+                heldRight = null;
+                rightUsable = null;
+            }
+            wasUsingTool = false;
         }
     }
 }

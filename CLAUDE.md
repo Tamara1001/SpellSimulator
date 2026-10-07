@@ -25,6 +25,11 @@ Idioma del proyecto: **español** (docs, commits, logs, comentarios). Identifica
 - **Nunca editar a mano `.unity`, `.prefab`, `.asset` ni `.meta`.** Cambios de escena/prefab/settings se hacen
   vía Unity MCP (`Unity_ManageGameObject`, `Unity_RunCommand`, etc.) o se le piden a Tamara.
   Al crear/mover/borrar un `.cs` fuera del Editor, mover también su `.meta` (el GUID mantiene las referencias).
+  **Antes de reestructurar, pausar el auto-refresh** (`AssetDatabase.DisallowAutoRefresh()` por MCP): si no, Unity borra
+  las `.meta` huérfanas a mitad de camino. Ver [Docs/HARNESS.md](Docs/HARNESS.md#mover--renombrar-scripts-importante).
+- **El significado de los glifos es data** (`Assets/_Project/Data/Dictionary/*.json`), no código. Tuning del compilador:
+  constantes nombradas portadas de la referencia, citando el archivo de origen.
+- **Todo cast pasa por `SpellCaster.Cast`.** Para reaccionar a hechizos, suscribirse a `SpellCaster.SpellCompiled`.
 - **Cero allocations en `Update/FixedUpdate/LateUpdate`** (ver CODESTYLE). Pre-alocar y reutilizar.
 - **Lógica de plataforma (PC vs VR) sólo vía `PlatformDetector.IsVR`.** Toda feature nueva debe funcionar en ambos.
 - **No `Texture2D.SetPixel`/CPU por píxel en el lienzo**: el trazado va por GPU (`RenderTexture` + `Graphics.DrawTexture`).

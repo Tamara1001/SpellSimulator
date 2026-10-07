@@ -38,6 +38,7 @@ Multiplayer, IA enemiga, múltiples anillos/sigilos, entrenamiento del modelo de
 | **Sigilo (Sigil)** | Glifo central: define el **elemento** (fire, water, earth…). |
 | **Signo (Sign)** | Glifo exterior al centro: **modifica** el comportamiento (column, pull, levitation…). |
 | **Glifo (Glyph)** | Cualquier símbolo reconocible por el modelo (sigilo o signo). Ver [[GLYPHS]]. |
-| **SpellAST** | Árbol con anillo → sigilo + signos, con índice de clase y confianza. |
+| **GlyphAST** | Sello reconocido: anillo, sigilo primario, signos, desconocidos, advertencias y métricas. |
 | **SpellIR** | Representación intermedia compilada (struct): parámetros finales que consume el VFX. |
-| **Cast** | Acción secundaria con el lápiz: limpia trazos, infiere, compila y lanza. |
+| **Cast** | Acción secundaria con el lápiz: `SpellCaster` limpia, parsea, reconoce, compila y lanza. |
+| **Preparado** | Hechizo válido con el anillo abierto: no se lanza hasta sellarlo. |

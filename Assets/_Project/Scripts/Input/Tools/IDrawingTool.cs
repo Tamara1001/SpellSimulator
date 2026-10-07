@@ -1,17 +1,14 @@
 using UnityEngine;
 using SpellSimulator.Canvas;
-using SpellSimulator.Core;
 
 namespace SpellSimulator.Input.Tools
 {
     /// <summary>
-    /// Interfaz base para todas las herramientas de edicion del simulador.
+    /// Herramienta logica que edita la sesion de un lienzo a partir de coordenadas UV.
+    /// No sabe de donde viene la UV (mouse, rayo VR, contacto).
     /// </summary>
     public interface IDrawingTool
     {
-        void Initialize(DrawingSession session);
-        void OnEquip();
-        void OnUnequip();
         void OnPointerDown(Vector2 uv, DrawingCanvas canvas);
         void OnPointerDrag(Vector2 uv, DrawingCanvas canvas);
         void OnPointerUp();

@@ -1,60 +1,47 @@
 using UnityEngine;
 using SpellSimulator.Canvas;
-using SpellSimulator.Core;
 
 namespace SpellSimulator.Input.Tools
 {
+    /// <summary>Goma: elimina trazos enteros que pasen cerca del puntero.</summary>
     public class EraserTool : IDrawingTool
     {
-        private DrawingSession currentSession;
-        private float eraseRadius = 0.05f; // Radio de interseccion para borrar
+        // Radio en metros sobre la superficie: igual en lienzos de cualquier tamanio o proporcion.
+        private readonly float eraseRadiusMeters;
 
-        public void Initialize(DrawingSession session)
+        public EraserTool(float eraseRadiusMeters = 0.025f)
         {
-            currentSession = session;
+            this.eraseRadiusMeters = eraseRadiusMeters;
         }
 
-        public void OnEquip() { }
-        public void OnUnequip() { }
-
-        public void OnPointerDown(Vector2 uv, DrawingCanvas canvas)
-        {
-            EraseAt(uv, canvas);
-        }
-
-        public void OnPointerDrag(Vector2 uv, DrawingCanvas canvas)
-        {
-            EraseAt(uv, canvas);
-        }
-
+        public void OnPointerDown(Vector2 uv, DrawingCanvas canvas) => EraseAt(uv, canvas);
+        public void OnPointerDrag(Vector2 uv, DrawingCanvas canvas) => EraseAt(uv, canvas);
         public void OnPointerUp() { }
 
         private void EraseAt(Vector2 uv, DrawingCanvas canvas)
         {
-            if (currentSession == null || currentSession.IsEmpty) return;
+            var strokes = canvas.Session.Strokes;
+            if (strokes.Count == 0) return;
 
-            bool erasedSomething = false;
-            
-            // Iteramos al reves para poder eliminar elementos de forma segura
-            for (int i = currentSession.Strokes.Count - 1; i >= 0; i--)
+            Vector2 size = canvas.WorldSize;
+            float radiusSq = eraseRadiusMeters * eraseRadiusMeters;
+            bool erased = false;
+
+            for (int i = strokes.Count - 1; i >= 0; i--)
             {
-                Stroke stroke = currentSession.Strokes[i];
-                foreach (Vector2 point in stroke.Points)
+                foreach (Vector2 point in strokes[i].Points)
                 {
-                    if (Vector2.Distance(point, uv) <= eraseRadius)
+                    Vector2 delta = Vector2.Scale(point - uv, size);
+                    if (delta.sqrMagnitude <= radiusSq)
                     {
-                        currentSession.Strokes.RemoveAt(i);
-                        erasedSomething = true;
-                        break; // Dejamos de revisar este trazo porque ya lo eliminamos
+                        strokes.RemoveAt(i);
+                        erased = true;
+                        break;
                     }
                 }
             }
 
-            // Si tocamos algun trazo, forzamos al lienzo a repintarse al instante
-            if (erasedSomething && canvas != null)
-            {
-                canvas.RedrawSession(currentSession);
-            }
+            if (erased) canvas.Redraw();
         }
     }
 }

@@ -4,62 +4,46 @@ using SpellSimulator.Core;
 
 namespace SpellSimulator.Input.Tools
 {
+    /// <summary>
+    /// Lapiz: agrega puntos al trazo actual con un estabilizador low-pass (suaviza el temblor de la mano en VR).
+    /// </summary>
     public class PenTool : IDrawingTool
     {
-        private DrawingSession currentSession;
+        /// <summary>Distancia UV minima entre puntos guardados.</summary>
+        public const float MinPointSpacing = 0.005f;
+
+        // Mayor = sigue mas rapido a la mano (menos lag, mas temblor).
+        private readonly float stabilizerSpeed;
         private Stroke currentStroke;
-        
-        // --- Estabilizador VR ---
         private Vector2 smoothedUV;
-        private bool isFirstPoint = true;
-        // Velocidad del estabilizador (menor = más suave pero más "lag" percibido, mayor = más rápido pero más tembloroso)
-        private float stabilizerSpeed = 8f; 
 
-        public void Initialize(DrawingSession session)
+        public PenTool(float stabilizerSpeed = 8f)
         {
-            currentSession = session;
-        }
-
-        public void OnEquip() { }
-        public void OnUnequip() 
-        { 
-            currentStroke = null; // Clean up if unequipped while drawing
+            this.stabilizerSpeed = stabilizerSpeed;
         }
 
         public void OnPointerDown(Vector2 uv, DrawingCanvas canvas)
         {
             currentStroke = new Stroke();
             currentStroke.AddPoint(uv);
-            currentSession.AddStroke(currentStroke);
-            
-            // Inicializar el estabilizador en el punto de impacto
+            canvas.Session.AddStroke(currentStroke);
             smoothedUV = uv;
-            isFirstPoint = true;
-            
-            if (canvas != null) canvas.DrawAt(uv, true);
+            canvas.DrawAt(uv, true);
         }
 
         public void OnPointerDrag(Vector2 uv, DrawingCanvas canvas)
         {
             if (currentStroke == null) return;
 
-            // 1. Estabilizador (Low-Pass Filter)
-            if (isFirstPoint)
-            {
-                smoothedUV = uv;
-                isFirstPoint = false;
-            }
-            else
-            {
-                // En VR, movemos la tinta suavemente hacia la mano real en base al tiempo
-                smoothedUV = Vector2.Lerp(smoothedUV, uv, Time.deltaTime * stabilizerSpeed);
-            }
+            // Suavizado exponencial independiente del framerate.
+            float t = 1f - Mathf.Exp(-stabilizerSpeed * Time.deltaTime);
+            smoothedUV = Vector2.Lerp(smoothedUV, uv, t);
 
-            // 2. Solo agregar el punto a la geometría si nos movimos lo suficiente desde el último punto suavizado
-            if (currentStroke.Points.Count == 0 || Vector2.Distance(currentStroke.Points[currentStroke.Points.Count - 1], smoothedUV) > 0.005f)
+            Vector2 last = currentStroke.Points[currentStroke.Points.Count - 1];
+            if (Vector2.Distance(last, smoothedUV) > MinPointSpacing)
             {
                 currentStroke.AddPoint(smoothedUV);
-                if (canvas != null) canvas.DrawAt(smoothedUV, false);
+                canvas.DrawAt(smoothedUV, false);
             }
         }
 

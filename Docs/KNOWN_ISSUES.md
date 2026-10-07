@@ -3,87 +3,70 @@ tags: [doc, bugs]
 ---
 # Known Issues y Deuda Técnica
 
-Formato: `KI-NNN` · severidad (🔴 alta, 🟠 media, 🟢 baja) · estado (`abierto` / `en curso` / `resuelto <fecha>`).
-Al resolver uno, no lo borres: marcalo resuelto y anotá el commit.
+Formato: `KI-NNN` · severidad (🔴 alta, 🟠 media, 🟢 baja) · estado (`abierto` / `resuelto <fecha>`).
+Al resolver uno, no lo borres: marcalo resuelto y explicá cómo.
 
-## Pipeline de hechizos
+## Abiertos
 
-### KI-001
-🔴 `abierto` — **Se usan logits como probabilidades.** El ONNX devuelve `class_logits` sin softmax
-(`export_onnx.py` de la referencia). `SentisInferenceEngine.RunInference` toma `probs[bestIdx]` como confianza y
-`SpellCompiler` la compara con `MinPrimaryConfidence = 0.45` y la usa en las fórmulas de `quality`/`duration`.
-El umbral y los parámetros resultantes no tienen sentido. **Fix:** aplicar softmax (estable, restando el máximo)
-antes del argmax. Lógica pura → test.
+### KI-020
+🟠 `abierto` — **Agrupado de trazos simplificado.** `StrokeGrouper` usa umbral radial (0.40 r) + proximidad. La
+referencia hace búsqueda de particiones guiada por reconocimiento (`parser/grouping/partition.ts`): separa un signo
+pegado al sigilo y mantiene juntos los puntos sueltos de un glifo. Síntoma esperado: un signo dibujado en la capa media
+muy cerca del centro se suma al sigilo. Próximo paso: probar con dibujos reales y, si falla, portar `hypotheses.ts`.
 
-### KI-002
-🟠 `abierto` — **El hechizo spawnea en la posición de `SystemManagers`**, no en el lienzo:
-`outputController?.SpawnSpellEffect(spell, this.transform.position)`. Debería usar el `DrawingCanvas` casteado
-(posición + normal como dirección). Requiere pasar el lienzo a `ProcessVectorSession`.
+### KI-021
+🟠 `abierto` — **No hay forma de limpiar el lienzo completo** desde el juego (los botones del HUD viejo estaban
+inactivos y se eliminaron). Sólo goma (trazo a trazo) y deshacer. Propuesta: mantener secundario de la goma = limpiar.
 
-### KI-003
-🟠 `abierto` — **Deltas semánticos no coinciden con la referencia** aunque el comentario dice que son copiados.
-Los sigilos tampoco aplican su `semantic`. Ver tabla en [[GLYPHS]]. Decidir: portar exacto o mantener valores
-propios (y entonces corregir el comentario). Ideal: mover el diccionario a un `ScriptableObject`/JSON por glifo.
+### KI-022
+🟢 `abierto` — El gate de ambigüedad del sigilo (`PrimarySigilAmbiguityGap = 0.05`) es inalcanzable con softmax puro:
+para pasar `≥ 0.62` la alternativa no puede superar 0.38. En la referencia la confianza es un score híbrido
+(template matcher + ML). Queda como red de seguridad.
 
-### KI-004
-🟠 `abierto` — **Anillo sin sigilo ⇒ hechizo inválido silencioso.** Si `ring.Found` pero `grouped.Sigil` está vacío,
-`ast.Ring.Sigil == null` y `CompileAST` devuelve `ast_empty`. Además si un signo queda dentro del 55% del radio se toma
-como parte del sigilo. Agregar diagnósticos al `DiagnosticBus`.
+### KI-023
+🟢 `abierto` — **Capa Plan no portada** (`compiler/plan/`: columnas, regiones, vórtices, R‑xx). `SpellIR` tiene
+manifestaciones y escalares, pero no el "plan" que la referencia anima. Ver [[ROADMAP]] F4.
 
-### KI-005
-🟠 `abierto` — **`active` siempre `true`.** `ProcessVectorSession` llama `CompileAST(ast, true)`, así que no existe el estado
-*preparado* (anillo abierto). `RingDetector` sólo reporta `Found`, no `Closed` vs `Open` (tolera cierre hasta 40%).
+### KI-024
+🟢 `abierto` — `Assets/_Recovery/0.unity` (escena de recuperación tras un crash) y `_Project/DebugCanvasCapture.png`
+siguen en el repo. No se borraron porque pueden tener trabajo tuyo: revisar y decidir.
 
-### KI-006
-🟢 `abierto` — Rotación manual de signos "al norte" en `SentisInferenceEngine` puede ser redundante: el modelo se
-entrenó con rotation augmentation. Medir accuracy con y sin rotación antes de decidir.
+### KI-025
+🟢 `abierto` — No se aprovechan las cabezas de pose del modelo (`angle`, `scale`, `center`). La orientación de cada
+signo sale de la geometría (`DirectedOrientationDeg`), no de la red. La referencia calibra el ángulo por glifo.
 
 ### KI-007
-🟢 `abierto` — `StrokeCleaner`, `RingDetector`, `TensorRasterizer`, `LogTopPredictions` alocan (listas, arrays, lambda en
-`Array.Sort`, strings). No es en `Update` (sólo al castear), así que es aceptable, pero `RunInference` crea un
-`float[9216]` y una `Texture2D` debug por glifo.
+🟢 `abierto` — El cast aloca (listas, `float[]` por predicción, `StringBuilder` de diagnóstico, `Texture2D` de debug).
+Es aceptable porque ocurre sólo al castear, nunca por frame. El buffer de entrada del clasificador sí se reutiliza.
 
-### KI-008
-🟢 `abierto` — `SpellCompiler`: campo muerto `classIndexToGlyphName`, `<summary>` de `Compile` pegado sobre ese campo,
-parser JSON casero con `Replace/Split` (frágil). Usar `JsonUtility` con wrapper o `Newtonsoft` (ya viene con Unity).
+### KI-026
+🟢 `abierto` — Sin PlayMode tests. El smoke test de cast en Play Mode se hizo a mano por MCP (ver [[HARNESS]]);
+convendría automatizarlo.
 
-## Jugador / VR
+## Resueltos (2026-10-07, reestructura del pipeline)
 
-### KI-009
-🟠 `abierto` — `PhysicalTool.OnSecondaryUseStart` busca el motor con `FindFirstObjectByType` en cada cast y hardcodea
-`CleanSession(…, 0.005f, 3)` (duplicado con `MouseInputHandler`). Centralizar en un servicio de cast.
-
-### KI-010
-🟢 `abierto` — `PlayerLook.Awake` bloquea el cursor aunque `PlatformDetector` ya lo hace según plataforma (orden de
-Awake no garantizado). Viola la regla "lógica de plataforma sólo en PlatformDetector".
-
-### KI-011
-🟢 `abierto` — `PlayerInteractor`: rayo VR rotado 90° "por pedido" en código (`Quaternion.AngleAxis(90, right)`) —
-compensación de la orientación del controlador. Mejor resolverlo con un transform hijo "Aim". Crea material con
-`Shader.Find("Sprites/Default")` en runtime (puede no estar en build).
-
-### KI-012
-🟢 `abierto` — `PlayerInteractor` sólo guarda **un** `IUsable` (`currentUsable`); al agarrar un segundo usable se pisa.
-
-### KI-013
-🟢 `abierto` — `EraserTool.eraseRadius` es en UV: en lienzos escalados no‑cuadrados el radio efectivo varía.
-`DrawingCanvas` también llama `GetComponent<MeshFilter>()` en cada `GetUVFromWorldPosition` (cachear).
-
-## Proyecto / repo
-
-### KI-014
-🟢 `abierto` — `MouseInputHandler` es legacy (flujo de mouse directo + HUD inactivo) y mantiene su propia
-`DrawingSession` separada de la del lienzo. Sigue en `SystemManagers` y en la escena. Decidir si se elimina.
-
-### KI-015
-🟢 `abierto` — Carpetas VFX duplicadas: `_Project/VFX/` (Fire) y `_Project/Prefabs/VFX/` (resto + `FireSpell_VFX.vfx`).
-`_Project/DebugCanvasCapture.png` y `Assets/_Recovery/0.unity` son residuos. `Assets/Editor/CheckURP.cs` y
-`VFXDiagnostics.cs` no tienen `[MenuItem]` (sólo invocables por MCP/código).
-
-### KI-016
-🟢 `resuelto 2026-10-07` — Sin asmdefs ni tests. Se agregaron `SpellSimulator.Runtime`, `SpellSimulator.Tests.EditMode`
-y tests de la lógica pura de `Core`. Ver [[HARNESS]].
-
-### KI-017
-🟢 `abierto` — El README describe una estructura (`Assets/Scripts`, `Scenes/PrototypePC.unity`, `Assets/Models`) que no
-coincide con la real. Se actualizó la sección y se apunta a [[STRUCTURE]].
+| KI | Problema | Resolución |
+|---|---|---|
+| KI-001 🔴 | Logits usados como probabilidades | `ClassificationMath.Softmax` + promedio TTA. Test de regresión. |
+| KI-002 🟠 | Hechizo spawneaba en `SystemManagers` | `SpellOutputController` recibe el lienzo: posición + normal + dirección papel→mundo. |
+| KI-003 🟠 | Deltas no coincidían con la referencia; sigilos sin semántica | Diccionario como datos (JSON de la referencia) + port fiel de `semanticRules.ts`/`spellBuilder.ts`. |
+| KI-004 🟠 | Anillo sin sigilo → inválido silencioso | `GlyphWarnings` con texto, publicado en la UI de diagnóstico. |
+| KI-005 🟠 | `active` siempre true | `RingDetector` mide cobertura: cerrado = activo, abierto = preparado. |
+| KI-006 🟢 | Rotación manual de signos al norte | Reemplazada por TTA de 8 rotaciones, como la referencia. |
+| KI-008 🟢 | Parser JSON casero, campos muertos | `GlyphDictionary` con Newtonsoft; compilador reescrito. |
+| KI-009 🟠 | `FindFirstObjectByType` en cada cast, constantes duplicadas | `SpellCaster` referenciado por `PhysicalTool`; parámetros en un solo lugar. |
+| KI-010 🟢 | Cursor bloqueado en `PlayerLook` | Sólo `PlatformDetector`; Escape libera el cursor. |
+| KI-011 🟢 | Rotación de 90° hardcodeada; `Shader.Find` en runtime | `vrRayPitchOffset` serializado; material `VRPointer.mat` asignado. |
+| KI-012 🟢 | Un solo `IUsable` | Usable por mano; la derecha tiene prioridad. |
+| KI-013 🟢 | Radio de goma en UV, `GetComponent` por llamada | Radio en metros; bounds del mesh cacheados. |
+| KI-014 🟢 | `MouseInputHandler` legacy | Eliminado junto con los botones del HUD. PC y VR usan las herramientas físicas. |
+| KI-015 🟢 | Carpetas VFX duplicadas, editor scripts sin menú | Todo en `Prefabs/VFX/`; `HarnessProjectChecks` reemplaza `CheckURP`/`VFXDiagnostics`. |
+| KI-016 🟢 | Sin asmdefs ni tests | 3 asmdefs, 44 tests EditMode. |
+| KI-017 🟢 | README desactualizado | Actualizado y apuntando a `Docs/`. |
+| KI-018 🟠 | **Nuevo:** trazos en UV ⇒ en lienzos no cuadrados un círculo era una elipse para parser y red | `DrawingCanvas.UvToIsotropic`; el caster trabaja en espacio isotrópico. |
+| KI-019 🔴 | **Nuevo:** `RedrawSession` llamaba `ClearCanvas`, que vaciaba la sesión ⇒ **borrar o deshacer un trazo borraba todo** | `Redraw()` (sólo textura) separado de `Clear()`. |
+| KI-027 🟠 | **Nuevo:** rasterizado distinto al de entrenamiento (centrado, binario, grosor 2 r) | `TensorRasterizer` replica `renderCandidateTensor`: anclado arriba‑izq., 2× + promedio, línea 2 px. 20/20 plantillas reconocidas. |
+| KI-028 🟢 | **Nuevo:** Douglas‑Peucker dividía por cero en trazos que se cruzan; trazos cortos compartidos por referencia | Distancia a punto en segmentos degenerados; copia de trazos. Tests. |
+| KI-029 🟢 | **Nuevo:** clustering de signos no transitivo | Union‑find. Test. |
+| KI-030 🟢 | **Nuevo:** `renderer.material` instanciado nunca se destruía | `DrawingCanvas.OnDestroy` lo destruye. |
+| KI-031 🟢 | **Nuevo:** suelo detectaba triggers (lienzo sostenido) | `QueryTriggerInteraction.Ignore`. |

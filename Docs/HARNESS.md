@@ -18,12 +18,35 @@ vía **Unity MCP** (`com.unity.ai.assistant`).
      `SpellSimulator.EditorTools.HarnessTestRunner.RunEditMode();`
    - Resultado en `Logs/harness-editmode.txt` (primera línea `PASS`/`FAIL passed=N failed=M …`)
      y en consola con prefijo `[Harness] EditMode:`. Es asíncrono: leer el archivo unos segundos después.
-3. **Validación de escena**: `SpellSimulator > Harness > Validate Open Scene` o
+3. **Chequeos de proyecto**: `SpellSimulator > Harness > Check Project Settings` (URP asignado, Color Space Linear).
+4. **Validación de escena**: `SpellSimulator > Harness > Validate Open Scene` o
    `SpellSimulator.EditorTools.HarnessSceneValidator.Validate()` (devuelve el reporte).
-   Chequea singletons del pipeline y referencias serializadas nulas en componentes `SpellSimulator.*`.
-4. **Play Mode** (si el cambio es de runtime): `Unity_ManageEditor Play`, ejercitar, leer logs
-   (`[Compilador]`, `[VFX Output]`, `[Sigilo]`, `[PlayerInteractor]`…), `Stop`. Captura opcional con `Unity_Camera_Capture`.
-5. **VR**: no se puede verificar desde el agente. Dejar en el resumen qué probar en el Quest.
+   Chequea singletons del pipeline (`SentisGlyphClassifier`, `SpellCaster`, `SpellOutputController`, `PlatformDetector`)
+   y referencias serializadas nulas en componentes `SpellSimulator.*`.
+5. **Play Mode** (si el cambio es de runtime): `Unity_ManageEditor Play`, ejercitar, leer logs
+   (`[Hechizo]`, `[Cast]`, `[Reconocimiento]`, `[VFX Output]`, `[PlatformDetector]`…), `Stop`. Captura opcional con `Unity_Camera_Capture`.
+6. **VR**: no se puede verificar desde el agente. Dejar en el resumen qué probar en el Quest.
+
+### Smoke test de cast (Play Mode)
+Con `Unity_ManageEditor Play`, un `Unity_RunCommand` puede dibujar un sello sintético en el lienzo real y castear:
+`canvas.Clear()`, agregar a `canvas.Session` un círculo (r 0.42 UV, con o sin hueco) + `dictionary.Get("fire").TemplateStrokes`
+escalados a 0.22 en el centro, `canvas.Redraw()`, `caster.Cast(canvas)` y loguear `valid/active/element/primaryManifestation`.
+Resultado esperado (2026-10-07): fuego cerrado → activo; agua con hueco de 45° → preparado; tierra + column abajo → `column`.
+
+## Mover / renombrar scripts (importante)
+El Editor **auto-refresca** mientras se editan archivos desde afuera: si un `.cs` desaparece un instante, Unity borra su
+`.meta` huérfana y el GUID se pierde (los componentes en escenas/prefabs quedan "Missing").
+- Antes de una reestructura: `Unity_RunCommand` con `AssetDatabase.DisallowAutoRefresh();` y al terminar `AllowAutoRefresh()` + `Refresh`.
+- Para conservar un componente al renombrar la clase: mover la `.meta` junto con el `.cs` (mismo GUID) y mantener los
+  nombres de campos serializados que importan.
+- Si se perdió un GUID: `git show HEAD:<ruta>.meta > <nueva ruta>.meta` antes del próximo refresh.
+- `AssetDatabase.MoveAsset` falla por MCP con assets `.vfx` (pide interacción): mover en disco con la `.meta`.
+
+## Datos
+- `SpellSimulator > Dictionary > Sync From Reference`: copia JSON del diccionario y el modelo desde `wha-spell-simulator`
+  (ruta en EditorPrefs, default `../../../wha-spell-simulator` relativo a `Assets/`) y regenera `GlyphDictionary.asset`.
+  Por código: `GlyphDictionarySync.Sync(path, copyModel)`.
+- `SpellSimulator > Dictionary > Rebuild Asset`: sólo regenera el asset (tras editar JSON a mano).
 
 ## Assemblies
 
@@ -35,11 +58,19 @@ vía **Unity MCP** (`com.unity.ai.assistant`).
 
 Al agregar un `using` de un paquete nuevo en runtime, sumar su asmdef a `references` de `SpellSimulator.Runtime.asmdef`.
 
+## Tests (44 al 2026-10-07)
+| Archivo | Cubre |
+|---|---|
+| `ParsingTests` | RingDetector (cerrado/abierto/dos arcos/ajuste), StrokeGrouper (transitividad), SymbolCandidate, capas, StrokeCleaner, GeometryUtils |
+| `RecognitionTests` | Softmax, TTA, TensorRasterizer, GlyphDictionary, **end-to-end modelo: 20/20 plantillas** |
+| `CompilerTests` | Gates (sin anillo, baja confianza, sin sigilo, varios sigilos), activo/preparado, levitation, dirección inward, cancelación, fuerza, escala |
+
 ## Escribir tests
-- Lógica pura (`Core`, `TensorRasterizer`, fórmulas del compilador) → EditMode, sin escena.
-- Fábricas de trazos sintéticos en `TestStrokes` (círculos, líneas, sesiones).
+- Lógica pura → EditMode, sin escena. El pipeline sin red se prueba fabricando `GlyphPrediction` (ver `CompilerTests.Fake`).
+- Fábricas en `TestStrokes`: `Circle`, `Arc`, `Line`, `FromTemplate`, `Session`.
+- `TestAssets.Dictionary` carga el diccionario real (requiere haber corrido el sync).
 - Nombre: `<Clase>Tests`, método `Condicion_ResultadoEsperado`.
-- PlayMode tests: todavía no hay asmdef; crear `Tests/PlayMode/` cuando haga falta (ej. `SpellCompiler` como MonoBehaviour).
+- PlayMode tests: todavía no hay asmdef; crear `Tests/PlayMode/` cuando haga falta (ej. el smoke test de cast con `SentisGlyphClassifier` real).
 
 ## Graphify
 Grafo de conocimiento del código (AST, sin LLM) para navegar dependencias y la vista de Obsidian.

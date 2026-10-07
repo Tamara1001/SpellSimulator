@@ -4,10 +4,22 @@ using UnityEngine;
 
 namespace SpellSimulator.Core
 {
+    /// <summary>
+    /// Un trazo: puntos en coordenadas del lienzo entre pointer-down y pointer-up.
+    /// </summary>
     [Serializable]
     public class Stroke
     {
         public List<Vector2> Points = new List<Vector2>();
+
+        public Stroke() { }
+
+        public Stroke(List<Vector2> points)
+        {
+            Points = points;
+        }
+
+        public int Count => Points.Count;
 
         public void AddPoint(Vector2 point)
         {
@@ -15,10 +27,15 @@ namespace SpellSimulator.Core
         }
     }
 
+    /// <summary>
+    /// Conjunto de trazos de un lienzo. Cada DrawingCanvas es duenio de la suya.
+    /// </summary>
     [Serializable]
     public class DrawingSession
     {
         public List<Stroke> Strokes = new List<Stroke>();
+
+        public bool IsEmpty => Strokes.Count == 0;
 
         public void AddStroke(Stroke stroke)
         {
@@ -27,12 +44,9 @@ namespace SpellSimulator.Core
 
         public bool UndoLastStroke()
         {
-            if (Strokes.Count > 0)
-            {
-                Strokes.RemoveAt(Strokes.Count - 1);
-                return true;
-            }
-            return false;
+            if (Strokes.Count == 0) return false;
+            Strokes.RemoveAt(Strokes.Count - 1);
+            return true;
         }
 
         public void Clear()
@@ -40,38 +54,28 @@ namespace SpellSimulator.Core
             Strokes.Clear();
         }
 
-        public bool IsEmpty => Strokes.Count == 0;
-
         /// <summary>
-        /// Obtiene los limites matematicos de todos los puntos dibujados.
-        /// Retorna true si hay puntos validos.
+        /// Limites de todos los puntos dibujados. Devuelve false si no hay puntos.
         /// </summary>
         public bool GetBounds(out Vector2 min, out Vector2 max)
         {
-            min = new Vector2(float.MaxValue, float.MaxValue);
-            max = new Vector2(float.MinValue, float.MinValue);
+            return GeometryUtils.GetBounds(Strokes, out min, out max);
+        }
 
-            bool hasPoints = false;
-
+        /// <summary>
+        /// Copia profunda con cada punto escalado. Se usa para pasar de UV a un espacio
+        /// isotropico cuando el lienzo no es cuadrado.
+        /// </summary>
+        public DrawingSession Scaled(Vector2 scale)
+        {
+            var copy = new DrawingSession();
             foreach (var stroke in Strokes)
             {
-                foreach (var point in stroke.Points)
-                {
-                    if (point.x < min.x) min.x = point.x;
-                    if (point.y < min.y) min.y = point.y;
-                    if (point.x > max.x) max.x = point.x;
-                    if (point.y > max.y) max.y = point.y;
-                    hasPoints = true;
-                }
+                var points = new List<Vector2>(stroke.Points.Count);
+                foreach (var p in stroke.Points) points.Add(Vector2.Scale(p, scale));
+                copy.AddStroke(new Stroke(points));
             }
-
-            if (!hasPoints)
-            {
-                min = Vector2.zero;
-                max = Vector2.zero;
-            }
-
-            return hasPoints;
+            return copy;
         }
     }
 }

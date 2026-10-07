@@ -1,53 +1,77 @@
 using UnityEngine;
+using SpellSimulator.Core;
 
 namespace SpellSimulator.Canvas
 {
     /// <summary>
-    /// Módulo 1: Motor de Trazado.
-    /// Gestiona un lienzo dinámico utilizando una RenderTexture para procesar
-    /// los trazos en GPU sin generar Garbage Collection en CPU.
+    /// Modulo 1: lienzo dinamico. Duenio de su DrawingSession (vectores) y de una RenderTexture donde la tinta
+    /// se estampa por GPU (GL + Graphics.DrawTexture), sin acceso a pixeles por CPU.
     /// </summary>
     [RequireComponent(typeof(Renderer))]
     public class DrawingCanvas : MonoBehaviour
     {
         [Header("Canvas Settings")]
-        [SerializeField, Tooltip("Resolución cuadrada de la textura (ej. 512).")]
+        [SerializeField, Tooltip("Resolucion de la textura para un lienzo de escala 1.")]
         private int resolution = 512;
-        
         [SerializeField, Tooltip("Color de fondo del lienzo al limpiarlo.")]
         private Color clearColor = Color.black;
 
         [Header("Brush Settings")]
-        [SerializeField, Tooltip("Material utilizado para estampar el pincel. Debe usar un shader Unlit/Transparent o similar.")]
+        [SerializeField, Tooltip("Material para estampar el pincel (Unlit/Transparent).")]
         private Material brushMaterial;
-        
-        [SerializeField, Range(0.01f, 0.2f), Tooltip("Tamaño del pincel en relación al lienzo (0-1).")]
+        [SerializeField, Range(0.01f, 0.2f), Tooltip("Tamanio del pincel relativo al lienzo.")]
         private float brushSize = 0.05f;
-
-        [SerializeField, Range(10f, 500f), Tooltip("Cantidad de interpolaciones entre puntos para evitar saltos al mover rápido.")]
+        [SerializeField, Range(10f, 500f), Tooltip("Sellos por unidad UV entre puntos, para no dejar huecos.")]
         private float lerpStepsPerUnit = 250f;
 
         private RenderTexture renderTexture;
-        private Renderer canvasRenderer;
-        
-        // Estado del trazo
+        private Material canvasMaterialInstance;
         private Vector2 lastDrawPosition;
+        private Bounds meshBounds = new Bounds(Vector3.zero, new Vector3(1f, 1f, 0f));
+        private Vector3 surfaceNormalLocal = Vector3.back;
 
-        // Bounding box del trazo en coordenadas UV [0,1]
-        // Permite recortar la region dibujada antes de mandarsela al modelo ONNX
-        private Vector2 inkBoundsMin = Vector2.one;
-        private Vector2 inkBoundsMax = Vector2.zero;
-        private bool hasInk = false;
+        /// <summary>Trazos de este lienzo, en UV [0,1].</summary>
+        public DrawingSession Session { get; } = new DrawingSession();
 
-        /// <summary>True si hay al menos un trazo registrado en el lienzo.</summary>
-        public bool HasInk => hasInk;
+        /// <summary>Normal "hacia afuera del papel" en espacio local (la cara visible del mesh).</summary>
+        public Vector3 SurfaceNormalLocal => surfaceNormalLocal;
 
-        /// <summary>La sesion de dibujo (vectores) asociada a este lienzo especifico.</summary>
-        public Core.DrawingSession Session { get; private set; } = new Core.DrawingSession();
+        /// <summary>
+        /// Escala UV -> espacio isotropico (el lado mayor mide 1). En un lienzo no cuadrado, un circulo dibujado
+        /// en UV es una elipse; el pipeline de reconocimiento trabaja en este espacio.
+        /// </summary>
+        public Vector2 UvToIsotropic
+        {
+            get
+            {
+                Vector2 size = WorldSize;
+                float largest = Mathf.Max(size.x, size.y, 1e-6f);
+                return new Vector2(size.x / largest, size.y / largest);
+            }
+        }
+
+        /// <summary>Tamanio del lienzo en metros (mesh x escala).</summary>
+        public Vector2 WorldSize
+        {
+            get
+            {
+                Vector3 scale = transform.lossyScale;
+                return new Vector2(Mathf.Abs(meshBounds.size.x * scale.x), Mathf.Abs(meshBounds.size.y * scale.y));
+            }
+        }
+
+        public RenderTexture GetRenderTexture() => renderTexture;
 
         private void Awake()
         {
-            InitializeCanvas();
+            var meshFilter = GetComponent<MeshFilter>();
+            if (meshFilter != null && meshFilter.sharedMesh != null)
+            {
+                Mesh mesh = meshFilter.sharedMesh;
+                meshBounds = mesh.bounds;
+                if (mesh.normals.Length > 0) surfaceNormalLocal = mesh.normals[0];
+            }
+            InitializeTexture();
         }
 
         private void OnDestroy()
@@ -57,202 +81,112 @@ namespace SpellSimulator.Canvas
                 renderTexture.Release();
                 Destroy(renderTexture);
             }
+            if (canvasMaterialInstance != null) Destroy(canvasMaterialInstance);
         }
 
-        /// <summary>
-        /// Crea la RenderTexture, la asigna al material del Quad y la limpia.
-        /// </summary>
-        private void InitializeCanvas()
+        private void InitializeTexture()
         {
-            canvasRenderer = GetComponent<Renderer>();
-
-            // Calcular resolución basada en la escala física para evitar pixelado al estirar el lienzo
+            // Resolucion proporcional a la escala fisica para no pixelar lienzos estirados.
             float scaleX = Mathf.Max(0.01f, transform.localScale.x);
             float scaleY = Mathf.Max(0.01f, transform.localScale.y);
-            
-            int width = Mathf.RoundToInt(resolution * scaleX);
-            int height = Mathf.RoundToInt(resolution * scaleY);
-            width = Mathf.Max(16, width);
-            height = Mathf.Max(16, height);
+            int width = Mathf.Max(16, Mathf.RoundToInt(resolution * scaleX));
+            int height = Mathf.Max(16, Mathf.RoundToInt(resolution * scaleY));
 
-            // Crear RenderTexture dinámica
-            renderTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32);
-            renderTexture.filterMode = FilterMode.Bilinear;
+            renderTexture = new RenderTexture(width, height, 0, RenderTextureFormat.ARGB32) { filterMode = FilterMode.Bilinear };
             renderTexture.Create();
 
-            // Asignar al material principal
-            if (canvasRenderer.material != null)
-            {
-                canvasRenderer.material.mainTexture = renderTexture;
-            }
+            // Renderer.material instancia el material: guardamos la instancia para destruirla.
+            canvasMaterialInstance = GetComponent<Renderer>().material;
+            if (canvasMaterialInstance != null) canvasMaterialInstance.mainTexture = renderTexture;
 
-            ClearCanvas();
+            ClearTexture();
         }
 
-        /// <summary>
-        /// Borra todo el contenido del lienzo usando el color de fondo.
-        /// </summary>
-        public void ClearCanvas()
+        /// <summary>Borra trazos y tinta.</summary>
+        public void Clear()
         {
-            Session.Clear(); // Tambien limpiamos los vectores
-
-            RenderTexture previousActive = RenderTexture.active;
-            RenderTexture.active = renderTexture;
-            GL.Clear(true, true, clearColor);
-            RenderTexture.active = previousActive;
+            Session.Clear();
+            ClearTexture();
         }
 
-        /// <summary>
-        /// Limpia el lienzo y redibuja todos los trazos de una sesion instantaneamente.
-        /// Util para implementar Undo u otras herramientas de edicion.
-        /// </summary>
-        public void RedrawSession(SpellSimulator.Core.DrawingSession session)
+        /// <summary>Repinta la textura desde la sesion actual (tras borrar o deshacer).</summary>
+        public void Redraw()
         {
-            ClearCanvas();
-            ResetInkBounds();
+            ClearTexture();
+            if (Session.IsEmpty || brushMaterial == null) return;
 
-            if (session == null || session.IsEmpty)
-                return;
-
-            foreach (var stroke in session.Strokes)
-            {
-                if (stroke.Points.Count == 0) continue;
-
+            BeginDraw();
+            foreach (var stroke in Session.Strokes)
                 for (int i = 0; i < stroke.Points.Count; i++)
-                {
-                    DrawAt(stroke.Points[i], i == 0);
-                }
-            }
+                    StampTo(stroke.Points[i], i == 0);
+            EndDraw();
         }
 
-        /// <summary>
-        /// Devuelve la textura del lienzo de forma segura.
-        /// </summary>
-        public RenderTexture GetRenderTexture()
+        /// <summary>Estampa tinta en uv, interpolando desde el punto anterior si no es el inicio de un trazo.</summary>
+        public void DrawAt(Vector2 uv, bool isNewStroke)
         {
-            return renderTexture;
-        }
-
-        /// <summary>
-        /// Devuelve el bounding box UV de la tinta dibujada en el lienzo.
-        /// Si no hay tinta, devuelve Rect(0,0,1,1) (canvas completo como fallback).
-        /// </summary>
-        public Rect GetInkBounds()
-        {
-            if (!hasInk) return new Rect(0f, 0f, 1f, 1f);
-
-            // Agregar margen del 10% del area dibujada para no cortar bordes
-            float padding = 0.08f;
-            float x = Mathf.Clamp01(inkBoundsMin.x - padding);
-            float y = Mathf.Clamp01(inkBoundsMin.y - padding);
-            float w = Mathf.Clamp01(inkBoundsMax.x + padding) - x;
-            float h = Mathf.Clamp01(inkBoundsMax.y + padding) - y;
-            return new Rect(x, y, Mathf.Max(w, 0.01f), Mathf.Max(h, 0.01f));
-        }
-
-        /// <summary>
-        /// Reinicia el bounding box de tinta. Llamar despues de disparar la inferencia.
-        /// </summary>
-        public void ResetInkBounds()
-        {
-            inkBoundsMin = Vector2.one;
-            inkBoundsMax = Vector2.zero;
-            hasInk = false;
-        }
-
-        /// <summary>
-        /// Interfaz pública para recibir coordenadas UV y estampar el pincel.
-        /// Aplica interpolación para evitar huecos en movimientos rápidos.
-        /// </summary>
-        /// <param name="uvPosition">Coordenada UV [0,1] actual del impacto.</param>
-        /// <param name="isNewStroke">True si es el inicio de un trazo (click inicial).</param>
-        public void DrawAt(Vector2 uvPosition, bool isNewStroke)
-        {
-            // Expandir el bounding box con cada punto recibido
-            inkBoundsMin = Vector2.Min(inkBoundsMin, uvPosition);
-            inkBoundsMax = Vector2.Max(inkBoundsMax, uvPosition);
-            hasInk = true;
-
             if (brushMaterial == null) return;
+            BeginDraw();
+            StampTo(uv, isNewStroke);
+            EndDraw();
+        }
 
-            // OPTIMIZACION CRITICA PARA VR (Meta Quest):
-            // Cambiar RenderTexture.active fuerza a la GPU (Tile-based) a volcar la memoria.
-            // Si lo hacemos por cada estampa, los FPS mueren. Lo hacemos UNA vez por frame.
-            RenderTexture previousActive = RenderTexture.active;
+        /// <summary>Punto del mundo -> UV usando los bounds del mesh (RaycastHit.textureCoord falla con BoxCollider).</summary>
+        public Vector2 GetUVFromWorldPosition(Vector3 worldPos)
+        {
+            Vector3 local = transform.InverseTransformPoint(worldPos);
+            return new Vector2(
+                Mathf.InverseLerp(meshBounds.min.x, meshBounds.max.x, local.x),
+                Mathf.InverseLerp(meshBounds.min.y, meshBounds.max.y, local.y));
+        }
+
+        private RenderTexture previousActive;
+
+        // Cambiar RenderTexture.active fuerza un resolve en GPUs tile-based (Quest): una vez por lote, no por sello.
+        private void BeginDraw()
+        {
+            previousActive = RenderTexture.active;
             RenderTexture.active = renderTexture;
             brushMaterial.SetPass(0);
-            
             GL.PushMatrix();
-            GL.LoadPixelMatrix(0, 1, 1, 0); 
+            GL.LoadPixelMatrix(0, 1, 1, 0);
+        }
 
-            if (isNewStroke)
-            {
-                lastDrawPosition = uvPosition;
-                DrawStampInternal(uvPosition);
-            }
-            else
-            {
-                float distance = Vector2.Distance(lastDrawPosition, uvPosition);
-                
-                // Calculamos cuántos "sellos" necesitamos para rellenar el espacio
-                int steps = Mathf.Max(1, Mathf.CeilToInt(distance * lerpStepsPerUnit));
-
-                for (int i = 1; i <= steps; i++)
-                {
-                    float t = (float)i / steps;
-                    Vector2 interpolatedUV = Vector2.Lerp(lastDrawPosition, uvPosition, t);
-                    DrawStampInternal(interpolatedUV);
-                }
-
-                lastDrawPosition = uvPosition;
-            }
-
+        private void EndDraw()
+        {
             GL.PopMatrix();
             RenderTexture.active = previousActive;
         }
 
-        /// <summary>
-        /// Estampa la textura del pincel. 
-        /// Requiere que RenderTexture.active y GL.LoadPixelMatrix ya estén configurados para evitar lag.
-        /// </summary>
-        private void DrawStampInternal(Vector2 uvPosition)
+        private void StampTo(Vector2 uv, bool isNewStroke)
         {
-            float yPos = 1f - uvPosition.y; 
-            
-            float scaleX = Mathf.Max(0.01f, transform.localScale.x);
-            float scaleY = Mathf.Max(0.01f, transform.localScale.y);
-            float sizeX = brushSize / scaleX;
-            float sizeY = brushSize / scaleY;
-
-            Rect drawRect = new Rect(
-                uvPosition.x - (sizeX * 0.5f), 
-                yPos - (sizeY * 0.5f), 
-                sizeX, 
-                sizeY
-            );
-
-            Graphics.DrawTexture(drawRect, Texture2D.whiteTexture, brushMaterial);
+            if (isNewStroke)
+            {
+                Stamp(uv);
+            }
+            else
+            {
+                int steps = Mathf.Max(1, Mathf.CeilToInt(Vector2.Distance(lastDrawPosition, uv) * lerpStepsPerUnit));
+                for (int i = 1; i <= steps; i++) Stamp(Vector2.Lerp(lastDrawPosition, uv, (float)i / steps));
+            }
+            lastDrawPosition = uv;
         }
 
-        /// <summary>
-        /// Convierte un punto del mundo tridimensional en coordenadas UV [0,1]
-        /// basándose en la malla local. Esto evita el bug de RaycastHit.textureCoord
-        /// devolviendo (0,0) cuando se usa un BoxCollider o un MeshCollider Convexo.
-        /// </summary>
-        public Vector2 GetUVFromWorldPosition(Vector3 worldPos)
+        private void Stamp(Vector2 uv)
         {
-            Vector3 localPos = transform.InverseTransformPoint(worldPos);
-            MeshFilter mf = GetComponent<MeshFilter>();
-            if (mf != null && mf.sharedMesh != null)
-            {
-                Bounds b = mf.sharedMesh.bounds;
-                float u = Mathf.InverseLerp(b.min.x, b.max.x, localPos.x);
-                float v = Mathf.InverseLerp(b.min.y, b.max.y, localPos.y);
-                return new Vector2(u, v);
-            }
-            
-            // Fallback asumiendo que es un Quad estándar de Unity (-0.5 a 0.5)
-            return new Vector2(localPos.x + 0.5f, localPos.y + 0.5f);
+            // El pincel se compensa por la escala para que siga siendo redondo en lienzos estirados.
+            float sizeX = brushSize / Mathf.Max(0.01f, transform.localScale.x);
+            float sizeY = brushSize / Mathf.Max(0.01f, transform.localScale.y);
+            var rect = new Rect(uv.x - sizeX * 0.5f, 1f - uv.y - sizeY * 0.5f, sizeX, sizeY);
+            Graphics.DrawTexture(rect, Texture2D.whiteTexture, brushMaterial);
+        }
+
+        private void ClearTexture()
+        {
+            RenderTexture previous = RenderTexture.active;
+            RenderTexture.active = renderTexture;
+            GL.Clear(true, true, clearColor);
+            RenderTexture.active = previous;
         }
     }
 }

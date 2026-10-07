@@ -2,8 +2,8 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 using SpellSimulator.Canvas;
-using SpellSimulator.Compiler;
-using SpellSimulator.Inference;
+using SpellSimulator.Casting;
+using SpellSimulator.Recognition;
 using SpellSimulator.Output;
 using SpellSimulator.Player;
 using SpellSimulator.World;
@@ -22,8 +22,8 @@ namespace SpellSimulator.EditorTools
             var report = new StringBuilder();
             int problems = 0;
 
-            problems += RequireSingle<SentisInferenceEngine>(report);
-            problems += RequireSingle<SpellCompiler>(report);
+            problems += RequireSingle<SentisGlyphClassifier>(report);
+            problems += RequireSingle<SpellCaster>(report);
             problems += RequireSingle<SpellOutputController>(report);
             problems += RequireSingle<PlatformDetector>(report);
             problems += RequireAtLeastOne<DrawingCanvas>(report);

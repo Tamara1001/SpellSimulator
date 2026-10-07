@@ -51,7 +51,7 @@ namespace SpellSimulator.Player
         private void CheckGrounded()
         {
             // Raycast desde el centro hacia abajo. La mitad de la altura + 0.1f de margen.
-            isGrounded = Physics.Raycast(transform.position, Vector3.down, (playerHeight * 0.5f) + 0.1f, groundLayer);
+            isGrounded = Physics.Raycast(transform.position, Vector3.down, (playerHeight * 0.5f) + 0.1f, groundLayer, QueryTriggerInteraction.Ignore);
         }
 
         private void HandleMovement()

@@ -204,7 +204,10 @@ MonoBehaviour:
   cameraTransform: {fileID: 4665974575741207286}
   rightHoldPoint: {fileID: 4556745438771966582}
   leftHoldPoint: {fileID: 8095274132000998638}
-  vrRaycastOrigin: {fileID: 3798321449590385459}
+  vrRightController: {fileID: 3798321449590385459}
+  vrLeftController: {fileID: 130248752199701237}
+  vrRayPitchOffset: 90
+  vrPointerMaterial: {fileID: 2100000, guid: 8326a591824c7e843a62f5916879c936, type: 2}
   interactRange: 3
   interactLayer:
     serializedVersion: 2

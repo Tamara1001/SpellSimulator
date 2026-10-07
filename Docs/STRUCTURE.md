@@ -12,29 +12,32 @@ SpellSimulator/
 ├── graphify-out/                 # grafo de código (ignorado en git)
 ├── Assets/
 │   ├── _Project/                 # ★ TODO lo propio vive acá
-│   │   ├── Data/                 #   glyph-recognizer.onnx(+.data), glyph-class-to-idx.json
-│   │   ├── Editor/               #   SpellSimulator.Editor.asmdef — harness (tests runner, validador)
-│   │   ├── Materials/            #   Canvas, BrushMaterial, Pen, Eraser, Binarize(.shader)
+│   │   ├── Data/                 #   glyph-recognizer.onnx(+.data), glyph-class-to-idx.json,
+│   │   │   ├── Dictionary/       #   sigils/*.json, signs/*.json (copiados de la referencia)
+│   │   │   └── GlyphDictionary.asset
+│   │   ├── Editor/               #   SpellSimulator.Editor.asmdef — harness, sync del diccionario, chequeos
+│   │   ├── Materials/            #   Canvas, BrushMaterial, Pen, Eraser, VRPointer, Binarize(.shader)
 │   │   ├── Prefabs/
 │   │   │   ├── Objects/          #   PaperCanvas, Pen, Eraser, Tool
 │   │   │   ├── Player/           #   Player (PCRIG + VRRIG)
-│   │   │   ├── System/           #   SystemManagers, Canvas (UI), cámaras, luz, EventSystem
-│   │   │   └── VFX/              #   Air, Earth, Light, Water, FireSpell_VFX.vfx
-│   │   ├── Scenes/Escena.unity   #   única escena (Build index 0)
+│   │   │   ├── System/           #   SystemManagers, Canvas (UI), camaras, luz, EventSystem
+│   │   │   └── VFX/              #   Fire (+Fire_VFX.vfx), Air, Earth, Light, Water, FireSpell_VFX.vfx
+│   │   ├── Scenes/Escena.unity   #   unica escena (Build index 0)
 │   │   ├── Scripts/              #   SpellSimulator.Runtime.asmdef
 │   │   │   ├── Canvas/           #   DrawingCanvas
-│   │   │   ├── Compiler/         #   SpellCompiler, SemanticRules, SpellDescriptor (SpellIR, enums)
-│   │   │   ├── Core/             #   DrawingData, StrokeCleaner, RingDetector, StrokeGrouper, GeometryUtils, SpellAST
+│   │   │   ├── Casting/          #   SpellCaster (punto de entrada del pipeline)
+│   │   │   ├── Compiler/         #   GlyphAST, GlyphAstBuilder, SpellCompiler, SemanticRules, SpellQuality, SpellDirection, SpellIR
+│   │   │   ├── Core/             #   DrawingData (Stroke, DrawingSession), GeometryUtils, StrokeCleaner
 │   │   │   ├── Debug/            #   DiagnosticBus, DiagnosticUIController   (namespace DebugTools)
-│   │   │   ├── Inference/        #   SentisInferenceEngine, TensorRasterizer
-│   │   │   ├── Input/            #   MouseInputHandler (legacy) + Tools/ (IDrawingTool, PenTool, EraserTool)
+│   │   │   ├── Glyphs/           #   GlyphDictionary, GlyphEntry, GlyphDictionaryAsset
+│   │   │   ├── Input/Tools/      #   IDrawingTool, PenTool, EraserTool
 │   │   │   ├── Interfaces/       #   IInteractable, IUsable, HandType
 │   │   │   ├── Output/           #   SpellOutputController
+│   │   │   ├── Parsing/          #   RingDetector, StrokeGrouper, SymbolCandidate, SealParser
 │   │   │   ├── Player/           #   PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor
+│   │   │   ├── Recognition/      #   TensorRasterizer, SentisGlyphClassifier, GlyphPrediction (+ClassificationMath)
 │   │   │   └── World/            #   PhysicalTool, PhysicalCanvas
-│   │   ├── Tests/EditMode/       #   SpellSimulator.Tests.EditMode.asmdef — NUnit
-│   │   └── VFX/                  #   Fire.prefab, Fire_VFX.vfx  (duplica Prefabs/VFX, ver KI-015)
-│   ├── Editor/                   # CheckURP, VFXDiagnostics (Assembly-CSharp-Editor, sin MenuItem)
+│   │   └── Tests/EditMode/       #   SpellSimulator.Tests.EditMode.asmdef — Parsing, Recognition, Compiler, modelo
 │   ├── Settings/                 # URP assets (PC_RPAsset, renderers, volume profiles)
 │   ├── XR/, XRI/                 # settings de OpenXR / XR Interaction Toolkit (generados)
 │   ├── Samples/                  # samples importados (XRI Starter Assets, VFX, SRP Core) — no editar

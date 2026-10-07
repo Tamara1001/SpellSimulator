@@ -133,6 +133,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 1867410708376636955, guid: f9e06e9005c218b4d8a87d3ee8fb4de6, type: 3}
+      propertyPath: spellCaster
+      value: 
+      objectReference: {fileID: 5652826552516281050}
+    - target: {fileID: 1867410708376636955, guid: f9e06e9005c218b4d8a87d3ee8fb4de6, type: 3}
       propertyPath: raycastOrigin
       value: 
       objectReference: {fileID: 1757511305}
@@ -259,17 +263,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &597144020 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 4966400286414474145, guid: 4536faff054cbc843906605db2d025dd, type: 3}
-  m_PrefabInstance: {fileID: 5652826552516281049}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fd3e167ec8951cb48b831065e72bb010, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Input.MouseInputHandler
 --- !u!4 &701897027 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 130248752199701237, guid: 1c35391a68063564097abe5bc67a74b3, type: 3}
@@ -490,6 +483,10 @@ PrefabInstance:
       value: Pen
       objectReference: {fileID: 0}
     - target: {fileID: 6466874696462171765, guid: 60e6fed39e5c11d4eb6771c314942bb1, type: 3}
+      propertyPath: spellCaster
+      value: 
+      objectReference: {fileID: 5652826552516281050}
+    - target: {fileID: 6466874696462171765, guid: 60e6fed39e5c11d4eb6771c314942bb1, type: 3}
       propertyPath: raycastOrigin
       value: 
       objectReference: {fileID: 1639417331}
@@ -707,6 +704,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 0}
     m_Modifications:
     - target: {fileID: 759907290825846478, guid: 9577b108610234c418223d3a7d6d4d67, type: 3}
+      propertyPath: Priority.Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 759907290825846478, guid: 9577b108610234c418223d3a7d6d4d67, type: 3}
       propertyPath: Target.LookAtTarget
       value: 
       objectReference: {fileID: 1260872873}
@@ -842,6 +843,17 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 4536faff054cbc843906605db2d025dd, type: 3}
+--- !u!114 &5652826552516281050 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 6153617415144828001, guid: 4536faff054cbc843906605db2d025dd, type: 3}
+  m_PrefabInstance: {fileID: 5652826552516281049}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c4047c122a5ef5e438c3ed074c19cc96, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpellSimulator.Compiler.SpellCompiler
 --- !u!1001 &6309653383193446360
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -926,7 +938,7 @@ PrefabInstance:
     - target: {fileID: 1624611020868705222, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 597144020}
+      objectReference: {fileID: 0}
     - target: {fileID: 2320698562139355140, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
       propertyPath: m_IsActive
       value: 0
@@ -1014,11 +1026,11 @@ PrefabInstance:
     - target: {fileID: 2902421709008860120, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 597144020}
+      objectReference: {fileID: 0}
     - target: {fileID: 3098213905521997283, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 597144020}
+      objectReference: {fileID: 0}
     - target: {fileID: 4637328793154994864, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
       propertyPath: m_Name
       value: Canvas
@@ -1034,11 +1046,11 @@ PrefabInstance:
     - target: {fileID: 6466684533481127378, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 597144020}
+      objectReference: {fileID: 0}
     - target: {fileID: 7280864945582516250, guid: ccf4a239ae899894e8507933ee0c22ed, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 597144020}
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:

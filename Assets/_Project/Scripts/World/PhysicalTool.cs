@@ -1,15 +1,16 @@
 using UnityEngine;
-using SpellSimulator.Interfaces;
-using SpellSimulator.Input.Tools;
 using SpellSimulator.Canvas;
-using SpellSimulator.Core;
+using SpellSimulator.Casting;
+using SpellSimulator.Input.Tools;
+using SpellSimulator.Interfaces;
 using SpellSimulator.Player;
 
 namespace SpellSimulator.World
 {
     /// <summary>
-    /// Representa un objeto fisico en el mundo 3D (Lapiz, Goma) que el jugador puede agarrar y usar.
-    /// Utiliza un "puntero laser" invisible para proyectar el uso sobre un DrawingCanvas.
+    /// Herramienta fisica (lapiz, goma) que el jugador agarra y usa. Proyecta un rayo sobre un DrawingCanvas:
+    /// en PC desde la camara (mira), en VR desde la punta de la herramienta.
+    /// Uso primario = dibujar/borrar. Secundario: lapiz = lanzar hechizo, goma = deshacer.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(Collider))]
@@ -18,55 +19,43 @@ namespace SpellSimulator.World
         public enum ToolKind { Pen, Eraser }
 
         [Header("Drawing Settings")]
-        [SerializeField] private string toolName = "Lápiz";
+        [SerializeField] private string toolName = "Lapiz";
         [SerializeField] private ToolKind kind = ToolKind.Pen;
         [SerializeField] private LayerMask canvasLayer;
         [SerializeField] private float pcMaxDrawDistance = 5f;
-        [SerializeField] private float vrMaxDrawDistance = 10f; // Aumentado temporalmente para asegurar que el trazo llegue al lienzo
-        
-        [Tooltip("Transform desde donde sale el rayo en VR (la punta del lápiz)")]
-        [SerializeField] private Transform raycastOrigin;
+        [SerializeField] private float vrMaxDrawDistance = 10f;
+        [SerializeField, Tooltip("Transform desde donde sale el rayo en VR (la punta de la herramienta).")]
+        private Transform raycastOrigin;
+
+        [Header("Casting")]
+        [SerializeField, Tooltip("Servicio que lanza el hechizo (solo lo usa el lapiz).")]
+        private SpellCaster spellCaster;
 
         private Rigidbody rb;
         private Collider col;
-        private IDrawingTool internalTool;
-        
-        // Estado de agarre
-        private Transform holdParent;
-        
-        // Estado de dibujo
+        private IDrawingTool tool;
         private DrawingCanvas currentCanvas;
+        private Camera cachedCamera;
+
+        public HandType PreferredHand => HandType.Right;
+        public ToolKind Kind => kind;
 
         private void Awake()
         {
             rb = GetComponent<Rigidbody>();
             col = GetComponent<Collider>();
-            
-            // Inicializar la herramienta logica
-            if (kind == ToolKind.Pen) internalTool = new PenTool();
-            else internalTool = new EraserTool();
-
+            tool = kind == ToolKind.Pen ? new PenTool() : (IDrawingTool)new EraserTool();
             if (raycastOrigin == null) raycastOrigin = transform;
         }
 
         // --- IInteractable ---
 
-        public HandType PreferredHand => HandType.Right;
-
-        public string GetInteractionPrompt()
-        {
-            return $"Agarrar {toolName}";
-        }
+        public string GetInteractionPrompt() => $"Agarrar {toolName}";
 
         public void OnInteract(Transform holdPoint)
         {
-            holdParent = holdPoint;
-            
-            // Desactivar fisicas
             rb.isKinematic = true;
             col.enabled = false;
-            
-            // Emparentar y resetear transform
             transform.SetParent(holdPoint);
             transform.localPosition = Vector3.zero;
             transform.localRotation = Quaternion.identity;
@@ -74,10 +63,8 @@ namespace SpellSimulator.World
 
         public void OnDrop()
         {
-            holdParent = null;
+            OnUseEnd();
             transform.SetParent(null);
-            
-            // Reactivar fisicas
             rb.isKinematic = false;
             col.enabled = true;
         }
@@ -86,112 +73,76 @@ namespace SpellSimulator.World
 
         public void OnUseStart()
         {
-            if (TryShootLaser(out Vector2 uv, out DrawingCanvas hitCanvas))
-            {
-                currentCanvas = hitCanvas;
-                
-                // La herramienta física ahora usa la sesión de vectores del lienzo que golpeó
-                internalTool.Initialize(currentCanvas.Session);
-                internalTool.OnPointerDown(uv, currentCanvas);
-            }
+            if (!TryShootLaser(out Vector2 uv, out DrawingCanvas canvas)) return;
+            currentCanvas = canvas;
+            tool.OnPointerDown(uv, canvas);
         }
 
         public void OnUseHold()
         {
-            if (currentCanvas == null) return;
-
-            if (TryShootLaser(out Vector2 uv, out DrawingCanvas hitCanvas))
+            if (currentCanvas == null)
             {
-                // Si el rayo salio del canvas actual, abortamos el trazo
-                if (hitCanvas != currentCanvas)
-                {
-                    OnUseEnd();
-                    return;
-                }
-
-                internalTool.OnPointerDrag(uv, currentCanvas);
+                // Permite empezar a dibujar si el gatillo ya estaba apretado al llegar al lienzo.
+                OnUseStart();
+                return;
             }
+
+            if (!TryShootLaser(out Vector2 uv, out DrawingCanvas canvas)) return;
+            if (canvas != currentCanvas)
+            {
+                OnUseEnd();
+                return;
+            }
+            tool.OnPointerDrag(uv, currentCanvas);
         }
 
         public void OnUseEnd()
         {
-            if (currentCanvas != null)
-            {
-                internalTool.OnPointerUp();
-                currentCanvas = null;
-            }
+            if (currentCanvas == null) return;
+            tool.OnPointerUp();
+            currentCanvas = null;
         }
 
         public void OnSecondaryUseStart()
         {
-            // Disparamos el laser para ver a qué lienzo le estamos apuntando
-            if (TryShootLaser(out Vector2 uv, out DrawingCanvas hitCanvas))
+            if (!TryShootLaser(out _, out DrawingCanvas canvas)) return;
+
+            if (kind == ToolKind.Pen)
             {
-                if (kind == ToolKind.Pen)
-                {
-                    // LAPIZ: Castear Hechizo
-                    if (!hitCanvas.Session.IsEmpty)
-                    {
-                        var engine = Object.FindFirstObjectByType<Inference.SentisInferenceEngine>();
-                        if (engine != null)
-                        {
-                            // Limpiar y castear
-                            DrawingSession cleaned = StrokeCleaner.CleanSession(hitCanvas.Session, 0.005f, 3);
-                            engine.ProcessVectorSession(cleaned);
-                        }
-                        else
-                        {
-                            Debug.LogWarning("[PhysicalTool] No se encontró un SentisInferenceEngine en la escena para castear.");
-                        }
-                    }
-                }
-                else if (kind == ToolKind.Eraser)
-                {
-                    // GOMA: Undo local en ese lienzo
-                    if (hitCanvas.Session.UndoLastStroke())
-                    {
-                        hitCanvas.RedrawSession(hitCanvas.Session);
-                    }
-                }
+                if (spellCaster != null) spellCaster.Cast(canvas);
+                else Debug.LogWarning($"[PhysicalTool] {name} no tiene SpellCaster asignado.", this);
+            }
+            else if (canvas.Session.UndoLastStroke())
+            {
+                canvas.Redraw();
             }
         }
 
-        private bool TryShootLaser(out Vector2 uv, out DrawingCanvas hitCanvas)
+        private bool TryShootLaser(out Vector2 uv, out DrawingCanvas canvas)
         {
             uv = Vector2.zero;
-            hitCanvas = null;
+            canvas = null;
 
             Ray ray;
-            float currentDistance;
-
+            float distance;
             if (PlatformDetector.IsVR)
             {
-                // En VR, sale de la punta de la varita. Si no se asigno en el inspector, usamos el transform del lapiz.
-                Transform origin = raycastOrigin != null ? raycastOrigin : transform;
-                ray = new Ray(origin.position, origin.forward);
-                currentDistance = vrMaxDrawDistance;
+                ray = new Ray(raycastOrigin.position, raycastOrigin.forward);
+                distance = vrMaxDrawDistance;
             }
             else
             {
-                // En PC, sale de la cámara
-                Camera cam = Camera.main;
-                if (cam == null) cam = FindAnyObjectByType<Camera>(); // Fallback seguro
-                
-                ray = new Ray(cam.transform.position, cam.transform.forward);
-                currentDistance = pcMaxDrawDistance;
+                if (cachedCamera == null) cachedCamera = Camera.main;
+                if (cachedCamera == null) return false;
+                ray = new Ray(cachedCamera.transform.position, cachedCamera.transform.forward);
+                distance = pcMaxDrawDistance;
             }
 
-            if (Physics.Raycast(ray, out RaycastHit hit, currentDistance, canvasLayer))
-            {
-                hitCanvas = hit.collider.GetComponent<DrawingCanvas>();
-                if (hitCanvas != null)
-                {
-                    uv = hitCanvas.GetUVFromWorldPosition(hit.point);
-                    return true;
-                }
-            }
-            
-            return false;
+            // Los lienzos sostenidos son triggers: hay que pedir que el rayo los detecte.
+            if (!Physics.Raycast(ray, out RaycastHit hit, distance, canvasLayer, QueryTriggerInteraction.Collide)) return false;
+            if (!hit.collider.TryGetComponent(out canvas)) return false;
+            uv = canvas.GetUVFromWorldPosition(hit.point);
+            return true;
         }
     }
 }

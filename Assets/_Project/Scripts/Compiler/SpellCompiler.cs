@@ -1,343 +1,132 @@
 using UnityEngine;
-using System.Collections.Generic;
 
 namespace SpellSimulator.Compiler
 {
     /// <summary>
-    /// Modulo 4: Interprete Logico (Compilador).
-    /// Traduce el indice de clase del modelo ONNX + la confianza a un SpellIR completo.
-    ///
-    /// Arquitectura basada en wha-spell-simulator/src/lib/compiler/spellBuilder.ts
-    /// Las constantes de tuning son las mismas del proyecto de referencia.
+    /// GlyphAST -> SpellIR. Port fiel de compiler/spellBuilder.ts (compileSpell) de wha-spell-simulator.
+    /// Logica pura: gates de validez, agregacion de signos y parametros escalares.
+    /// La capa Plan de la referencia (resolvePlan) todavia no esta portada (ver ROADMAP F4).
     /// </summary>
-    public class SpellCompiler : MonoBehaviour
+    public static class SpellCompiler
     {
-        [Header("Data")]
-        [SerializeField, Tooltip("Archivo JSON con el diccionario (ej. glyph-class-to-idx.json)")]
-        private TextAsset dictionaryJson;
+        public const float MinimumPrimarySigilConfidence = 0.62f;
+        public const float PrimarySigilAmbiguityGap = 0.05f;
 
-        // -----------------------------------------------------------------------
-        // Constantes de tuning: copiadas de spellBuilder.ts y semanticRules.ts
-        // -----------------------------------------------------------------------
+        // SPELL_PARAMETER_TUNING
+        private const float FocusBase = 0.46f, FocusQuality = 0.2f;
+        private const float SpreadBase = 0.32f, SpreadInverseFocus = 0.28f;
+        private const float ForceBase = 0.34f, ForceSignPower = 0.34f, ForceQuality = 0.18f;
+        private const float RangeBase = 0.42f, RangeSignPower = 0.18f;
+        private const float DurationMinSeconds = 0.65f, DurationMaxSeconds = 8.5f, DurationSecondsScale = 6.4f;
+        private const float DurationQualityWeight = 0.35f, DurationNeatnessWeight = 0.65f, DurationCurve = 1.45f;
 
-        // Parametros base del hechizo (de SPELL_PARAMETER_TUNING en spellBuilder.ts)
-        private const float FocusBase              = 0.46f;
-        private const float FocusQuality           = 0.20f;
-        private const float SpreadBase             = 0.32f;
-        private const float SpreadInverseFocus     = 0.28f;
-        private const float ForceBase              = 0.34f;
-        private const float ForceQuality           = 0.18f;
-        private const float RangeBase              = 0.42f;
-        private const float DurationMinSeconds     = 0.65f;
-        private const float DurationMaxSeconds     = 8.5f;
-        private const float DurationSecondsScale   = 6.4f;
-        private const float DurationQualityWeight  = 0.35f;
-        private const float DurationNeatnessWeight = 0.65f;
-        private const float DurationCurve         = 1.45f;
-
-        // Escala del efecto (de config.renderer.effectSize en spellBuilder.ts)
-        private const float EffectNeutralScale     = 1.91f;
-        private const float EffectSizeRatioInfluence = 0.65f;
-        private const float EffectMinScale         = 1.0f;
-        private const float EffectMaxScale         = 2.35f;
-        private const float StrengthFullSizeRatio  = 1.5f;
-
-        // Fisica de levitacion (de PHYSICS_TUNING en spellBuilder.ts)
+        // PHYSICS_TUNING
         private const float LevitationGravityScale = 0.42f;
 
-        // Umbral de confianza minima para aceptar el sigio primario
-        private const float MinPrimaryConfidence   = 0.45f;
+        // config.renderer.effectSize
+        private const float DefaultReferenceSizeNorm = 0.3f;
+        private const float NeutralScale = 1.91f, SizeRatioInfluence = 0.63f, StrengthFullSizeRatio = 2f;
+        private const float MinScale = 1f, MaxScale = 2.35f;
 
-        // Clasificacion de glifos por rol
-        // Sigilos: definen el elemento
-        private static readonly HashSet<string> SigilIds = new HashSet<string>
+        public static SpellIR Compile(GlyphAST ast, float time)
         {
-            "fire", "water", "earth", "aeroform", "light",
-            "wind-directs-air", "wind-underfoot", "crystal"
-        };
+            string[] warnings = ast.Warnings.ToArray();
+            float neatness = ast.Metrics.Neatness;
 
-        // Signos: modifican el comportamiento
-        private static readonly HashSet<string> SignIds = new HashSet<string>
-        {
-            "column", "levitation", "pull", "dispersion", "collection",
-            "convergence", "region", "billowing", "float", "crush",
-            "repetition", "weave"
-        };
+            if (!ast.Ring.Found) return SpellIR.Invalid("Sin anillo", warnings, neatness);
+            if (ast.ExtraSigils.Count > 0) return SpellIR.Invalid("Varios sigilos", warnings, neatness);
 
-        // Deltas semanticos por signo (force, focus, spread, range, lifetimeBias)
-        // Extraidos de los archivos .json del diccionario del proyecto de referencia
-        private static readonly Dictionary<string, float[]> SignSemantics =
-            new Dictionary<string, float[]>
-        {
-            // {force, focus, spread, range, lifetimeBias}
-            { "column",      new float[] {  0.12f,  0.18f, -0.08f,  0.18f,  0.10f } },
-            { "levitation",  new float[] { -0.06f,  0.06f,  0.04f, -0.04f,  0.05f } },
-            { "pull",        new float[] {  0.08f,  0.10f, -0.05f, -0.08f,  0.00f } },
-            { "dispersion",  new float[] {  0.05f, -0.10f,  0.18f,  0.12f, -0.05f } },
-            { "collection",  new float[] {  0.04f,  0.08f, -0.06f, -0.05f,  0.00f } },
-            { "convergence", new float[] {  0.00f,  0.12f, -0.18f,  0.00f,  0.00f } },
-            { "region",      new float[] { -0.04f, -0.04f,  0.10f, -0.10f,  0.00f } },
-            { "billowing",   new float[] {  0.06f, -0.08f,  0.20f,  0.10f, -0.05f } },
-            { "float",       new float[] { -0.08f,  0.04f,  0.06f, -0.06f,  0.05f } },
-            { "crush",       new float[] {  0.18f,  0.14f, -0.12f, -0.08f,  0.00f } },
-            { "repetition",  new float[] {  0.00f,  0.00f,  0.00f,  0.00f,  0.12f } },
-            { "weave",       new float[] {  0.04f, -0.06f,  0.12f,  0.08f,  0.02f } },
-        };
+            var primary = ast.PrimarySigil;
+            if (primary == null) return SpellIR.Invalid("Hechizo invalido", warnings, neatness);
+            if (primary.Confidence < MinimumPrimarySigilConfidence)
+                return SpellIR.Invalid("Hechizo invalido", With(warnings, GlyphWarnings.PrimarySigilConfidenceLow), neatness);
+            if (primary.Confidence - primary.SameKindAlternateConfidence < PrimarySigilAmbiguityGap)
+                return SpellIR.Invalid("Sigilo ambiguo", With(warnings, GlyphWarnings.PrimarySigilAmbiguous), neatness);
+            if (string.IsNullOrEmpty(primary.Entry.Element))
+                return SpellIR.Invalid("Elemento no soportado", With(warnings, GlyphWarnings.PrimaryElementMissing), neatness);
 
-        // Mapa de memoria (Indice -> Nombre del Glifo)
-        private Dictionary<int, string> indexToClassName = new Dictionary<int, string>();
-
-        private void Awake()
-        {
-            LoadDictionary();
-        }
-
-        private void LoadDictionary()
-        {
-            if (dictionaryJson == null)
-            {
-                Debug.LogWarning("SpellCompiler: No se asigno el diccionario JSON en el inspector.");
-                return;
-            }
-
-            string json = dictionaryJson.text;
-            json = json.Replace("{", "").Replace("}", "").Replace("\"", "")
-                       .Replace(" ", "").Replace("\r", "").Replace("\n", "");
-
-            string[] pairs = json.Split(new char[] { ',' }, System.StringSplitOptions.RemoveEmptyEntries);
-            foreach (string p in pairs)
-            {
-                string[] kv = p.Split(':');
-                if (kv.Length == 2 && int.TryParse(kv[1], out int index))
-                    indexToClassName[index] = kv[0];
-            }
-            Debug.Log($"[Compilador] Diccionario cargado: {indexToClassName.Count} glifos.");
-        }
-
-        /// <summary>
-        /// Compila el indice de clase de la IA en un SpellIR completo.
-        /// </summary>
-        /// <param name="classIndex">Indice de clase predicho por el modelo ONNX.</param>
-        /// <param name="confidence">Confianza del modelo (0..1).</param>
-        private Dictionary<int, string> classIndexToGlyphName;
-
-        public SpellIR CompileAST(SpellSimulator.Core.SpellAST ast, bool active)
-        {
-            if (ast.Ring == null || ast.Ring.Sigil == null)
-            {
-                Debug.LogWarning("[Compilador] AST invalido o vacio.");
-                return SpellIR.Invalid("ast_empty");
-            }
-
-            // Para MVP: Usar el sigilo central como base
-            SpellIR result = Compile(ast.Ring.Sigil.ClassIndex, ast.Ring.Sigil.Confidence, active);
-
-            // Acumular deltas de los signos usando las tablas del proyecto original
-            float deltaForce = 0f;
-            float deltaFocus = 0f;
-            float deltaSpread = 0f;
-            float deltaRange = 0f;
-            float deltaLifetime = 0f;
-
-            string signNames = "Ninguno";
-            if (ast.Ring.Signs.Count > 0)
-            {
-                List<string> names = new List<string>();
-                foreach (var signNode in ast.Ring.Signs)
-                {
-                    if (indexToClassName != null && indexToClassName.TryGetValue(signNode.ClassIndex, out string signName))
-                    {
-                        names.Add(signName);
-                        // Acumular deltas matematicos
-                        if (SignSemantics.TryGetValue(signName, out float[] deltas))
-                        {
-                            deltaForce += deltas[0];
-                            deltaFocus += deltas[1];
-                            deltaSpread += deltas[2];
-                            deltaRange += deltas[3];
-                            deltaLifetime += deltas[4];
-                        }
-                        
-                        // Aplicar reglas de manifestacion/gravedad puras
-                        SemanticRules.ApplySign(ref result, SemanticRules.ParseSignName(signName));
-                    }
-                    else
-                    {
-                        names.Add($"Idx {signNode.ClassIndex}");
-                    }
-                }
-                signNames = string.Join(", ", names);
-            }
-
-            // Recalcular los valores finales del SpellIR usando las formulas puras + los deltas
-            float quality = Mathf.Clamp01(ast.Ring.Sigil.Confidence);
-            float neatness = quality;
-
-            result.focus = Mathf.Clamp01(FocusBase + deltaFocus + quality * FocusQuality);
-            result.spread = Mathf.Clamp01(SpreadBase + deltaSpread + (1f - result.focus) * SpreadInverseFocus);
-            result.force = Mathf.Clamp01(ForceBase + deltaForce + quality * ForceQuality);
-            result.range = Mathf.Clamp01(RangeBase + deltaRange);
-            
-            result.duration = Mathf.Clamp(
-                (DurationMinSeconds + deltaLifetime) +
-                Mathf.Pow(quality * DurationQualityWeight + neatness * DurationNeatnessWeight, DurationCurve) * DurationSecondsScale,
-                DurationMinSeconds,
-                DurationMaxSeconds
-            );
-
-            // Emitir diagnostico actualizado con el AST y la Telemetria completa
-            string log = 
-                $"<b>[AST] Hechizo Compilado</b>\n" +
-                $"- Sigilo: {result.element} (Anillo: {ast.HasRing})\n" +
-                $"- Signos ({ast.Ring.Signs.Count}): {signNames}\n" +
-                $"\n<b>[Parametros VFX]</b>\n" +
-                $"- Scale: {result.effectScale:F2}\n" +
-                $"- Duration: {result.duration:F1}s\n" +
-                $"- Force: {result.force:F2}\n" +
-                $"- Spread: {result.spread:F2}\n" +
-                $"- Gravity: {result.gravity:F2}\n" +
-                $"- Focus: {result.focus:F2}\n" +
-                $"- Range: {result.range:F2}\n" +
-                $"- Forma: {result.primaryManifestation}";
-                
-            Debug.Log(log);
-            SpellSimulator.DebugTools.DiagnosticBus.OnDiagnosticsUpdated?.Invoke(log);
-
-            return result;
-        }
-
-        public SpellIR Compile(int classIndex, float confidence, bool isRingClosed)
-        {
-            // 1. Validacion de confianza minima
-            if (confidence < MinPrimaryConfidence)
-            {
-                Debug.Log($"[Compilador] Confianza insuficiente ({confidence:F2} < {MinPrimaryConfidence}). Hechizo invalido.");
-                return SpellIR.Invalid("confidence_too_low");
-            }
-
-            // 2. Resolver el nombre del glifo
-            if (!indexToClassName.TryGetValue(classIndex, out string glyphName))
-            {
-                Debug.LogWarning($"[Compilador] Indice {classIndex} no existe en el diccionario.");
-                return SpellIR.Invalid("unknown_class");
-            }
-
-            // 3. Clasificar como sigilo o signo
-            bool isSigil = SigilIds.Contains(glyphName);
-            bool isSign  = SignIds.Contains(glyphName);
-
-            if (!isSigil && !isSign)
-            {
-                Debug.LogWarning($"[Compilador] Glifo '{glyphName}' no clasificado como sigilo ni signo.");
-                return SpellIR.Invalid("unclassified_glyph");
-            }
-
-            // 4. Por ahora (MVP sin ring detector ni stroke grouper):
-            //    Si es un sigilo, compilamos un hechizo completo.
-            //    Si es un signo, lo reportamos pero devolvemos invalido hasta que
-            //    tengamos el ring detector y el agrupamiento de candidatos.
-            if (!isSigil)
-            {
-                Debug.Log($"[Compilador] Glifo '{glyphName}' es un Signo. Requiere Sigilo primario. Hechizo preparado.");
-                return SpellIR.Invalid("sign_without_sigil");
-            }
-
-            // 5. Mapear sigilo a elemento
-            ElementType element = GlyphToElement(glyphName);
+            ElementType element = SpellIR.ParseElement(primary.Entry.Element);
             if (element == ElementType.None)
-            {
-                Debug.LogWarning($"[Compilador] Sigilo '{glyphName}' sin elemento mapeado.");
-                return SpellIR.Invalid("unsupported_element");
-            }
+                return SpellIR.Invalid("Elemento no soportado", With(warnings, GlyphWarnings.PrimaryElementUnsupported), neatness);
 
-            // 6. Calcular quality aproximada desde la confianza del modelo
-            //    (En la Fase Media esto vendra del ring neatness + symbol neatness reales)
-            float quality  = Mathf.Clamp01(confidence);
-            float neatness = quality; // sin ring detector, usamos confidence como proxy
+            var signs = ast.Signs;
+            float quality = SpellQuality.Quality(ast);
+            float stability = SpellQuality.Stability(ast);
+            if (neatness <= 0f) neatness = quality;
 
-            // 7. Calcular sizeRatio y strength
-            //    Sin ring detector no tenemos el tamano normalizado real,
-            //    usamos 1.0 (tamano regular) como valor neutro.
-            float sizeRatio   = 1.0f;
-            float strength    = Mathf.Clamp01(sizeRatio / StrengthFullSizeRatio);
-            float effectScale = Mathf.Clamp(
-                EffectNeutralScale + (sizeRatio - 1f) * EffectSizeRatioInfluence,
-                EffectMinScale,
-                EffectMaxScale
-            );
+            var manifestations = SemanticRules.AggregateManifestations(signs);
+            var deltas = SemanticRules.AggregateSemanticDeltas(signs);
+            float coherence = 0f;
+            Vector2 surface = signs.Count > 0 ? SemanticRules.CombineSignDirection(signs, out coherence) : Vector2.zero;
 
-            // 8. Calcular los parametros de comportamiento base (sin signos todavia)
-            // Estos se re-calcularan de forma final en CompileAST con todos los deltas.
-            float focus  = FocusBase + quality * FocusQuality;
-            float spread = SpreadBase + (1f - focus) * SpreadInverseFocus;
-            float force  = ForceBase + quality * ForceQuality;
-            float range  = RangeBase;
+            float signPower = 0f;
+            foreach (var s in signs) signPower += SemanticRules.SignInfluence(s);
 
-            float durationScore = Mathf.Clamp01(quality * DurationQualityWeight + neatness * DurationNeatnessWeight);
+            var semantic = primary.Entry.Semantic;
+            float referenceSize = primary.Entry.ReferenceSizeNorm > 0f ? primary.Entry.ReferenceSizeNorm : DefaultReferenceSizeNorm;
+            float sizeRatio = primary.Candidate.SizeNorm / Mathf.Max(referenceSize, 1e-6f);
+            float strength = Mathf.Clamp01(sizeRatio / StrengthFullSizeRatio);
+            float effectScale = Mathf.Clamp(NeutralScale + (sizeRatio - 1f) * SizeRatioInfluence, MinScale, MaxScale);
+
+            float focus = Mathf.Clamp01(FocusBase + semantic.focus + deltas.focus + quality * FocusQuality);
+            float spread = Mathf.Clamp01(SpreadBase + semantic.spread + deltas.spread + (1f - focus) * SpreadInverseFocus);
+            float force = Mathf.Clamp01(ForceBase + semantic.force + signPower * ForceSignPower + deltas.force + quality * ForceQuality);
+            float range = Mathf.Clamp01(RangeBase + semantic.range + deltas.range + signPower * RangeSignPower);
+
+            float durationScore = Mathf.Clamp01(
+                quality * DurationQualityWeight + neatness * DurationNeatnessWeight + semantic.lifetimeBias + deltas.lifetimeBias);
             float duration = Mathf.Clamp(
                 DurationMinSeconds + Mathf.Pow(durationScore, DurationCurve) * DurationSecondsScale,
-                DurationMinSeconds,
-                DurationMaxSeconds
-            );
+                DurationMinSeconds, DurationMaxSeconds);
 
-            // 11. Stability y Gravity (sin signos ni ring: valores neutros)
-            float stability = Mathf.Clamp01(quality * 0.8f + 0.2f);
-            float gravity   = 1.0f; // Sin signos de levitacion
+            float levitation = 0f;
+            foreach (var m in manifestations) if (m.Id == Manifestations.Levitation) levitation = m.Influence;
+            float gravity = Mathf.Clamp01(1f - levitation * LevitationGravityScale);
 
-            // 12. Direccion: sin signos, direccion neutra = z (fuera del papel)
-            Vector3 direction       = Vector3.forward;
-            float   directionCoherence = 0f;
+            Vector3 direction = SpellDirection.FromSurface(surface, force, out float xTilt, out float yTilt);
 
-            // 13. Manifestacion primaria: sin signos = Aura
-            ManifestationType manifestation = ManifestationType.Aura;
-
-            // 14. Estado del hechizo
-            bool active   = isRingClosed;
-            bool prepared = !isRingClosed;
-
-            SpellIR result = new SpellIR
+            // La activacion es el cierre del anillo y nada mas (invariante de la referencia).
+            bool active = ast.Ring.Complete;
+            return new SpellIR
             {
-                valid              = true,
-                active             = active,
-                prepared           = prepared,
-                element            = element,
-                elementConfidence  = confidence,
-                sizeRatio          = sizeRatio,
-                strength           = strength,
-                effectScale        = effectScale,
-                primaryManifestation = manifestation,
-                force              = force,
-                spread             = spread,
-                focus              = focus,
-                range              = range,
-                gravity            = gravity,
-                duration           = duration,
-                stability          = stability,
-                quality            = quality,
-                direction          = direction,
-                directionCoherence = directionCoherence,
-                activatedAt        = active ? Time.time : -1f
+                valid = true,
+                active = active,
+                prepared = !active,
+                status = active ? "Hechizo activo" : "Hechizo preparado",
+                warnings = warnings,
+                element = element,
+                sigilId = primary.Id,
+                elementConfidence = primary.Confidence,
+                primarySizeNorm = primary.Candidate.SizeNorm,
+                sizeRatio = sizeRatio,
+                strength = strength,
+                effectScale = effectScale,
+                primaryManifestation = manifestations[0].Id,
+                manifestations = manifestations,
+                force = force,
+                spread = spread,
+                focus = focus,
+                range = range,
+                gravity = gravity,
+                duration = duration,
+                stability = stability,
+                quality = quality,
+                neatness = neatness,
+                direction = direction,
+                xTiltDeg = xTilt,
+                yTiltDeg = yTilt,
+                directionCoherence = coherence,
+                activatedAt = active ? time : -1f
             };
-
-            // El log individual fue eliminado para que lo maneje CompileAST directamente.
-
-            return result;
         }
 
-        private static ElementType GlyphToElement(string glyphName)
+        private static string[] With(string[] warnings, string extra)
         {
-            switch (glyphName)
-            {
-                case "fire":            return ElementType.Fire;
-                case "water":           return ElementType.Water;
-                case "earth":           return ElementType.Earth;
-                case "aeroform":        return ElementType.Wind;
-                case "light":           return ElementType.Light;
-                case "wind-directs-air":return ElementType.WindDirectsAir;
-                case "wind-underfoot":  return ElementType.WindUnderfoot;
-                case "crystal":         return ElementType.Earth; // variante de tierra
-                default:                return ElementType.None;
-            }
+            if (System.Array.IndexOf(warnings, extra) >= 0) return warnings;
+            var result = new string[warnings.Length + 1];
+            warnings.CopyTo(result, 0);
+            result[warnings.Length] = extra;
+            return result;
         }
     }
 }

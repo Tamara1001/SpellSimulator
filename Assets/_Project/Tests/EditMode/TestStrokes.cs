@@ -21,6 +21,30 @@ namespace SpellSimulator.Tests
             return stroke;
         }
 
+        public static Stroke Arc(Vector2 center, float radius, float fromDeg, float toDeg, int points = 32)
+        {
+            var stroke = new Stroke();
+            for (int i = 0; i <= points; i++)
+            {
+                float angle = Mathf.Lerp(fromDeg, toDeg, (float)i / points) * Mathf.Deg2Rad;
+                stroke.AddPoint(center + new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius);
+            }
+            return stroke;
+        }
+
+        /// <summary>Copia los trazos de plantilla [0,1] escalados y centrados en center con un lado de size.</summary>
+        public static DrawingSession FromTemplate(List<List<Vector2>> template, Vector2 center, float size)
+        {
+            var session = new DrawingSession();
+            foreach (var points in template)
+            {
+                var stroke = new Stroke();
+                foreach (var p in points) stroke.AddPoint(center + (p - new Vector2(0.5f, 0.5f)) * size);
+                session.AddStroke(stroke);
+            }
+            return session;
+        }
+
         public static Stroke Line(Vector2 from, Vector2 to, int points = 12)
         {
             var stroke = new Stroke();
