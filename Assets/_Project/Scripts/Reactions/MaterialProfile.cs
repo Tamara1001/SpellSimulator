@@ -1,4 +1,5 @@
 using UnityEngine;
+using SpellSimulator.Compiler;
 
 namespace SpellSimulator.Reactions
 {
@@ -8,6 +9,10 @@ namespace SpellSimulator.Reactions
     {
         public string displayName = "Madera";
         public MaterialParams parameters = MaterialParams.Wood;
+        [Tooltip("Elemento de la materia (piedra = Earth). Lo atrae el pull de ese elemento. None = ninguno.")]
+        public ElementType element = ElementType.None;
+        [Tooltip("Flotabilidad en el agua (densidad del agua / densidad del material): > 1 flota, < 1 se hunde.")]
+        public float buoyancy = 1.6f;
 
         [Header("Aspecto")]
         [Tooltip("Color al carbonizarse por completo.")]

@@ -56,4 +56,13 @@ namespace SpellSimulator.Interfaces
     {
         UnityEngine.Color Tint(UnityEngine.Color color);
     }
+
+    /// <summary>
+    /// Materia de un elemento (piedra = tierra, algo ardiendo = fuego). Canon: el pull solo atrae materia de su mismo
+    /// elemento, nunca cualquier objeto.
+    /// </summary>
+    public interface IElementMatter
+    {
+        SpellSimulator.Compiler.ElementType Element { get; }
+    }
 }

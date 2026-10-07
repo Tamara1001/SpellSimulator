@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Compiler;
+using SpellSimulator.Interfaces;
 
 namespace SpellSimulator.Output
 {
@@ -37,6 +38,8 @@ namespace SpellSimulator.Output
         /// <summary>Objeto que lo emitio (el papel): no se afecta a si mismo.</summary>
         public GameObject Source { get; private set; }
         public SealFrame Frame => frame;
+        /// <summary>Tiene succion (pull): atrae materia de su elemento.</summary>
+        public bool HasIntake => plan != null && plan.Has(PlanPrimitive.Intake);
         /// <summary>Esfera que contiene todo el alcance del hechizo.</summary>
         public float ReachRadius { get; private set; }
 
@@ -278,6 +281,9 @@ namespace SpellSimulator.Output
             for (int i = 0; i < n; i++)
             {
                 var rb = bodies[i];
+                // Canon (ground-truth 7): el pull atrae materia de su mismo elemento, no cualquier objeto.
+                var matter = rb.GetComponent<IElementMatter>();
+                if (matter == null || matter.Element != spell.element) continue;
                 Vector3 toSeal = frame.Origin - rb.worldCenterOfMass;
                 float d = toSeal.magnitude;
                 if (d < frame.Scale * 0.5f) continue;

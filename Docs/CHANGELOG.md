@@ -5,6 +5,17 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — M4: agua y pull canónico
+- `StylizedWater.shader`: olas suaves por vértice y hasta 16 ondas de impacto calculadas en el fragmento, con espuma
+  (sin render textures: apto Quest).
+- `WaterVolume`: flotación según el material (`MaterialProfile.buoyancy`: madera flota, piedra se hunde), arrastre,
+  salpicaduras al caer, ondas cuando un hechizo toca el agua, **vapor** si es fuego y **chorro de agua** hacia el sello si
+  es agua con pull. Lo sumergido se moja y se apaga (`MagicWorld`).
+- KI-037: el pull ya no atrae cualquier objeto, solo materia de su elemento (`IElementMatter`: piedra = tierra, lo que
+  arde = fuego). `MaterialProfile.element`.
+- Escena: estanque de piedra a la derecha del papel (4×4 m) con dos cajitas que flotan y una piedra que se hunde; una
+  piedra suelta para probar el pull de tierra. Verificado en Play Mode con capturas.
+
 ## 2026-10-07 — M4: el mundo reacciona (núcleo)
 - Nuevo módulo `Reactions`: `ReactionModel` (reglas puras), `MaterialProfile` (Madera, Papel, Piedra, Tela),
   `ReactionTable` (elemento × material como datos), `ElementReactive`, `MagicWorld` (ticks a 15 Hz), `BurnEffect`,

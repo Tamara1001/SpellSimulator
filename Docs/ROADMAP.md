@@ -49,7 +49,8 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 - [x] Fuego: arde, se propaga a vecinos, lo apaga el agua, lo aviva el viento, carboniza y consume (`ReactionModel`).
 - [x] Romper el sello: papel empapado o en llamas pierde el dibujo (`SealBreaker`).
 - [~] Fractura: versión simple por grilla (`Shatter`, presupuesto de 160 fragmentos). Falta pre-fractura Voronoi para mesas y paredes.
-- [ ] Agua: lago estilizado con ripples por GPU, splashes, flotación y evaporación. Pull atrae agua.
+- [x] Agua: estanque estilizado (`StylizedWater`: olas + ondas analíticas), salpicaduras, flotación por material, vapor
+      con fuego, lo sumergido se moja y se apaga. Pull de agua tira un chorro del estanque (`WaterVolume`). Falta el lago de M5.
 - [ ] Suelo: cráteres (decals) y rocas emergentes.
 - [ ] Dummies de prueba (ragdoll) y barriles, cajas y estantes destructibles.
 - [x] Reinicio del mundo (Backspace / Select / Y izquierdo).

@@ -96,7 +96,8 @@ flowchart TB
 
 ## 5. Mundo reactivo
 > **Estado (M4, 2026-10-07):** hecho el núcleo — `MagicWorld`, `ElementReactive`, `MaterialProfile`, `ReactionTable`,
-> fuego, agua, viento, impacto, fractura por grilla y reinicio. Faltan lago, suelo, dummies y pre-fractura.
+> fuego, agua, viento, impacto, fractura por grilla y reinicio; estanque (`WaterVolume`) con ondas analíticas en shader
+> (sin RT, 16 ondas), flotación por material, vapor y succión. Faltan el lago grande, suelo, dummies y pre-fractura.
 
 - `MagicField` no busca objetos por frame: un **MagicWorld** hace *ticks* a 10–20 Hz con `Physics.OverlapXNonAlloc`
   (buffers preasignados) y despacha a los componentes reactivos.

@@ -74,6 +74,8 @@ Están detalladas en `ground-truth.md`. Las que más impactan el diseño 3D son 
 
 Leyes del §3 implementadas en M3 (`PlanResolver` + `SpellManifestation` + `MagicField`): ráfaga, columna (chorro,
 abanico, vórtice), levitación (orbe), pull (succión) y convergencia (lente). Faltan región, weave y orbe-vasija.
+Desde M4 el pull respeta la ley 7: solo atrae materia de su elemento (piedra con tierra, lo que arde con fuego, agua
+del estanque con agua).
 
 | Canon | Regla en SpellSimulator | Estado |
 |---|---|---|

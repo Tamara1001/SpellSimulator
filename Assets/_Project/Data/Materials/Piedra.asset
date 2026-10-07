@@ -24,6 +24,8 @@ MonoBehaviour:
     fracturable: 1
     strength: 3
     spreadHeatPerSecond: 0
+  element: 4
+  buoyancy: 0.4
   charColor: {r: 0.25, g: 0.24, b: 0.23, a: 1}
   wetDarkening: 0.35
   fragmentsPerAxis: 3

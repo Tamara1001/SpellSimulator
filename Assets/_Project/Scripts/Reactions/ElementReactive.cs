@@ -9,7 +9,7 @@ namespace SpellSimulator.Reactions
     /// Objeto que reacciona a la magia segun su material: arde, se apaga, se moja, se carboniza y se rompe.
     /// MagicWorld le suma exposicion y lo avanza en cada tick; aca solo hay estado y aspecto.
     /// </summary>
-    public class ElementReactive : MonoBehaviour, ISurfaceTint
+    public class ElementReactive : MonoBehaviour, ISurfaceTint, IElementMatter
     {
         /// <summary>Todos los reactivos de la escena, activos o rotos (para el reinicio).</summary>
         public static readonly List<ElementReactive> All = new List<ElementReactive>();
@@ -26,6 +26,8 @@ namespace SpellSimulator.Reactions
         public event Action<ElementReactive, ReactionEvents> Reacted;
 
         public MaterialProfile Profile => profile;
+        /// <summary>Lo que arde es fuego; si no, el elemento de su material.</summary>
+        public Compiler.ElementType Element => state.Burning ? Compiler.ElementType.Fire : profile != null ? profile.element : Compiler.ElementType.None;
         public ReactiveState State => state;
         public Bounds WorldBounds => rend != null ? rend.bounds : new Bounds(transform.position, Vector3.one * 0.5f);
 

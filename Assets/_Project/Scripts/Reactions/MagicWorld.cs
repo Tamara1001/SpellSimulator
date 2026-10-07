@@ -40,6 +40,7 @@ namespace SpellSimulator.Reactions
         {
             if (reactions == null) return;
             ExposeToSpells();
+            ExposeToWater();
             SpreadFire();
 
             var all = ElementReactive.All;
@@ -70,6 +71,26 @@ namespace SpellSimulator.Reactions
                 }
             }
         }
+
+        /// <summary>Lo que esta en un cuerpo de agua se moja y se enfria segun cuanto esta sumergido.</summary>
+        private void ExposeToWater()
+        {
+            var waters = WaterVolume.All;
+            for (int w = 0; w < waters.Count; w++)
+            {
+                var water = waters[w];
+                Bounds b = water.Bounds;
+                int n = Gather(b.center, b.extents.magnitude);
+                for (int i = 0; i < n; i++)
+                {
+                    float submerged = water.Submerged(found[i].WorldBounds);
+                    if (submerged > 0f) found[i].AddExposure(Immersion, submerged);
+                }
+            }
+        }
+
+        /// <summary>Exposicion por segundo de estar completamente sumergido.</summary>
+        private static readonly Exposure Immersion = new Exposure { Heat = -4f, Wet = 3f };
 
         private void SpreadFire()
         {

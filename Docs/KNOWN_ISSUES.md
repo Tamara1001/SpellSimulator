@@ -33,10 +33,6 @@ levitación (orbe), pull (succión), convergencia (lente), dispersión como fuga
 (cercos y válvulas, `region.ts` + `chevrons.ts`), **weave**, **orb/vessel** y snapping de simetría. Hoy esos signos aportan
 solo potencia y dejan una nota `unmodeled-*`.
 
-### KI-037
-🟢 `abierto` — **La succión (pull) atrae cualquier Rigidbody.** En el canon solo atrae materia del mismo elemento (agua
-del lago, fuego de una fogata). Se resuelve con el sistema de materiales y elementos de M4 (`MaterialProfile`).
-
 ### KI-038
 🟢 `abierto` — **Partículas sin presupuesto medido en Quest**: cada hechizo puede llegar a ~1000 partículas (chorro 420/s).
 El límite de 6 hechizos activos es provisorio. Medir en el dispositivo (M3/M7).
@@ -67,6 +63,10 @@ Pre-fractura Voronoi pendiente (M5, mesas y paredes).
 
 ### KI-044
 🟢 `abierto` — Las llamas de un objeto que gira quedan inclinadas (se orientan al crearse). Menor.
+
+### KI-048
+🟢 `abierto` — **Agua sin simulación de altura**: las ondas son analíticas (16 a la vez) y el nivel no baja al evaporar
+ni al succionar. El vapor usa el look del viento. Suficiente para Quest; revisar si el lago grande de M5 lo pide.
 
 ## Resueltos (2026-10-07, reestructura del pipeline)
 
@@ -102,6 +102,8 @@ Pre-fractura Voronoi pendiente (M5, mesas y paredes).
 | KI-025 🟢 | No se usaban las cabezas de pose del modelo | `GlyphClassifier` lee `angle`, calibra con plantillas y da la rotación de cada glifo (test: error < 25° en 7 poses). |
 | KI-040 🔴 | **Nuevo (física):** el campo aplicaba aceleración sin límite, y un cuerpo liviano salía a cientos de m/s | Modelo de arrastre hacia la velocidad del flujo, ráfaga acotada, `Respawnable`. |
 | KI-041 🟠 | **Nuevo (plan):** el ruido de pose creaba chorros o giros fantasma en sellos simétricos | Zona muerta hacia las clases canónicas + umbral relativo de primitivas (20%). |
+| KI-037 🟢 | La succión (pull) atraía cualquier Rigidbody | Solo atrae `IElementMatter` de su elemento (piedra = tierra, lo que arde = fuego); el pull de agua tira un chorro desde un `WaterVolume`. |
+| KI-047 🟢 | **Nuevo (M4):** el estanque se armó a y=0 y el piso real está a 0.5 (cubo) | Estanque subido. Ojo al ubicar props: la cara de arriba del `Floor` es y=0.5. |
 | KI-045 🟠 | **Nuevo (M4):** el calor de lo que ardía crecía sin tope y el agua se evaporaba antes de apagarlo | Tope de calor (2× ignición) + test `Water_ExtinguishesALongFire_StillUnderFire`. |
 | KI-046 🟢 | **Nuevo (M4):** el reinicio movía cuerpos cinemáticos (herramienta en la mano) | `RespawnAll` ignora cinemáticos. |
 | KI-031 🟢 | **Nuevo:** suelo detectaba triggers (lienzo sostenido) | `QueryTriggerInteraction.Ignore`. |
