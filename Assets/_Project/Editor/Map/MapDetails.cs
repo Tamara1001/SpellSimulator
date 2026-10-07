@@ -271,6 +271,9 @@ namespace SpellSimulator.EditorTools.Map
             MapBuilder.Place("PaperBoard", map, boardMesh, material, boardAt, Quaternion.LookRotation(-outward));
             var wall = Paper(template, "WallPaper", boardAt + outward * 0.06f, Quaternion.LookRotation(-outward), 1.25f, kinematic: true);
             SetEmission(wall, EmissionSide.InkSide);
+            MakeFixed(wall);
+            var desk = GameObject.Find("DeskPaper");
+            if (desk != null) MakeFixed(desk);
 
             // Agarrables en la mesa de lectura de la biblioteca.
             Paper(template, "Paper_S", towerOrigin + new Vector3(-1.7f, 0.87f, -1.3f), Quaternion.Euler(90f, 20f, 0f), 0.35f, kinematic: false);
@@ -290,6 +293,15 @@ namespace SpellSimulator.EditorTools.Map
             var rb = paper.GetComponent<Rigidbody>();
             if (rb != null) rb.isKinematic = kinematic;
             return paper;
+        }
+
+        /// <summary>Papel fijo (pared, escritorio): se dibuja pero no se agarra.</summary>
+        private static void MakeFixed(GameObject paper)
+        {
+            var grab = paper.GetComponent<World.PhysicalCanvas>();
+            if (grab != null) Object.DestroyImmediate(grab);
+            var rb = paper.GetComponent<Rigidbody>();
+            if (rb != null) rb.isKinematic = true;
         }
 
         private static void SetEmission(GameObject paper, EmissionSide side)

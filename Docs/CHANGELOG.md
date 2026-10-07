@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — Arreglos de la prueba manual de M5
+- KI-052: rampas de la torre con 3 m de altura libre (antes 2.0 m: no se podía subir al segundo piso). Estantes del
+  estudio reubicados fuera del hueco nuevo.
+- KI-053: las hojas soltadas caen y se acuestan (`PhysicalCanvas`: gravedad al soltar, frenado del aire, torque de
+  asentado). Los papeles fijos (pared exterior y escritorio) no se pueden agarrar.
+
 ## 2026-10-07 — M5: audio
 - Nuevo módulo `Audio`: `AudioLibrary` (37 cues como datos), `AudioDirector` (pool de 24 fuentes, loops por objeto,
   música y viento de fondo, pájaros al azar), `GameAudio` (eventos → sonidos), `AmbientEmitter` (cascada),

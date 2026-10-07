@@ -27,7 +27,9 @@ namespace SpellSimulator.EditorTools.Map
         public const float RampOuter = InnerRadius - 0.05f;
         public const float RampTurn = 270f;
         public static readonly float[] RampStart = { 0f, 300f, 240f };
-        public const float Headroom = 2.3f;
+        /// <summary>Altura libre sobre la rampa (el jugador mide ~2.1 m; prueba manual 2026-10-07: chocaba con 2.0).</summary>
+        public const float Headroom = 3f;
+        public const float FloorThickness = 0.3f;
 
         private static readonly Color StoneA = new Color(0.66f, 0.7f, 0.62f);
         private static readonly Color StoneB = new Color(0.58f, 0.62f, 0.55f);
@@ -134,7 +136,7 @@ namespace SpellSimulator.EditorTools.Map
             if (floor == 0) return false;
             float start = RampStart[floor - 1];
             float d = Mathf.Repeat(angle - start, 360f);
-            float holeFrom = RampTurn * (1f - Headroom / FloorHeight);
+            float holeFrom = RampTurn * (1f - (Headroom + FloorThickness) / FloorHeight);
             return d >= holeFrom && d <= RampTurn;
         }
 
@@ -142,7 +144,7 @@ namespace SpellSimulator.EditorTools.Map
         {
             var b = new LowPolyMesh();
             float y = floor * FloorHeight + (floor == 0 ? 0.05f : 0f);
-            const float thickness = 0.3f;
+            const float thickness = FloorThickness;
             const int sectors = 36;
             for (int i = 0; i < sectors; i++)
             {
@@ -274,7 +276,7 @@ namespace SpellSimulator.EditorTools.Map
             float[] shelves0 = { 170f, 195f, 220f, 245f, 300f, 325f, 350f };
             foreach (float a in shelves0) tris += Shelf(props, material, a, 0f);
             // Estudio (primer piso): estantes donde la rampa de arriba deja altura y fuera del hueco de la de abajo.
-            float[] shelves1 = { 105f, 125f, 285f };
+            float[] shelves1 = { 285f };
             foreach (float a in shelves1) tris += Shelf(props, material, a, FloorHeight);
 
             tris += Table(props, material, "LibraryDesk", new Vector3(0f, 0f, 0.6f), 0f, 1.8f, 0.9f);
