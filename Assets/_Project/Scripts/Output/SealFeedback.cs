@@ -86,6 +86,7 @@ namespace SpellSimulator.Output
                 tint = Color.Lerp(tint, preparedColor, pulse * 0.6f);
             }
 
+            block ??= new MaterialPropertyBlock(); // tras una recarga de scripts en Play el campo queda en null
             canvasRenderer.GetPropertyBlock(block);
             block.SetColor(BaseColorId, tint);
             canvasRenderer.SetPropertyBlock(block);

@@ -82,10 +82,15 @@ Se empieza conociendo **Fuego, Columna y Levitación**. Los libros de la torre e
 del estudio) y *Signos raros* (pedestal en la terraza, premio por subir). Dibujar bien un glifo desconocido también lo
 descubre. El grimorio muestra cada glifo dibujándose solo, con su explicación. El progreso se guarda.
 
+## Mundo inflamable (M6)
+Los **pinos** y el **mobiliario de la torre** (mesas, sillas, estantes, libros, caballetes) son de madera: arden, contagian a
+lo que tienen cerca y se rompen o quedan carbonizados. El **pasto** arde en una grilla de 2 m: el fuego se propaga solo
+(≈1 m/s), deja el suelo negro y enciende los arboles; el agua lo apaga. La piedra de la torre no arde. Reiniciar el mundo
+(Backspace o el menú del grimorio) lo devuelve todo.
+
 ## Lienzos y dibujo cómodo (M6)
-Un lienzo que se suelta **no cae**: si hay una mesa, el piso o una pared a 30 cm se apoya (pegado y derecho) y si no queda
-**flotando** a esa altura, parado, con un leve vaivén. Con **Q** se arroja y cae con física, aterrizando siempre con la
-cara hacia arriba. **F** da vuelta la hoja: el hechizo sale por la **cara con tinta** (la que miraba al jugador cuando
+Un lienzo que se suelta (E) **cae con física** y se acuesta solo con la cara hacia arriba (una mesa lo recibe). Con **G**
+queda **flotando** en el aire con un vaivén suave. Con **Q** se arroja. **F** da vuelta la hoja: el hechizo sale por la **cara con tinta** (la que miraba al jugador cuando
 empezó a dibujar), así que girarla cambia hacia dónde apunta. **V** fija el lienzo delante de la cámara y el mouse pasa
 a ser un puntero (se congela la vista; V o E para volver). Hay cuadernos (S), lienzos grandes con marco, pergaminos
 flotantes, pizarra de pared, caballetes (torre y campo) y una mesa de dibujo inclinada.
@@ -98,8 +103,14 @@ encima del sello lo rompen (menos los de su propio hechizo), igual que mojar o p
 
 ## Objetos movibles (M6)
 Cajas, bloques, pesas y baúles son `Movable`: E los lleva con un resorte (chocan con el mundo y no empujan al jugador),
-la rueda los acerca o aleja y Q los arroja. Los de más de 40 kg no se levantan. La torre tiene mesas de trabajo con
+la rueda los acerca o aleja y Q los arroja. Se levantan hasta 600 kg y los grandes se llevan más lejos. La torre tiene mesas de trabajo con
 plumas, pinceles, gomas, trapos y tinteros, cajas y baúles.
+
+## Grimorio como menú (M6)
+Tab lo abre; no se cierra al alejarte. La portada es un menú: **Glifos** (índice de lo descubierto, con detalle de cada uno,
+anterior/siguiente), **Controles**, **Sellos y estampas** y **Opciones**. Se aprieta apuntando + E. **V** lo fija a la cámara a
+pantalla casi completa (clic con el mouse). El borde de abajo se agarra con E para llevarlo. Empezás conociendo los 8
+sigilos y los signos columna, levitación, dispersión y atracción (para copiarlos con estampas).
 
 ## Sellos en objetos (M6)
 Un objeto con `SealTrigger` no lanza el sello al cerrar el anillo: lo deja **armado** (el papel pulsa igual que uno
@@ -129,6 +140,7 @@ rocas que emergen, pasos según el piso (pasto, madera, piedra). Créditos: soni
 | Agarrar / soltar (herramientas, lienzos, cajas, pesas, el grimorio por el borde de abajo) | E | Grip |
 | Acercar / alejar lo que llevás | Rueda del mouse | Mover la mano |
 | Arrojar | Q | B (control derecho) |
+| Dejar el lienzo flotando / tumbarse | G / Z | — |
 | Dar vuelta la hoja | F | Girar la mano / click del stick derecho |
 | Fijar el lienzo a la cámara (dibujar de escritorio, mouse libre) | V | — |
 | Pasar página del grimorio | Flechas, rueda o mirar + E | Apuntar + grip |

@@ -100,6 +100,7 @@ namespace SpellSimulator.Player
             if (heldRight != null && !heldRight.activeInHierarchy) Drop(HandType.Right);
             HandleHover();
             HandleInteraction();
+            HandlePin();
             HandleThrow();
             HandleFlip();
             HandleHoldDistance();
@@ -128,7 +129,7 @@ namespace SpellSimulator.Player
                 hoveredPressable = hit.collider.GetComponentInParent<IPressable>();
                 hoveredFlippable = hit.collider.GetComponentInParent<IFlippable>();
                 var interactable = hit.collider.GetComponentInParent<IInteractable>();
-                if (interactable != null && HasFreeHandFor(interactable)) currentHovered = interactable;
+                if (interactable != null) currentHovered = interactable;
             }
             HoverPrompt = hoveredPressable != null ? hoveredPressable.GetPressPrompt()
                 : currentHovered != null ? currentHovered.GetInteractionPrompt() : "";
@@ -212,14 +213,20 @@ namespace SpellSimulator.Player
             point.localPosition = p;
         }
 
-        private bool HasFreeHandFor(IInteractable interactable)
+        /// <summary>G: fija lo que se sostiene. Prioridad: mano izquierda (lienzos) y luego derecha.</summary>
+        private void HandlePin()
         {
-            switch (interactable.PreferredHand)
-            {
-                case HandType.Right: return heldRight == null;
-                case HandType.Left: return heldLeft == null;
-                default: return heldRight == null || heldLeft == null;
-            }
+            if (!inputReader.IsPinning) return;
+            if (!TryPin(HandType.Left)) TryPin(HandType.Right);
+        }
+
+        private bool TryPin(HandType hand)
+        {
+            GameObject obj = hand == HandType.Left ? heldLeft : heldRight;
+            if (obj == null || !obj.TryGetComponent(out IPinnable pinnable)) return false;
+            Drop(hand);
+            pinnable.Pin();
+            return true;
         }
 
         private void HandleInteraction()
@@ -269,6 +276,9 @@ namespace SpellSimulator.Player
         /// <summary>V: fija el lienzo de la mano delante de la camara para dibujar sin sostener la mira.</summary>
         private void ToggleFocus()
         {
+            // Con el grimorio abierto, V lo fija a el (lo maneja el propio libro).
+            var book = Learning.Grimoire.Instance;
+            if (book != null && book.IsOpen) return;
             if (PlatformDetector.IsVR || heldLeft == null || !heldLeft.TryGetComponent(out IFocusable focusable)) return;
             focusable.SetFocus(cameraTransform, !focusable.Focused);
         }
@@ -282,9 +292,13 @@ namespace SpellSimulator.Player
         {
             if (!(interactable is MonoBehaviour mb)) return;
 
-            // "Both" va a la mano que este libre, prefiriendo la derecha.
+            // "Both" va a la izquierda solo si la derecha esta ocupada y la izquierda libre; si ambas estan ocupadas, la derecha.
             bool left = interactable.PreferredHand == HandType.Left ||
-                        (interactable.PreferredHand == HandType.Both && heldRight != null);
+                        (interactable.PreferredHand == HandType.Both && heldRight != null && heldLeft == null);
+
+            // Intercambio: si la mano destino esta ocupada, lo que tiene se suelta primero.
+            if (left ? heldLeft != null : heldRight != null) Drop(left ? HandType.Left : HandType.Right);
+
             mb.TryGetComponent(out IUsable usable);
 
             if (left)

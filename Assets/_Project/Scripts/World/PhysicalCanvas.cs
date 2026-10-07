@@ -7,31 +7,30 @@ namespace SpellSimulator.World
 {
     /// <summary>
     /// Lienzo que se agarra con E. Pensado para dibujar siempre comodo:
-    /// - al soltarlo se apoya solo en la mesa, el piso o la pared si hay una a mano; si no, queda flotando (con un
-    ///   leve vaiven) a la altura donde se lo dejo, parado y derecho;
-    /// - Q lo arroja (cae con fisica y aterriza con la cara hacia arriba);
+    /// - al soltarlo (E) cae con fisica y se acuesta solo con la cara hacia arriba;
+    /// - G lo deja flotando en el aire donde esta, con un vaiven suave (y E vuelve a agarrarlo);
+    /// - Q lo arroja;
     /// - F lo da vuelta: la magia sale por la cara con tinta, asi que girarlo cambia hacia donde apunta el hechizo;
     /// - V (PC) lo fija delante de la camara y el mouse pasa a ser un puntero para dibujar sin sostener la mira.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(Collider))]
-    public class PhysicalCanvas : MonoBehaviour, IInteractable, IThrowable, IFlippable, IFocusable
+    public class PhysicalCanvas : MonoBehaviour, IInteractable, IThrowable, IFlippable, IFocusable, IPinnable
     {
         [Header("Settings")]
         [SerializeField] private string objectName = "Lienzo Mágico";
         [SerializeField, Tooltip("Corrección de rotación al sostenerlo en la mano izquierda")]
         private Vector3 holdRotationOffset = Vector3.zero;
 
-        [Header("Al soltarlo")]
-        [SerializeField, Tooltip("Si al soltarlo queda flotando (o apoyado) en vez de caer. Desactivar en piedras con sello.")]
-        private bool floatOnDrop = true;
-        [SerializeField, Tooltip("Distancia (m) a la que una superficie cercana lo atrapa para apoyarlo.")]
-        private float placeReach = 0.3f;
+        [Header("Flotando (G)")]
         [SerializeField, Tooltip("Empieza flotando en el aire donde esta puesto (lienzos decorativos y de practica).")]
         private bool startFloating;
-        [SerializeField] private float bobHeight = 0.012f;
-        [SerializeField] private float bobSpeed = 1.1f;
-        [SerializeField, Tooltip("Segundos de las animaciones de apoyar, enderezar y dar vuelta.")]
+        [SerializeField, Tooltip("Altura (m) del vaiven.")] private float bobHeight = 0.03f;
+        [SerializeField, Tooltip("Velocidad (rad/s) del vaiven.")] private float bobSpeed = 1.3f;
+        [SerializeField, Tooltip("Cabeceo maximo (grados) del vaiven. Chico: se puede dibujar encima.")]
+        private float swayDegrees = 2.5f;
+        [SerializeField, Tooltip("Desplazamiento lateral (m) de la deriva.")] private float driftMeters = 0.015f;
+        [SerializeField, Tooltip("Segundos de las animaciones de enderezar y dar vuelta.")]
         private float poseSeconds = 0.18f;
 
         [Header("Papel arrojado")]
@@ -57,6 +56,7 @@ namespace SpellSimulator.World
         // Estado de reposo.
         private bool floating;
         private Vector3 floatAnchor;
+        private Quaternion floatRotation = Quaternion.identity;
         private float bobPhase;
         private bool focused;
 
@@ -108,17 +108,11 @@ namespace SpellSimulator.World
             if (focused) SetFocus(null, false);
             holdParent = null;
             transform.SetParent(null);
-            rb.isKinematic = false;
-            col.isTrigger = false;
-
-            if (floatOnDrop)
-            {
-                if (TryPlace()) return;
-                StartFloating();
-                return;
-            }
-            Fall();
+            Fall(); // al soltar cae y se acuesta cara arriba; G lo deja flotando
         }
+
+        /// <summary>G: lo deja flotando en el aire, enderezado, con un vaiven suave. El interactor ya lo solto.</summary>
+        public void Pin() => StartFloating();
 
         /// <summary>Arrojado (Q): cae con fisica y se acuesta con la cara hacia arriba.</summary>
         public void Throw(Vector3 velocity)
@@ -140,63 +134,7 @@ namespace SpellSimulator.World
             rb.linearDamping = airDrag;
         }
 
-        // ---------------------------------------------------------------- apoyar / flotar
-
-        private static readonly RaycastHit[] placeHits = new RaycastHit[12];
-
-        /// <summary>Si hay una mesa, el piso o una pared a mano, lo apoya ahi (pegado y derecho).</summary>
-        private bool TryPlace()
-        {
-            Vector3 center = transform.position;
-            Vector3 normal = canvas != null ? canvas.FaceNormal : transform.forward;
-            RaycastHit best = default;
-            float bestDistance = float.MaxValue;
-            foreach (var dir in new[] { Vector3.down, -normal, normal })
-                if (Probe(center, dir, out RaycastHit hit) && hit.distance < bestDistance) { best = hit; bestDistance = hit.distance; }
-            if (bestDistance == float.MaxValue) return false;
-
-            Vector3 up = Vector3.up;
-            Quaternion rotation;
-            if (best.normal.y > 0.7f)
-            {
-                // Sobre una superficie horizontal: cara arriba, borde de arriba alejandose de quien mira.
-                Camera cam = Camera.main;
-                Vector3 away = cam != null ? Vector3.ProjectOnPlane(cam.transform.forward, up) : transform.forward;
-                if (away.sqrMagnitude < 1e-4f) away = transform.forward;
-                rotation = Orient(transform.rotation, normal, up, away);
-            }
-            else if (Mathf.Abs(best.normal.y) < 0.3f)
-            {
-                // Contra una pared: de cara al cuarto, con el borde de arriba arriba.
-                rotation = Orient(transform.rotation, normal, best.normal, up);
-            }
-            else return false;
-
-            Vector3 position = best.point + best.normal * 0.004f;
-            StartPose(position, rotation, false);
-            rb.isKinematic = true;
-            col.isTrigger = false;
-            floating = false;
-            // Si descansa sobre algo que se puede mover, viaja con ello.
-            if (best.rigidbody != null && !best.rigidbody.isKinematic) transform.SetParent(best.collider.transform, true);
-            return true;
-        }
-
-        private bool Probe(Vector3 from, Vector3 dir, out RaycastHit best)
-        {
-            int n = Physics.RaycastNonAlloc(from, dir, placeHits, placeReach, ~0, QueryTriggerInteraction.Ignore);
-            best = default;
-            float bestDistance = float.MaxValue;
-            for (int i = 0; i < n; i++)
-            {
-                var h = placeHits[i];
-                if (h.distance >= bestDistance || h.collider.transform.IsChildOf(transform)) continue;
-                if (h.collider.GetComponentInParent<PlayerMovement>() != null) continue;
-                best = h;
-                bestDistance = h.distance;
-            }
-            return bestDistance < float.MaxValue;
-        }
+        // ---------------------------------------------------------------- flotar
 
         /// <summary>Rotacion que lleva la cara visible hacia face y el borde de arriba lo mas cerca de top.</summary>
         private static Quaternion Orient(Quaternion rotation, Vector3 currentFace, Vector3 face, Vector3 top)
@@ -217,10 +155,16 @@ namespace SpellSimulator.World
                 : new Vector3(normal.x, 0f, normal.z).normalized;
             Vector3 top = Mathf.Abs(normal.y) > 0.75f ? transform.up : Vector3.up;
             Quaternion rotation = Orient(transform.rotation, normal, face, top);
+            if (!rb.isKinematic)
+            {
+                rb.linearVelocity = Vector3.zero;
+                rb.angularVelocity = Vector3.zero;
+            }
             rb.isKinematic = true;
             col.isTrigger = true; // flotando no estorba: el cuerpo lo atraviesa, el rayo lo detecta
             floating = true;
             floatAnchor = transform.position;
+            floatRotation = rotation;
             StartPose(transform.position, rotation, false);
         }
 
@@ -250,12 +194,18 @@ namespace SpellSimulator.World
                 if (animT >= 1f)
                 {
                     animating = false;
-                    if (floating) floatAnchor = transform.position;
+                    if (floating) { floatAnchor = transform.position; floatRotation = transform.rotation; }
                 }
                 return;
             }
             if (floating)
-                transform.position = floatAnchor + Vector3.up * (Mathf.Sin(Time.time * bobSpeed + bobPhase) * bobHeight);
+            {
+                float t = Time.time * bobSpeed + bobPhase;
+                // Tres ondas de periodos distintos: se mueve sin repetirse de forma obvia.
+                Vector3 offset = new Vector3(Mathf.Sin(t * 0.61f) * driftMeters, Mathf.Sin(t) * bobHeight, Mathf.Cos(t * 0.47f) * driftMeters);
+                Quaternion sway = Quaternion.Euler(Mathf.Sin(t * 0.83f) * swayDegrees, Mathf.Sin(t * 0.53f + 1.3f) * swayDegrees * 1.4f, Mathf.Sin(t * 0.71f + 2.1f) * swayDegrees);
+                transform.SetPositionAndRotation(floatAnchor + offset, floatRotation * sway);
+            }
         }
 
         /// <summary>
@@ -278,6 +228,11 @@ namespace SpellSimulator.World
         public void Flip()
         {
             // Si estaba apoyada contra algo, se despega y queda flotando (si no, el giro la atravesaria).
+            if (floating)
+            {
+                StartPose(floatAnchor, floatRotation * Quaternion.Euler(0f, 180f, 0f), false);
+                return;
+            }
             Quaternion target = transform.localRotation * Quaternion.Euler(0f, 180f, 0f);
             StartPose(transform.localPosition, target, true);
         }

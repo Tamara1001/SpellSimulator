@@ -18,7 +18,7 @@ namespace SpellSimulator.World
         [SerializeField, Tooltip("Lado (m) de la calcomania que se crea al dibujar.")]
         private float decalSize = 1.2f;
         [SerializeField, Tooltip("Resolucion por metro de la calcomania (textura del lienzo).")]
-        private int pixelsPerMeter = 420;
+        private int pixelsPerMeter = 300;
         [SerializeField] private Material decalMaterial;
         [SerializeField] private Material brushMaterial;
         [SerializeField] private SpellCaster caster;
@@ -30,6 +30,7 @@ namespace SpellSimulator.World
         public void Configure(float size, Material decal, Material brush, SpellCaster spellCaster)
         {
             decalSize = size;
+            pixelsPerMeter = 300;
             decalMaterial = decal;
             brushMaterial = brush;
             caster = spellCaster;
@@ -59,7 +60,7 @@ namespace SpellSimulator.World
             go.AddComponent<BoxCollider>().size = Vector3.one;
 
             var canvas = go.AddComponent<DrawingCanvas>();
-            canvas.Prepare(Mathf.Max(128, Mathf.RoundToInt(pixelsPerMeter * decalSize)), brushMaterial, new Color(0f, 0f, 0f, 0f), 0.02f, EmissionSide.InkSide);
+            canvas.Prepare(Mathf.Clamp(Mathf.RoundToInt(pixelsPerMeter * decalSize), 128, 1024), brushMaterial, new Color(0f, 0f, 0f, 0f), 0.02f, EmissionSide.InkSide);
             var decal = go.AddComponent<InscribedDecal>();
             decal.Init(canvas, caster, hit.collider.transform, decalSize);
             go.SetActive(true);

@@ -16,7 +16,20 @@ namespace SpellSimulator.EditorTools
         private const string DecalMaterialPath = "Assets/_Project/Materials/InkDecal.mat";
 
         [MenuItem("SpellSimulator/Interaction/Setup Current Scene")]
-        public static string Apply() => MakePropsMovable() + " " + MakeSurfacesInscribable();
+        public static string Apply() => FixInteractMask() + " " + MakePropsMovable() + " " + MakeSurfacesInscribable();
+
+        /// <summary>
+        /// El rayo de E solo veia las capas Canvas e Interactable: libro, estampas y cajas (capa Default) no se podian apuntar.
+        /// </summary>
+        public static string FixInteractMask()
+        {
+            var player = Object.FindFirstObjectByType<Player.PlayerInteractor>();
+            if (player == null) return "Sin interactor.";
+            var so = new SerializedObject(player);
+            so.FindProperty("interactLayer").intValue = Physics.DefaultRaycastLayers;
+            so.ApplyModifiedProperties();
+            return "Mascara de interaccion: todo salvo Ignore Raycast.";
+        }
 
         public static string MakePropsMovable()
         {
@@ -54,9 +67,10 @@ namespace SpellSimulator.EditorTools
                 EditorUtility.SetDirty(surface);
                 count++;
             }
-            Mark(GameObject.Find("Terrain"), 1.3f);
-            Mark(GameObject.Find("Tower"), 1.3f);
-            Mark(GameObject.Find("Platform"), 1.2f);
+            // Grandes: un sello grande no debe cortarse en el borde de la calcomania.
+            Mark(GameObject.Find("Terrain"), 3.4f);
+            Mark(GameObject.Find("Tower"), 2.6f);
+            Mark(GameObject.Find("Platform"), 2f);
             foreach (var movable in Object.FindObjectsByType<Movable>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 // Un poco menos que la cara mas chica del objeto, para que el sello quepa.
@@ -78,7 +92,13 @@ namespace SpellSimulator.EditorTools
         private static Material DecalMaterial()
         {
             var material = AssetDatabase.LoadAssetAtPath<Material>(DecalMaterialPath);
-            if (material != null) return material;
+            if (material != null)
+            {
+                // Tinta oscura como la del papel (el material guarda su propio color).
+                material.SetColor("_InkColor", new Color(0.2f, 0.07f, 0.1f, 1f));
+                material.SetFloat("_Glow", 1f);
+                return material;
+            }
             var shader = Shader.Find("SpellSimulator/InkDecal");
             if (shader == null) return null;
             material = new Material(shader) { name = "InkDecal" };

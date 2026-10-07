@@ -65,7 +65,6 @@ namespace SpellSimulator.EditorTools.Map
             {
                 var gso = new SerializedObject(grab);
                 gso.FindProperty("settleFlat").boolValue = false;
-                gso.FindProperty("floatOnDrop").boolValue = false;
                 gso.FindProperty("objectName").stringValue = "piedra con sello";
                 gso.ApplyModifiedProperties();
             }

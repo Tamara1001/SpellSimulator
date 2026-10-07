@@ -405,7 +405,7 @@ namespace SpellSimulator.EditorTools.Map
             paper.transform.SetPositionAndRotation(position, rotation);
             paper.transform.localScale = new Vector3(size, size, template.transform.localScale.z);
             var rb = paper.GetComponent<Rigidbody>();
-            if (rb != null) rb.isKinematic = kinematic;
+            if (rb != null) { rb.isKinematic = kinematic; rb.useGravity = !kinematic; }
             return paper;
         }
 

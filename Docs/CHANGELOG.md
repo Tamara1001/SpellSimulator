@@ -5,6 +5,20 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — Segunda prueba manual: interacción, grimorio-menú, tumbarse y fuego en el mundo
+- **Causa raíz de varios fallos:** la máscara del rayo de E solo veía las capas Canvas/Interactable; libro, estampas y cajas no
+  se podían apuntar (`InteractionSetup.FixInteractMask`). Agarrar ahora intercambia de mano.
+- **Lienzos:** soltar = caer (cara arriba); **G** = flotar con vaivén suave (`IPinnable`, `PhysicalCanvas.Pin`); caballetes y mesa de
+  dibujo bien orientados; papeles/cuadernos con gravedad (no flotan sobre las mesas).
+- **Tumbarse (Z)** además de agacharse (`PlayerMovement`, `stanceT`).
+- **Objetos grandes:** `Movable` hasta 600 kg, distancia y resorte según tamaño.
+- **Grimorio como menú** (`GrimoireScreen`): índice de glifos, detalle, controles, sellos, opciones; no se cierra al alejarse; V = fijo
+  a cámara con clic; los 8 sigilos y 4 signos empiezan descubiertos.
+- **Tinta del entorno** oscura y calcomanías más grandes (3,4 m en el piso): ya no se cortan los sellos grandes.
+- **Mundo inflamable:** pinos y mobiliario reactivos (`FlammableSetup`, perfil Arbol) y `GrassFire` (grilla de pasto con propagación,
+  quemado instanciado y llamas con pool). ADR-030/031, KI-066 a KI-072.
+- Trabajo repartido: agente Haiku para PlayerMovement (tumbarse), Movable/Interactor, Grimorio y GrassFire; yo, editor y verificación.
+
 ## 2026-10-07 — Prueba manual: movilidad, lienzos, entorno, torre y herramientas
 - **Cielo:** la cámara de PC usaba un color liso marrón; ahora Skybox (`MapBuilder.SetupLighting`).
 - **Movimiento:** correr (Shift), agacharse (Ctrl/C, con chequeo de altura libre) y saltar; velocidades caminar 4,2 / correr 7,4 / agachado 2.

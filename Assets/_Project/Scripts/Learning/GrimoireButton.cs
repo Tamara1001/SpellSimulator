@@ -4,7 +4,7 @@ using SpellSimulator.Interfaces;
 
 namespace SpellSimulator.Learning
 {
-    /// <summary>Zona del grimorio que se aprieta (pasar pagina, reiniciar...). La accion la configura el grimorio.</summary>
+    /// <summary>Boton del grimorio que se aprieta (opciones de menu, glifos, volver...). La accion la configura el grimorio al cambiar de pantalla.</summary>
     public class GrimoireButton : MonoBehaviour, IPressable
     {
         private string prompt;

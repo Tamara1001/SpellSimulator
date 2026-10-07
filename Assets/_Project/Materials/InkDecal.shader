@@ -5,8 +5,8 @@ Shader "SpellSimulator/InkDecal"
     Properties
     {
         [MainTexture] _MainTex ("Textura del lienzo", 2D) = "black" {}
-        _InkColor ("Color de la tinta", Color) = (0.62, 0.9, 1.0, 1)
-        _Glow ("Brillo", Range(0, 3)) = 1.4
+        _InkColor ("Color de la tinta", Color) = (0.2, 0.07, 0.1, 1)
+        _Glow ("Brillo", Range(0, 3)) = 1
     }
     SubShader
     {

@@ -97,6 +97,17 @@ por código (VFX Graph no). El viejo `Fire_VFX.vfx` queda sin uso.
 hechizo le explotaría en la cara. `DrawingCanvas.EmissionSide = AwayFromViewer` en papeles (la magia sale hacia el
 objetivo, como cuando los personajes giran el papel); `InkSide` queda para sellos en paredes, mesas y piedras.
 
+## ADR-030 — El fuego se propaga por una grilla de pasto y por objetos reactivos
+**2026-10-07.** Quemar "la casa entera" no es simular cada brizna: el pasto es una grilla de 2 m (`GrassFire`, 70x70) con
+automata celular (ardiendo, quemado, inflamable) que enciende lo reactivo cercano (pinos, mobiliario); los objetos que
+arden encienden la celda de abajo. Es barato (sin allocations, llamas con pool de 36) y reutiliza `ElementReactive`.
+Los pinos y el mobiliario de la torre son `ElementReactive` (madera); la piedra de la torre no arde.
+
+## ADR-031 — Soltar = caer; flotar es una accion aparte (G)
+**2026-10-07.** Reemplaza ADR-028 en lo que respecta al comportamiento por defecto: soltar un lienzo lo deja caer con fisica
+(aterriza cara arriba) y **G** lo deja flotando con un vaiven suave. El grimorio pasa a ser un menu (hub) que no se cierra
+al alejarse y se puede fijar a la camara con V.
+
 ## ADR-029 — Dibujar en el entorno con calcomanías, no con UV del mesh
 **2026-10-07.** El piso, la torre y las cajas no tienen UV útiles ni forma plana. Al empezar un trazo sobre una
 `Inscribable` se crea un lienzo transparente (quad en la capa Canvas, shader `InkDecal`) pegado a la superficie. Así el

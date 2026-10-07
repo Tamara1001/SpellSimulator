@@ -31,13 +31,19 @@ namespace SpellSimulator.Player
         [SerializeField, Tooltip("Cuanto baja la camara agachado (m).")] private float crouchCameraDrop = 0.5f;
         [SerializeField, Tooltip("Rapidez de la transicion (1/s).")] private float crouchBlend = 12f;
 
+        [Header("Tumbarse")]
+        [SerializeField, Tooltip("Altura del cuerpo tumbado (m). Se clampa a 2 radios de la capsula.")] private float proneHeight = 0.65f;
+        [SerializeField, Tooltip("Cuanto baja la camara tumbado respecto a de pie (m).")] private float proneCameraDrop = 1.35f;
+        [SerializeField, Tooltip("Velocidad al arrastrarse tumbado (m/s).")] private float proneSpeed = 0.9f;
+
         private Rigidbody rb;
         private PlayerInputReader inputReader;
         private CapsuleCollider body;
         private Transform cameraRoot;
         private float standHeight, standCameraY;
-        private float crouchT;
+        private float stanceT; // 0 = de pie, 1 = agachado, 2 = tumbado
         private bool crouching;
+        private bool prone;
 
         private bool isGrounded;
         private Vector3 groundNormal = Vector3.up;
@@ -70,42 +76,77 @@ namespace SpellSimulator.Player
         private void Update()
         {
             CheckGrounded();
-            HandleCrouch();
+            HandleStance();
             HandleJump();
         }
 
-        /// <summary>Agacharse (PC): achica el cuerpo y baja la camara; solo se para si hay lugar arriba.</summary>
-        private void HandleCrouch()
+        /// <summary>
+        /// Postura (PC): de pie (0), agachado (1) o tumbado (2) con un unico valor continuo stanceT.
+        /// Z alterna tumbado; agacharse solo se para si hay lugar arriba.
+        /// </summary>
+        private void HandleStance()
         {
             if (body == null || PlatformDetector.IsVR) return;
-            bool wants = inputReader.IsCrouching;
-            if (wants) crouching = true;
-            else if (crouching && HasHeadroom()) crouching = false;
 
-            float previousT = crouchT;
-            crouchT = Mathf.MoveTowards(crouchT, crouching ? 1f : 0f, crouchBlend * Time.deltaTime);
-            if (crouchT == previousT) return; // quieto: no se toca el collider ni la camara
-            float height = Mathf.Lerp(standHeight, crouchHeight, crouchT);
+            // Z: si esta tumbado se levanta solo si hay altura libre hasta la altura de pie; si no, queda tumbado.
+            if (inputReader.IsTogglingProne)
+            {
+                if (!prone) prone = true;
+                else if (HasHeadroom(standHeight)) prone = false;
+            }
+
+            float target;
+            if (prone) target = 2f; // tumbado: ignora Ctrl y no se levanta por agacharse
+            else
+            {
+                if (inputReader.IsCrouching) crouching = true;
+                else if (crouching && HasHeadroom(standHeight)) crouching = false;
+                target = crouching ? 1f : 0f;
+            }
+
+            float previousT = stanceT;
+            stanceT = Mathf.MoveTowards(stanceT, target, crouchBlend * Time.deltaTime);
+            if (stanceT == previousT) return; // quieto: no se toca el collider ni la camara
+            float height = StanceHeight(stanceT);
             body.height = height;
-            // Los pies quedan en el mismo lugar: el centro baja la mitad de lo que se achica.
+            // Los pies quedan en el mismo lugar: el centro se desplaza la mitad de lo que cambia la altura.
             body.center = new Vector3(0f, (height - standHeight) * 0.5f, 0f);
             if (cameraRoot != null)
             {
                 var p = cameraRoot.localPosition;
-                p.y = standCameraY - crouchCameraDrop * crouchT;
+                p.y = standCameraY - StanceCameraDrop(stanceT);
                 cameraRoot.localPosition = p;
             }
         }
 
-        private bool HasHeadroom()
+        // La capsula no puede ser mas baja que su diametro.
+        private float ProneHeight => Mathf.Max(proneHeight, body.radius * 2f);
+
+        /// <summary>Altura de la capsula para la postura t, interpolada por tramos (de pie-agachado, agachado-tumbado).</summary>
+        private float StanceHeight(float t)
+        {
+            return t <= 1f ? Mathf.Lerp(standHeight, crouchHeight, t) : Mathf.Lerp(crouchHeight, ProneHeight, t - 1f);
+        }
+
+        /// <summary>Cuanto baja la camara para la postura t, interpolado por tramos.</summary>
+        private float StanceCameraDrop(float t)
+        {
+            return t <= 1f ? crouchCameraDrop * t : Mathf.Lerp(crouchCameraDrop, proneCameraDrop, t - 1f);
+        }
+
+        /// <summary>SphereCast hacia arriba desde la cabeza actual: hay lugar si nada bloquea hasta targetHeight.</summary>
+        private bool HasHeadroom(float targetHeight)
         {
             float radius = body.radius * 0.9f;
-            Vector3 from = transform.position + Vector3.up * (crouchHeight * 0.5f - radius);
-            float room = standHeight - crouchHeight + 0.05f;
+            float currentHeight = body.height;
+            // Los pies estan fijos en -standHeight/2 (ver HandleStance): la esfera arranca bajo la cabeza actual.
+            Vector3 from = transform.position + Vector3.up * (-standHeight * 0.5f + currentHeight - radius);
+            float room = targetHeight - currentHeight + 0.05f;
+            if (room <= 0f) return true;
             return !Physics.SphereCast(from, radius, Vector3.up, out _, room, groundLayer, QueryTriggerInteraction.Ignore);
         }
 
-        private float CurrentMaxSpeed => crouching ? crouchSpeed : inputReader.IsRunning ? runSpeed : walkSpeed;
+        private float CurrentMaxSpeed => prone ? proneSpeed : crouching ? crouchSpeed : inputReader.IsRunning ? runSpeed : walkSpeed;
 
         private void FixedUpdate()
         {
@@ -174,6 +215,12 @@ namespace SpellSimulator.Player
 
         private void HandleJump()
         {
+            if (prone)
+            {
+                // Tumbado no se salta: apretar salto solo intenta levantarse (si hay lugar).
+                if (inputReader.IsJumping && HasHeadroom(standHeight)) prone = false;
+                return;
+            }
             if (inputReader.IsJumping && isGrounded && readyToJump && !crouching)
             {
                 readyToJump = false;

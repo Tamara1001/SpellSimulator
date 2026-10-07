@@ -96,7 +96,13 @@ namespace SpellSimulator.Learning
         {
             try
             {
-                if (File.Exists(SavePath)) return DiscoveryState.FromJson(File.ReadAllText(SavePath));
+                if (File.Exists(SavePath))
+                {
+                    // Lo inicial siempre esta al alcance, aunque el progreso guardado sea de una version anterior.
+                    var saved = DiscoveryState.FromJson(File.ReadAllText(SavePath));
+                    foreach (var g in Lore.Starting) saved.Discover(g);
+                    return saved;
+                }
             }
             catch (Exception e)
             {

@@ -43,6 +43,13 @@ namespace SpellSimulator.Player
         /// <summary>Rueda del mouse (acerca/aleja lo que se sostiene; pasa paginas con el grimorio abierto).</summary>
         public float Scroll { get; private set; }
 
+        /// <summary>Tumbarse / levantarse (alterna): Z. Para dibujar en el piso.</summary>
+        public bool IsTogglingProne { get; private set; }
+        /// <summary>Dejar lo que llevas flotando en el aire (en vez de soltarlo): G.</summary>
+        public bool IsPinning { get; private set; }
+
+        private InputAction proneAction;
+        private InputAction pinAction;
         private InputAction runAction;
         private InputAction crouchAction;
         private InputAction throwAction;
@@ -112,6 +119,12 @@ namespace SpellSimulator.Player
             resetWorldAction.AddBinding("<Gamepad>/select");
             resetWorldAction.AddBinding("<XRController>{LeftHand}/secondaryButton");
 
+            proneAction = new InputAction("Prone", InputActionType.Button);
+            proneAction.AddBinding("<Keyboard>/z");
+            proneAction.AddBinding("<Gamepad>/dpad/down");
+            pinAction = new InputAction("Pin", InputActionType.Button);
+            pinAction.AddBinding("<Keyboard>/g");
+
             runAction = new InputAction("Run", InputActionType.Button);
             runAction.AddBinding("<Keyboard>/leftShift");
             runAction.AddBinding("<Gamepad>/leftStickPress");
@@ -155,6 +168,8 @@ namespace SpellSimulator.Player
         {
             reloadAction.Enable();
             runAction.Enable();
+            proneAction.Enable();
+            pinAction.Enable();
             crouchAction.Enable();
             throwAction.Enable();
             flipAction.Enable();
@@ -176,6 +191,8 @@ namespace SpellSimulator.Player
         {
             reloadAction.Disable();
             runAction.Disable();
+            proneAction.Disable();
+            pinAction.Disable();
             crouchAction.Disable();
             throwAction.Disable();
             flipAction.Disable();
@@ -209,6 +226,8 @@ namespace SpellSimulator.Player
             IsResettingWorld = resetWorldAction.triggered;
             IsTogglingBook = bookAction.triggered;
             IsRunning = runAction.IsPressed();
+            IsTogglingProne = proneAction.triggered;
+            IsPinning = pinAction.triggered;
             IsCrouching = crouchAction.IsPressed();
             IsThrowing = throwAction.triggered;
             IsFlipping = flipAction.triggered;

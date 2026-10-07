@@ -94,6 +94,13 @@ namespace SpellSimulator.Interfaces
         void Throw(UnityEngine.Vector3 velocity);
     }
 
+    /// <summary>Objeto sostenido que puede quedar flotando en el aire al soltarlo (G).</summary>
+    public interface IPinnable
+    {
+        /// <summary>Suelta el objeto dejandolo flotando donde esta. El interactor ya lo solto de la mano.</summary>
+        void Pin();
+    }
+
     /// <summary>Hoja o libro que se puede dar vuelta (F en PC, girar la mano en VR).</summary>
     public interface IFlippable
     {

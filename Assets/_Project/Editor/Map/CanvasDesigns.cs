@@ -191,8 +191,12 @@ namespace SpellSimulator.EditorTools.Map
             root.AddComponent<MeshFilter>().sharedMesh = mesh;
             root.AddComponent<MeshRenderer>().sharedMaterial = material;
             // El lienzo se apoya en el reposa-lienzo, de cara a quien mira el caballete (-Z local del caballete).
+            // La cara mira a +Z del caballete y un poco hacia arriba (inclinado hacia atras ~15 grados); la cara visible es -forward.
+            const float lean = 15f * Mathf.Deg2Rad;
+            Vector3 face = root.transform.rotation * new Vector3(0f, Mathf.Sin(lean), Mathf.Cos(lean));
+            Vector3 top = root.transform.rotation * new Vector3(0f, Mathf.Cos(lean), -Mathf.Sin(lean));
             var canvas = Fixed(template, material, name + "_Canvas", root.transform.TransformPoint(new Vector3(0f, 1.3f, -0.05f)),
-                root.transform.rotation * Quaternion.Euler(-6f, 180f, 0f), 0.9f, 1.2f, Dressing.None);
+                Quaternion.LookRotation(-face, top), 0.9f, 1.2f, Dressing.None);
             canvas.transform.SetParent(root.transform, true);
             Undo.RegisterCreatedObjectUndo(root, name);
         }
@@ -220,7 +224,8 @@ namespace SpellSimulator.EditorTools.Map
             // Cara visible hacia arriba y hacia quien se sienta del lado -Z.
             Vector3 center = root.transform.TransformPoint(new Vector3(0f, 0.985f, 0f) + Quaternion.Euler(-20f, 0f, 0f) * new Vector3(0f, 0.032f, 0f));
             var canvas = Fixed(template, material, name + "_Canvas", center,
-                root.transform.rotation * Quaternion.Euler(-20f, 0f, 0f) * Quaternion.Euler(-90f, 0f, 0f) * Quaternion.Euler(180f, 0f, 0f), 1.1f, 0.7f, Dressing.None);
+                Quaternion.LookRotation(-(root.transform.rotation * new Vector3(0f, Mathf.Cos(20f * Mathf.Deg2Rad), -Mathf.Sin(20f * Mathf.Deg2Rad))),
+                    root.transform.rotation * new Vector3(0f, Mathf.Sin(20f * Mathf.Deg2Rad), Mathf.Cos(20f * Mathf.Deg2Rad))), 1.1f, 0.7f, Dressing.None);
             canvas.transform.SetParent(root.transform, true);
             Undo.RegisterCreatedObjectUndo(root, name);
         }
