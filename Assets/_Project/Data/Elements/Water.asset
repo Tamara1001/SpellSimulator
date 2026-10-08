@@ -12,19 +12,19 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 529f1c204d33a9148985493bbf421480, type: 3}
   m_Name: Water
   m_EditorClassIdentifier: SpellSimulator.Runtime::SpellSimulator.Output.ElementLook
-  material: {fileID: 2100000, guid: 3bb213a3adbe4fa4aa7cf59b01daa9e2, type: 2}
+  material: {fileID: 2100000, guid: 83baf9fb8bd535f45aa8b8051a0b42f5, type: 2}
   color:
     serializedVersion: 2
-    key0: {r: 0.85, g: 0.97, b: 1, a: 0.95}
+    key0: {r: 0.55, g: 0.85, b: 1, a: 0}
     key1: {r: 0.3, g: 0.65, b: 1, a: 0.85}
-    key2: {r: 0.15, g: 0.35, b: 0.8, a: 0}
+    key2: {r: 0.22, g: 0.5, b: 0.92, a: 0.7}
     key3: {r: 0, g: 0, b: 0, a: 0}
     key4: {r: 0, g: 0, b: 0, a: 0}
     key5: {r: 0, g: 0, b: 0, a: 0}
     key6: {r: 0, g: 0, b: 0, a: 0}
     key7: {r: 0, g: 0, b: 0, a: 0}
     ctime0: 0
-    ctime1: 26214
+    ctime1: 22937
     ctime2: 65535
     ctime3: 0
     ctime4: 0
@@ -32,9 +32,9 @@ MonoBehaviour:
     ctime6: 0
     ctime7: 0
     atime0: 0
-    atime1: 26214
-    atime2: 65535
-    atime3: 0
+    atime1: 5243
+    atime2: 45875
+    atime3: 65535
     atime4: 0
     atime5: 0
     atime6: 0
@@ -42,14 +42,34 @@ MonoBehaviour:
     m_Mode: 0
     m_ColorSpace: -1
     m_NumColorKeys: 3
-    m_NumAlphaKeys: 3
-  size: 0.13
-  stretch: 1.2
+    m_NumAlphaKeys: 4
+  size: 0.08
+  stretch: 0.15
+  mesh: {fileID: 0}
+  spin: 0
+  sizeOverLife:
+    serializedVersion: 2
+    m_Curve: []
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  maxParticles: 260
+  trails: 0
+  trailLifetime: 0.4
   gravity: 1.1
   speed: 1.1
-  lifetime: 1.1
-  turbulence: 0.25
-  density: 1.3
+  lifetime: 1
+  turbulence: 0.12
+  density: 0.75
+  layers:
+  - {fileID: 11400000, guid: e5c854ad378ccd24087b5cd80d3a54fd, type: 2}
+  impacts:
+  - {fileID: 11400000, guid: a0fb5d2ac24c957479cf44ce9337ed7d, type: 2}
+  crumble: 0
+  layerRatio: 0.2
+  layerSpeed: 1
+  impactCount: 4
+  impactChance: 0.5
   emitsLight: 0
   lightColor: {r: 1, g: 1, b: 1, a: 1}
   lightIntensity: 0

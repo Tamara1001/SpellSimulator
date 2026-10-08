@@ -1,0 +1,100 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="SpellUI.uss" />
+    <Style src="MainMenu.uss" />
+    <!-- Menu principal (UI.MainMenu): columna de cuero a la izquierda sobre la camara que orbita la torre. -->
+    <ui:VisualElement name="menu" class="mm mm--enter">
+        <ui:VisualElement class="mm-shade" picking-mode="Ignore" />
+        <ui:VisualElement class="mm-fade" picking-mode="Ignore" />
+        <ui:VisualElement name="motes" class="mm-motes" picking-mode="Ignore" />
+
+        <ui:VisualElement name="column" class="mm-column">
+            <ui:VisualElement class="mm-column-bg" picking-mode="Ignore" />
+            <ui:VisualElement class="mm-column-edge" picking-mode="Ignore" />
+
+            <ui:VisualElement class="mm-head" picking-mode="Ignore">
+                <ui:VisualElement class="mm-crest">
+                    <ui:VisualElement class="mm-crest-glow" />
+                    <ui:VisualElement class="mm-crest-seal" />
+                </ui:VisualElement>
+                <ui:Label text="TALLER DE HECHICERÍA" class="mm-kicker" />
+                <ui:Label text="SpellSimulator" class="mm-title" />
+                <ui:VisualElement class="mm-divider" />
+                <ui:Label text="Dibujá el sello, nombrá el mundo." class="mm-subtitle" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="buttons" class="mm-buttons">
+                <ui:Button name="sandbox" class="mm-button mm-button--primary">
+                    <ui:VisualElement class="mm-gem" picking-mode="Ignore" />
+                    <ui:VisualElement class="mm-button-text" picking-mode="Ignore">
+                        <ui:Label text="Modo Sandbox" class="mm-label" picking-mode="Ignore" />
+                        <ui:Label text="El taller libre: la torre y la pradera" class="mm-sub" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="duel" class="mm-button">
+                    <ui:VisualElement class="mm-gem" picking-mode="Ignore" />
+                    <ui:VisualElement class="mm-button-text" picking-mode="Ignore">
+                        <ui:Label text="Modo Duelo" class="mm-label" picking-mode="Ignore" />
+                        <ui:Label text="Hechicero contra hechicero" class="mm-sub" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:Label text="PRÓXIMAMENTE" class="mm-soon" picking-mode="Ignore" />
+                </ui:Button>
+                <ui:Button name="info" class="mm-button">
+                    <ui:VisualElement class="mm-gem" picking-mode="Ignore" />
+                    <ui:VisualElement class="mm-button-text" picking-mode="Ignore">
+                        <ui:Label text="Información" class="mm-label" picking-mode="Ignore" />
+                        <ui:Label text="Abrir el grimorio" class="mm-sub" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="credits" class="mm-button">
+                    <ui:VisualElement class="mm-gem" picking-mode="Ignore" />
+                    <ui:VisualElement class="mm-button-text" picking-mode="Ignore">
+                        <ui:Label text="Créditos" class="mm-label" picking-mode="Ignore" />
+                        <ui:Label text="Quién hizo este taller" class="mm-sub" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:Button>
+                <ui:Button name="quit" class="mm-button mm-button--quiet">
+                    <ui:VisualElement class="mm-gem" picking-mode="Ignore" />
+                    <ui:VisualElement class="mm-button-text" picking-mode="Ignore">
+                        <ui:Label text="Salir" class="mm-label" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:Button>
+            </ui:VisualElement>
+
+            <ui:VisualElement class="mm-foot" picking-mode="Ignore">
+                <ui:Label text="Configuración de teclas: próximamente" class="mm-hint" />
+                <ui:Label text="Multijugador: próximamente" class="mm-hint" />
+                <ui:VisualElement class="mm-help">
+                    <ui:Label text="↑ ↓" class="keycap keycap--small" />
+                    <ui:Label text="elegir" class="mm-help-text" />
+                    <ui:Label text="Enter" class="keycap keycap--small" />
+                    <ui:Label text="aceptar" class="mm-help-text" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:Label name="version" text="v0.6 · prototipo" class="mm-version" picking-mode="Ignore" />
+
+        <!-- Creditos: hoja de pergamino sobre el menu. -->
+        <ui:VisualElement name="credits-panel" class="mm-credits mm-credits--hidden">
+            <ui:VisualElement name="credits-backdrop" class="mm-credits-backdrop" />
+            <ui:VisualElement class="mm-sheet">
+                <ui:VisualElement class="mm-sheet-cover" picking-mode="Ignore" />
+                <ui:VisualElement class="mm-sheet-page">
+                    <ui:Label text="CRÉDITOS" class="kicker" />
+                    <ui:Label text="SpellSimulator" class="mm-sheet-title" />
+                    <ui:VisualElement class="divider divider--wide" />
+                    <ui:Label text="Tamara D'Angelo" class="mm-sheet-name" />
+                    <ui:Label text="diseño, programación, arte, sonido y todo lo demás" class="mm-sheet-role" />
+                    <ui:VisualElement class="mm-sheet-seal" />
+                    <ui:Label text="Gracias por abrir el taller. Que cada sello que dibujes encuentre su forma." class="mm-sheet-thanks" />
+                    <ui:Label text="Inspirado en la estética de los grimorios ilustrados." class="mm-sheet-note" />
+                    <ui:Button name="credits-back" class="mm-back" text="Volver" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+            <ui:VisualElement class="mm-credits-help" picking-mode="Ignore">
+                <ui:Label text="Esc" class="keycap keycap--dark" />
+                <ui:Label text="volver" class="reader-help-text" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>

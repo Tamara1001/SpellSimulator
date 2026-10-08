@@ -341,6 +341,32 @@ namespace SpellSimulator.Player
             IsTogglingFocus = focusAction.triggered;
             PageDelta = (pageNextAction.triggered ? 1 : 0) - (pagePrevAction.triggered ? 1 : 0);
             Scroll = scrollAction.ReadValue<float>();
+            if (Gate != InputGate.Full) ApplyGate();
+        }
+
+        /// <summary>
+        /// Quien puede usar la entrada: todo el juego (Full), solo el grimorio (BookOnly: Tab/Esc, paginas y clic; lo usa
+        /// la opcion Informacion del menu principal) o nadie (None: menu principal en pantalla). Lo maneja MainMenu.
+        /// </summary>
+        public InputGate Gate { get; set; } = InputGate.Full;
+
+        private void ApplyGate()
+        {
+            bool book = Gate == InputGate.BookOnly;
+            MoveValue = Vector2.zero;
+            LookValue = Vector2.zero;
+            IsJumping = IsInteracting = IsSecondaryUsingTool = IsReloading = IsResettingWorld = false;
+            IsRunning = IsTogglingProne = IsZooming = IsRemoteGrabbing = IsRotateHeld = IsTogglingDebug = false;
+            IsTogglingBookFocus = IsPinning = IsCrouching = IsThrowing = IsFlipping = IsTogglingFocus = false;
+            WidthPreset = -1;
+            HotbarKey = -1;
+            Scroll = 0f;
+            if (book) return;
+            IsUsingTool = IsTogglingBook = IsPressingEscape = IsPressingEscapeRaw = false;
+            PageDelta = 0;
         }
     }
+
+    /// <summary>Compuerta de la entrada del jugador (ver <see cref="PlayerInputReader.Gate"/>).</summary>
+    public enum InputGate { Full, BookOnly, None }
 }

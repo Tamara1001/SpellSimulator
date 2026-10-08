@@ -32,6 +32,7 @@ namespace SpellSimulator.EditorTools
         public static void Run()
         {
             Directory.CreateDirectory(Path.GetDirectoryName(ResultPath));
+            UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();   // sin cartel de guardar escena al entrar a Play
             File.WriteAllText(ResultPath, "RUNNING");
             SessionState.SetBool(FlagKey, true);
             SessionState.SetInt(StartFrameKey, -1);
@@ -83,6 +84,20 @@ namespace SpellSimulator.EditorTools
 
         private static void Checks()
         {
+            // --- Menu principal: arranca en pantalla con la entrada cerrada; Sandbox entrega el control (el resto del
+            // test asume juego activo).
+            var menu = SpellSimulator.UI.MainMenu.Instance;
+            Check(menu != null, "el menu principal existe");
+            if (menu != null)
+            {
+                bool shown = SpellSimulator.UI.MainMenu.IsActive;
+                var reader = Object.FindFirstObjectByType<PlayerInputReader>();
+                bool gated = reader != null && reader.Gate == InputGate.None;
+                menu.EnterSandbox();
+                bool handed = !SpellSimulator.UI.MainMenu.IsActive && reader != null && reader.Gate == InputGate.Full;
+                Check(shown && gated && handed, "el menu arranca activo y Sandbox entrega el control");
+            }
+
             var player = Find("Player");
             Check(player != null, "jugador");
             if (player == null) return;

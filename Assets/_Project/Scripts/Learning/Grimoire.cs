@@ -29,6 +29,8 @@ namespace SpellSimulator.Learning
         public static event Action PageTurned;
         /// <summary>El jugador pidio reiniciar el mundo desde el libro.</summary>
         public static event Action ResetWorldRequested;
+        /// <summary>"Menú principal" en Opciones (lo escucha UI.MainMenu; sin oyente el boton no aparece).</summary>
+        public static event Action MainMenuRequested;
 
         [SerializeField] private PlayerInputReader input;
         [SerializeField] private GlyphDictionaryAsset dictionary;
@@ -231,6 +233,13 @@ namespace SpellSimulator.Learning
             if (s == GrimoireScreen.SpellDetail && (spell == null || !spells.Contains(spell))) { s = GrimoireScreen.Spells; g = null; }
             Show(s, g);
             Opened?.Invoke();
+        }
+
+        /// <summary>Abre el libro directamente fijo a la camara (pantalla completa). Lo usa "Información" del menu principal.</summary>
+        public void OpenFullscreen()
+        {
+            if (!IsOpen) Open();
+            if (IsOpen && !focused) EnterFocus();
         }
 
         public void Close()
@@ -743,6 +752,14 @@ namespace SpellSimulator.Learning
                 GrimoireOptions.MusicVolume = GrimoireOptions.StepVolume(GrimoireOptions.MusicVolume, dir));
             Stepper(-0.121f, "Efectos", GrimoireOptions.Percent(GrimoireOptions.EffectsVolume), dir =>
                 GrimoireOptions.EffectsVolume = GrimoireOptions.StepVolume(GrimoireOptions.EffectsVolume, dir));
+
+            // Abajo a la derecha (la barra de esta pantalla esta libre): volver al menu principal.
+            if (MainMenuRequested != null)
+                Place(Right, 0.044f, BarY, 0.13f, BarHeight, "Menú principal", ButtonSize * 0.9f, () =>
+                {
+                    Close();
+                    MainMenuRequested?.Invoke();
+                });
         }
 
         /// <summary>Fila de opcion en la pagina derecha: nombre, boton -, valor, boton +.</summary>

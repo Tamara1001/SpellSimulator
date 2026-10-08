@@ -1,0 +1,450 @@
+/* SpellSimulator · menu principal (UI.MainMenu). Reusa variables, keycaps y divisores de SpellUI.uss. */
+
+.mm {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.45s;
+}
+
+.mm--hidden {
+    display: none;
+}
+
+.mm--fading {
+    opacity: 0;
+}
+
+.mm-shade {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-color: rgba(14, 8, 22, 0.18);
+}
+
+/* Degrade a la derecha de la columna (sprite generado: USS no tiene degrades). */
+.mm-fade {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 680px;
+    width: 320px;
+    background-image: url("Sprites/menu_fade.png");
+    -unity-background-scale-mode: stretch-to-fill;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.7s;
+}
+
+.mm--enter .mm-fade {
+    opacity: 0;
+}
+
+/* ------------------------------------------------------------ motas */
+
+.mm-motes {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+}
+
+.mm-mote {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: rgb(255, 222, 150);
+    border-width: 2px;
+    border-color: rgba(255, 214, 130, 0.35);
+}
+
+.mm-mote--violet {
+    background-color: rgb(214, 180, 255);
+    border-color: rgba(196, 150, 255, 0.35);
+}
+
+/* ------------------------------------------------------------ columna */
+
+.mm-column {
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 680px;
+    padding: 84px 0 40px 104px;
+    opacity: 1;
+    translate: 0 0;
+    transition-property: opacity, translate;
+    transition-duration: 0.7s, 0.7s;
+    transition-timing-function: ease-out-cubic, ease-out-cubic;
+}
+
+.mm--enter .mm-column {
+    opacity: 0;
+    translate: -70px 0;
+}
+
+.mm-column-bg {
+    position: absolute;
+    left: 0; top: 0; bottom: 0; right: 0;
+    background-color: rgba(24, 13, 34, 0.9);
+}
+
+.mm-column-edge {
+    position: absolute;
+    top: 0; bottom: 0; right: 0;
+    width: 3px;
+    background-color: rgba(222, 172, 78, 0.55);
+    border-left-width: 1px;
+    border-left-color: rgba(255, 236, 190, 0.35);
+}
+
+/* ------------------------------------------------------------ cabecera */
+
+.mm-head {
+    align-items: flex-start;
+    width: 440px;
+}
+
+.mm-crest {
+    width: 92px;
+    height: 92px;
+    margin-bottom: 10px;
+    margin-left: -6px;
+}
+
+.mm-crest-glow {
+    position: absolute;
+    left: -14px; top: -14px; right: -14px; bottom: -14px;
+    border-radius: 50%;
+    background-color: rgba(150, 100, 210, 0.35);
+    border-width: 8px;
+    border-color: rgba(150, 100, 210, 0.15);
+    opacity: 0.55;
+}
+
+.mm-crest-seal {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-image: url("Sprites/seal.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.mm-kicker {
+    color: rgb(196, 160, 232);
+    font-size: 16px;
+    letter-spacing: 7px;
+    -unity-font-style: bold;
+    margin: 0 0 2px 2px;
+    padding: 0;
+}
+
+.mm-title {
+    color: var(--gold-light);
+    font-size: 68px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    margin: 0;
+    padding: 0;
+    white-space: nowrap;
+    -unity-text-outline-width: 0.3px;
+    -unity-text-outline-color: rgba(70, 40, 10, 0.9);
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.75);
+}
+
+.mm-divider {
+    width: 420px;
+    height: 20px;
+    margin: 4px 0 8px 0;
+    background-image: url("Sprites/divider.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.mm-subtitle {
+    color: var(--cream-dim);
+    font-size: 20px;
+    -unity-font-style: italic;
+    margin: 0 0 0 2px;
+    padding: 0;
+}
+
+/* ------------------------------------------------------------ botones */
+
+.mm-buttons {
+    margin-top: 46px;
+    width: 452px;
+}
+
+.mm-button {
+    flex-direction: row;
+    align-items: center;
+    height: 74px;
+    margin: 0 0 12px 0;
+    padding: 0 22px 0 14px;
+    background-image: url("Sprites/button.png");
+    -unity-slice-left: 16; -unity-slice-right: 16; -unity-slice-top: 16; -unity-slice-bottom: 16;
+    -unity-background-image-tint-color: rgb(214, 200, 228);
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    opacity: 1;
+    translate: 0 0;
+    scale: 1 1;
+    transition-property: opacity, translate, scale, -unity-background-image-tint-color;
+    transition-duration: 0.5s, 0.5s, 0.12s, 0.15s;
+    transition-timing-function: ease-out-cubic, ease-out-cubic, ease-out, linear;
+}
+
+.mm--enter .mm-button {
+    opacity: 0;
+    translate: -40px 0;
+}
+
+.mm-button:hover,
+.mm-button:focus {
+    translate: 12px 0;
+    -unity-background-image-tint-color: rgb(255, 240, 210);
+}
+
+.mm-button:active {
+    scale: 0.98 0.98;
+}
+
+.mm-button:disabled {
+    opacity: 0.55;
+    -unity-background-image-tint-color: rgb(150, 140, 160);
+}
+
+.mm-gem {
+    width: 30px;
+    height: 30px;
+    margin-right: 16px;
+    background-image: url("Sprites/gem.png");
+    -unity-background-scale-mode: scale-to-fit;
+    opacity: 0.55;
+    scale: 0.85 0.85;
+    transition-property: opacity, scale;
+    transition-duration: 0.15s, 0.15s;
+}
+
+.mm-button:hover .mm-gem,
+.mm-button:focus .mm-gem {
+    opacity: 1;
+    scale: 1.1 1.1;
+}
+
+.mm-button--primary .mm-gem {
+    opacity: 0.9;
+}
+
+.mm-button-text {
+    flex-grow: 1;
+    justify-content: center;
+}
+
+.mm-button-text > Label {
+    -unity-text-align: middle-left;
+}
+
+.mm-label {
+    color: var(--gold-light);
+    font-size: 25px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    margin: 0;
+    padding: 0;
+    -unity-text-outline-width: 0.2px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.7);
+}
+
+.mm-button--primary .mm-label {
+    font-size: 27px;
+}
+
+.mm-sub {
+    color: var(--cream-dim);
+    font-size: 14px;
+    -unity-font-style: italic;
+    margin: 0;
+    padding: 0;
+}
+
+.mm-button--quiet {
+    height: 58px;
+    margin-top: 6px;
+}
+
+.mm-soon {
+    color: rgb(214, 190, 240);
+    font-size: 12px;
+    letter-spacing: 2px;
+    -unity-font-style: bold;
+    padding: 3px 9px 3px 9px;
+    border-radius: 4px;
+    background-color: rgba(92, 58, 124, 0.7);
+    border-width: 1px;
+    border-color: rgba(196, 150, 255, 0.5);
+}
+
+/* ------------------------------------------------------------ pie */
+
+.mm-foot {
+    position: absolute;
+    left: 104px; bottom: 40px;
+}
+
+.mm-hint {
+    color: rgba(214, 198, 168, 0.5);
+    font-size: 14px;
+    -unity-font-style: italic;
+    margin: 0 0 2px 0;
+    padding: 0;
+}
+
+.mm-help {
+    flex-direction: row;
+    align-items: center;
+    margin-top: 14px;
+    opacity: 0.8;
+}
+
+.mm-help-text {
+    color: var(--cream-dim);
+    font-size: 13px;
+    margin: 0 16px 0 0;
+}
+
+.mm-version {
+    position: absolute;
+    right: 28px; bottom: 22px;
+    color: rgba(246, 234, 206, 0.55);
+    font-size: 13px;
+    letter-spacing: 1px;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* ------------------------------------------------------------ creditos */
+
+.mm-credits {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    transition-property: opacity;
+    transition-duration: 0.25s;
+}
+
+.mm-credits--hidden {
+    display: none;
+}
+
+.mm-credits--fading {
+    opacity: 0;
+}
+
+.mm-credits-backdrop {
+    position: absolute;
+    left: 0; top: 0; right: 0; bottom: 0;
+    background-color: rgba(12, 6, 18, 0.72);
+}
+
+.mm-sheet {
+    width: 720px;
+    height: 600px;
+    scale: 1 1;
+    translate: 0 0;
+    transition-property: scale, translate;
+    transition-duration: 0.3s, 0.3s;
+    transition-timing-function: ease-out-back, ease-out-cubic;
+}
+
+.mm-credits--fading .mm-sheet {
+    scale: 0.94 0.94;
+    translate: 0 24px;
+}
+
+.mm-sheet-cover {
+    position: absolute;
+    left: -24px; top: -22px; right: -24px; bottom: -26px;
+    background-image: url("Sprites/cover.png");
+    -unity-slice-left: 28; -unity-slice-right: 28; -unity-slice-top: 28; -unity-slice-bottom: 28;
+}
+
+.mm-sheet-page {
+    flex-grow: 1;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 70px 40px 70px;
+    background-image: url("Sprites/page.png");
+    -unity-slice-left: 24; -unity-slice-right: 24; -unity-slice-top: 24; -unity-slice-bottom: 24;
+}
+
+.mm-sheet-title {
+    color: var(--ink);
+    font-size: 44px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+}
+
+.mm-sheet-name {
+    color: var(--violet);
+    font-size: 34px;
+    -unity-font-style: bold;
+    margin-top: 10px;
+}
+
+.mm-sheet-role {
+    color: var(--ink-soft);
+    font-size: 18px;
+    -unity-font-style: italic;
+    margin-top: 2px;
+}
+
+.mm-sheet-seal {
+    width: 64px;
+    height: 64px;
+    margin: 22px 0 14px 0;
+    background-image: url("Sprites/seal.png");
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+.mm-sheet-thanks {
+    color: var(--ink);
+    font-size: 20px;
+    white-space: normal;
+    -unity-text-align: middle-center;
+}
+
+.mm-sheet-note {
+    color: var(--ink-soft);
+    font-size: 15px;
+    -unity-font-style: italic;
+    margin-top: 8px;
+}
+
+.mm-back {
+    margin-top: 26px;
+    height: 48px;
+    min-width: 180px;
+    padding: 0 26px 2px 26px;
+    background-image: url("Sprites/button.png");
+    -unity-slice-left: 16; -unity-slice-right: 16; -unity-slice-top: 16; -unity-slice-bottom: 16;
+    background-color: rgba(0, 0, 0, 0);
+    border-width: 0;
+    color: var(--gold-light);
+    font-size: 19px;
+    -unity-font-style: bold;
+    letter-spacing: 1px;
+    scale: 1 1;
+    transition-property: scale, -unity-background-image-tint-color;
+    transition-duration: 0.12s, 0.12s;
+}
+
+.mm-back:hover,
+.mm-back:focus {
+    scale: 1.05 1.05;
+    -unity-background-image-tint-color: rgb(255, 236, 200);
+}
+
+.mm-credits-help {
+    position: absolute;
+    bottom: 30px;
+    flex-direction: row;
+    align-items: center;
+}

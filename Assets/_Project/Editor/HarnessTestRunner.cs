@@ -17,6 +17,7 @@ namespace SpellSimulator.EditorTools
         [MenuItem("SpellSimulator/Harness/Run EditMode Tests")]
         public static void RunEditMode()
         {
+            UnityEditor.SceneManagement.EditorSceneManager.SaveOpenScenes();   // sin cartel de guardar escena en el Test Runner
             File.WriteAllText(ResultPath, "RUNNING\n");
             var api = ScriptableObject.CreateInstance<TestRunnerApi>();
             api.RegisterCallbacks(new ResultWriter(api));

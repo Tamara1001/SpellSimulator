@@ -22,7 +22,10 @@ namespace SpellSimulator.EditorTools
         public const string HudUxmlPath = UiFolder + "/Hud.uxml";
         public const string UssPath = UiFolder + "/SpellUI.uss";
         private const string DictionaryPath = "Assets/_Project/Data/GlyphDictionary.asset";
+        public const string MenuUxmlPath = UiFolder + "/MainMenu.uxml";
+        public const string MenuUssPath = UiFolder + "/MainMenu.uss";
         private const string RootName = "UI";
+        private const string MenuRootName = "MainMenu";
 
         [MenuItem("SpellSimulator/UI/Setup Current Scene")]
         public static void SetupFromMenu() => Debug.Log("[UI] " + Apply());
@@ -60,12 +63,58 @@ namespace SpellSimulator.EditorTools
             rso.ApplyModifiedPropertiesWithoutUndo();
 
             int removed = RemoveOldHud();
+            bool menu = SetupMainMenu(panel);
 
             var scene = go.scene;
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();
-            return $"UI Toolkit en {scene.name}: HUD + lector de libros (jugador={(interactor != null)}, restos uGUI quitados={removed}).";
+            return $"UI Toolkit en {scene.name}: HUD + lector de libros + menu principal={menu} (jugador={(interactor != null)}, restos uGUI quitados={removed}).";
+        }
+
+        /// <summary>
+        /// GameObject "MainMenu": UIDocument (MainMenu.uxml, por encima de la HUD) + <see cref="MainMenu"/> con la entrada
+        /// del jugador, la torre como centro de la orbita, el CinemachineBrain de la camara y el Canvas uGUI a ocultar.
+        /// Solo en escenas con torre (Pradera).
+        /// </summary>
+        private static bool SetupMainMenu(PanelSettings panel)
+        {
+            var tower = GameObject.Find("Tower");
+            var go = GameObject.Find(MenuRootName);
+            if (tower == null)
+            {
+                if (go != null) Object.DestroyImmediate(go);
+                return false;
+            }
+            AssetDatabase.ImportAsset(MenuUssPath, ImportAssetOptions.ForceUpdate);
+            AssetDatabase.ImportAsset(MenuUxmlPath, ImportAssetOptions.ForceUpdate);
+            if (go == null) go = new GameObject(MenuRootName);
+            var doc = go.GetComponent<UIDocument>() ?? go.AddComponent<UIDocument>();
+            doc.panelSettings = panel;
+            doc.visualTreeAsset = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(MenuUxmlPath);
+            doc.sortingOrder = 20;
+
+            var menu = go.GetComponent<MainMenu>() ?? go.AddComponent<MainMenu>();
+            var so = new SerializedObject(menu);
+            so.FindProperty("input").objectReferenceValue = Object.FindFirstObjectByType<PlayerInputReader>();
+            so.FindProperty("orbitCenter").objectReferenceValue = tower.transform;
+
+            var drivers = new System.Collections.Generic.List<Behaviour>();
+            var cam = Camera.main;
+            if (cam != null)
+                foreach (var b in cam.GetComponents<Behaviour>())
+                    if (b != null && b.GetType().Name == "CinemachineBrain") drivers.Add(b);
+            var driversProp = so.FindProperty("cameraDrivers");
+            driversProp.arraySize = drivers.Count;
+            for (int i = 0; i < drivers.Count; i++) driversProp.GetArrayElementAtIndex(i).objectReferenceValue = drivers[i];
+
+            var canvasGo = GameObject.Find("Canvas");
+            var canvas = canvasGo != null ? canvasGo.GetComponent<UnityEngine.Canvas>() : null;
+            var canvasProp = so.FindProperty("hiddenCanvases");
+            canvasProp.arraySize = canvas != null ? 1 : 0;
+            if (canvas != null) canvasProp.GetArrayElementAtIndex(0).objectReferenceValue = canvas;
+            so.ApplyModifiedPropertiesWithoutUndo();
+            return true;
         }
 
         private static PanelSettings EnsurePanelSettings()

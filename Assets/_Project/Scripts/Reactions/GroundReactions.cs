@@ -27,6 +27,13 @@ namespace SpellSimulator.Reactions
         private readonly List<MagicField> stale = new List<MagicField>();
         private readonly Vector3[] directions = new Vector3[3];
         private float nextProbe;
+        private ElementLook earthLook;
+
+        private void Start()
+        {
+            var output = FindFirstObjectByType<SpellOutputController>();
+            if (output != null) earthLook = output.LookFor(Compiler.ElementType.Earth);
+        }
 
         private void Update()
         {
@@ -60,7 +67,7 @@ namespace SpellSimulator.Reactions
                 if (previous.time > 0f && Vector3.Distance(previous.point, hit.point) < minSpacing) continue;
 
                 float radius = Mathf.Clamp(frame.Scale * (0.4f + 0.6f * exposure), 0.25f, 1.5f);
-                if (GroundMarks.Mark(field.Element, hit.point, hit.normal, radius, markMaterial, rockMaterial, rockProfile))
+                if (GroundMarks.Mark(field.Element, hit.point, hit.normal, radius, markMaterial, rockMaterial, rockProfile, earthLook))
                     last[field] = (Time.time, hit.point);
                 return;
             }

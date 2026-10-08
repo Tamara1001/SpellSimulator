@@ -45,6 +45,7 @@ namespace SpellSimulator.EditorTools
             Save("divider", Divider(), 0);
             Save("page", Page(), 24);
             Save("gutter", Gutter(), 0);
+            Save("menu_fade", MenuFade(), 0);
             Save("cover", Cover(), 28);
             Save("ribbon", Ribbon(), 0);
             Save("seal", Seal(), 0);
@@ -239,6 +240,14 @@ namespace SpellSimulator.EditorTools
         {
             var img = new Img(64, 8);
             img.Paint(p => C(80, 50, 20).A(Mathf.Pow(p.x / 64f, 2.2f) * 0.38f));
+            return img;
+        }
+
+        /// <summary>Degrade del menu principal: violeta oscuro a la izquierda que se apaga hacia la derecha.</summary>
+        private static Img MenuFade()
+        {
+            var img = new Img(128, 4);
+            img.Paint(p => C(24, 13, 34).A(Mathf.Pow(1f - p.x / 128f, 2f) * 0.6f));
             return img;
         }
 

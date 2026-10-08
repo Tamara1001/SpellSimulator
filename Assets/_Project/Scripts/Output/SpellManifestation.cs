@@ -20,8 +20,10 @@ namespace SpellSimulator.Output
         public const float MaxBodySeconds = 6f;
 
         private readonly List<(ParticleSystem system, float rate)> bodyTracks = new List<(ParticleSystem, float)>();
-        private ParticleSystem burst, charge;
-        private int burstCount;
+        private readonly List<(ParticleSystem system, int count)> bursts = new List<(ParticleSystem, int)>();
+        private ParticleSystem charge;
+        private ElementLook look;
+        private float scale;
         private Light glow;
         private float lightIntensity;
         private float startTime, bodySeconds;
@@ -40,12 +42,14 @@ namespace SpellSimulator.Output
         {
             Spell = spell;
             Frame = frame;
+            this.look = look;
             SpellPlan plan = spell.plan ?? SpellPlan.Inert();
             bodySeconds = Mathf.Clamp(spell.duration - 1.5f, MinBodySeconds, MaxBodySeconds) * (plan.Leak ? 1.5f : 1f);
             startTime = Time.time;
             transform.SetPositionAndRotation(frame.Origin, frame.Facing(frame.Normal));
 
             float s = frame.Scale;
+            scale = s;
             float speed = (2f + 8f * spell.force) * look.speed;
             float density = look.density * Mathf.Clamp(0.5f + spell.quality, 0.5f, 1.5f);
 
@@ -56,10 +60,10 @@ namespace SpellSimulator.Output
 
             if (plan.Has(PlanPrimitive.Burst))
             {
-                burst = Track("Burst", look, frame.Origin, frame.Facing(frame.Normal), s);
+                var burst = Track("Burst", look, frame.Origin, frame.Facing(frame.Normal), s);
                 Shape(burst, ParticleSystemShapeType.Hemisphere, s * 0.4f, 0f);
                 Speed(burst, speed * 0.6f, look.lifetime);
-                burstCount = Mathf.RoundToInt(220f * density * (1f + spell.strength));
+                AddBurst(burst, Mathf.RoundToInt(220f * density * (1f + spell.strength)));
             }
 
             if (plan.Has(PlanPrimitive.Jet))
@@ -71,7 +75,7 @@ namespace SpellSimulator.Output
                 float cone = Mathf.Lerp(18f, 3f, Mathf.Clamp01((plan.Focus - 1f) * 0.8f + spell.focus * 0.5f));
                 Shape(jet, ParticleSystemShapeType.Cone, s * 0.35f / plan.Focus, cone);
                 Speed(jet, jetSpeed, length / jetSpeed);
-                bodyTracks.Add((jet, 420f * density));
+                AddBody(jet, 420f * density, impacts: true);
             }
 
             if (plan.Has(PlanPrimitive.Fan))
@@ -82,7 +86,7 @@ namespace SpellSimulator.Output
                 // Abanico = lamina radial sobre el plano del papel: particulas finas y casi sin flotacion, para que se
                 // lea como una erupcion plana y no como una nube que tapa la camara (prueba manual 2026-10-07).
                 Thin(fan, FanSizeFactor, FanGravityFactor * look.gravity);
-                bodyTracks.Add((fan, 360f * density));
+                AddBody(fan, 360f * density, impacts: true);
             }
 
             if (plan.Has(PlanPrimitive.Vortex))
@@ -96,7 +100,7 @@ namespace SpellSimulator.Output
                 vel.orbitalZ = new ParticleSystem.MinMaxCurve(Mathf.Clamp(plan.Circulation, -4f, 4f) * 2.2f);
                 vel.radial = new ParticleSystem.MinMaxCurve(-0.4f * s);
                 vel.z = new ParticleSystem.MinMaxCurve(speed * 0.35f);
-                bodyTracks.Add((vortex, 400f * density));
+                AddBody(vortex, 400f * density, impacts: false);
             }
 
             if (plan.Has(PlanPrimitive.Hold))
@@ -111,7 +115,7 @@ namespace SpellSimulator.Output
                 vel.enabled = true;
                 vel.space = ParticleSystemSimulationSpace.Local;
                 vel.orbitalZ = new ParticleSystem.MinMaxCurve(2f + Mathf.Clamp(plan.Hold.Spin, -3f, 3f) * 2f);
-                bodyTracks.Add((orb, 300f * density));
+                AddBody(orb, 300f * density, impacts: false);
             }
 
             if (plan.Has(PlanPrimitive.Intake))
@@ -127,7 +131,7 @@ namespace SpellSimulator.Output
                 vel.enabled = true;
                 vel.space = ParticleSystemSimulationSpace.Local;
                 vel.orbitalZ = new ParticleSystem.MinMaxCurve(Mathf.Clamp(plan.Intake.Swirl, -3f, 3f) * 1.5f);
-                bodyTracks.Add((intake, 260f * density));
+                AddBody(intake, 260f * density, impacts: false);
             }
 
             if (look.emitsLight)
@@ -154,7 +158,11 @@ namespace SpellSimulator.Output
             {
                 struck = true;
                 charge.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-                if (burst != null) burst.Emit(burstCount);
+                foreach (var (system, count) in bursts)
+                {
+                    system.Play();
+                    system.Emit(count);
+                }
                 foreach (var (system, rate) in bodyTracks)
                 {
                     var emission = system.emission;
@@ -196,53 +204,35 @@ namespace SpellSimulator.Output
 
         private ParticleSystem Track(string trackName, ElementLook look, Vector3 position, Quaternion rotation, float scale, bool local = false)
         {
-            var go = new GameObject(trackName);
-            go.transform.SetParent(transform, false);
-            go.transform.SetPositionAndRotation(position, rotation);
-            var ps = go.AddComponent<ParticleSystem>();
-            ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+            return ElementVfx.Create(trackName, transform, look, position, rotation, scale, local);
+        }
 
-            var main = ps.main;
-            main.playOnAwake = false;
-            main.loop = true;
-            main.duration = 1f;
-            main.maxParticles = 1500;
-            main.simulationSpace = local ? ParticleSystemSimulationSpace.Local : ParticleSystemSimulationSpace.World;
-            main.startSize = new ParticleSystem.MinMaxCurve(look.size * scale * 1.2f, look.size * scale * 2.4f);
-            main.startColor = Color.white;
-            main.gravityModifier = look.gravity;
+        /// <summary>Pista del cuerpo: se prende en el golpe con su tasa; suma las capas del look y, si choca, sus impactos.</summary>
+        private void AddBody(ParticleSystem track, float rate, bool impacts)
+        {
+            bodyTracks.Add((track, rate));
+            if (look.layers != null)
+                foreach (var layer in look.layers)
+                {
+                    if (layer == null || layer.material == null) continue;
+                    var ps = ElementVfx.AddLayer(track, layer, scale);
+                    bodyTracks.Add((ps, rate * layer.density * layer.layerRatio));
+                }
+            if (impacts) ElementVfx.AddImpacts(track, look, scale);
+        }
 
-            var emission = ps.emission;
-            emission.rateOverTime = 0f;
-
-            var col = ps.colorOverLifetime;
-            col.enabled = true;
-            col.color = new ParticleSystem.MinMaxGradient(look.color);
-
-            var size = ps.sizeOverLifetime;
-            size.enabled = true;
-            size.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 0.6f, 1f, 1.4f));
-
-            if (look.turbulence > 0f)
-            {
-                var noise = ps.noise;
-                noise.enabled = true;
-                noise.strength = look.turbulence * scale;
-                noise.frequency = 1.2f;
-                noise.quality = ParticleSystemNoiseQuality.Low;
-            }
-
-            var renderer = go.GetComponent<ParticleSystemRenderer>();
-            renderer.sharedMaterial = look.material;
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            renderer.receiveShadows = false;
-            if (look.stretch > 0f)
-            {
-                renderer.renderMode = ParticleSystemRenderMode.Stretch;
-                renderer.velocityScale = look.stretch * 0.05f;
-                renderer.lengthScale = 1.5f;
-            }
-            return ps;
+        /// <summary>Rafaga del golpe: se emite una vez; las capas emiten su fraccion.</summary>
+        private void AddBurst(ParticleSystem track, int count)
+        {
+            bursts.Add((track, count));
+            if (look.layers != null)
+                foreach (var layer in look.layers)
+                {
+                    if (layer == null || layer.material == null) continue;
+                    var ps = ElementVfx.AddLayer(track, layer, scale);
+                    bursts.Add((ps, Mathf.RoundToInt(count * layer.density * layer.layerRatio)));
+                }
+            ElementVfx.AddImpacts(track, look, scale);
         }
 
         private const float FanSizeFactor = 0.45f;

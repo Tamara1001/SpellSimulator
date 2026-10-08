@@ -10,7 +10,7 @@ grimorio nuevo, contornos). Falta M7: build de Quest, medicion de rendimiento, t
 **Tests:** 141 EditMode (`HarnessTestRunner`) + test de humo de Play (`HarnessPlaySmoke`, ver HARNESS.md).
 **Escenas:** `Pradera.unity` (mapa, indice 0) y `Escena.unity` (laboratorio, sin HUD nueva ni UI Toolkit).
 
-**Siguiente:** [PLAN_SEXTA_TANDA.md](PLAN_SEXTA_TANDA.md) (3 fases con agentes, feedback de la quinta prueba manual; Fases 1 y 2 hechas el 2026-10-08; falta la Fase 3: menu principal y VFX).
+**Siguiente:** [PLAN_SEXTA_TANDA.md](PLAN_SEXTA_TANDA.md) (3 fases con agentes, feedback de la quinta prueba manual; Fases 1, 2 y 3 hechas el 2026-10-08; falta probar a mano y M7).
 
 ## Mapa mental rapido
 - Pipeline: `PlayerInteractor`/`PhysicalTool` -> `DrawingCanvas` -> `SpellCaster.Cast` -> `SpellOutputController` -> `MagicField`/`MagicWorld`.

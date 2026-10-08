@@ -26,7 +26,7 @@ namespace SpellSimulator.Reactions
 
         /// <summary>Deja la marca del elemento. radius en metros. Devuelve false si el elemento no marca el suelo.</summary>
         public static bool Mark(ElementType element, Vector3 point, Vector3 normal, float radius, Material markMaterial,
-            Material rockMaterial, MaterialProfile rockProfile)
+            Material rockMaterial, MaterialProfile rockProfile, Output.ElementLook earthLook = null)
         {
             if (markMaterial == null) return false;
             if (element == ElementType.Earth || element == ElementType.Fire || element == ElementType.Water) Marked?.Invoke(element, point);
@@ -34,7 +34,9 @@ namespace SpellSimulator.Reactions
             {
                 case ElementType.Earth:
                     Spawn(point, normal, radius * 1.2f, markMaterial, new Color(0.18f, 0.13f, 0.09f, 0.85f), 1f, 0f);
-                    SpawnRocks(point, normal, radius, rockMaterial, rockProfile);
+                    // Con el look de tierra, las estacas usan su material (StylizedLit con borde claro y color por vertice).
+                    SpawnRocks(point, normal, radius, earthLook != null && earthLook.mesh != null ? earthLook.material : rockMaterial, rockProfile);
+                    SpawnDust(point, normal, radius, earthLook);
                     return true;
                 case ElementType.Fire:
                     Spawn(point, normal, radius, markMaterial, new Color(0.05f, 0.04f, 0.035f, 0.75f), 0f, 0f);
@@ -83,11 +85,13 @@ namespace SpellSimulator.Reactions
                 Vector3 tangent = Vector3.Cross(normal, Vector3.forward).sqrMagnitude > 1e-3f ? Vector3.Cross(normal, Vector3.forward).normalized : Vector3.right;
                 Vector3 bitangent = Vector3.Cross(normal, tangent);
                 Vector3 at = point + tangent * ring.x + bitangent * ring.y;
-                float size = radius * Random.Range(0.25f, 0.45f);
+                float size = radius * Random.Range(0.32f, 0.55f);
 
+                // Estaca facetada (cabe en el cubo unitario: el BoxCollider del cubo sigue sirviendo).
                 var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 go.name = "Rock";
-                go.transform.localScale = new Vector3(size, size * Random.Range(1.4f, 2.4f), size);
+                go.GetComponent<MeshFilter>().sharedMesh = StakeMesh(i);
+                go.transform.localScale = new Vector3(size * 1.15f, size * Random.Range(1.6f, 2.8f), size * 1.15f);
                 // Inclinadas hacia afuera del crater, como empujadas desde abajo.
                 Vector3 outward = (at - point).normalized;
                 go.transform.rotation = Quaternion.FromToRotation(Vector3.up, (normal + outward * 0.5f).normalized) * Quaternion.Euler(0f, Random.Range(0f, 90f), 0f);
@@ -103,6 +107,28 @@ namespace SpellSimulator.Reactions
                 go.AddComponent<RockRise>().Init(at, go.transform.rotation, go.transform.localScale.y);
                 Track(rocks, go, MaxRocks);
             }
+        }
+
+        /// <summary>Polvo y cascotes cuando las rocas brotan: los impactos del look de tierra, en anillo.</summary>
+        private static void SpawnDust(Vector3 point, Vector3 normal, float radius, Output.ElementLook earthLook)
+        {
+            if (earthLook == null || earthLook.impacts == null) return;
+            foreach (var impact in earthLook.impacts)
+            {
+                if (impact == null) continue;
+                Output.ElementVfx.OneShot("RockDust", impact, point + normal * 0.05f, normal, radius * 0.9f,
+                    impact.impactCount * DustPerImpact, Mathf.Clamp(radius, 0.3f, 1.2f));
+            }
+        }
+
+        private const int DustPerImpact = 3;
+        private static readonly Mesh[] stakeMeshes = new Mesh[3];
+
+        private static Mesh StakeMesh(int index)
+        {
+            int i = Mathf.Abs(index) % stakeMeshes.Length;
+            if (stakeMeshes[i] == null) stakeMeshes[i] = Output.LowPolyMeshes.Stake(17 + i * 31);
+            return stakeMeshes[i];
         }
 
         private static void Track(Queue<GameObject> queue, GameObject go, int max)

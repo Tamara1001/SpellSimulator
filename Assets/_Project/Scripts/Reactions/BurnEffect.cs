@@ -12,28 +12,57 @@ namespace SpellSimulator.Reactions
         {
             var go = new GameObject("Flames");
             go.transform.SetParent(target, false);
-            // Las llamas salen de la cara de arriba y siempre suben, aunque el objeto este girado.
-            go.transform.SetPositionAndRotation(bounds.center + Vector3.up * bounds.extents.y * 0.6f, Quaternion.LookRotation(Vector3.up));
+            go.transform.SetPositionAndRotation(bounds.center, Quaternion.identity);
             var ps = go.AddComponent<ParticleSystem>();
             ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
-            float size = Mathf.Max(bounds.extents.x, bounds.extents.z, 0.05f);
+            // Lenguas chicas pegadas a la superficie (no una bola encima): tamanio por el lado mas chico del objeto
+            // y cantidad por su area, con tope para Quest.
+            Vector3 e = bounds.extents;
+            float minExtent = Mathf.Max(Mathf.Min(e.x, Mathf.Min(e.y, e.z)), 0.03f);
+            float flame = Mathf.Clamp(minExtent * 1.1f, FlameMinSize, FlameMaxSize);
+            float area = 4f * (e.x * e.y + e.y * e.z + e.x * e.z);
             var main = ps.main;
             main.playOnAwake = false;
             main.loop = true;
             main.maxParticles = MaxParticles;
             main.simulationSpace = ParticleSystemSimulationSpace.World;
-            main.startLifetime = new ParticleSystem.MinMaxCurve(0.6f, 1.1f);
-            main.startSpeed = new ParticleSystem.MinMaxCurve(0.3f, 0.9f);
-            main.startSize = new ParticleSystem.MinMaxCurve(size * 1.1f, size * 2f);
-            main.gravityModifier = look.gravity * 0.5f;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(0.45f, 0.8f);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(0.05f, 0.2f);
+            main.startSize = new ParticleSystem.MinMaxCurve(flame * 0.6f, flame * 1.1f);
+            main.gravityModifier = look.gravity * 0.8f;
 
             var emission = ps.emission;
-            emission.rateOverTime = Mathf.Clamp(400f * size, 40f, 140f);
+            emission.rateOverTime = Mathf.Clamp(area * FlamesPerSquareMeter, 20f, 110f);
 
+            // Emitir desde la malla misma si se puede leer; si no, desde la caja del objeto.
             var shape = ps.shape;
-            shape.shapeType = ParticleSystemShapeType.Circle;
-            shape.radius = size * 0.8f;
+            shape.enabled = true;
+            var meshRenderer = target.GetComponentInChildren<MeshRenderer>();
+            var filter = meshRenderer != null ? meshRenderer.GetComponent<MeshFilter>() : null;
+            if (filter != null && filter.sharedMesh != null && filter.sharedMesh.isReadable)
+            {
+                shape.shapeType = ParticleSystemShapeType.MeshRenderer;
+                shape.meshRenderer = meshRenderer;
+                shape.meshShapeType = ParticleSystemMeshShapeType.Triangle;
+                shape.useMeshColors = false;
+                shape.normalOffset = flame * 0.15f;
+            }
+            else
+            {
+                shape.shapeType = ParticleSystemShapeType.Box;
+                shape.boxThickness = new Vector3(0.15f, 0.15f, 0.15f);
+                shape.scale = bounds.size * 0.9f;
+            }
+            shape.randomDirectionAmount = 1f;
+
+            // Suben aunque el objeto este girado: la flotacion la da la gravedad negativa del look mas un empujon.
+            var velocity = ps.velocityOverLifetime;
+            velocity.enabled = true;
+            velocity.space = ParticleSystemSimulationSpace.World;
+            velocity.x = new ParticleSystem.MinMaxCurve(0f);
+            velocity.y = new ParticleSystem.MinMaxCurve(flame * 1.5f, flame * 3f);
+            velocity.z = new ParticleSystem.MinMaxCurve(0f);
 
             var col = ps.colorOverLifetime;
             col.enabled = true;
@@ -41,20 +70,33 @@ namespace SpellSimulator.Reactions
 
             var sizeOverLife = ps.sizeOverLifetime;
             sizeOverLife.enabled = true;
-            sizeOverLife.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 1f, 1f, 0.2f));
+            var lick = new AnimationCurve(new Keyframe(0f, 0.4f), new Keyframe(0.25f, 1f), new Keyframe(1f, 0.1f));
+            sizeOverLife.size = new ParticleSystem.MinMaxCurve(1f, lick);
 
             var noise = ps.noise;
             noise.enabled = true;
-            noise.strength = 0.3f;
-            noise.frequency = 1.5f;
+            noise.strength = flame * 0.8f;
+            noise.frequency = 2f;
             noise.quality = ParticleSystemNoiseQuality.Low;
 
             var renderer = go.GetComponent<ParticleSystemRenderer>();
             renderer.sharedMaterial = look.material;
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             renderer.receiveShadows = false;
+            // Lenguas: estiradas a lo largo de su velocidad (hacia arriba), no discos redondos; un poco hacia adelante
+            // en el orden de dibujo para no hundirse en la malla.
+            renderer.renderMode = ParticleSystemRenderMode.Stretch;
+            renderer.lengthScale = 1.9f;
+            renderer.velocityScale = 0.12f;
+            renderer.sortingFudge = -2f;
+            CreateSparks(go.transform, Mathf.Max(e.x, e.z) * 2f, look);
+            go.transform.GetChild(0).rotation = Quaternion.LookRotation(Vector3.up);
             return ps;
         }
+
+        private const float FlameMinSize = 0.08f;
+        private const float FlameMaxSize = 0.38f;
+        private const float FlamesPerSquareMeter = 45f;
 
         // ---------------------------------------------------------------- llamas de pasto
 

@@ -237,7 +237,7 @@ namespace SpellSimulator.UI
         {
             Grimoire book = Grimoire.Instance;
             // Con el grimorio en modo normal la HUD sigue visible; solo se oculta a pantalla completa (fijo a la camara).
-            bool hide = (book != null && book.IsFullscreen) || BookReaderUI.IsOpen;
+            bool hide = (book != null && book.IsFullscreen) || BookReaderUI.IsOpen || MainMenu.IsActive;
             bool bookOpen = book != null && book.IsOpen;
             if (bookOpen != bookSlotActive && bookSlot != null)
             {

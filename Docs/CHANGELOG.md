@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Sexta tanda, Fase 3: menu principal y VFX de elementos
+- **Menu principal** (`MainMenu`, UI Toolkit, en Pradera): Sandbox, Duelo (proximamente), Informacion (grimorio a pantalla completa), Creditos (Tamara D'Angelo) y Salir; camara orbitando la torre; en VR se entra directo. `PlayerInputReader.Gate` (Full/BookOnly/None) congela el input mientras esta abierto. Se vuelve desde Opciones del grimorio ("Menu principal").
+- **VFX:** tierra rehecha (esquirlas y estacas low-poly que se desmoronan, polvo y fragmentos al impactar), agua (gotas azules translucidas, espuma y spray), viento (estelas curvas y hojas en vez de humo gris), objetos prendidos emiten desde su malla. Costo medido: agua ~520, tierra ~315-370, viento ~210 particulas. `ElementVfx`, `LowPolyMeshes`, `ElementVfxSetup` (menu SpellSimulator/VFX).
+- **Harness:** `HarnessTestRunner` y `HarnessPlaySmoke` guardan la escena antes de empezar (evita el cartel de "guardar escena" que colgaba el MCP).
+- 154 tests y PlaySmoke en PASS. Sin probar a mano; ver KI-100 a KI-102.
+
 ## 2026-10-08 — Sexta tanda, Fase 2: torre, puerta y apartado Hechizos
 - **Torre rediseñada** (Opus): piedra y madera calidas, alfombras, vigas, faroles, cortinas, ventanas y banderas; recorrido puerta-atril; **estacion de viento** (tablero, papeles, plumas, banderines) y **estacion de agua** (pila con agua real y barquito) con carteles; sin luz violeta. `SaveMesh` reescribe la malla por la API (la copia dejaba mallas viejas en pantalla).
 - **Puerta interactuable** (`TowerDoor`, E abre/cierra, arranca abierta, el reinicio la deja abierta) y el hint de E se actualiza si cambia el texto.
