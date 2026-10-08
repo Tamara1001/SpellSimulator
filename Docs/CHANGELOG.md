@@ -5,6 +5,9 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Plan de la sexta tanda
+- Feedback de la prueba manual desglosado en `Docs/PLAN_SEXTA_TANDA.md`: 3 fases con reparto de agentes (Haiku/Sonnet/Opus) y decisiones por confirmar (teclas Z/X, slot del grimorio). Sin cambios de codigo.
+
 ## 2026-10-07 — Quinta prueba manual: UI Toolkit, inventario de dos manos, grimorio nuevo, contornos y torre
 - **Inventario (ADR-033):** barra de 3 slots (1-2-3) en la mano principal (derecha/izquierda en Opciones) + mano secundaria que arrastra lo
   agarrado con E (`PlayerInteractor` reescrito, `ObjectMover` con cinematicos conducidos y volteo). Rueda = grosor (pluma/goma) o pagina
