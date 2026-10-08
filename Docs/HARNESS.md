@@ -143,6 +143,10 @@ copiarlo a `Assets/_Project/Tests/Fixtures/` y agregar `"expect": { "sigil": "fi
 ## Graphify
 Grafo de conocimiento del código (AST, sin LLM) para navegar dependencias y la vista de Obsidian.
 
+**Instalación en Windows:** `pip install graphifyy` (con doble «y»). El comando `graphify` puede no estar en el PATH: usar `python -m graphify ...`.
+`python -m graphify update Assets/_Project` escribe `Assets/_Project/graphify-out`: **moverlo a la raíz** (`./graphify-out`, ignorado por git) para no generar `.meta` dentro de `Assets/`.
+Leer `graphify-out/GRAPH_REPORT.md` antes de explorar código ahorra muchos tokens.
+
 ```bash
 graphify update .                           # re-extrae (incremental) → graphify-out/graph.json
 graphify export obsidian --dir Docs/Graph   # notas + canvas para Obsidian
