@@ -9,6 +9,11 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - El sigilo `crystal` sigue siendo elemento Tierra (reacciones/fisica/danio intactos) pero usa su propio `ElementLook` (`Data/Elements/Crystal.asset`): esquirlas facetadas celestes (`LowPolyMeshes.Crystal`), motas brillantes, impactos con fragmentos y destellos, y estacas de cristal + escarcha celeste en el suelo (`GroundMarks`, `ElementLook.crystalline`).
 - `SpellOutputController.LookFor(element, sigilId)` elige la variante; `MagicField.SigilId`. `ElementVfxSetup` (idempotente, menu VFX/Setup Cristal) crea el look y lo asigna en `SystemManagers.prefab`.
 
+## 2026-10-08 — Traspaso del proyecto
+- `Docs/ONBOARDING.md` (instalacion, primer arranque, verificacion con y sin Editor, MCP, builds, trampas), backlog priorizado al final de `ROADMAP.md`, `README`/`CLAUDE.md`/`STATUS`/`Home` actualizados y rutas absolutas quitadas de la documentacion.
+- `ProjectSetup.FixBuildScenes`: las escenas del build eran `SampleScene` (inexistente); ahora `Pradera` (0) y `Escena`. Ajustes WebGL de `ProjectSettings.asset` versionados.
+- Menu `SpellSimulator/Harness/Run Play Smoke`. Verificado en batch (sin el Editor abierto): compila y pasan los 161 tests EditMode.
+
 ## 2026-10-08 — Septima tanda (parte 3): mundo
 - **Carteles:** el poste va detras del tablero (antes tapaba el texto del medio).
 - **Zonas de practica:** piso casi plano (desnivel < 0,28 m a 2,5 m a la redonda, 8 sondas) y zonas prohibidas (campo de practica, colina de la torre, spawn); bajaron de 57 a 44 piezas. Tus ajustes manuales siguen aplicandose (`MapLayout`).
