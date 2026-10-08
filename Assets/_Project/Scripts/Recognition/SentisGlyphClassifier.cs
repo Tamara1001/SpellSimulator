@@ -32,6 +32,9 @@ namespace SpellSimulator.Recognition
                 return;
             }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+            backend = BackendType.CPU;   // WebGL no tiene compute shaders: se usa la CPU (la red es chica, 96x96).
+#endif
             classifier = new GlyphClassifier(modelAsset, backend, useRotationTta);
             // Calentar: la primera ejecucion compila kernels y causaria un tiron en el primer cast.
             classifier.Classify(new[] { new DrawingSession() });

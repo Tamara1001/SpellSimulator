@@ -5,6 +5,11 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Build de WebGL para itch.io
+- `Editor/WebGLBuild.cs` (menu SpellSimulator/Build/WebGL (itch.io) o `WebGLBuild.Run()`): Gzip, sin hilos, memoria 256 MB-1 GB, solo `Pradera`; salida `Builds/WebGL` y resultado en `Logs/build-webgl.txt`. Build de 32 MB (~19 min la primera vez), `Builds/SpellSimulator-WebGL.zip` de 34 MB.
+- `SentisGlyphClassifier` usa `BackendType.CPU` en WebGL (no hay compute shaders).
+- Probado en el navegador con un servidor local con `Content-Encoding: gzip`: carga, muestra el menu y entra a Sandbox sin errores de consola. Sin probar dibujo/reconocimiento en la web ni rendimiento. Ver KI-103.
+
 ## 2026-10-08 — Volumenes de musica y efectos
 - `AudioDirector` aplica los volumenes de Opciones del grimorio (KI-094) y refresca la musica y el viento al instante.
 
