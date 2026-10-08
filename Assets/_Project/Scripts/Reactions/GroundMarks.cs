@@ -35,7 +35,7 @@ namespace SpellSimulator.Reactions
                 case ElementType.Earth:
                     bool crystal = earthLook != null && earthLook.crystalline;
                     Spawn(point, normal, radius * 1.2f, markMaterial,
-                        crystal ? new Color(0.62f, 0.88f, 0.98f, 0.55f) : new Color(0.18f, 0.13f, 0.09f, 0.85f), 1f, 0f);
+                        crystal ? new Color(0.72f, 0.93f, 1f, 0.5f) : new Color(0.18f, 0.13f, 0.09f, 0.85f), crystal ? 0f : 1f, 0f);
                     // Con el look de tierra, las estacas usan su material (StylizedLit con borde claro y color por vertice).
                     SpawnRocks(point, normal, radius, earthLook != null && earthLook.mesh != null ? earthLook.material : rockMaterial, rockProfile, crystal);
                     SpawnDust(point, normal, radius, earthLook);

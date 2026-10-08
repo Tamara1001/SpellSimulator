@@ -137,8 +137,8 @@ namespace SpellSimulator.Output
         }
 
         // Cristal: caras de abajo celeste profundo, las que miran arriba casi blancas (borde claro sin textura).
-        private static readonly Color CrystalLow = new Color(0.38f, 0.74f, 0.95f);
-        private static readonly Color CrystalHigh = new Color(0.9f, 1f, 1f);
+        private static readonly Color CrystalLow = new Color(0.62f, 0.88f, 1f);
+        private static readonly Color CrystalHigh = new Color(0.94f, 1f, 1f);
 
         private static float Jitter(System.Random rng, float amount) => ((float)rng.NextDouble() * 2f - 1f) * amount;
 

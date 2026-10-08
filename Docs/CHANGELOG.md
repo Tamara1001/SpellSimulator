@@ -5,6 +5,10 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Cristal con look propio (celeste)
+- El sigilo `crystal` sigue siendo elemento Tierra (reacciones/fisica/danio intactos) pero usa su propio `ElementLook` (`Data/Elements/Crystal.asset`): esquirlas facetadas celestes (`LowPolyMeshes.Crystal`), motas brillantes, impactos con fragmentos y destellos, y estacas de cristal + escarcha celeste en el suelo (`GroundMarks`, `ElementLook.crystalline`).
+- `SpellOutputController.LookFor(element, sigilId)` elige la variante; `MagicField.SigilId`. `ElementVfxSetup` (idempotente, menu VFX/Setup Cristal) crea el look y lo asigna en `SystemManagers.prefab`.
+
 ## 2026-10-08 — Septima tanda (parte 1): sellos, calidad grafica y libros
 - **Hechizos a sello:** boton 'Cargar en el sello' en el detalle de un hechizo (`Stamp.LoadSpell`, `StampPattern.Compound`); sellos con dibujo ~1,8x mas grande (`Stamp.PatternScale`, tope `MaxCanvasFill` 0,9 del lienzo).
 - **Calidad grafica Baja/Media/Alta** en Opciones del grimorio (`GraphicsQuality`, `GraphicsQualityApplier`): escala de render, sombras, MSAA, contorno y particulas; default Alta en PC y Media en WebGL/Quest; persiste en PlayerPrefs.

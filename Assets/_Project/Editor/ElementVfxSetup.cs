@@ -32,6 +32,7 @@ namespace SpellSimulator.EditorTools
             SetupWater(water, puff);
             SetupWind(leaf, streak);
             SetupEarth(rock, shard, puff);
+            SetupCrystal();
 
             AssetDatabase.SaveAssets();
             Debug.Log("[VFX Setup] Looks de agua, viento y tierra actualizados.");
@@ -167,6 +168,149 @@ namespace SpellSimulator.EditorTools
             main.impacts = new[] { puffImpact, pebbles };
             main.crumble = true;
             Save(main);
+        }
+
+        // ---------------------------------------------------------------- cristal
+
+        private const string CrystalMeshPath = "Assets/_Project/Art/Generated/CrystalShard.asset";
+        private const string SystemManagersPrefab = "Assets/_Project/Prefabs/System/SystemManagers.prefab";
+
+        /// <summary>
+        /// Cristal: variante celeste de Tierra (mismo elemento y fisica; el sigilo crystal elige este look). Esquirlas facetadas
+        /// de celeste claro a cian con borde claro, motas brillantes, y al chocar fragmentos y destellos. Mismo presupuesto que Tierra.
+        /// </summary>
+        [MenuItem("SpellSimulator/VFX/Setup Cristal (variante celeste de tierra)")]
+        public static void SetupCrystalMenu()
+        {
+            if (!AssetDatabase.IsValidFolder(FxDir)) AssetDatabase.CreateFolder(ElementsDir, "Fx");
+            SetupCrystal();
+            AssetDatabase.SaveAssets();
+            AssetDatabase.Refresh();
+        }
+
+        private static void SetupCrystal()
+        {
+            var glass = CrystalMaterial();
+            var mote = AssetDatabase.LoadAssetAtPath<Material>(MaterialsDir + "/SpellParticleAdditive.mat");
+            var shard = CrystalShardMesh();
+
+            var sparkle = Look("CrystalSparkle");
+            Base(sparkle, mote, Gradient(
+                new[] { (new Color(0.75f, 0.95f, 1f), 0f), (new Color(0.35f, 0.85f, 1f), 1f) },
+                new[] { (0f, 0f), (0.9f, 0.15f), (0.5f, 0.6f), (0f, 1f) }), size: 0.03f, gravity: -0.02f, lifetime: 0.8f, turbulence: 0.3f);
+            sparkle.sizeOverLife = new AnimationCurve(new Keyframe(0f, 0.4f), new Keyframe(0.3f, 1.2f), new Keyframe(1f, 0f));
+            sparkle.layerRatio = 0.14f;
+            sparkle.layerSpeed = 0.35f;
+            sparkle.maxParticles = 70;
+            Save(sparkle);
+
+            var glint = Look("CrystalGlint");
+            Base(glint, mote, Gradient(
+                new[] { (Color.white, 0f), (new Color(0.5f, 0.9f, 1f), 1f) },
+                new[] { (0f, 0f), (1f, 0.08f), (0.4f, 0.5f), (0f, 1f) }), size: 0.07f, gravity: 0f, lifetime: 0.45f, turbulence: 0f);
+            glint.sizeOverLife = new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(1f, 1.6f));
+            glint.speed = 0.5f;
+            glint.impactCount = 2;
+            glint.impactChance = 0.6f;
+            glint.maxParticles = 40;
+            Save(glint);
+
+            var fragments = Look("CrystalFragments");
+            Base(fragments, glass, Gradient(
+                new[] { (new Color(0.92f, 1f, 1f), 0f), (new Color(0.6f, 0.9f, 1f), 1f) },
+                new[] { (1f, 0f), (1f, 1f) }), size: 0.03f, gravity: 2.2f, lifetime: 0.8f, turbulence: 0f);
+            fragments.mesh = shard;
+            fragments.spin = 500f;
+            fragments.sizeOverLife = Crumble();
+            fragments.speed = 2.1f;
+            fragments.impactCount = 3;
+            fragments.impactChance = 0.5f;
+            fragments.maxParticles = 60;
+            Save(fragments);
+
+            var main = CrystalLook();
+            Base(main, glass, Gradient(
+                new[] { (new Color(0.95f, 1f, 1f), 0f), (new Color(0.75f, 0.96f, 1f), 0.5f), (new Color(0.58f, 0.9f, 1f), 1f) },
+                new[] { (1f, 0f), (1f, 1f) }), size: 0.085f, gravity: 1.6f, lifetime: 1.1f, turbulence: 0.05f);
+            main.mesh = shard;
+            main.spin = 220f;
+            main.sizeOverLife = Crumble();
+            main.speed = 0.8f;
+            main.density = 0.3f;
+            main.maxParticles = 140;
+            main.layers = new[] { sparkle };
+            main.impacts = new[] { glint, fragments };
+            main.crumble = true;
+            main.crystalline = true;
+            main.push = 1f;
+            Save(main);
+
+            AssignToPrefab(main);
+            Debug.Log("[VFX Setup] Look de cristal actualizado.");
+        }
+
+        private static ElementLook CrystalLook()
+        {
+            string path = $"{ElementsDir}/Crystal.asset";
+            var look = AssetDatabase.LoadAssetAtPath<ElementLook>(path);
+            if (look != null) return look;
+            look = ScriptableObject.CreateInstance<ElementLook>();
+            AssetDatabase.CreateAsset(look, path);
+            return look;
+        }
+
+        /// <summary>Asigna el look al SpellOutputController del prefab de managers (las escenas lo instancian).</summary>
+        private static void AssignToPrefab(ElementLook crystal)
+        {
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(SystemManagersPrefab) == null) return;
+            var root = PrefabUtility.LoadPrefabContents(SystemManagersPrefab);
+            try
+            {
+                var output = root.GetComponentInChildren<SpellOutputController>(true);
+                if (output == null) return;
+                var so = new SerializedObject(output);
+                var prop = so.FindProperty("crystal");
+                if (prop == null || prop.objectReferenceValue == crystal) return;
+                prop.objectReferenceValue = crystal;
+                so.ApplyModifiedPropertiesWithoutUndo();
+                PrefabUtility.SaveAsPrefabAsset(root, SystemManagersPrefab);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+        }
+
+        private static Material CrystalMaterial()
+        {
+            string path = $"{MaterialsDir}/SpellCrystal.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null)
+            {
+                mat = new Material(Shader.Find("SpellSimulator/StylizedLit"));
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            mat.SetColor("_BaseColor", new Color(0.82f, 0.97f, 1f));
+            mat.SetColor("_ShadowTint", new Color(0.78f, 0.92f, 1f));
+            mat.SetFloat("_Bands", 3f);
+            mat.SetFloat("_RimStrength", 0.9f);
+            mat.SetFloat("_RimSharpness", 1f);
+            mat.SetFloat("_RimCut", 0.5f);
+            EditorUtility.SetDirty(mat);
+            return mat;
+        }
+
+        private static Mesh CrystalShardMesh()
+        {
+            var fresh = LowPolyMeshes.Crystal(11);
+            var mesh = AssetDatabase.LoadAssetAtPath<Mesh>(CrystalMeshPath);
+            if (mesh == null)
+            {
+                AssetDatabase.CreateAsset(fresh, CrystalMeshPath);
+                return fresh;
+            }
+            EditorUtility.CopySerialized(fresh, mesh);
+            mesh.name = "CrystalShard";
+            EditorUtility.SetDirty(mesh);
+            Object.DestroyImmediate(fresh);
+            return mesh;
         }
 
         /// <summary>Brota rapido, se sostiene y se desmorona al final.</summary>

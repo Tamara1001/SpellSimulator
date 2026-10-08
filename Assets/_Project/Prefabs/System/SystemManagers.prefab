@@ -67,6 +67,7 @@ MonoBehaviour:
   output: {fileID: 2256094165641764747}
   simplificationTolerance: 0.005
   splineResolution: 3
+  recordSeals: 1
 --- !u!114 &2256094165641764747
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -84,5 +85,6 @@ MonoBehaviour:
   wind: {fileID: 11400000, guid: 884d01ad2514ef84ab187646aada93f7, type: 2}
   earth: {fileID: 11400000, guid: 4615ca28929dc944f8baef469cea6ef3, type: 2}
   light: {fileID: 11400000, guid: dc6d433902fb03b4cb416bfedc7bb110, type: 2}
+  crystal: {fileID: 11400000, guid: 9b9e37b5e908e444fb721240dab3ac7f, type: 2}
   surfaceOffset: 0.05
   maxActive: 6
