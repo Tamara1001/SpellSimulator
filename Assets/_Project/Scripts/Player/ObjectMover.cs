@@ -1,5 +1,6 @@
 using UnityEngine;
 using SpellSimulator.Interfaces;
+using SpellSimulator.World;
 
 namespace SpellSimulator.Player
 {
@@ -158,6 +159,8 @@ namespace SpellSimulator.Player
             }
             else
             {
+                // Si estaba fijado en el aire, se desfija primero: asi savedKinematic guarda el estado original y no "fijo".
+                PinnedBody.Unpin(rb);
                 savedGravity = rb.useGravity;
                 savedKinematic = rb.isKinematic;
                 savedLinearDamping = rb.linearDamping;
@@ -167,6 +170,8 @@ namespace SpellSimulator.Player
                 rb.linearDamping = GenericDamping;
                 rb.angularDamping = GenericDamping;
             }
+            // Evita que atraviese el piso al chocar fuerte (ver KI de fisicas).
+            if (!rb.isKinematic) rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 
             IgnorePlayerCollisions(true);
         }
@@ -191,9 +196,7 @@ namespace SpellSimulator.Player
             rb.angularDamping = savedAngularDamping;
             if (pin)
             {
-                rb.linearVelocity = Vector3.zero;
-                rb.angularVelocity = Vector3.zero;
-                rb.isKinematic = true;
+                PinnedBody.Pin(rb, savedKinematic, savedGravity);
             }
             else
             {

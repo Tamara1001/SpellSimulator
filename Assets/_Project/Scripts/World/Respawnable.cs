@@ -32,6 +32,8 @@ namespace SpellSimulator.World
         private void Awake()
         {
             rb = GetComponent<Rigidbody>();
+            // Deteccion continua: los objetos chicos y rapidos (lapices, piedras) no atraviesan el piso al chocar fuerte.
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             startPosition = transform.position;
             startRotation = transform.rotation;
         }

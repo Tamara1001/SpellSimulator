@@ -60,9 +60,9 @@ namespace SpellSimulator.Reactions
             var velocity = ps.velocityOverLifetime;
             velocity.enabled = true;
             velocity.space = ParticleSystemSimulationSpace.World;
-            velocity.x = new ParticleSystem.MinMaxCurve(0f);
+            velocity.x = new ParticleSystem.MinMaxCurve(0f, 0f); // los tres ejes deben usar el mismo modo (TwoConstants)
             velocity.y = new ParticleSystem.MinMaxCurve(flame * 1.5f, flame * 3f);
-            velocity.z = new ParticleSystem.MinMaxCurve(0f);
+            velocity.z = new ParticleSystem.MinMaxCurve(0f, 0f);
 
             var col = ps.colorOverLifetime;
             col.enabled = true;

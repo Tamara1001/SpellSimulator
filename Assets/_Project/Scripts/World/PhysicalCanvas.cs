@@ -209,6 +209,7 @@ namespace SpellSimulator.World
             rb.isKinematic = false;
             col.isTrigger = false;
             rb.useGravity = true;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             rb.linearDamping = airDrag;
         }
 

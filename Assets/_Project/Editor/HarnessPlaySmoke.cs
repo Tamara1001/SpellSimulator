@@ -193,6 +193,22 @@ namespace SpellSimulator.EditorTools
                 Check(closing && reopening && door.IsOpen && !door.IsMoving, "la puerta alterna y el reinicio la deja abierta");
             }
 
+            // --- Fijar en el aire un objeto generico (banco, mesa...) y poder desfijarlo al volver a agarrarlo.
+            var pinMover = player != null ? player.GetComponent<ObjectMover>() : null;
+            if (pinMover != null)
+            {
+                var probe = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                probe.transform.position = new Vector3(0f, 50f, 0f);
+                var probeRb = probe.AddComponent<Rigidbody>();
+                pinMover.TryBegin(probeRb, 2f);
+                pinMover.End(true);
+                bool pinned = probeRb.isKinematic && probe.GetComponent<PinnedBody>() != null;
+                pinMover.TryBegin(probeRb, 2f);
+                pinMover.End(false);
+                Check(pinned && !probeRb.isKinematic && probeRb.useGravity, "un objeto generico fijado en el aire se puede desfijar");
+                Object.DestroyImmediate(probe);
+            }
+
             // --- HUD
             Check(Object.FindFirstObjectByType<UnityEngine.UIElements.UIDocument>() != null, "HUD UI Toolkit presente");
         }

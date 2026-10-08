@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Cuatro bugs de la prueba manual (fijado, flotacion, runa de fuego, atravesar el piso)
+- **Fijar/desfijar:** `ObjectMover` dejaba el objeto generico (banco, mesa) como `isKinematic=true` y al volver a agarrarlo guardaba ese estado como "original", asi que nunca se soltaba. Nuevo `PinnedBody` (World): recuerda la fisica original, se quita al agarrar de nuevo (`PinnedBody.Unpin`) y restaura todo.
+- **Flotacion:** `PinnedBody` aplica el mismo vaiven que `PhysicalCanvas` (menos cabeceo, para muebles grandes).
+- **Crash de la runa de fuego:** `BurnEffect` mezclaba modos en `velocityOverLifetime` (x/z constante, y rango) -> "Particle Velocity curves must all be in the same mode". Ahora los tres ejes son TwoConstants.
+- **Atravesar el piso:** los Rigidbody iban en deteccion Discrete. `Respawnable.Awake`, `ObjectMover` y `PhysicalCanvas.Fall` fijan `ContinuousDynamic`. Falta confirmar a mano con lapices lanzados fuertes.
+- Test de humo: +1 chequeo (fijar y desfijar un objeto generico). Docs tocadas: STRUCTURE.
+
 ## 2026-10-08 — Graphify en Windows
 - HARNESS: cómo instalar y correr graphify en Windows (`python -m graphify`, mover `graphify-out` fuera de `Assets/`). Docs tocadas: HARNESS.
 
