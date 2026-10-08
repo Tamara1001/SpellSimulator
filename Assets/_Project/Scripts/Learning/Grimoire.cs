@@ -6,6 +6,7 @@ using SpellSimulator.Canvas;
 using SpellSimulator.Glyphs;
 using SpellSimulator.Interfaces;
 using SpellSimulator.Player;
+using SpellSimulator.Rendering;
 
 namespace SpellSimulator.Learning
 {
@@ -678,7 +679,14 @@ namespace SpellSimulator.Learning
             });
 
             SetTitle(Right, spell.Name);
-            SetBody(Right, GrimoireTexts.SpellPage(spell), BodyTop, BodyBottom + 0.02f);
+            SetBody(Right, GrimoireTexts.SpellPage(spell), BodyTop, BodyBottom + 0.04f);
+            // Cargar el hechizo completo (circulo con su hueco + glifos) en el sello que se lleva en la mano.
+            SpellDef shown = spell;
+            Place(Right, 0f, -0.112f, ContentWidth * 0.86f, 0.031f, "Cargar en el sello", ButtonSize, () =>
+            {
+                if (World.Stamp.Held == null) { Hud.Notify("stampspell", "Necesitás un sello en la mano", 2.5f); return; }
+                World.Stamp.Held.LoadSpell(shown.Id, shown.Name, SpellStrokeBuilder.Build(shown, TemplateOf));
+            });
             Pager(i, spells.Count, () => Step(-1), () => Step(1));
         }
 
@@ -737,18 +745,24 @@ namespace SpellSimulator.Learning
             // Derecha: control y sonido.
             SetTitle(Right, "Ajustes");
             Label(Right, 0f, 0.098f, ContentWidth, 0.02f, GrimoireTexts.Heading("Control"), SmallSize * 1.1f, TextAlignmentOptions.Center);
-            Stepper(0.068f, "Sensibilidad", GrimoireOptions.Multiplier(PlayerSettings.LookSensitivity), dir =>
+            Stepper(0.074f, "Sensibilidad", GrimoireOptions.Multiplier(PlayerSettings.LookSensitivity), dir =>
                 PlayerSettings.LookSensitivity = GrimoireOptions.StepSensitivity(PlayerSettings.LookSensitivity, dir));
-            RowLabel(0.028f, "Invertir eje Y");
-            Place(Right, 0.058f, 0.028f, 0.09f, 0.028f, PlayerSettings.InvertY ? "Sí" : "No", ButtonSize, () =>
+            RowLabel(0.042f, "Invertir eje Y");
+            Place(Right, 0.058f, 0.042f, 0.09f, 0.028f, PlayerSettings.InvertY ? "Sí" : "No", ButtonSize, () =>
             {
                 PlayerSettings.InvertY = !PlayerSettings.InvertY;
                 Refresh();
             });
-            Label(Right, 0f, -0.012f, ContentWidth, 0.02f, GrimoireTexts.Heading("Sonido"), SmallSize * 1.1f, TextAlignmentOptions.Center);
-            Stepper(-0.045f, "General", GrimoireOptions.Percent(GrimoireOptions.MasterVolume), dir =>
+            RowLabel(0.010f, "Calidad");
+            Place(Right, 0.058f, 0.010f, 0.09f, 0.028f, GraphicsQuality.Label(GraphicsQuality.Current), ButtonSize, () =>
+            {
+                GraphicsQuality.Current = GraphicsQuality.Next(GraphicsQuality.Current);
+                Refresh();
+            });
+            Label(Right, 0f, -0.026f, ContentWidth, 0.02f, GrimoireTexts.Heading("Sonido"), SmallSize * 1.1f, TextAlignmentOptions.Center);
+            Stepper(-0.057f, "General", GrimoireOptions.Percent(GrimoireOptions.MasterVolume), dir =>
                 GrimoireOptions.MasterVolume = GrimoireOptions.StepVolume(GrimoireOptions.MasterVolume, dir));
-            Stepper(-0.083f, "Música", GrimoireOptions.Percent(GrimoireOptions.MusicVolume), dir =>
+            Stepper(-0.089f, "Música", GrimoireOptions.Percent(GrimoireOptions.MusicVolume), dir =>
                 GrimoireOptions.MusicVolume = GrimoireOptions.StepVolume(GrimoireOptions.MusicVolume, dir));
             Stepper(-0.121f, "Efectos", GrimoireOptions.Percent(GrimoireOptions.EffectsVolume), dir =>
                 GrimoireOptions.EffectsVolume = GrimoireOptions.StepVolume(GrimoireOptions.EffectsVolume, dir));

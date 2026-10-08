@@ -34,7 +34,9 @@ namespace SpellSimulator.Learning
         private int hudUnread = -1;
         private Light glow;
         private float glowPhase;
-        private const float GlowMin = 0.09f, GlowMax = 0.32f, GlowSpeed = 1.6f;
+        private const float GlowMin = 0.045f, GlowMax = 0.16f, GlowSpeed = 1.6f;
+        private Rendering.OutlineHighlight outline;
+        private bool wasRead;
 
         /// <summary>Numero de este libro (1..Total) segun el orden de glifos.json.</summary>
         public int Number
@@ -90,15 +92,24 @@ namespace SpellSimulator.Learning
             glow = go.AddComponent<Light>();
             glow.type = LightType.Point;
             glow.color = new Color(1f, 0.82f, 0.5f);
-            glow.range = 0.9f;
+            glow.range = 0.45f;
             glow.intensity = GlowMin;
             glow.shadows = LightShadows.None;
             glowPhase = Mathf.Abs(transform.position.x * 3.1f + transform.position.z * 1.7f);
-            Rendering.OutlineHighlight.Mark(gameObject);
+            outline = Rendering.OutlineHighlight.Mark(gameObject, Rendering.OutlineHighlight.BookWidth, Rendering.OutlineHighlight.BookColor);
         }
 
         private void Update()
         {
+            // Contorno: sin leer = mas ancho/vivo y pulsando; leido = calmo (se refresca al instante al aprender).
+            if (outline != null)
+            {
+                var d = Discovery.Instance;
+                bool read = d != null && d.State.HasRead(bookId);
+                if (!read) outline.SetStrength(0.75f + 0.25f * Mathf.Sin(Time.time * 3f + glowPhase));
+                else if (!wasRead) outline.SetStrength(0f);
+                wasRead = read;
+            }
             if (glow == null) return;
             float k = 0.5f + 0.5f * Mathf.Sin(Time.time * GlowSpeed + glowPhase);
             glow.intensity = Mathf.Lerp(GlowMin, GlowMax, k);

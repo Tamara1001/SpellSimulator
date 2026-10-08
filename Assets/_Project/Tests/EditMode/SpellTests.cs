@@ -153,5 +153,32 @@ namespace SpellSimulator.Tests
             Assert.AreEqual(1, catalog.All.Count);
             Assert.AreEqual(2, errors.Count);
         }
+
+        [Test]
+        public void StampCompound_FromSpell_KeepsGapAndFitsRadius()
+        {
+            var def = new SpellDef { Id = "t", Name = "T", Sigil = "s", GapDeg = 34f };
+            def.Signs.Add(new SpellSign("g", 270f, 0f));
+            var square = new List<List<Vector2>> { new List<Vector2> { new Vector2(0f, 0f), new Vector2(1f, 1f) } };
+            var ring = SpellStrokeBuilder.Build(def, id => square);
+            Assert.AreEqual(3, ring.Count, "sigilo + signo + anillo");
+
+            var size = new Vector2(2f, 1f);
+            var strokes = Casting.StampPattern.Compound(ring, new Vector2(0.5f, 0.5f), 0.25f, size, 0.01f);
+            Assert.AreEqual(ring.Count, strokes.Count);
+            var circle = strokes[strokes.Count - 1];
+            foreach (var p in circle.Points)
+                Assert.AreEqual(0.25f, Vector2.Distance(Vector2.Scale(p - new Vector2(0.5f, 0.5f), size), Vector2.zero), 1e-3f);
+            // Hueco arriba: ningun punto del anillo cae en el centro del hueco.
+            foreach (var p in circle.Points)
+                Assert.Greater(Vector2.Angle(Vector2.Scale(p - new Vector2(0.5f, 0.5f), size), Vector2.up), 15f);
+        }
+
+        [Test]
+        public void StampPatternDiameter_IsScaledAndClampedToCanvas()
+        {
+            Assert.AreEqual(0.2f * World.Stamp.PatternScale, World.Stamp.PatternDiameter(0.2f, new Vector2(5f, 5f)), 1e-4f);
+            Assert.AreEqual(World.Stamp.MaxCanvasFill * 0.3f, World.Stamp.PatternDiameter(0.2f, new Vector2(5f, 0.3f)), 1e-4f);
+        }
     }
 }

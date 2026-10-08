@@ -33,9 +33,11 @@ namespace SpellSimulator.Reactions
             switch (element)
             {
                 case ElementType.Earth:
-                    Spawn(point, normal, radius * 1.2f, markMaterial, new Color(0.18f, 0.13f, 0.09f, 0.85f), 1f, 0f);
+                    bool crystal = earthLook != null && earthLook.crystalline;
+                    Spawn(point, normal, radius * 1.2f, markMaterial,
+                        crystal ? new Color(0.62f, 0.88f, 0.98f, 0.55f) : new Color(0.18f, 0.13f, 0.09f, 0.85f), 1f, 0f);
                     // Con el look de tierra, las estacas usan su material (StylizedLit con borde claro y color por vertice).
-                    SpawnRocks(point, normal, radius, earthLook != null && earthLook.mesh != null ? earthLook.material : rockMaterial, rockProfile);
+                    SpawnRocks(point, normal, radius, earthLook != null && earthLook.mesh != null ? earthLook.material : rockMaterial, rockProfile, crystal);
                     SpawnDust(point, normal, radius, earthLook);
                     return true;
                 case ElementType.Fire:
@@ -75,7 +77,7 @@ namespace SpellSimulator.Reactions
             Track(marks, go, MaxMarks);
         }
 
-        private static void SpawnRocks(Vector3 point, Vector3 normal, float radius, Material material, MaterialProfile profile)
+        private static void SpawnRocks(Vector3 point, Vector3 normal, float radius, Material material, MaterialProfile profile, bool crystal = false)
         {
             if (material == null) return;
             int count = Random.Range(3, 6);
@@ -90,7 +92,7 @@ namespace SpellSimulator.Reactions
                 // Estaca facetada (cabe en el cubo unitario: el BoxCollider del cubo sigue sirviendo).
                 var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
                 go.name = "Rock";
-                go.GetComponent<MeshFilter>().sharedMesh = StakeMesh(i);
+                go.GetComponent<MeshFilter>().sharedMesh = StakeMesh(i, crystal);
                 go.transform.localScale = new Vector3(size * 1.15f, size * Random.Range(1.6f, 2.8f), size * 1.15f);
                 // Inclinadas hacia afuera del crater, como empujadas desde abajo.
                 Vector3 outward = (at - point).normalized;
@@ -124,11 +126,14 @@ namespace SpellSimulator.Reactions
         private const int DustPerImpact = 3;
         private static readonly Mesh[] stakeMeshes = new Mesh[3];
 
-        private static Mesh StakeMesh(int index)
+        private static readonly Mesh[] crystalMeshes = new Mesh[3];
+
+        private static Mesh StakeMesh(int index, bool crystal)
         {
             int i = Mathf.Abs(index) % stakeMeshes.Length;
-            if (stakeMeshes[i] == null) stakeMeshes[i] = Output.LowPolyMeshes.Stake(17 + i * 31);
-            return stakeMeshes[i];
+            var cache = crystal ? crystalMeshes : stakeMeshes;
+            if (cache[i] == null) cache[i] = crystal ? Output.LowPolyMeshes.CrystalStake(23 + i * 29) : Output.LowPolyMeshes.Stake(17 + i * 31);
+            return cache[i];
         }
 
         private static void Track(Queue<GameObject> queue, GameObject go, int max)

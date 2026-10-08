@@ -43,7 +43,7 @@ namespace SpellSimulator.Output
         public static void Apply(ParticleSystem ps, ElementLook look, float scale)
         {
             var main = ps.main;
-            main.maxParticles = Mathf.Max(8, look.maxParticles);
+            main.maxParticles = Mathf.Max(8, Mathf.RoundToInt(look.maxParticles * SpellSimulator.Rendering.GraphicsQuality.ParticleScale));
             main.startSize = new ParticleSystem.MinMaxCurve(look.size * scale * 1.2f, look.size * scale * 2.4f);
             main.startColor = Color.white;
             main.gravityModifier = look.gravity;

@@ -61,6 +61,10 @@ namespace SpellSimulator.Output
         [Tooltip("Como impacto: probabilidad de emitir en cada choque (0..1).")]
         public float impactChance = 0.5f;
 
+        [Header("Variante")]
+        [Tooltip("Cristal: variante de Tierra (mismo elemento y fisica). Las marcas de suelo usan estacas y escarcha de cristal.")]
+        public bool crystalline;
+
         [Header("Luz")]
         public bool emitsLight;
         public Color lightColor = Color.white;

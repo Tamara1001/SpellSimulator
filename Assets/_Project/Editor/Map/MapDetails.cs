@@ -239,8 +239,6 @@ namespace SpellSimulator.EditorTools.Map
             b.Box(lectern * Matrix4x4.Translate(new Vector3(0f, 0.6f, 0f)), new Vector3(0.1f, 1.1f, 0.1f), new Color(0.36f, 0.22f, 0.15f));
             var desk = lectern * Matrix4x4.TRS(new Vector3(0f, 1.15f, 0f), Quaternion.Euler(-25f, 0f, 0f), Vector3.one);
             b.Box(desk, new Vector3(0.6f, 0.04f, 0.45f), new Color(0.45f, 0.3f, 0.2f));
-            b.Box(desk * Matrix4x4.TRS(new Vector3(-0.14f, 0.04f, 0f), Quaternion.Euler(0f, 0f, 6f), Vector3.one), new Vector3(0.26f, 0.025f, 0.36f), new Color(0.96f, 0.92f, 0.8f));
-            b.Box(desk * Matrix4x4.TRS(new Vector3(0.14f, 0.04f, 0f), Quaternion.Euler(0f, 0f, -6f), Vector3.one), new Vector3(0.26f, 0.025f, 0.36f), new Color(0.96f, 0.92f, 0.8f));
             var mesh = MapBuilder.SaveMesh(b.Build("TowerProps"));
             MapBuilder.Place("TowerProps", root, mesh, material, o, Quaternion.identity);
 
@@ -278,7 +276,7 @@ namespace SpellSimulator.EditorTools.Map
             float floor = TowerBuilder.FloorHeight;
             var spots = new (string id, Vector3 at, float yaw, float tilt)[]
             {
-                ("elements", new Vector3(-1.3f, 1.22f, -2.6f), -52f, -25f),
+                ("elements", new Vector3(-1.293f, 1.168f, -2.605f), -52f, -25f),
                 ("variants", new Vector3(-0.6f, 0.86f, 0.22f), 15f, 0f),
                 ("motion", new Vector3(0.9f, floor + 0.86f, 0.2f), 60f, 0f),
                 ("shape", new Vector3(0.25f, floor + 0.86f, 0.75f), 95f, 0f),

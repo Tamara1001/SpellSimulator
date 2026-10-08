@@ -35,6 +35,8 @@ namespace SpellSimulator.Output
 
         /// <summary>Elemento del hechizo.</summary>
         public ElementType Element => spell.element;
+        /// <summary>Sigilo primario (variante de look, p. ej. cristal).</summary>
+        public string SigilId => spell.sigilId;
         /// <summary>Objeto que lo emitio (el papel): no se afecta a si mismo.</summary>
         public GameObject Source { get; private set; }
         public SealFrame Frame => frame;

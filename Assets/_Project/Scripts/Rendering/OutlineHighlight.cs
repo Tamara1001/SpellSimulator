@@ -31,7 +31,31 @@ namespace SpellSimulator.Rendering
         /// <summary>Contorno leve de las herramientas sueltas.</summary>
         public const float ToolWidth = 0.0018f;
         /// <summary>Contorno marcado de los libros.</summary>
-        public const float BookWidth = 0.0075f;
+        public const float BookWidth = 0.012f;
+        /// <summary>Contorno de un libro que nunca se leyo (pulsa entre este ancho y +20%).</summary>
+        public const float BookUnreadWidth = 0.018f;
+        public static readonly Color BookColor = new Color(1f, 0.9f, 0.55f, 1f);
+        public static readonly Color BookUnreadColor = new Color(1f, 0.78f, 0.15f, 1f);
+
+        private static readonly int ColorId = Shader.PropertyToID("_Color");
+        private static readonly int WidthId = Shader.PropertyToID("_Width");
+
+        /// <summary>Cambia ancho y color de las cascaras sin recrearlas (sin allocations).</summary>
+        public void SetStyle(float newWidth, Color newColor)
+        {
+            width = newWidth;
+            color = newColor;
+            if (material == null) return;
+            material.SetColor(ColorId, newColor);
+            material.SetFloat(WidthId, newWidth);
+        }
+
+        /// <summary>Interpola entre el estilo "ya leido" (0) y el "sin leer" (1).</summary>
+        public void SetStrength(float t)
+        {
+            t = Mathf.Clamp01(t);
+            SetStyle(Mathf.Lerp(BookWidth, BookUnreadWidth, t), Color.Lerp(BookColor, BookUnreadColor, t));
+        }
 
         private void Awake()
         {
@@ -90,7 +114,7 @@ namespace SpellSimulator.Rendering
         private static void AutoApply()
         {
             // Una sola pasada al cargar: libros, herramientas, tinteros y estampas.
-            foreach (var b in Object.FindObjectsByType<LibraryBook>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(b.gameObject, BookWidth, new Color(1f, 0.86f, 0.5f, 1f));
+            foreach (var b in Object.FindObjectsByType<LibraryBook>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(b.gameObject, BookWidth, BookColor);
             foreach (var t in Object.FindObjectsByType<PhysicalTool>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(t.gameObject, ToolWidth, new Color(0.85f, 0.72f, 0.55f, 1f));
             foreach (var i in Object.FindObjectsByType<Inkwell>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(i.gameObject, ToolWidth, new Color(0.85f, 0.72f, 0.55f, 1f));
             foreach (var s in Object.FindObjectsByType<Stamp>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(s.gameObject, ToolWidth, new Color(0.85f, 0.72f, 0.55f, 1f));

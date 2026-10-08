@@ -63,6 +63,22 @@ namespace SpellSimulator.Casting
             return Template(template, centerUv, ringRadius * SignOfRadius, rotation, canvasSize, width);
         }
 
+        /// <summary>
+        /// Patron compuesto (hechizo completo: sigilo, signos y circulo casi cerrado) dado en unidades de anillo
+        /// (centro en 0,0, radio 1, Y arriba; ver SpellStrokeBuilder). Se escala a ringRadius metros y se ubica en centerUv.
+        /// </summary>
+        public static List<Stroke> Compound(List<List<Vector2>> ringUnitStrokes, Vector2 centerUv, float ringRadius, Vector2 canvasSize, float width)
+        {
+            var strokes = new List<Stroke>(ringUnitStrokes.Count);
+            foreach (var points in ringUnitStrokes)
+            {
+                var stroke = new Stroke { Width = width };
+                foreach (var p in points) stroke.AddPoint(ToUv(p * ringRadius, centerUv, canvasSize));
+                strokes.Add(stroke);
+            }
+            return strokes;
+        }
+
         /// <summary>Plantilla [0,1] (Y arriba) escalada a `extent` metros, rotada y ubicada en el lienzo.</summary>
         public static List<Stroke> Template(List<List<Vector2>> template, Vector2 centerUv, float extent, float rotationDeg, Vector2 canvasSize, float width)
         {

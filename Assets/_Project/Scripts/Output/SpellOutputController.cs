@@ -17,6 +17,8 @@ namespace SpellSimulator.Output
         [SerializeField] private ElementLook wind;
         [SerializeField] private ElementLook earth;
         [SerializeField] private ElementLook light;
+        [SerializeField, Tooltip("Variante de Tierra para el sigilo crystal (mismo elemento, otro look). Vacio = usa Tierra.")]
+        private ElementLook crystal;
 
         [Header("Escala y presupuesto")]
         [SerializeField, Tooltip("Distancia (m) delante del papel donde nace el efecto.")]
@@ -32,7 +34,7 @@ namespace SpellSimulator.Output
         {
             if (!spell.valid || !spell.active) return null;
 
-            ElementLook look = LookFor(spell.element);
+            ElementLook look = LookFor(spell.element, spell.sigilId);
             if (look == null || look.material == null)
             {
                 Debug.LogWarning($"[VFX Output] Sin ElementLook para {spell.element}.");
@@ -81,6 +83,15 @@ namespace SpellSimulator.Output
         {
             foreach (var m in active) if (m != null) Destroy(m.gameObject);
             active.Clear();
+        }
+
+        public const string CrystalSigil = "crystal";
+
+        /// <summary>Look del hechizo: igual que LookFor(elemento) salvo variantes por sigilo (cristal es tierra celeste).</summary>
+        public ElementLook LookFor(ElementType element, string sigilId)
+        {
+            if (element == ElementType.Earth && sigilId == CrystalSigil && crystal != null) return crystal;
+            return LookFor(element);
         }
 
         /// <summary>Look de un elemento (tambien lo usan las reacciones: llamas de lo que arde).</summary>

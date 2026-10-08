@@ -52,8 +52,25 @@ namespace SpellSimulator.World
 
         public string Glyph => glyph;
 
+        /// <summary>
+        /// Factor del dibujo que deja el sello respecto del diametro del modelo (no cambia el modelo 3D): el patron se
+        /// ve ~1,8x mas grande sobre la superficie. Se limita a <see cref="MaxCanvasFill"/> del lienzo mas chico.
+        /// </summary>
+        public const float PatternScale = 1.8f;
+        /// <summary>Fraccion maxima del lado menor del lienzo que puede ocupar el diametro del patron (lienzos chicos).</summary>
+        public const float MaxCanvasFill = 0.9f;
+
+        // Hechizo cargado (patron compuesto en unidades de anillo). Null: se estampa el glifo.
+        private System.Collections.Generic.List<System.Collections.Generic.List<Vector2>> spellStrokes;
+        private string spellName;
+        private string DisplayName => spellStrokes != null ? spellName : (Discovery.Instance != null ? Discovery.Instance.Lore.Name(glyph) : glyph);
+
+        /// <summary>Diametro del dibujo estampado en un lienzo de ese tamaño (m), con el clamp para lienzos chicos.</summary>
+        public static float PatternDiameter(float diameter, Vector2 canvasSize) =>
+            Mathf.Min(diameter * PatternScale, MaxCanvasFill * Mathf.Min(canvasSize.x, canvasSize.y));
+
         // ---- Interfaz (HUD de abajo)
-        public string HudName => string.IsNullOrEmpty(glyph) ? $"Estampa {sizeName}" : $"Estampa {sizeName}: {(Discovery.Instance != null ? Discovery.Instance.Lore.Name(glyph) : glyph)} ({charges})";
+        public string HudName => string.IsNullOrEmpty(glyph) ? $"Estampa {sizeName}" : $"Estampa {sizeName}: {DisplayName} ({charges})";
         public Color HudColor => new Color(0.65f, 0.4f, 0.85f);
         public string HudHints => string.IsNullOrEmpty(glyph) ? "Vacia: abri un glifo en el grimorio (Tab) y 'Cargar en la estampa' | Q: arrojar" : "Clic: estampar | Q: arrojar";
         public float HudGauge => -1f;
@@ -102,6 +119,7 @@ namespace SpellSimulator.World
         public void ResetToInitial()
         {
             glyph = null;
+            spellStrokes = null;
             charges = 0;
             RefreshLabel();
         }
@@ -125,21 +143,24 @@ namespace SpellSimulator.World
                 Say("La estampa esta vacia. Abri el grimorio en un glifo y cargala (clic derecho / A apuntando al libro).");
                 return;
             }
-            var entry = dictionary != null ? dictionary.Dictionary.Get(glyph) : null;
-            if (entry == null || entry.TemplateStrokes.Count == 0) return;
+            var entry = spellStrokes == null && dictionary != null ? dictionary.Dictionary.Get(glyph) : null;
+            if (spellStrokes == null && (entry == null || entry.TemplateStrokes.Count == 0)) return;
 
             Vector2 uv = canvas.GetUVFromWorldPosition(hit.point);
             canvas.NoteInkViewer(cam != null ? cam.transform.position : hit.point + hit.normal);
             Vector2 size = canvas.WorldSize;
-            float width = Mathf.Max(0.004f, diameter * 0.03f);
+            float diam = PatternDiameter(diameter, size);
+            float width = Mathf.Max(0.004f, diam * 0.03f);
             // D1: un sigilo se copia SOLO como simbolo (sin circulo exterior); el circulo es el glifo "Circulo Magico".
             System.Collections.Generic.List<Stroke> strokes;
-            if (entry.Id == StampPattern.MagicCircleId)
-                strokes = new System.Collections.Generic.List<Stroke> { StampPattern.OpenRing(uv, diameter, size, width) };
+            if (spellStrokes != null)
+                strokes = StampPattern.Compound(spellStrokes, uv, diam * 0.5f, size, width);
+            else if (entry.Id == StampPattern.MagicCircleId)
+                strokes = new System.Collections.Generic.List<Stroke> { StampPattern.OpenRing(uv, diam, size, width) };
             else if (entry.Kind == GlyphKind.Sigil)
-                strokes = StampPattern.SigilOnly(entry.TemplateStrokes, uv, diameter, size, width);
+                strokes = StampPattern.SigilOnly(entry.TemplateStrokes, uv, diam, size, width);
             else
-                strokes = SignStrokes(entry, canvas, uv, size, width);
+                strokes = SignStrokes(entry, canvas, uv, size, width, diam);
             if (strokes == null) return;
 
             foreach (var stroke in strokes)
@@ -154,14 +175,14 @@ namespace SpellSimulator.World
             if (caster != null) caster.OnSealEdited(canvas);
         }
 
-        private System.Collections.Generic.List<Stroke> SignStrokes(GlyphEntry entry, DrawingCanvas canvas, Vector2 uv, Vector2 size, float width)
+        private System.Collections.Generic.List<Stroke> SignStrokes(GlyphEntry entry, DrawingCanvas canvas, Vector2 uv, Vector2 size, float width, float diam)
         {
             // Busca el anillo que ya hay en el papel para dimensionar y orientar el signo.
             Vector2 iso = canvas.UvToIsotropic;
             var ring = canvas.Session.IsEmpty ? RingInfo.NotFound()
                 : RingDetector.Detect(StrokeCleaner.CleanSession(canvas.Session.Scaled(iso), StrokeCleaner.DefaultTolerance, StrokeCleaner.DefaultSplineResolution));
             if (!ring.Found)
-                return StampPattern.Template(entry.TemplateStrokes, uv, diameter * 0.5f, 0f, size, width);
+                return StampPattern.Template(entry.TemplateStrokes, uv, diam * 0.5f, 0f, size, width);
             Vector2 centerUv = new Vector2(ring.Center.x / iso.x, ring.Center.y / iso.y);
             float radiusM = ring.Radius * Mathf.Max(size.x, size.y);
             return StampPattern.Sign(entry.TemplateStrokes, uv, radiusM, centerUv, size, width);
@@ -185,10 +206,23 @@ namespace SpellSimulator.World
         public void Load(string g)
         {
             glyph = g;
+            spellStrokes = null;
             charges = chargesPerLoad;
             RefreshLabel();
             Loaded?.Invoke(this, g);
             Say($"Estampa {sizeName} cargada: {Discovery.Instance?.Lore.Name(g) ?? g} ({charges} usos).");
+        }
+
+        /// <summary>Carga un hechizo completo (trazos en unidades de anillo, ver SpellStrokeBuilder). Lo llama el boton de la pagina del hechizo.</summary>
+        public void LoadSpell(string id, string displayName, System.Collections.Generic.List<System.Collections.Generic.List<Vector2>> ringUnitStrokes)
+        {
+            glyph = "spell:" + id;
+            spellStrokes = ringUnitStrokes;
+            spellName = displayName;
+            charges = chargesPerLoad;
+            RefreshLabel();
+            Loaded?.Invoke(this, glyph);
+            Say($"Sello {sizeName} cargado: {displayName} ({charges} usos).");
         }
 
         private bool Aim(out RaycastHit hit) => Aim(out hit, canvasLayer);
@@ -201,8 +235,8 @@ namespace SpellSimulator.World
             {
                 // Sobre una calcomania enorme del piso la estampa no se leeria: se pone otra a su medida encima.
                 var big = canvas.GetComponent<InscribedDecal>();
-                if (big == null || big.Owner == null || canvas.WorldSize.x <= diameter * 5f) return true;
-                var small = big.Owner.CreateDecal(hit, cam != null ? cam.transform.forward : -hit.normal, Mathf.Max(0.6f, diameter * 3f));
+                if (big == null || big.Owner == null || canvas.WorldSize.x <= diameter * PatternScale * 5f) return true;
+                var small = big.Owner.CreateDecal(hit, cam != null ? cam.transform.forward : -hit.normal, Mathf.Max(0.6f, diameter * PatternScale * 3f));
                 if (small == null) return true;
                 canvas = small;
                 return true;
@@ -213,7 +247,7 @@ namespace SpellSimulator.World
             var surface = hit.collider.GetComponentInParent<Inscribable>();
             if (surface == null) return false;
             Vector3 view = cam != null ? cam.transform.forward : -hit.normal;
-            canvas = surface.CreateDecal(hit, view, Mathf.Max(0.6f, diameter * 3f));
+            canvas = surface.CreateDecal(hit, view, Mathf.Max(0.6f, diameter * PatternScale * 3f));
             return canvas != null;
         }
 
@@ -239,7 +273,7 @@ namespace SpellSimulator.World
         private void RefreshLabel()
         {
             if (label == null) return;
-            string name = string.IsNullOrEmpty(glyph) ? "vacia" : (Discovery.Instance != null ? Discovery.Instance.Lore.Name(glyph) : glyph);
+            string name = string.IsNullOrEmpty(glyph) ? "vacia" : DisplayName;
             label.text = string.IsNullOrEmpty(glyph) ? $"{sizeName}\nvacia" : $"{sizeName}\n{name}\n{charges}";
         }
 

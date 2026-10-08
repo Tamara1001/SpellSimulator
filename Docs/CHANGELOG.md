@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Septima tanda (parte 1): sellos, calidad grafica y libros
+- **Hechizos a sello:** boton 'Cargar en el sello' en el detalle de un hechizo (`Stamp.LoadSpell`, `StampPattern.Compound`); sellos con dibujo ~1,8x mas grande (`Stamp.PatternScale`, tope `MaxCanvasFill` 0,9 del lienzo).
+- **Calidad grafica Baja/Media/Alta** en Opciones del grimorio (`GraphicsQuality`, `GraphicsQualityApplier`): escala de render, sombras, MSAA, contorno y particulas; default Alta en PC y Media en WebGL/Quest; persiste en PlayerPrefs.
+- **Libros:** atril sin libro modelado detras (se veia doble), contorno mas marcado y dorado pulsante si no se leyeron; luz a la mitad.
+- 161 tests en PASS. Falta regenerar el mapa para ver los atriles. Pendiente de la tanda: textos/creditos/tinta, mundo (viento, agua, carteles), reconocimiento agua/viento, cristal y WebGL.
+
 ## 2026-10-08 — Los ajustes manuales de la escena sobreviven a MapBuilder.Build()
 - `Editor/Map/MapLayout.cs`: al empezar un Build compara la escena con la linea base (`Logs/MapBaseline.json`, al terminar el Build anterior); lo movido a mano (posicion/rotacion/escala locales) se guarda en `Data/MapOverrides.json` y se reaplica al terminar el Build (mismo camino jerarquico). Menus `SpellSimulator/Map/Capturar mi layout manual` y `Borrar overrides del layout`. Primera captura: 11 objetos (zonas Path8/Path9, GiantPaper_Field).
 - Quedan fuera terreno, vegetacion y agua. Si un objeto movido a mano ya no existe tras un Build, su override se ignora.
