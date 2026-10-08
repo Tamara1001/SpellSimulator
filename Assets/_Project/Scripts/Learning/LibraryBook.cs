@@ -135,10 +135,13 @@ namespace SpellSimulator.Learning
             var pages = new List<UI.ReaderPage>(info.Glyphs.Count + 2);
             var contents = new StringBuilder();
             foreach (var g in info.Glyphs) contents.Append("·  ").Append(lore.Name(g)).Append('\n');
+            foreach (var id in info.Spells) contents.Append("·  ").Append(SpellName(id)).Append('\n');
             pages.Add(new UI.ReaderPage
             {
                 CoverTitle = info.Title,
-                CoverSubtitle = $"Libro {Number} de {Total}  ·  " + (info.Glyphs.Count == 1 ? "un glifo explicado" : $"{info.Glyphs.Count} glifos explicados"),
+                CoverSubtitle = $"Libro {Number} de {Total}  ·  " + (info.Spells.Count > 0
+                    ? $"{info.Spells.Count} hechizos explicados"
+                    : info.Glyphs.Count == 1 ? "un glifo explicado" : $"{info.Glyphs.Count} glifos explicados"),
                 Kicker = "Contenido",
                 Heading = info.Title,
                 Body = contents.ToString().TrimEnd(),
@@ -152,6 +155,30 @@ namespace SpellSimulator.Learning
                     Body = lore.Text(g),
                     Note = state.Knows(g) ? "Ya conocías este glifo." : null,
                 });
+            foreach (var id in info.Spells)
+            {
+                var spell = SpellCatalog.Shared?.Get(id);
+                pages.Add(new UI.ReaderPage
+                {
+                    Kicker = spell != null ? $"{spell.ElementName} · dificultad {spell.Difficulty}" : null,
+                    Heading = SpellName(id),
+                    Body = spell != null ? $"{spell.Description}\n\n{spell.HowTo}" : "",
+                });
+            }
+            if (info.Spells.Count > 0)
+            {
+                pages.Add(new UI.ReaderPage
+                {
+                    CoverTitle = "Colofón",
+                    CoverSubtitle = "Fin del tratado",
+                    Kicker = "Para aprender",
+                    Heading = state.HasRead(bookId) ? "Nada nuevo en estas páginas" : "Copia los hechizos en tu grimorio",
+                    Body = state.HasRead(bookId)
+                        ? "Ya conocías los hechizos de este libro. Podés repasarlos en la sección Hechizos de tu grimorio (Tab)."
+                        : "Al aprender este conocimiento, los hechizos pasan a la sección Hechizos de tu grimorio (Tab), con el dibujo del sello y cómo hacerlo.",
+                });
+                return pages;
+            }
             int unknown = 0;
             foreach (var g in info.Glyphs) if (!state.Knows(g)) unknown++;
             pages.Add(new UI.ReaderPage
@@ -167,14 +194,22 @@ namespace SpellSimulator.Learning
             return pages;
         }
 
+        private static string SpellName(string id) => SpellCatalog.Shared?.Get(id)?.Name ?? id;
+
         private void Learn()
         {
             var info = Info;
             if (info == null || Discovery.Instance == null) return;
+            bool wasRead = Discovery.Instance.State.HasRead(bookId);
             int learned = Discovery.Instance.Read(info);
-            var names = string.Join(", ", info.Glyphs.ConvertAll(g => Discovery.Instance.Lore.Name(g)));
+            // Libro de hechizos: aprender = leerlo (el grimorio desbloquea sus hechizos por libro leido).
+            if (info.Spells.Count > 0) learned = wasRead ? 0 : info.Spells.Count;
+            var names = info.Spells.Count > 0
+                ? string.Join(", ", info.Spells.ConvertAll(SpellName))
+                : string.Join(", ", info.Glyphs.ConvertAll(g => Discovery.Instance.Lore.Name(g)));
+            string where = info.Spells.Count > 0 ? "la seccion Hechizos del grimorio (Tab)" : "el grimorio (Tab)";
             DiagnosticBus.OnDiagnosticsUpdated?.Invoke(learned > 0
-                ? $"<b>[Libro] {info.Title}</b>\nAprendiste: {names}. Abri el grimorio (Tab) para verlos."
+                ? $"<b>[Libro] {info.Title}</b>\nAprendiste: {names}. Abri {where} para verlos."
                 : $"<b>[Libro] {info.Title}</b>\nYa conocias: {names}.");
             BookRead?.Invoke(this, learned);
         }

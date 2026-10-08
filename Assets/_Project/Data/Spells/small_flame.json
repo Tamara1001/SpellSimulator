@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "small_flame",
+  "name": "Llama pequeña",
+  "description": "Un disparo corto de fuego. Enciende madera, papel y tela.",
+  "element": "fire",
+  "origin": "Book",
+  "difficulty": 2,
+  "book": "spells-fire-earth",
+  "howTo": "Dibujá el sigilo del fuego y una sola columna abajo, con la punta hacia el sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "fire",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 270,
+      "turn": 0
+    }
+  ]
+}

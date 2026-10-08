@@ -93,6 +93,7 @@ namespace SpellSimulator.Player
         private static readonly string[] HoverHintTable = BuildHoverHintTable();
         private IPressable hintPressable;
         private string hintPressableText = "";
+        private string hintPressablePrompt;
 
         private static string[] BuildHoverHintTable()
         {
@@ -114,10 +115,13 @@ namespace SpellSimulator.Player
             if (hoveredPressable != null)
             {
                 if (hoveredPressable.PressWithClick) return "";
-                if (!ReferenceEquals(hintPressable, hoveredPressable))
+                // Se rearma si cambia lo mirado o su texto (puerta: Abrir/Cerrar). Los textos son constantes cacheadas:
+                // comparar referencias no aloca.
+                string p = hoveredPressable.GetPressPrompt();
+                if (!ReferenceEquals(hintPressable, hoveredPressable) || !ReferenceEquals(hintPressablePrompt, p))
                 {
                     hintPressable = hoveredPressable;
-                    string p = hoveredPressable.GetPressPrompt();
+                    hintPressablePrompt = p;
                     hintPressableText = string.IsNullOrEmpty(p) ? "E" : "E: " + p;
                 }
                 return hintPressableText;

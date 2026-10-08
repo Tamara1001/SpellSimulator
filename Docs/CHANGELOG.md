@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Sexta tanda, Fase 2: torre, puerta y apartado Hechizos
+- **Torre rediseñada** (Opus): piedra y madera calidas, alfombras, vigas, faroles, cortinas, ventanas y banderas; recorrido puerta-atril; **estacion de viento** (tablero, papeles, plumas, banderines) y **estacion de agua** (pila con agua real y barquito) con carteles; sin luz violeta. `SaveMesh` reescribe la malla por la API (la copia dejaba mallas viejas en pantalla).
+- **Puerta interactuable** (`TowerDoor`, E abre/cierra, arranca abierta, el reinicio la deja abierta) y el hint de E se actualiza si cambia el texto.
+- **Apartado Hechizos** del grimorio (menu I-VI): 7 hechizos como data (`Data/Spells`), 2 iniciales (Rafaga, Chorro de agua) y 2 libros nuevos (`spells-wind-water`, `spells-fire-earth`); `SpellDef/SpellStrokeBuilder/SpellCatalog`. Desvio del ADR-034: el JSON guarda la composicion y los trazos se arman desde el diccionario.
+- 151 tests y PlaySmoke (con chequeos de la puerta) en PASS. Sin probar a mano.
+
 ## 2026-10-08 — Ajustes tras la prueba: outlines, circulo inicial, zonas de practica y spawn
 - **Bug del generador:** la plantilla `PaperCanvas` habia desaparecido de `Pradera.unity` y `CanvasDesigns`, las zonas de practica y los props se omitian en silencio al regenerar; `MapBuilder.EnsureCanvasTemplate` la rehace desde `Paper_S`. Ahora hay 57 piezas en `Practice` y `Props_Field`.
 - Outline mas leve en herramientas (1,8 mm) y mas fuerte en libros (7,5 mm). `magic_circle` se conoce desde el inicio (5 glifos iniciales).

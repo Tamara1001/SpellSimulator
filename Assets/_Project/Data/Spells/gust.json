@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "gust",
+  "name": "Ráfaga",
+  "description": "Un golpe de aire concentrado. Empuja objetos livianos y aviva el fuego.",
+  "element": "wind",
+  "origin": "Preset",
+  "difficulty": 1,
+  "book": "inicial",
+  "howTo": "Dibujá el sigilo del viento al centro. A izquierda y derecha, una columna a cada lado con la punta hacia el sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "wind-directs-air",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 0,
+      "turn": 0
+    },
+    {
+      "id": "column",
+      "angle": 180,
+      "turn": 0
+    }
+  ]
+}

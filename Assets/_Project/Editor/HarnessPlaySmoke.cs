@@ -161,6 +161,22 @@ namespace SpellSimulator.EditorTools
             }
             else failures.Add("falta el grimorio");
 
+            // --- Puerta de la torre: arranca abierta, E la cierra (y anima), el reinicio la deja abierta.
+            var doorGo = Find("TowerDoor");
+            var door = doorGo != null ? doorGo.GetComponent<TowerDoor>() : null;
+            Check(door != null, "la puerta de la torre existe");
+            if (door != null)
+            {
+                Check(door.IsOpen, "la puerta arranca abierta");
+                door.Press();
+                bool closing = !door.IsOpen && door.IsMoving && door.GetPressPrompt() == "Abrir puerta";
+                door.Press();
+                bool reopening = door.IsOpen;
+                door.Press();
+                if (world != null) world.ResetWorld();
+                Check(closing && reopening && door.IsOpen && !door.IsMoving, "la puerta alterna y el reinicio la deja abierta");
+            }
+
             // --- HUD
             Check(Object.FindFirstObjectByType<UnityEngine.UIElements.UIDocument>() != null, "HUD UI Toolkit presente");
         }

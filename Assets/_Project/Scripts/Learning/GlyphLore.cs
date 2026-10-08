@@ -11,6 +11,8 @@ namespace SpellSimulator.Learning
         public string Title;
         public Color Color;
         public readonly List<string> Glyphs = new List<string>();
+        /// <summary>Hechizos (Data/Spells) que ensena; vacio en los libros de glifos.</summary>
+        public readonly List<string> Spells = new List<string>();
     }
 
     /// <summary>
@@ -39,6 +41,7 @@ namespace SpellSimulator.Learning
                     var info = new BookInfo { Id = (string)b["id"], Title = (string)b["title"], Color = new Color(0.5f, 0.3f, 0.2f) };
                     if (b["color"] is JArray c && c.Count >= 3) info.Color = new Color((float)c[0], (float)c[1], (float)c[2]);
                     if (b["glyphs"] is JArray ids) foreach (var id in ids) info.Glyphs.Add((string)id);
+                    if (b["spells"] is JArray spells) foreach (var id in spells) info.Spells.Add((string)id);
                     lore.Books.Add(info);
                 }
             return lore;

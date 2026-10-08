@@ -154,6 +154,21 @@ namespace SpellSimulator.Learning
             "Se aprenden leyendo los libros de la biblioteca o dibujando bien uno nuevo.\n\n" +
             $"<i><color={Faded}>Conocés {known} de {total}: {sigils} sigilos y {signs} signos.</color></i>";
 
+        // ---------------------------------------------------------------- Hechizos
+
+        /// <summary>Texto de la pagina izquierda de la lista de hechizos.</summary>
+        public static string SpellIntro(int known, int total) =>
+            "Hechizos listos para hacer. Cada página muestra el <b>sello completo</b> dibujándose: sigilo al centro, signos sobre el anillo y el <b>círculo casi cerrado</b>.\n\n" +
+            "Copialo en el papel y cerrá el anillo a mano para lanzarlo. Los básicos ya los sabés; los demás los enseñan los <b>libros de hechizos</b> de la biblioteca.\n\n" +
+            $"<i><color={Faded}>Conocés {known} de {total}.</color></i>";
+
+        public const string NoSpells = "Aún no conocés ningún hechizo.\n\nBuscá los libros de hechizos en la biblioteca.";
+
+        /// <summary>Pagina derecha de un hechizo: ficha, descripcion y como hacerlo.</summary>
+        public static string SpellPage(SpellDef spell) =>
+            $"<i><color={Faded}>{spell.ElementName} · dificultad {spell.Difficulty} de 3</color></i>\n\n" +
+            $"{spell.Description}\n\n{Heading("Cómo hacerlo")}\n{spell.HowTo}";
+
         // ---------------------------------------------------------------- creacion de textos
 
         /// <summary>Crea un texto 3D (TextMeshPro) hijo de parent. Solo en la construccion del libro.</summary>

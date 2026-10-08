@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "wind_fan",
+  "name": "Abanico de viento",
+  "description": "El aire sale en abanico hacia los lados: empuja menos pero cubre más.",
+  "element": "wind",
+  "origin": "Book",
+  "difficulty": 2,
+  "book": "spells-wind-water",
+  "howTo": "Igual que la Ráfaga, pero con las dos columnas dadas vuelta: la punta mira hacia afuera del sello. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "wind-directs-air",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 0,
+      "turn": 180
+    },
+    {
+      "id": "column",
+      "angle": 180,
+      "turn": 180
+    }
+  ]
+}

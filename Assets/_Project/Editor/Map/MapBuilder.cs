@@ -116,7 +116,19 @@ namespace SpellSimulator.EditorTools.Map
             var existing = AssetDatabase.LoadAssetAtPath<Mesh>(path);
             if (existing != null)
             {
-                EditorUtility.CopySerialized(mesh, existing);
+                // Se reescribe con la API de Mesh (no CopySerialized): con CopySerialized el editor seguia dibujando la malla
+                // vieja en la misma sesion (cache de GPU), aunque el asset ya tuviera la nueva.
+                existing.Clear();
+                existing.indexFormat = mesh.indexFormat;
+                existing.SetVertices(mesh.vertices);
+                if (mesh.colors.Length > 0) existing.SetColors(mesh.colors);
+                if (mesh.uv.Length > 0) existing.SetUVs(0, mesh.uv);
+                existing.subMeshCount = mesh.subMeshCount;
+                for (int i = 0; i < mesh.subMeshCount; i++) existing.SetTriangles(mesh.GetTriangles(i), i);
+                existing.SetNormals(mesh.normals);
+                existing.RecalculateBounds();
+                EditorUtility.SetDirty(existing);
+                Object.DestroyImmediate(mesh);
                 return existing;
             }
             AssetDatabase.CreateAsset(mesh, path);
@@ -437,6 +449,10 @@ namespace SpellSimulator.EditorTools.Map
                 so.FindProperty("emissionSide").enumValueIndex = (int)EmissionSide.InkSide;
                 so.ApplyModifiedProperties();
             }
+            // El papel del escritorio vive fuera de Map (no se regenera): se lo vuelve a apoyar si el escritorio se movio.
+            var existingDeskPaper = GameObject.Find("DeskPaper");
+            if (desk != null && existingDeskPaper != null)
+                existingDeskPaper.transform.SetPositionAndRotation(desk.transform.position + Vector3.up * 0.86f, Quaternion.Euler(90f, 0f, 0f));
         }
 
         /// <summary>Posiciones originales en el laboratorio (para que regenerar no acumule desplazamientos).</summary>

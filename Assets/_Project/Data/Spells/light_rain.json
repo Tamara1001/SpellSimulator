@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "light_rain",
+  "name": "Lluvia suave",
+  "description": "Una llovizna que se derrama despacio: dura más, empuja poco y moja todo.",
+  "element": "water",
+  "origin": "Book",
+  "difficulty": 2,
+  "book": "spells-wind-water",
+  "howTo": "Dibujá el sigilo del agua y, a izquierda y derecha, un signo de dispersión mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "water",
+  "signs": [
+    {
+      "id": "dispersion",
+      "angle": 0,
+      "turn": 0
+    },
+    {
+      "id": "dispersion",
+      "angle": 180,
+      "turn": 0
+    }
+  ]
+}

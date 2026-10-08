@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "whirl",
+  "name": "Remolino",
+  "description": "El aire gira alrededor del sello y arrastra lo que encuentra.",
+  "element": "wind",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-wind-water",
+  "howTo": "Dibujá el sigilo del viento y tres columnas repartidas en el anillo, todas giradas un cuarto de vuelta en el mismo sentido, como un molinete. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "wind-directs-air",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 30,
+      "turn": 90
+    },
+    {
+      "id": "column",
+      "angle": 150,
+      "turn": 90
+    },
+    {
+      "id": "column",
+      "angle": 270,
+      "turn": 90
+    }
+  ]
+}

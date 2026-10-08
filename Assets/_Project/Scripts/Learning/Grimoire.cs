@@ -12,7 +12,7 @@ namespace SpellSimulator.Learning
     /// <summary>
     /// Pantallas del grimorio. La portada (Menu) es un indice: desde ahi se llega a cada seccion en cualquier orden.
     /// </summary>
-    public enum GrimoireScreen { Menu, Magic, GlyphIndex, GlyphDetail, Seals, Controls, Options }
+    public enum GrimoireScreen { Menu, Magic, GlyphIndex, GlyphDetail, Seals, Controls, Options, Spells, SpellDetail }
 
     /// <summary>
     /// Libro-menu diegetico (SYSTEMS_DESIGN 9). Tab / Y / menu izquierdo lo abre flotando frente al jugador, un poco
@@ -32,6 +32,8 @@ namespace SpellSimulator.Learning
 
         [SerializeField] private PlayerInputReader input;
         [SerializeField] private GlyphDictionaryAsset dictionary;
+        [SerializeField, Tooltip("Hechizos (Data/Spells/*.json). Los asigna SpellSimulator > Learning > Setup Grimoire; en el Editor, si queda vacio, se leen de la carpeta.")]
+        private TextAsset[] spellFiles;
         [Header("Materiales (SpellSimulator > Learning > Setup Grimoire)")]
         [SerializeField, Tooltip("Pagina izquierda (lienzo del glifo animado).")] private Material pageMaterial;
         [SerializeField, Tooltip("Pagina derecha (pergamino espejado).")] private Material pageRightMaterial;
@@ -94,6 +96,14 @@ namespace SpellSimulator.Learning
         private int indexPage;                              // pagina del indice de glifos
         private int spread;                                 // hoja de Magia / Sellos / Controles
 
+        // Hechizos (ADR-034): catalogo del proyecto y los desbloqueados (inicial o de un libro leido).
+        private SpellCatalog catalog;
+        private readonly List<SpellDef> spells = new List<SpellDef>();
+        private SpellDef spell;                             // hechizo de la pantalla SpellDetail
+        private int spellPage;                              // pagina de la lista de hechizos
+        private Func<string, bool> bookRead;
+        private const int SpellsPerPage = 7;
+
         // Pools fijos (creados en Build): cada pantalla reutiliza los primeros y oculta el resto.
         private GrimoireButton[] buttons;
         private TextMeshPro[] labels;
@@ -149,6 +159,7 @@ namespace SpellSimulator.Learning
                 mover = input.GetComponent<ObjectMover>();
             }
             GrimoireOptions.ApplyMaster();
+            LoadSpells();
             Build();
             root.gameObject.SetActive(false);
             Discovery.Discovered += OnDiscovered;
@@ -212,10 +223,12 @@ namespace SpellSimulator.Learning
             root.gameObject.SetActive(true);
             wasUsingTool = input != null && input.IsUsingTool;
             RefreshGlyphs();
+            RefreshSpells();
             // Si el glifo abierto ya no esta descubierto (se olvido todo), vuelve al menu.
             GrimoireScreen s = screen;
             string g = glyph;
             if (s == GrimoireScreen.GlyphDetail && !glyphs.Contains(g)) { s = GrimoireScreen.Menu; g = null; }
+            if (s == GrimoireScreen.SpellDetail && (spell == null || !spells.Contains(spell))) { s = GrimoireScreen.Spells; g = null; }
             Show(s, g);
             Opened?.Invoke();
         }
@@ -354,6 +367,19 @@ namespace SpellSimulator.Learning
                     if (next >= 0 && next < IndexPageCount()) { indexPage = next; Go(GrimoireScreen.GlyphIndex); }
                     break;
                 }
+                case GrimoireScreen.SpellDetail:
+                {
+                    int i = spells.IndexOf(spell);
+                    int n = i + delta;
+                    if (i >= 0 && n >= 0 && n < spells.Count) { spell = spells[n]; spellPage = n / SpellsPerPage; Go(GrimoireScreen.SpellDetail); }
+                    break;
+                }
+                case GrimoireScreen.Spells:
+                {
+                    int next = spellPage + delta;
+                    if (next >= 0 && next < SpellPageCount()) { spellPage = next; Go(GrimoireScreen.Spells); }
+                    break;
+                }
                 case GrimoireScreen.Magic:
                 case GrimoireScreen.Seals:
                 case GrimoireScreen.Controls:
@@ -378,6 +404,8 @@ namespace SpellSimulator.Learning
         {
             spread = Mathf.Max(0, sheet);
             indexPage = Mathf.Max(0, sheet);
+            spellPage = Mathf.Max(0, sheet);
+            if (next == GrimoireScreen.SpellDetail) { RefreshSpells(); spell = spells.Count > 0 ? spells[Mathf.Min(sheet, spells.Count - 1)] : null; if (spell == null) next = GrimoireScreen.Spells; }
             if (IsOpen) Show(next, next == GrimoireScreen.GlyphDetail && glyphs.Count > 0 ? glyphs[0] : null);
         }
 
@@ -442,6 +470,8 @@ namespace SpellSimulator.Learning
                 case GrimoireScreen.GlyphIndex: ShowIndex(); break;
                 case GrimoireScreen.GlyphDetail: ShowDetail(id); break;
                 case GrimoireScreen.Options: ShowOptions(); break;
+                case GrimoireScreen.Spells: ShowSpells(); break;
+                case GrimoireScreen.SpellDetail: ShowSpellDetail(); break;
             }
             PlaceMenuButton();
         }
@@ -466,11 +496,14 @@ namespace SpellSimulator.Learning
             SetTitle(Right, "Índice");
             float w = ContentWidth * 0.86f, h = 0.034f;
             string n = $"<color={GrimoireTexts.Gold}>";
-            Place(Right, 0f, 0.083f, w, h, $"{n}I</color>   Magia", ButtonSize, () => Go(GrimoireScreen.Magic));
-            Place(Right, 0f, 0.035f, w, h, $"{n}II</color>   Glifos   <size=75%>({glyphs.Count} de {total})</size>", ButtonSize, () => Go(GrimoireScreen.GlyphIndex));
-            Place(Right, 0f, -0.013f, w, h, $"{n}III</color>   Sellos", ButtonSize, () => Go(GrimoireScreen.Seals));
-            Place(Right, 0f, -0.061f, w, h, $"{n}IV</color>   Controles", ButtonSize, () => Go(GrimoireScreen.Controls));
-            Place(Right, 0f, -0.109f, w, h, $"{n}V</color>   Opciones", ButtonSize, () => Go(GrimoireScreen.Options));
+            RefreshSpells();
+            h = 0.032f;
+            Place(Right, 0f, 0.092f, w, h, $"{n}I</color>   Magia", ButtonSize, () => Go(GrimoireScreen.Magic));
+            Place(Right, 0f, 0.052f, w, h, $"{n}II</color>   Glifos   <size=75%>({glyphs.Count} de {total})</size>", ButtonSize, () => Go(GrimoireScreen.GlyphIndex));
+            Place(Right, 0f, 0.012f, w, h, $"{n}III</color>   Sellos", ButtonSize, () => Go(GrimoireScreen.Seals));
+            Place(Right, 0f, -0.028f, w, h, $"{n}IV</color>   Hechizos   <size=75%>({spells.Count})</size>", ButtonSize, () => Go(GrimoireScreen.Spells));
+            Place(Right, 0f, -0.068f, w, h, $"{n}V</color>   Controles", ButtonSize, () => Go(GrimoireScreen.Controls));
+            Place(Right, 0f, -0.108f, w, h, $"{n}VI</color>   Opciones", ButtonSize, () => Go(GrimoireScreen.Options));
             PlaceOrnament(Right, 0f, -0.145f, 0.1f);
         }
 
@@ -559,6 +592,109 @@ namespace SpellSimulator.Learning
                 else DebugTools.DiagnosticBus.OnDiagnosticsUpdated?.Invoke("<b>[Estampa]</b> Agarra una estampa (E) y volve a apretar el boton.");
             });
             Pager(i, glyphs.Count, () => Step(-1), () => Step(1));
+        }
+
+        // ---------------------------------------------------------------- hechizos (ADR-034)
+
+        private void LoadSpells()
+        {
+            var texts = new List<string>();
+            if (spellFiles != null)
+                for (int i = 0; i < spellFiles.Length; i++)
+                    if (spellFiles[i] != null) texts.Add(spellFiles[i].text);
+#if UNITY_EDITOR
+            // Tolerante: si nadie corrio el setup, en el Editor se leen directo de la carpeta de datos.
+            if (texts.Count == 0)
+                foreach (string guid in UnityEditor.AssetDatabase.FindAssets("t:TextAsset", new[] { "Assets/_Project/Data/Spells" }))
+                {
+                    var asset = UnityEditor.AssetDatabase.LoadAssetAtPath<TextAsset>(UnityEditor.AssetDatabase.GUIDToAssetPath(guid));
+                    if (asset != null) texts.Add(asset.text);
+                }
+#endif
+            catalog = SpellCatalog.FromJsons(texts, msg => Debug.LogWarning("[Hechizos] " + msg));
+            SpellCatalog.Shared = catalog;
+            bookRead = IsBookRead;
+        }
+
+        private static bool IsBookRead(string book) => Discovery.Instance != null && Discovery.Instance.State.HasRead(book);
+
+        /// <summary>Hechizos desbloqueados: los iniciales y los de libros ya leidos.</summary>
+        private void RefreshSpells()
+        {
+            spells.Clear();
+            if (catalog != null) catalog.Unlocked(bookRead, spells);
+        }
+
+        private int SpellPageCount() => Mathf.Max(1, Mathf.CeilToInt(spells.Count / (float)SpellsPerPage));
+
+        private void ShowSpells()
+        {
+            RefreshSpells();
+            int total = catalog != null ? catalog.All.Count : 0;
+            SetTitle(Left, "Hechizos");
+            SetBody(Left, GrimoireTexts.SpellIntro(spells.Count, total), BodyTop, BodyBottom);
+
+            SetTitle(Right, "Conocidos");
+            if (spells.Count == 0)
+            {
+                SetBody(Right, GrimoireTexts.NoSpells, BodyTop, BodyBottom);
+                return;
+            }
+            int pages = SpellPageCount();
+            spellPage = Mathf.Clamp(spellPage, 0, pages - 1);
+            float w = ContentWidth * 0.92f;
+            for (int k = 0; k < SpellsPerPage; k++)
+            {
+                int index = spellPage * SpellsPerPage + k;
+                if (index >= spells.Count) break;
+                SpellDef def = spells[index];
+                Place(Right, 0f, 0.092f - k * 0.041f, w, 0.031f,
+                    $"{def.Name}   <size=70%><color={GrimoireTexts.Faded}>{def.ElementName}</color></size>", ButtonSize * 0.95f,
+                    () => { spell = def; Go(GrimoireScreen.SpellDetail); });
+            }
+            Pager(spellPage, pages, () => Step(-1), () => Step(1));
+        }
+
+        private void ShowSpellDetail()
+        {
+            if (spell == null) { ShowSpells(); return; }
+            int i = spells.IndexOf(spell);
+            SetTitle(Left, spell.Name);
+            // El sello completo dibujandose: sigilo, signos y el circulo casi cerrado al final.
+            QueueSpell(spell, new Vector2(0.5f, 0.47f), SpellRadius);
+            Place(Left, 0.034f, BarY, 0.088f, BarHeight, "Índice", ButtonSize * 0.9f, () =>
+            {
+                spellPage = i >= 0 ? i / SpellsPerPage : 0;
+                Go(GrimoireScreen.Spells);
+            });
+
+            SetTitle(Right, spell.Name);
+            SetBody(Right, GrimoireTexts.SpellPage(spell), BodyTop, BodyBottom + 0.02f);
+            Pager(i, spells.Count, () => Step(-1), () => Step(1));
+        }
+
+        /// <summary>Radio del anillo del sello dibujado en la pagina (m).</summary>
+        private const float SpellRadius = 0.098f;
+
+        private List<List<Vector2>> TemplateOf(string id) => dictionary.Dictionary.Get(id).TemplateStrokes;
+
+        /// <summary>Encola los trazos del hechizo (unidades de anillo) centrados en center (UV de la pagina), con el mismo suavizado y remuestreo que los glifos.</summary>
+        private void QueueSpell(SpellDef def, Vector2 center, float radiusMeters)
+        {
+            List<List<Vector2>> strokes = SpellStrokeBuilder.Build(def, TemplateOf);
+            for (int s = 0; s < strokes.Count; s++)
+            {
+                GrimoireStrokeMath.Smooth(strokes[s], GrimoireStrokeMath.SmoothRadius, tmpSmooth);
+                tmpPath.Clear();
+                for (int i = 0; i < tmpSmooth.Count; i++) tmpPath.Add(tmpSmooth[i] * radiusMeters);
+                tmpResampled.Clear();
+                GrimoireStrokeMath.Resample(tmpPath, GrimoireStrokeMath.StepMeters, tmpResampled);
+                for (int i = 0; i < tmpResampled.Count; i++)
+                {
+                    Vector2 p = tmpResampled[i];
+                    strokeQueue.Add((new Vector2(center.x + p.x / PageWidth, center.y + p.y / PageHeight), i == 0, SigilLineWidth));
+                }
+            }
         }
 
         private void ShowOptions()

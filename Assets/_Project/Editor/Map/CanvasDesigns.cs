@@ -36,25 +36,27 @@ namespace SpellSimulator.EditorTools.Map
             foreach (var c in Object.FindObjectsByType<DrawingCanvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 SetInkSide(c.gameObject);
 
-            // Biblioteca: cuadernos (con paginas) sobre la mesa de herramientas; pizarra en la pared libre.
-            Vector3 bench = towerOrigin + new Vector3(0.4f, 0.82f, -2.35f);
-            var notebookA = Grabbable(template, material, "Notebook_A", bench + new Vector3(-0.7f, 0.012f, 0f), Quaternion.Euler(90f, 12f, 0f), 0.24f, 0.32f, Dressing.Notebook);
+            // Biblioteca: cuadernos (con paginas) a la izquierda de la mesa de trabajo (las herramientas van a la derecha).
+            Vector3 bench = towerOrigin + TowerProps.LibraryBench + Vector3.up * 0.82f;
+            var notebookA = Grabbable(template, material, "Notebook_A", bench + new Vector3(-0.78f, 0.012f, 0.02f), Quaternion.Euler(90f, 12f, 0f), 0.24f, 0.32f, Dressing.Notebook);
             AddPages(notebookA);
-            var notebookB = Grabbable(template, material, "Notebook_B", bench + new Vector3(-0.35f, 0.012f, 0.1f), Quaternion.Euler(90f, -20f, 0f), 0.2f, 0.28f, Dressing.Notebook);
+            var notebookB = Grabbable(template, material, "Notebook_B", bench + new Vector3(-0.45f, 0.012f, -0.08f), Quaternion.Euler(90f, -20f, 0f), 0.2f, 0.28f, Dressing.Notebook);
             AddPages(notebookB);
 
-            // Lienzo grande enmarcado de pie en el piso, contra la pared: a 4.4 m del centro de la torre y 40 grados
-            // (mismo sentido que Polar: 0 = +X, 90 = +Z), con el borde de arriba inclinado 10 grados hacia la pared.
-            float libraryAngle = 40f * Mathf.Deg2Rad;
+            // Estacion de agua (oeste, ver TowerProps): lienzo grande enmarcado de pie en el piso, al lado de la pila, con el
+            // borde de arriba inclinado 10 grados hacia la pared (mismo sentido que Polar: 0 = +X, 90 = +Z).
+            float libraryAngle = (TowerProps.WaterAngle + 22f) * Mathf.Deg2Rad;
             Vector3 radial = new Vector3(Mathf.Cos(libraryAngle), 0f, Mathf.Sin(libraryAngle));
             Quaternion libraryRotation = StandingRotation(-radial, 10f); // la cara mira al centro de la torre
-            Grabbable(template, material, "BigCanvas_Library", StandingPosition(towerOrigin + radial * 4.4f, libraryRotation, 1.2f),
+            Grabbable(template, material, "BigCanvas_Library", StandingPosition(towerOrigin + radial * 4.3f + Vector3.up * 0.05f, libraryRotation, 1.2f),
                 libraryRotation, 0.9f, 1.2f, Dressing.Framed).GetComponent<Rigidbody>().isKinematic = true;
 
-            float wallAngle = 283f * Mathf.Deg2Rad;
+            // Estacion de viento (sureste): pizarra de pared centrada en una cara del muro, sobre la mesa de los papeles.
+            float wallAngle = TowerProps.WindAngle * Mathf.Deg2Rad;
             Vector3 outward = new Vector3(Mathf.Cos(wallAngle), 0f, Mathf.Sin(wallAngle));
-            Vector3 boardAt = towerOrigin + outward * (TowerBuilder.InnerRadius - 0.1f) + Vector3.up * 1.7f;
-            Fixed(template, material, "WallBoard_Library", boardAt, Quaternion.LookRotation(outward), 1.5f, 1.0f, Dressing.Framed);
+            float face = TowerBuilder.InnerRadius * Mathf.Cos(9f * Mathf.Deg2Rad);
+            Vector3 boardAt = towerOrigin + outward * (face - 0.06f) + Vector3.up * 1.85f;
+            Fixed(template, material, "WallBoard_Library", boardAt, Quaternion.LookRotation(outward), 1.4f, 0.9f, Dressing.Framed);
 
             // Estudio (primer piso): mesa de dibujo inclinada y caballete.
             DraftingTable(template, material, "DraftingTable", towerOrigin + new Vector3(-1.6f, floor, -1.2f), 20f);

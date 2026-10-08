@@ -221,8 +221,8 @@ namespace SpellSimulator.EditorTools.Map
             root.SetParent(tower, false);
             Vector3 o = tower.position;
 
-            // Velas sobre el escritorio y la mesa de lectura.
-            Vector3[] candles = { new Vector3(-0.7f, 0.82f, 0.85f), new Vector3(0.75f, 0.82f, 0.85f), new Vector3(-1.2f, 0.82f, -1.4f) };
+            // Velas sobre el escritorio (centro) y la mesa de lectura (este). Ninguna cerca de las estaciones de viento y agua.
+            Vector3[] candles = { new Vector3(-0.7f, 0.82f, 0.6f), new Vector3(0.72f, 0.82f, 0.6f), new Vector3(2.1f, 0.82f, -0.02f) };
             var b = new LowPolyMesh();
             foreach (var c in candles)
             {
@@ -232,8 +232,8 @@ namespace SpellSimulator.EditorTools.Map
                     Loop("CandleFlame", root, o + c + Vector3.up * 0.2f, output.LookFor(ElementType.Fire), 14f,
                         new Vector2(0.05f, 0.09f), new Vector2(0.05f, 0.15f), -0.1f, 0.35f, 5f, 0.01f);
             }
-            // Atril con un libro abierto, junto a la puerta.
-            // Atril del lado oeste (antes estaba en el camino de la puerta a la rampa).
+            // Atril con el libro de los cuatro elementos, a la izquierda de quien entra: se ve desde el spawn (la puerta
+            // abierta queda contra el muro, detras) y detras de el, la estacion de agua.
             var lectern = Matrix4x4.TRS(new Vector3(-1.3f, 0f, -2.6f), Quaternion.Euler(0f, -52f, 0f), Vector3.one);
             b.Frustum(lectern, 0.25f, 0.12f, 0f, 0.1f, 6, new Color(0.36f, 0.22f, 0.15f));
             b.Box(lectern * Matrix4x4.Translate(new Vector3(0f, 0.6f, 0f)), new Vector3(0.1f, 1.1f, 0.1f), new Color(0.36f, 0.22f, 0.15f));
@@ -279,7 +279,7 @@ namespace SpellSimulator.EditorTools.Map
             var spots = new (string id, Vector3 at, float yaw, float tilt)[]
             {
                 ("elements", new Vector3(-1.3f, 1.22f, -2.6f), -52f, -25f),
-                ("variants", new Vector3(-0.6f, 0.86f, 0.35f), 15f, 0f),
+                ("variants", new Vector3(-0.6f, 0.86f, 0.22f), 15f, 0f),
                 ("motion", new Vector3(0.9f, floor + 0.86f, 0.2f), 60f, 0f),
                 ("shape", new Vector3(0.25f, floor + 0.86f, 0.75f), 95f, 0f),
                 ("rare", new Vector3(0f, TowerBuilder.TerraceY + 1.05f, 0f), 0f, -20f),
@@ -403,9 +403,9 @@ namespace SpellSimulator.EditorTools.Map
             var desk = GameObject.Find("DeskPaper");
             if (desk != null) MakeFixed(desk);
 
-            // Agarrables en la mesa de lectura de la biblioteca.
-            Paper(template, "Paper_S", towerOrigin + new Vector3(-1.7f, 0.87f, -1.3f), Quaternion.Euler(90f, 20f, 0f), 0.35f, kinematic: false);
-            Paper(template, "Paper_M", towerOrigin + new Vector3(-1.15f, 0.87f, -1.05f), Quaternion.Euler(90f, -15f, 0f), 0.6f, kinematic: false);
+            // Agarrables en la mesa de lectura de la biblioteca (al este del escritorio).
+            Paper(template, "Paper_S", towerOrigin + new Vector3(1.8f, 0.87f, 0.15f), Quaternion.Euler(90f, 20f, 0f), 0.35f, kinematic: false);
+            Paper(template, "Paper_M", towerOrigin + new Vector3(1.85f, 0.87f, 0.75f), Quaternion.Euler(90f, -10f, 0f), 0.55f, kinematic: false);
         }
 
         private static GameObject Paper(GameObject template, string name, Vector3 position, Quaternion rotation, float size, bool kinematic)

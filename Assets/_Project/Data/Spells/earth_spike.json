@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "earth_spike",
+  "name": "Estaca de tierra",
+  "description": "Una punta de roca que sale del suelo. Golpea y parte la madera.",
+  "element": "earth",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-fire-earth",
+  "howTo": "Dibujá el sigilo de la tierra y una columna abajo, con la punta hacia el sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "earth",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 270,
+      "turn": 0
+    }
+  ]
+}

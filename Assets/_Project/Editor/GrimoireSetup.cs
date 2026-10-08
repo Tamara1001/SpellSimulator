@@ -72,6 +72,7 @@ namespace SpellSimulator.EditorTools
                 Set(so, "dictionary", AssetDatabase.LoadAssetAtPath<GlyphDictionaryAsset>("Assets/_Project/Data/GlyphDictionary.asset"));
             if (so.FindProperty("input").objectReferenceValue == null)
                 Set(so, "input", Object.FindFirstObjectByType<PlayerInputReader>());
+            AssignSpellFiles(so);
             so.FindProperty("openDistance").floatValue = 0.72f;
             so.ApplyModifiedProperties();
 
@@ -79,6 +80,18 @@ namespace SpellSimulator.EditorTools
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             return $"Grimorio equipado en {scene.name}: texturas en {TextureDir}, materiales en {MaterialDir}.";
+        }
+
+        /// <summary>Asigna los JSON de Data/Spells al grimorio (seccion Hechizos). Idempotente.</summary>
+        private static void AssignSpellFiles(SerializedObject so)
+        {
+            var array = so.FindProperty("spellFiles");
+            if (array == null) return;
+            var guids = AssetDatabase.FindAssets("t:TextAsset", new[] { "Assets/_Project/Data/Spells" });
+            array.arraySize = guids.Length;
+            for (int i = 0; i < guids.Length; i++)
+                array.GetArrayElementAtIndex(i).objectReferenceValue =
+                    AssetDatabase.LoadAssetAtPath<TextAsset>(AssetDatabase.GUIDToAssetPath(guids[i]));
         }
 
         private static void Set(SerializedObject so, string field, Object value)

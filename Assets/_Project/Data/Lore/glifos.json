@@ -29,6 +29,8 @@
     { "id": "variants", "title": "Variantes y parientes", "color": [0.2, 0.35, 0.6], "glyphs": [ "light", "crystal", "aeroform", "wind-underfoot" ] },
     { "id": "motion", "title": "Signos del movimiento", "color": [0.25, 0.48, 0.3], "glyphs": [ "dispersion", "pull", "float", "levitation" ] },
     { "id": "shape", "title": "Dar forma a la magia", "color": [0.62, 0.5, 0.2], "glyphs": [ "column", "convergence", "region", "crush" ] },
-    { "id": "rare", "title": "Signos raros", "color": [0.42, 0.24, 0.52], "glyphs": [ "collection", "billowing", "repetition", "weave" ] }
+    { "id": "rare", "title": "Signos raros", "color": [0.42, 0.24, 0.52], "glyphs": [ "collection", "billowing", "repetition", "weave" ] },
+    { "id": "spells-wind-water", "title": "Hechizos de viento y agua", "color": [0.2, 0.5, 0.62], "glyphs": [], "spells": [ "wind_fan", "light_rain", "whirl" ] },
+    { "id": "spells-fire-earth", "title": "Hechizos de fuego y tierra", "color": [0.6, 0.3, 0.14], "glyphs": [], "spells": [ "small_flame", "earth_spike" ] }
   ]
 }

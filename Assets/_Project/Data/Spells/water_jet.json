@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "water_jet",
+  "name": "Chorro de agua",
+  "description": "Un chorro de agua firme. Moja, empuja y apaga el fuego.",
+  "element": "water",
+  "origin": "Preset",
+  "difficulty": 1,
+  "book": "inicial",
+  "howTo": "Dibujá el sigilo del agua al centro y una columna a cada lado, con la punta hacia el sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "water",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 0,
+      "turn": 0
+    },
+    {
+      "id": "column",
+      "angle": 180,
+      "turn": 0
+    }
+  ]
+}
