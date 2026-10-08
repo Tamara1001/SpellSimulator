@@ -15,7 +15,23 @@ namespace SpellSimulator.EditorTools
         private static readonly string ResultPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "build-webgl.txt"));
         private static readonly string OutputPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Builds", "WebGL"));
 
+        private static bool development;
+
+        /// <summary>Build de diagnostico: Development Build (errores de shaders y logs en la consola del navegador) y compilacion rapida.</summary>
+        [MenuItem("SpellSimulator/Build/WebGL (diagnostico)")]
+        public static void RunDevelopment()
+        {
+            development = true;
+            Run();
+        }
+
         [MenuItem("SpellSimulator/Build/WebGL (itch.io)")]
+        public static void RunRelease()
+        {
+            development = false;
+            Run();
+        }
+
         public static void Run()
         {
             Directory.CreateDirectory(Path.GetDirectoryName(ResultPath));
@@ -30,7 +46,7 @@ namespace SpellSimulator.EditorTools
             PlayerSettings.WebGL.compressionFormat = WebGLCompressionFormat.Gzip;
             PlayerSettings.WebGL.decompressionFallback = false;
             PlayerSettings.WebGL.threadsSupport = false;
-            PlayerSettings.WebGL.exceptionSupport = WebGLExceptionSupport.None;
+            PlayerSettings.WebGL.exceptionSupport = development ? WebGLExceptionSupport.ExplicitlyThrownExceptionsOnly : WebGLExceptionSupport.None;
             PlayerSettings.WebGL.initialMemorySize = 256;
             PlayerSettings.WebGL.maximumMemorySize = 1024;
             PlayerSettings.WebGL.dataCaching = true;
@@ -42,8 +58,9 @@ namespace SpellSimulator.EditorTools
                 locationPathName = OutputPath,
                 target = BuildTarget.WebGL,
                 targetGroup = BuildTargetGroup.WebGL,
-                options = BuildOptions.None
+                options = development ? BuildOptions.Development : BuildOptions.None
             };
+            UnityEditor.WebGL.UserBuildSettings.codeOptimization = development ? UnityEditor.WebGL.WasmCodeOptimization.BuildTimes : UnityEditor.WebGL.WasmCodeOptimization.RuntimeSpeed;
             var report = BuildPipeline.BuildPlayer(options);
             var sb = new StringBuilder();
             sb.AppendLine(report.summary.result == BuildResult.Succeeded ? "PASS" : "FAIL " + report.summary.result);

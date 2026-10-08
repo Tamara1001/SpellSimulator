@@ -26,8 +26,8 @@ Shader "SpellSimulator/InkBrush"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
-                half4 _InkColor;
-                half _Softness;
+                float4 _InkColor;
+                float _Softness;
             CBUFFER_END
 
             struct Attributes { float4 positionOS : POSITION; float2 uv : TEXCOORD0; };
@@ -41,13 +41,13 @@ Shader "SpellSimulator/InkBrush"
                 return output;
             }
 
-            half4 frag(Varyings input) : SV_Target
+            float4 frag(Varyings input) : SV_Target
             {
-                half d = length(input.uv - 0.5h) * 2.0h;
-                half a = saturate((1.0h - d) / max(_Softness, 0.001h)) * _InkColor.a;
+                float d = length(input.uv - 0.5) * 2.0;
+                float a = saturate((1.0 - d) / max(_Softness, 0.001)) * _InkColor.a;
                 // Blanco donde no hay tinta (Min no cambia el fondo), color de tinta donde si.
-                half3 color = lerp(half3(1, 1, 1), _InkColor.rgb, a);
-                return half4(color, a);
+                float3 color = lerp(float3(1, 1, 1), _InkColor.rgb, a);
+                return float4(color, a);
             }
             ENDHLSL
         }

@@ -34,7 +34,7 @@ Shader "SpellSimulator/SpellParticle"
                 float _Softness;
                 float _Intensity;
                 float _Shape;
-                half4 _RimColor;
+                float4 _RimColor;
             CBUFFER_END
 
             struct Attributes
@@ -64,13 +64,13 @@ Shader "SpellSimulator/SpellParticle"
                 return output;
             }
 
-            half4 frag(Varyings input) : SV_Target
+            float4 frag(Varyings input) : SV_Target
             {
                 float2 p = input.uv * 2.0 - 1.0;
                 float d = length(p);
                 float mask = saturate((1.0 - d) / _Softness);
                 mask *= mask;
-                half4 c = input.color;
+                float4 c = input.color;
                 if (_Shape > 0.5)
                 {
                     if (_Shape < 1.5)
@@ -108,8 +108,8 @@ Shader "SpellSimulator/SpellParticle"
                     }
                 }
                 if (_Additive > 0.5)
-                    return half4(c.rgb * c.a * mask * _Intensity, 1);
-                return half4(c.rgb, c.a * mask);
+                    return float4(c.rgb * c.a * mask * _Intensity, 1);
+                return float4(c.rgb, c.a * mask);
             }
             ENDHLSL
         }

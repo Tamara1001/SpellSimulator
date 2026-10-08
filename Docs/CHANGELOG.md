@@ -9,6 +9,10 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - El sigilo `crystal` sigue siendo elemento Tierra (reacciones/fisica/danio intactos) pero usa su propio `ElementLook` (`Data/Elements/Crystal.asset`): esquirlas facetadas celestes (`LowPolyMeshes.Crystal`), motas brillantes, impactos con fragmentos y destellos, y estacas de cristal + escarcha celeste en el suelo (`GroundMarks`, `ElementLook.crystalline`).
 - `SpellOutputController.LookFor(element, sigilId)` elige la variante; `MagicField.SigilId`. `ElementVfxSetup` (idempotente, menu VFX/Setup Cristal) crea el look y lo asigna en `SystemManagers.prefab`.
 
+## 2026-10-08 — WebGL: diagnostico y precision de shaders
+- `WebGLBuild` con dos modos (menus `WebGL (diagnostico)`: Development + compilacion rapida, y `WebGL (itch.io)`: release Gzip). El diagnostico no mostro errores propios; el libro, los lienzos y el anillo de tinta del grimorio se ven bien en el navegador de prueba (build release tambien).
+- Shaders de tinta, libro, calcomanias, marcas de suelo y particulas en `float` en lugar de `half` (GPUs con precision reducida en WebGL/movil). Hipotesis sin confirmar para lo que la usuaria ve invisible en itch.io (KI-104): pedir navegador, GPU y consola F12.
+
 ## 2026-10-08 — Septima tanda (parte 2): textos, creditos y tinta
 - 'Taller' -> 'Simulador' en el menu; creditos en grilla de roles (Programacion, Arte, Diseño de juego, Diseño de interfaz, Musica y sonido, VFX) con cierre 'Hecho con Unity 6 / v0.1.0 · prototipo'.
 - 'Estampa' -> 'Sello' en HUD, hints, grimorio y libros.

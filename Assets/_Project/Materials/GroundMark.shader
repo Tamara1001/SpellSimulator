@@ -26,8 +26,8 @@ Shader "SpellSimulator/GroundMark"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             CBUFFER_START(UnityPerMaterial)
-                half4 _BaseColor;
-                half4 _RimColor;
+                float4 _BaseColor;
+                float4 _RimColor;
                 float _Rim;
                 float _Fade;
                 float _Seed;
@@ -57,7 +57,7 @@ Shader "SpellSimulator/GroundMark"
                 return output;
             }
 
-            half4 frag(Varyings input) : SV_Target
+            float4 frag(Varyings input) : SV_Target
             {
                 float2 p = input.uv * 2.0 - 1.0;
                 float angle = atan2(p.y, p.x);
@@ -66,7 +66,7 @@ Shader "SpellSimulator/GroundMark"
                 float d = length(p) / (0.85 + wobble);
                 float body = 1 - smoothstep(0.75, 1.0, d);
                 float rim = smoothstep(0.6, 0.85, d) * (1 - smoothstep(0.85, 1.0, d)) * _Rim;
-                half4 c = lerp(_BaseColor, _RimColor, saturate(rim * 2));
+                float4 c = lerp(_BaseColor, _RimColor, saturate(rim * 2));
                 c.a = max(body * _BaseColor.a, rim * _RimColor.a) * _Fade;
                 return c;
             }

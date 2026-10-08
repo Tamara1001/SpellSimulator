@@ -31,9 +31,9 @@ Shader "SpellSimulator/GrimoirePage"
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseMap_ST;
                 float4 _Parchment_ST;
-                half4 _Tint;
+                float4 _Tint;
                 float _Mirror;
-                half _Lit;
+                float _Lit;
             CBUFFER_END
 
             struct Attributes { float4 positionOS : POSITION; float3 normalOS : NORMAL; float2 uv : TEXCOORD0; };
@@ -48,17 +48,17 @@ Shader "SpellSimulator/GrimoirePage"
                 return o;
             }
 
-            half4 frag(Varyings i) : SV_Target
+            float4 frag(Varyings i) : SV_Target
             {
-                half4 ink = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, i.uv);
+                float4 ink = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, i.uv);
                 float2 puv = i.uv;
                 puv.x = lerp(puv.x, 1.0 - puv.x, _Mirror);
-                half4 paper = SAMPLE_TEXTURE2D(_Parchment, sampler_Parchment, puv);
+                float4 paper = SAMPLE_TEXTURE2D(_Parchment, sampler_Parchment, puv);
                 Light light = GetMainLight();
-                half ndl = saturate(abs(dot(normalize(i.normalWS), light.direction)));
-                half3 lightCol = saturate(light.color * ndl + SampleSH(normalize(i.normalWS)));
-                half3 lit = lerp(half3(1, 1, 1), saturate(lightCol * 0.6 + 0.45), _Lit);
-                return half4(paper.rgb * ink.rgb * _Tint.rgb * lit, 1);
+                float ndl = saturate(abs(dot(normalize(i.normalWS), light.direction)));
+                float3 lightCol = saturate(light.color * ndl + SampleSH(normalize(i.normalWS)));
+                float3 lit = lerp(float3(1, 1, 1), saturate(lightCol * 0.6 + 0.45), _Lit);
+                return float4(paper.rgb * ink.rgb * _Tint.rgb * lit, 1);
             }
             ENDHLSL
         }

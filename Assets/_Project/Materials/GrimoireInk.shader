@@ -25,7 +25,7 @@ Shader "SpellSimulator/GrimoireInk"
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseMap_ST;
-                half4 _BaseColor;
+                float4 _BaseColor;
             CBUFFER_END
 
             struct Attributes { float4 positionOS : POSITION; float2 uv : TEXCOORD0; };
@@ -39,7 +39,7 @@ Shader "SpellSimulator/GrimoireInk"
                 return o;
             }
 
-            half4 frag(Varyings i) : SV_Target
+            float4 frag(Varyings i) : SV_Target
             {
                 return SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, i.uv) * _BaseColor;
             }
