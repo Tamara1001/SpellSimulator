@@ -48,7 +48,7 @@ Idioma del proyecto: **español** (docs, commits, logs, comentarios). Identifica
 4. **Documentar lo mínimo útil:** siempre `Docs/CHANGELOG.md` y, si aplica, `Docs/KNOWN_ISSUES.md`; el resto de la tabla de abajo **solo si cambió lo que
    describe**. `graphify update .` solo si se pide (o antes de una refactorización grande).
 5. Commit atómico en `main` al cerrar la tarea, mensaje en español, estilo de los commits existentes
-   (`Título corto` + cuerpo opcional). **Nunca push** sin pedido explícito. No commitear cambios de
+   (`Título corto` + cuerpo opcional). **Push solo si lo piden.** No commitear cambios de
    `ProjectSettings/`/escenas que no hizo el agente sin avisar.
 
 ### Qué doc actualizar (solo si cambió)
@@ -63,6 +63,30 @@ Idioma del proyecto: **español** (docs, commits, logs, comentarios). Identifica
 | Mecánica, objeto, regla o **control** de juego | `Docs/GAME_DESIGN.md` (y `MAGIC_SYSTEM.md` si toca el canon) |
 | Fin de hito | `Docs/ROADMAP.md` y `Docs/STATUS.md` |
 | Siempre | `Docs/CHANGELOG.md` |
+
+## Traspaso: lo que sabía el Claude anterior (leelo, no tenés su memoria)
+
+El proyecto lo diseñó y probó **Tamara D'Angelo** (@Tamara1001); ahora lo continúa otra persona con su propio Claude. Este bloque reemplaza las
+notas de memoria del agente anterior. Si la persona que te habla es otra, preguntale cómo prefiere trabajar (idioma, commits, push) y adaptate.
+
+**Contexto.** Evaluación final de la asignatura *Simuladores*. Dos modos: **Libre** (torre + pradera + lago, mundo reactivo, glifos que se aprenden leyendo
+libros; es lo que debe estar sólido) y **Duelo** (arena, rival IA, online; después). PC y Quest en paralelo; sin fecha fija. Estilo visual: *Witch Hat Atelier*, low-poly cartoon.
+El ONNX y el diccionario ya están en el repo; la referencia `wha-spell-simulator` solo hace falta para re-sincronizarlos.
+
+**Primeros pasos:** [Docs/ONBOARDING.md](Docs/ONBOARDING.md) → [Docs/STATUS.md](Docs/STATUS.md) → «Siguiente» al final de [Docs/ROADMAP.md](Docs/ROADMAP.md).
+Lo reciente (HUD, inventario, grimorio, torre, VFX, sellos, menú, calidad, WebGL) **nunca se probó a mano con teclado/mouse reales ni en VR**: lo primero es probar y corregir.
+
+**Cómo se trabajó (y por qué):**
+- **Todo en español** (docs, commits, logs, comentarios); identificadores en inglés. Commits atómicos en `main` con trailer `Co-Authored-By`. **Push solo si te lo piden.**
+- **No commitear ruido del Editor** (`Assets/Settings/*_RPAsset.asset`, `UniversalRenderPipelineGlobalSettings`, `OpenXRPackageSettings`, `SpellSimulator.slnx`, defines de `ProjectSettings.asset`): `git checkout -- <archivo>`.
+- **Costo/límites:** un pedido de ~25 puntos mezclados gastó >75 % de un límite de 5 h. Separá **bugs** de **rediseños**; en rediseños proponé un plan de media página y esperá el sí antes de codear.
+  Delegá a subagentes **solo con especificación cerrada y archivos propios** (Haiku: datos/textos; Sonnet: lógica de varios archivos; Opus: UI/estética 3D y planificación profunda, ~250k tokens cada uno).
+  Los subagentes **no compilan**: compilás y verificás vos una vez por tanda. A veces el sistema rechaza lanzar un subagente; no insistas con la misma tarea, hacela directo o avisá.
+- **Verificá con el harness**, no a ojo: compilación limpia + tests EditMode + `HarnessPlaySmoke` (+1 chequeo por sistema nuevo). Capturas con `HarnessCapture` o `ScreenCapture`. Probá en el navegador los builds WebGL (servidor local con `Content-Encoding: gzip`).
+- **No resolver por hipótesis lo que se puede medir**: p. ej. el desempate agua/viento se simuló, empeoró y se descartó (KI-105); ver «Siguiente» para cómo juntar datos reales (`Tests/Fixtures`).
+- Si dudás, **preguntá** a la persona antes de cambiar diseño o controles. Los controles tienen una sola fuente de verdad: `Docs/GAME_DESIGN.md` (se repiten en `Learning/GrimoireTexts.cs` y `PlayerInputReader`: si cambian, tocar los tres).
+- Reglas del trabajo con Unity MCP (parámetros `Code`/`Title`, esperar la compilación con loops de `sleep`, `delayCall` para builds, cartel de «guardar escena», CRLF, candado `Logs/unity.lock` si hay varios agentes): [Docs/HARNESS.md](Docs/HARNESS.md).
+- `MapBuilder.Build()` regenera la escena; **`MapLayout` conserva los ajustes manuales** (`Data/MapOverrides.json`). No borres ese archivo sin avisar.
 
 ## Comandos útiles
 
