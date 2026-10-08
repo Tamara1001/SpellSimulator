@@ -150,10 +150,10 @@ namespace SpellSimulator.EditorTools.Map
             MovablesSetup.Prop(map, material, "Candle_Wind_B", MovablesSetup.Kind.Candle, On(0.56f, -0.05f), 0f);
             for (int i = 0; i < 3; i++)
                 LightProp(map, material, $"WindSheet_{i}", LooseSheet(), On(-0.26f + i * 0.26f, -0.05f), yaw + 90f + (i - 1) * 9f,
-                    new Vector3(0.29f, 0.008f, 0.21f), new Vector3(0f, 0.003f, 0f), 0.05f, "hoja suelta", PaperPath, 2.5f);
+                    new Vector3(0.29f, 0.008f, 0.21f), new Vector3(0f, 0.003f, 0f), 0.02f, "hoja suelta", PaperPath, 0.7f);
             for (int i = 0; i < 3; i++)
                 LightProp(map, material, $"Feather_{i}", Feather(i), On(-0.28f + i * 0.28f, 0.17f), yaw + (i - 1) * 20f,
-                    new Vector3(0.24f, 0.012f, 0.05f), new Vector3(0f, 0.006f, 0f), 0.02f, "pluma", PaperPath, 3f);
+                    new Vector3(0.24f, 0.012f, 0.05f), new Vector3(0f, 0.006f, 0f), 0.01f, "pluma", PaperPath, 0.8f);
 
             Bunting(stations, material, origin, a);
             Sign(stations, material, "Sign_WindStation", origin + TowerBuilder.Polar(3.7f, 306f, 0.05f), origin + new Vector3(0f, 0f, -1.5f),
@@ -249,7 +249,7 @@ namespace SpellSimulator.EditorTools.Map
             var rb = go.AddComponent<Rigidbody>();
             rb.mass = mass;
             rb.linearDamping = airDrag;
-            rb.angularDamping = 1f;
+            rb.angularDamping = Mathf.Min(1f, airDrag * 0.4f);   // livianos: giran y revolotean
             rb.interpolation = RigidbodyInterpolation.Interpolate;
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousSpeculative;
             var movable = go.AddComponent<Movable>();
@@ -354,7 +354,7 @@ namespace SpellSimulator.EditorTools.Map
                 new Vector3(0.3f, 0.28f, 0.3f), new Vector3(0f, 0.14f, 0f), 1.5f, "balde", WoodPath, 0.1f);
 
             Sign(stations, material, "Sign_WaterStation", origin + TowerBuilder.Polar(3.45f, 160f, 0.05f), origin + new Vector3(0f, 0f, -1.5f),
-                "2 · Estación de agua", "Dibujá el sigilo <b>Agua</b>\nen el lienzo: moja y empuja.\nEl barquito flota en la pila.\n<size=75%>El fuego, afuera: acá todo arde.</size>");
+                "2 · Estación de agua", "Dibujá el sigilo <b>Agua</b>\nen la pizarra del muro: el chorro\ncae sobre la pila y mueve el barquito.\n<size=75%>Ojo: el agua borra la tinta.</size>");
         }
 
         // ---------------------------------------------------------------- carteles

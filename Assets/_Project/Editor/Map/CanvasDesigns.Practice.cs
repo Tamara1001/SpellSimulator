@@ -34,6 +34,18 @@ namespace SpellSimulator.EditorTools.Map
 
         private const float ZoneClearRadius = 3.4f;
 
+        /// <summary>Desnivel maximo (m) a 2,5 m del centro de una zona.</summary>
+        private const float MaxHeightDelta = 0.28f;
+
+        private static readonly Vector2[] FlatProbes =
+        {
+            new Vector2(2.5f, 0f), new Vector2(-2.5f, 0f), new Vector2(0f, 2.5f), new Vector2(0f, -2.5f),
+            new Vector2(1.8f, 1.8f), new Vector2(-1.8f, 1.8f), new Vector2(1.8f, -1.8f), new Vector2(-1.8f, -1.8f)
+        };
+
+        /// <summary>Zonas donde NO se arma una zona de practica (el campo de practica, la colina de la torre).</summary>
+        private static (Vector2 center, float radius)[] KeepOut;
+
         private static void PracticeZones(Transform map, GameObject template, Material material, Vector3 towerOrigin, Vector3 fieldOrigin)
         {
             var root = MovablesSetup.Root("Practice");
@@ -42,6 +54,7 @@ namespace SpellSimulator.EditorTools.Map
             int index = 0;
 
             Vector2 lake = ValleyShape.LakeCenter, tower = ValleyShape.TowerCenter, field = new Vector2(fieldOrigin.x, fieldOrigin.z);
+            KeepOut = new[] { (field, 16f), (tower, 15f), (ValleyShape.Spawn, 6f) };
 
             // Orilla del lago: se prueba cada angulo alejandose del agua hasta encontrar piso firme y libre de arboles.
             foreach (var spot in LakeSpots)
@@ -97,11 +110,14 @@ namespace SpellSimulator.EditorTools.Map
         {
             float h = ValleyShape.Height(p.x, p.y);
             if (h < ValleyShape.WaterLevel + 0.5f) return false;
-            foreach (var o in new[] { new Vector2(2f, 0f), new Vector2(-2f, 0f), new Vector2(0f, 2f), new Vector2(0f, -2f) })
+            // Piso casi plano en 2,5 m a la redonda: en una pendiente los objetos con fisica se deslizan y se caen.
+            foreach (var o in FlatProbes)
             {
                 float ho = ValleyShape.Height(p.x + o.x, p.y + o.y);
-                if (ho < ValleyShape.WaterLevel + 0.3f || Mathf.Abs(ho - h) > 0.8f) return false;
+                if (ho < ValleyShape.WaterLevel + 0.3f || Mathf.Abs(ho - h) > MaxHeightDelta) return false;
             }
+            foreach (var k in KeepOut)
+                if (Vector2.Distance(p, k.center) < k.radius) return false;
             foreach (var t in taken)
                 if (Vector2.Distance(p, new Vector2(t.x, t.z)) < 9f) return false;
             if (trees != null)
@@ -182,18 +198,19 @@ namespace SpellSimulator.EditorTools.Map
             if (old != null) Object.DestroyImmediate(old);
             var b = new LowPolyMesh();
             var post = new Color(0.3f, 0.19f, 0.12f);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.85f, 0f)), new Vector3(0.1f, 1.7f, 0.1f), post);
+            // El poste va DETRAS del tablero (la cara con el texto mira a -Z): si no, tapa el texto del medio.
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.85f, 0.07f)), new Vector3(0.1f, 1.7f, 0.09f), post);
             b.Box(Matrix4x4.Translate(new Vector3(0f, 1.45f, 0f)), new Vector3(1.0f, 0.55f, 0.05f), new Color(0.72f, 0.57f, 0.38f));
             var mesh = MapBuilder.SaveMesh(b.Build($"Sign_{name}"));
             // El texto se lee desde -Z: el cartel mira "hacia afuera" del jugador (forward = -viewer).
             var go = MapBuilder.Place(name, root, mesh, material, new Vector3(at.x, MapBuilder.Ground(at.x, at.z).y, at.z), Quaternion.LookRotation(-viewer));
             var col = go.AddComponent<BoxCollider>();
-            col.center = new Vector3(0f, 0.85f, 0f);
-            col.size = new Vector3(1.0f, 1.7f, 0.12f);
+            col.center = new Vector3(0f, 0.85f, 0.04f);
+            col.size = new Vector3(1.0f, 1.7f, 0.18f);
 
             var labelGo = new GameObject("Label");
             labelGo.transform.SetParent(go.transform, false);
-            labelGo.transform.localPosition = new Vector3(0f, 1.45f, -0.035f);
+            labelGo.transform.localPosition = new Vector3(0f, 1.45f, -0.03f);
             var label = labelGo.AddComponent<TMPro.TextMeshPro>();
             label.rectTransform.sizeDelta = new Vector2(0.95f, 0.5f);
             label.alignment = TMPro.TextAlignmentOptions.Center;

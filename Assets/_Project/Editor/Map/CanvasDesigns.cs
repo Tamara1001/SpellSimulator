@@ -43,13 +43,13 @@ namespace SpellSimulator.EditorTools.Map
             var notebookB = Grabbable(template, material, "Notebook_B", bench + new Vector3(-0.45f, 0.012f, -0.08f), Quaternion.Euler(90f, -20f, 0f), 0.2f, 0.28f, Dressing.Notebook);
             AddPages(notebookB);
 
-            // Estacion de agua (oeste, ver TowerProps): lienzo grande enmarcado de pie en el piso, al lado de la pila, con el
-            // borde de arriba inclinado 10 grados hacia la pared (mismo sentido que Polar: 0 = +X, 90 = +Z).
-            float libraryAngle = (TowerProps.WaterAngle + 22f) * Mathf.Deg2Rad;
-            Vector3 radial = new Vector3(Mathf.Cos(libraryAngle), 0f, Mathf.Sin(libraryAngle));
-            Quaternion libraryRotation = StandingRotation(-radial, 10f); // la cara mira al centro de la torre
-            Grabbable(template, material, "BigCanvas_Library", StandingPosition(towerOrigin + radial * 4.3f + Vector3.up * 0.05f, libraryRotation, 1.2f),
-                libraryRotation, 0.9f, 1.2f, Dressing.Framed).GetComponent<Rigidbody>().isKinematic = true;
+            // Estacion de agua (oeste, ver TowerProps): pizarra CHICA fija en el muro, justo sobre la pila. El chorro sale de la
+            // pizarra hacia el centro y cae sobre el agua; nada que sumergir (el agua borra la tinta, por eso el lienzo no se agarra).
+            float waterWall = TowerProps.WaterAngle * Mathf.Deg2Rad;
+            Vector3 waterOut = new Vector3(Mathf.Cos(waterWall), 0f, Mathf.Sin(waterWall));
+            float waterFace = TowerBuilder.InnerRadius * Mathf.Cos(9f * Mathf.Deg2Rad);
+            Vector3 waterBoardAt = towerOrigin + waterOut * (waterFace - 0.06f) + Vector3.up * 1.95f;
+            Fixed(template, material, "BigCanvas_Library", waterBoardAt, Quaternion.LookRotation(waterOut), 0.8f, 0.6f, Dressing.Framed);
 
             // Estacion de viento (sureste): pizarra de pared centrada en una cara del muro, sobre la mesa de los papeles.
             float wallAngle = TowerProps.WindAngle * Mathf.Deg2Rad;

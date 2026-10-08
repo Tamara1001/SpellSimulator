@@ -9,6 +9,13 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - El sigilo `crystal` sigue siendo elemento Tierra (reacciones/fisica/danio intactos) pero usa su propio `ElementLook` (`Data/Elements/Crystal.asset`): esquirlas facetadas celestes (`LowPolyMeshes.Crystal`), motas brillantes, impactos con fragmentos y destellos, y estacas de cristal + escarcha celeste en el suelo (`GroundMarks`, `ElementLook.crystalline`).
 - `SpellOutputController.LookFor(element, sigilId)` elige la variante; `MagicField.SigilId`. `ElementVfxSetup` (idempotente, menu VFX/Setup Cristal) crea el look y lo asigna en `SystemManagers.prefab`.
 
+## 2026-10-08 — Septima tanda (parte 3): mundo
+- **Carteles:** el poste va detras del tablero (antes tapaba el texto del medio).
+- **Zonas de practica:** piso casi plano (desnivel < 0,28 m a 2,5 m a la redonda, 8 sondas) y zonas prohibidas (campo de practica, colina de la torre, spawn); bajaron de 57 a 44 piezas. Tus ajustes manuales siguen aplicandose (`MapLayout`).
+- **Estacion de agua:** pizarra chica fija en el muro sobre la pila (nada que sumergir); el cartel explica el chorro y que el agua borra la tinta.
+- **Estacion de viento:** papeles y plumas mas livianos y con menos freno (masa 0,02/0,01, damping 0,7-0,8) y giran. Sin verificar en Play: la sonda `HarnessWindProbe` no pudo lanzar un hechizo valido sobre la pizarra rectangular (el harness dibuja en UV cuadrado).
+- **Reconocimiento agua/viento:** evaluado y descartado el desempate por chamfer (KI-105).
+
 ## 2026-10-08 — WebGL: diagnostico y precision de shaders
 - `WebGLBuild` con dos modos (menus `WebGL (diagnostico)`: Development + compilacion rapida, y `WebGL (itch.io)`: release Gzip). El diagnostico no mostro errores propios; el libro, los lienzos y el anillo de tinta del grimorio se ven bien en el navegador de prueba (build release tambien).
 - Shaders de tinta, libro, calcomanias, marcas de suelo y particulas en `float` en lugar de `half` (GPUs con precision reducida en WebGL/movil). Hipotesis sin confirmar para lo que la usuaria ve invisible en itch.io (KI-104): pedir navegador, GPU y consola F12.
