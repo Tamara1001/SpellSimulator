@@ -10,7 +10,7 @@ tags: [doc, onboarding]
 | Qué | Detalle |
 |---|---|
 | **Unity Hub + Unity 6000.3.14f1** | Exactamente esa versión (`ProjectSettings/ProjectVersion.txt`). Módulos: **Windows Build Support (IL2CPP o Mono)**, **WebGL Build Support** y **Android Build Support** (OpenJDK + SDK/NDK, para Meta Quest). |
-| **Git** | El repo es `https://github.com/Tamara1001/SpellSimulator` (rama `main`). No usa Git LFS. |
+| **Git** | El repo es `https://github.com/Tamara1001/SpellSimulator` (rama `main`). **Instalar Git LFS antes de clonar** (`git lfs install`): ~460 archivos pesados (modelos y texturas de los samples de URP/XR) viven en LFS; sin LFS el proyecto abre con assets rotos. Si ya clonaste sin LFS: `git lfs pull`. |
 | **Claude Code** (opcional pero recomendado) | El repo trae `CLAUDE.md` y `AGENTS.md` con las reglas para agentes. Leerlas antes de pedir cambios. |
 | **Visual Studio / Rider** | Cualquiera de los dos; el proyecto trae `.vsconfig`. |
 | **Python 3** (opcional) | Solo para scripts auxiliares (zip del build web, análisis); nada del juego lo necesita. |
