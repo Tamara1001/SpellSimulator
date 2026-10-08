@@ -12,10 +12,10 @@ namespace SpellSimulator.Tests
             var hints = HudText.ParseHints("Clic: dibujar | Clic der.: deshacer | 5-0: grosor | R: tinta");
             Assert.AreEqual(4, hints.Count);
             Assert.AreEqual("Clic", hints[0].Key);
-            Assert.AreEqual("dibujar", hints[0].Action);
+            Assert.AreEqual("Dibujar", hints[0].Action);
             Assert.AreEqual("Clic der.", hints[1].Key);
             Assert.AreEqual("Rueda", hints[2].Key);
-            Assert.AreEqual("tinta", hints[3].Action);
+            Assert.AreEqual("Tinta", hints[3].Action);
         }
 
         [Test]
@@ -38,7 +38,7 @@ namespace SpellSimulator.Tests
             StringAssert.Contains("E: soltar", box);
 
             string notebook = HudText.SecondaryHints(true, true, true, true);
-            StringAssert.Contains("Rueda: página", notebook);
+            StringAssert.Contains("Z/X: página", notebook);
             StringAssert.Contains("F: dar vuelta", notebook);
             StringAssert.Contains("V: a pantalla", notebook);
             Assert.AreSame(notebook, HudText.SecondaryHints(true, true, true, true));

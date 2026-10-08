@@ -11,32 +11,38 @@
             <ui:VisualElement name="bottom" class="bottom">
                 <ui:VisualElement name="context" class="context">
                     <ui:VisualElement name="ctx-main" class="ctx-row">
-                        <ui:Label name="ctx-main-name" class="ctx-name" />
-                        <ui:VisualElement name="widths" class="widths" />
-                        <ui:VisualElement name="ink" class="ink">
-                            <ui:VisualElement class="ink-drop" />
-                            <ui:VisualElement class="ink-track">
-                                <ui:VisualElement name="ink-fill" class="ink-fill" />
+                        <ui:VisualElement class="ctx-line">
+                            <ui:Label name="ctx-main-name" class="ctx-name" />
+                            <ui:VisualElement name="widths" class="widths" />
+                            <ui:VisualElement name="ink" class="ink">
+                                <ui:VisualElement class="ink-drop" />
+                                <ui:VisualElement class="ink-track">
+                                    <ui:VisualElement name="ink-fill" class="ink-fill" />
+                                </ui:VisualElement>
+                                <ui:Label name="ink-pct" class="ink-pct" />
                             </ui:VisualElement>
-                            <ui:Label name="ink-pct" class="ink-pct" />
                         </ui:VisualElement>
                         <ui:VisualElement name="ctx-main-hints" class="hints" />
                     </ui:VisualElement>
                     <ui:VisualElement name="ctx-sec" class="ctx-row ctx-row--sec">
-                        <ui:Label name="ctx-sec-name" class="ctx-name ctx-name--sec" />
-                        <ui:Label name="page" class="page-label" />
+                        <ui:VisualElement class="ctx-line">
+                            <ui:Label name="ctx-sec-name" class="ctx-name ctx-name--sec" />
+                            <ui:Label name="page" class="page-label" />
+                        </ui:VisualElement>
                         <ui:VisualElement name="ctx-sec-hints" class="hints" />
                     </ui:VisualElement>
                 </ui:VisualElement>
 
                 <ui:VisualElement name="bar" class="bar">
+                    <ui:VisualElement class="hand hand--book">
+                        <ui:VisualElement name="book-slots" class="slot-tray slot-tray--single" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="hand-gap" />
                     <ui:VisualElement class="hand hand--sec">
-                        <ui:Label name="sec-hand-label" class="hand-label" text="Mano izquierda" />
                         <ui:VisualElement name="sec-slots" class="slot-tray slot-tray--single" />
                     </ui:VisualElement>
                     <ui:VisualElement class="hand-gap" />
                     <ui:VisualElement class="hand hand--main">
-                        <ui:Label name="main-hand-label" class="hand-label" text="Mano derecha" />
                         <ui:VisualElement name="main-slots" class="slot-tray" />
                     </ui:VisualElement>
                 </ui:VisualElement>
@@ -91,7 +97,7 @@
             <ui:VisualElement class="reader-footer" picking-mode="Ignore">
                 <ui:Label name="counter" class="counter" />
                 <ui:VisualElement class="reader-help">
-                    <ui:Label text="←  →" class="keycap keycap--dark" />
+                    <ui:Label text="←  →  Z  X" class="keycap keycap--dark" />
                     <ui:Label text="pasar página" class="reader-help-text" />
                     <ui:Label text="Clic" class="keycap keycap--dark" />
                     <ui:Label text="en la hoja" class="reader-help-text" />

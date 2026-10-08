@@ -82,13 +82,13 @@ namespace SpellSimulator.Player
 
         /// <summary>
         /// Postura (PC): de pie (0), agachado (1) o tumbado (2) con un unico valor continuo stanceT.
-        /// Z alterna tumbado; agacharse solo se para si hay lugar arriba.
+        /// C mantenida (~0.35 s) alterna tumbado; agacharse solo se para si hay lugar arriba.
         /// </summary>
         private void HandleStance()
         {
             if (body == null || PlatformDetector.IsVR) return;
 
-            // Z: si esta tumbado se levanta solo si hay altura libre hasta la altura de pie; si no, queda tumbado.
+            // C mantenida: si esta tumbado se levanta solo si hay altura libre hasta la altura de pie; si no, queda tumbado.
             if (inputReader.IsTogglingProne)
             {
                 if (!prone) prone = true;

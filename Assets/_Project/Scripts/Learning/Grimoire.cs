@@ -115,10 +115,18 @@ namespace SpellSimulator.Learning
         private readonly List<(Vector2 uv, bool start, float width)> strokeQueue = new List<(Vector2, bool, float)>();
         private int strokeIndex;
         private float strokeBudget;
+        // Puntos por segundo de la animacion actual: se fija al primer frame para que cada glifo dure lo mismo (A3).
+        private float strokeRate;
+        private readonly List<Vector2> tmpSmooth = new List<Vector2>(512);
+        private readonly List<Vector2> tmpPath = new List<Vector2>(512);
+        private readonly List<Vector2> tmpResampled = new List<Vector2>(2048);
 
         public static Grimoire Instance { get; private set; }
 
         public bool IsOpen => root != null && root.gameObject.activeSelf;
+
+        /// <summary>True si esta abierto en modo pantalla completa (fijo a la camara, B): ahi la HUD se oculta.</summary>
+        public bool IsFullscreen => IsOpen && focused;
 
         /// <summary>Glifo de la pantalla de detalle abierta (null en cualquier otra). Lo usan las estampas para cargarse.</summary>
         public string CurrentGlyph => IsOpen && screen == GrimoireScreen.GlyphDetail ? glyph : null;
@@ -156,7 +164,11 @@ namespace SpellSimulator.Learning
         private void Update()
         {
             if (input == null) return;
-            if (input.IsTogglingBook)
+            // TAB o ESC abren/cierran el grimorio. ESC no actua si el lector de libros esta abierto o acaba de cerrarse
+            // con esa misma pulsacion (el lector se encarga de ESC primero).
+            bool escape = input.IsPressingEscape && !SpellSimulator.UI.BookReaderUI.IsOpen
+                && Time.frameCount != SpellSimulator.UI.BookReaderUI.ClosedFrame;
+            if (input.IsTogglingBook || escape)
             {
                 if (IsOpen) Close();
                 else Open();
@@ -175,9 +187,8 @@ namespace SpellSimulator.Learning
             wasUsingTool = usingTool;
             if (focused && pressed) PressUnderPointer();
 
-            // Teclado: flechas / cruceta; la rueda tambien navega (salvo arrastrandolo: ahi la rueda lo acerca o aleja).
+            // Teclado: Z / X, flechas o cruceta (la rueda ya no pasa paginas).
             int delta = input.PageDelta;
-            if (delta == 0 && !remoteHeld && input.Scroll != 0f) delta = input.Scroll > 0f ? -1 : 1;
             if (delta != 0) Step(delta);
 
             UpdateHover();
@@ -405,6 +416,7 @@ namespace SpellSimulator.Learning
             strokeQueue.Clear();
             strokeIndex = 0;
             strokeBudget = 0f;
+            strokeRate = 0f;
             HidePools();
             for (int side = 0; side < 2; side++)
             {
@@ -679,13 +691,30 @@ namespace SpellSimulator.Learning
         {
             float sx = size / PageWidth, sy = size / PageHeight;
             foreach (var stroke in strokes)
-                for (int i = 0; i < stroke.Count; i++)
-                    strokeQueue.Add((new Vector2(center.x + (stroke[i].x - 0.5f) * sx, center.y + (stroke[i].y - 0.5f) * sy), i == 0, 0.006f));
+            {
+                // Suaviza la escalera de la plantilla y remuestrea por longitud de arco (en metros): misma densidad
+                // de puntos en todos los glifos, asi la velocidad es pareja.
+                GrimoireStrokeMath.Smooth(stroke, GrimoireStrokeMath.SmoothRadius, tmpSmooth);
+                tmpPath.Clear();
+                for (int i = 0; i < tmpSmooth.Count; i++) tmpPath.Add(tmpSmooth[i] * size);
+                tmpResampled.Clear();
+                GrimoireStrokeMath.Resample(tmpPath, GrimoireStrokeMath.StepMeters, tmpResampled);
+                for (int i = 0; i < tmpResampled.Count; i++)
+                {
+                    Vector2 p = tmpResampled[i] / size;
+                    strokeQueue.Add((new Vector2(center.x + (p.x - 0.5f) * sx, center.y + (p.y - 0.5f) * sy), i == 0, SigilLineWidth));
+                }
+            }
         }
+
+        /// <summary>Ancho de la linea de los sigilos del libro (m): fina y limpia.</summary>
+        private const float SigilLineWidth = 0.0035f;
+        /// <summary>Lado (px) de la textura de la pagina izquierda.</summary>
+        private const int PageTextureSize = 1024;
 
         private void QueueRing(Vector2 center, float radius, float width)
         {
-            const int Segments = 64;
+            int Segments = Mathf.Max(16, Mathf.CeilToInt(2f * Mathf.PI * radius / GrimoireStrokeMath.StepMeters));
             for (int i = 0; i <= Segments; i++)
             {
                 float a = i / (float)Segments * Mathf.PI * 2f + Mathf.PI * 0.5f;
@@ -696,7 +725,9 @@ namespace SpellSimulator.Learning
         private void AnimateStroke()
         {
             if (strokeIndex >= strokeQueue.Count) return;
-            strokeBudget += strokeSpeed * Time.deltaTime;
+            // Duracion fija por glifo: todos los puntos de la cola se reparten en DrawSeconds.
+            if (strokeRate <= 0f) strokeRate = Mathf.Max(1f, strokeQueue.Count / GrimoireStrokeMath.DrawSeconds);
+            strokeBudget += strokeRate * Time.deltaTime;
             while (strokeBudget >= 1f && strokeIndex < strokeQueue.Count)
             {
                 var (uv, start, width) = strokeQueue[strokeIndex++];
@@ -792,9 +823,15 @@ namespace SpellSimulator.Learning
                 side == Left ? pageMaterial : (pageRightMaterial != null ? pageRightMaterial : pageMaterial));
             if (side == Left)
             {
-                leftCanvas = sheet.gameObject.AddComponent<DrawingCanvas>();
                 bool parchmentShader = pageMaterial != null && pageMaterial.HasProperty("_Parchment");
-                leftCanvas.Configure(brushMaterial, parchmentShader ? Color.white : parchment, 0.02f);
+                Color pageBackground = parchmentShader ? Color.white : parchment;
+                // Con el objeto inactivo se prepara la textura ANTES de Awake: sin esto el lienzo salia de ~140x180 px
+                // (resolucion x escala de la pagina en metros) y la tinta se veia pixelada. 1024x1024 sobre 27x36 cm.
+                sheet.gameObject.SetActive(false);
+                leftCanvas = sheet.gameObject.AddComponent<DrawingCanvas>();
+                leftCanvas.Prepare(PageTextureSize, brushMaterial, pageBackground, 0.02f, EmissionSide.AwayFromViewer);
+                sheet.gameObject.SetActive(true);
+                leftCanvas.Configure(brushMaterial, pageBackground, 0.02f);
             }
 
             // Pila de hojas: capas finas alternando tono, cada una un poco mas chica hacia el canto (se ve en los bordes).

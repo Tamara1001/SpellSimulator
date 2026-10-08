@@ -12,7 +12,8 @@ namespace SpellSimulator.UI
     /// HUD de juego en UI Toolkit (reemplaza la HUD uGUI): barra de la mano principal (3 slots, teclas 1-3) y slot de la
     /// mano secundaria con miniaturas 3D (<see cref="ItemIcons"/>), panel de contexto con keycaps, selector de grosor,
     /// tinta y pagina, la tecla [E] junto a la mira y los avisos (<see cref="Hud"/>) arriba a la derecha. Nada toma el
-    /// mouse. Se oculta (salvo avisos) con el grimorio o el lector de libros abiertos.
+    /// mouse (salvo el slot del grimorio, a la izquierda de la barra, que abre/cierra el libro con clic o TAB). Se oculta
+    /// (salvo avisos) con el grimorio a pantalla completa o el lector de libros abiertos.
     /// Rendimiento: el arbol solo se reconstruye ante <see cref="PlayerInteractor.InventoryChanged"/> o
     /// <see cref="Hud.Changed"/>; por frame solo se comparan valores cuantizados (tinta al 1%, grosor, pagina) sin GC.
     /// </summary>
@@ -53,9 +54,10 @@ namespace SpellSimulator.UI
 
         private UIDocument document;
         private VisualElement hud, hoverKey, context, ctxMain, ctxSec, mainHints, secHints, widths, ink, inkFill, noticesBox;
-        private Label mainName, secName, inkPct, pageLabel, mainHandLabel, secHandLabel, widthLabel;
+        private Label mainName, secName, inkPct, pageLabel, widthLabel;
         private readonly Slot[] mainSlots = new Slot[PlayerInteractor.HotbarSlots];
-        private Slot secondarySlot;
+        private Slot secondarySlot, bookSlot;
+        private bool bookSlotActive;
         private readonly List<VisualElement> widthDots = new List<VisualElement>(8);
         private readonly List<HudText.Hint> hintBuffer = new List<HudText.Hint>(10);
         private readonly List<NoticeCard> cards = new List<NoticeCard>(8);
@@ -129,8 +131,6 @@ namespace SpellSimulator.UI
             secName = root.Q<Label>("ctx-sec-name");
             inkPct = root.Q<Label>("ink-pct");
             pageLabel = root.Q<Label>("page");
-            mainHandLabel = root.Q<Label>("main-hand-label");
-            secHandLabel = root.Q<Label>("sec-hand-label");
 
             VisualElement mainTray = root.Q("main-slots");
             mainTray.Clear();
@@ -138,11 +138,21 @@ namespace SpellSimulator.UI
             VisualElement secTray = root.Q("sec-slots");
             secTray.Clear();
             secondarySlot = MakeSlot(secTray, "E");
+            VisualElement bookTray = root.Q("book-slots");
+            bookTray.Clear();
+            bookSlot = MakeSlot(bookTray, "TAB");
+            bookSlot.Icon.AddToClassList("slot-icon--book");
+            bookSlot.Name.text = "Grimorio";
+            bookSlot.Root.EnableInClassList("slot--empty", false);
+            bookSlotActive = false;
 
             noticesBox.Clear();
             cards.Clear();
             IgnorePicking(hud);
             IgnorePicking(noticesBox);
+            // Unico elemento de la HUD que recibe el mouse (cuando el cursor esta libre): abre/cierra el grimorio.
+            bookSlot.Root.pickingMode = PickingMode.Position;
+            bookSlot.Root.RegisterCallback<ClickEvent>(OnBookSlotClicked);
             inventoryDirty = noticesDirty = true;
             hidden = false;
             hoverShown = false;
@@ -173,6 +183,14 @@ namespace SpellSimulator.UI
             slot.Root.Add(slot.Name);
             parent.Add(slot.Root);
             return slot;
+        }
+
+        private static void OnBookSlotClicked(ClickEvent evt)
+        {
+            Grimoire book = Grimoire.Instance;
+            if (book == null) return;
+            if (book.IsOpen) book.Close();
+            else book.Open();
         }
 
         private static void IgnorePicking(VisualElement e)
@@ -217,7 +235,14 @@ namespace SpellSimulator.UI
         private void UpdateHidden()
         {
             Grimoire book = Grimoire.Instance;
-            bool hide = (book != null && book.IsOpen) || BookReaderUI.IsOpen;
+            // Con el grimorio en modo normal la HUD sigue visible; solo se oculta a pantalla completa (fijo a la camara).
+            bool hide = (book != null && book.IsFullscreen) || BookReaderUI.IsOpen;
+            bool bookOpen = book != null && book.IsOpen;
+            if (bookOpen != bookSlotActive && bookSlot != null)
+            {
+                bookSlotActive = bookOpen;
+                bookSlot.Root.EnableInClassList("slot--active", bookOpen);
+            }
             if (hide == hidden) return;
             hidden = hide;
             hud.EnableInClassList("hud--hidden", hide);
@@ -288,10 +313,6 @@ namespace SpellSimulator.UI
         {
             inventoryDirty = false;
             if (interactor == null) return;
-
-            bool right = PlayerSettings.MainHandRight;
-            mainHandLabel.text = right ? "MANO DERECHA" : "MANO IZQUIERDA";
-            secHandLabel.text = right ? "MANO IZQUIERDA" : "MANO DERECHA";
 
             int active = interactor.ActiveHotbar;
             for (int i = 0; i < mainSlots.Length; i++)

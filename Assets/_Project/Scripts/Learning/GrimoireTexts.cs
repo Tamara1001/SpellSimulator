@@ -77,7 +77,7 @@ namespace SpellSimulator.Learning
                 "El hechizo sale por la <b>cara con tinta</b> de la hoja: dala vuelta (<b>F</b>) para apuntarlo.\n\n" +
                 "Cuanto más grande el anillo, más fuerte el hechizo.",
                 "Este libro",
-                "<b>Tab</b> lo abre y lo cierra. Apuntá a un botón y hacé <b>clic</b>; las flechas o la rueda pasan las páginas.\n\n" +
+                "<b>Tab</b> lo abre y lo cierra (<b>ESC</b> si está a pantalla completa). Apuntá a un botón y hacé <b>clic</b>; <b>Z</b> y <b>X</b> pasan las páginas.\n\n" +
                 "<b>E</b> sobre el libro lo agarra para moverlo y otra <b>E</b> lo suelta: queda flotando. <b>B</b> lo trae a pantalla completa.\n\n" +
                 "Cada glifo que descubrís queda escrito en <b>Glifos</b>."),
         };
@@ -110,12 +110,13 @@ namespace SpellSimulator.Learning
                 "Moverse",
                 Row("W A S D", "caminar") +
                 Row("Shift", "correr") +
-                Row("C / Ctrl", "agacharse") +
-                Row("Z", "tumbarse") +
+                Row("C", "tumbarse si la mantenés; un toque, agacharse") +
+                Row("Ctrl", "agacharse") +
                 Row("Espacio", "saltar") +
-                Row("X", "zoom") +
+                Row("Alt izq.", "zoom (mantenido)") +
                 "\n" + Heading("Menú") + "\n" +
-                Row("Tab", "grimorio") +
+                Row("Tab", "abre o cierra el grimorio") +
+                Row("Z / X", "página anterior / siguiente") +
                 Row("B", "grimorio a pantalla") +
                 Row("F3", "depuración") +
                 Row("Retroceso", "reiniciar el mundo"),
@@ -130,21 +131,21 @@ namespace SpellSimulator.Learning
             new GrimoireSpread(
                 "Mano secundaria",
                 Intro("Lo agarrado con E se arrastra.") +
-                Row("Rueda", "acerca o aleja; en un cuaderno, pasa de página", 40) +
-                Row("Clic der. + mouse", "gira", 40) +
-                Row("Shift + rueda", "inclina", 40) +
-                Row("F", "da vuelta la hoja", 40) +
-                Row("V", "la fija a pantalla para dibujar", 40) +
-                Row("Clic de rueda", "lo deja flotando", 40) +
-                Row("E", "suelta", 40),
+                Row("Rueda", "acerca o aleja lo agarrado", 44) +
+                Row("Clic der.", "gira con el mouse", 44) +
+                Row("Shift + rueda", "inclina", 44) +
+                Row("F", "da vuelta la hoja", 44) +
+                Row("V", "la fija a pantalla para dibujar", 44) +
+                Row("Clic rueda", "lo deja flotando", 44) +
+                Row("E", "suelta", 44),
                 "Realidad virtual",
-                Row("Gatillo", "dibuja", 40) +
-                Row("Agarre", "agarra", 40) +
-                Row("A", "deshace", 40) +
-                Row("B", "arroja", 40) +
-                Row("Stick izq. (clic)", "corre", 40) +
-                Row("Stick der. (clic)", "da vuelta la hoja", 40) +
-                Row("Y", "reinicia el mundo", 40)),
+                Row("Gatillo", "dibuja", 44) +
+                Row("Agarre", "agarra", 44) +
+                Row("A", "deshace", 44) +
+                Row("B", "arroja", 44) +
+                Row("Stick izq.", "clic: corre", 44) +
+                Row("Stick der.", "clic: da vuelta la hoja", 44) +
+                Row("Y", "reinicia el mundo", 44)),
         };
 
         /// <summary>Texto de la pagina izquierda del indice de glifos.</summary>

@@ -5,6 +5,15 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Sexta tanda, Fase 1: controles, grimorio, libros y HUD
+- **Controles:** la rueda solo cambia grosor (pincel) o distancia; paginas con Z/X; C = agacharse (toque) / tumbarse (mantener); zoom con Alt izq.
+- **Grimorio:** TAB visible (4.o slot fijo a la izquierda de la hotbar), ESC lo abre/cierra, ya no oculta la HUD fuera del modo fijo (B); layout de controles arreglado.
+- **Sigilos del libro:** textura 1024, trazo fino, remuestreo por arco y 2,5 s fijos (`GrimoireStrokeMath` + 2 tests).
+- **Aprendizaje:** se empieza solo con fuego, agua, viento y tierra; `levitation` pasa al libro "motion", `column` y el nuevo `magic_circle` al libro "shape". El libro de elementos explica Fuego.
+- **Libros:** luz pulsante, "Libro X de Y" y cuantos faltan. **Sellos:** copian solo el simbolo (sin circulo); glifo "Circulo Magico" (`magic_circle`, solo anillo abierto).
+- **HUD:** contexto en dos lineas sin cortes, mayusculas, sin rotulos de mano, mas margen arriba, glow sin recorte.
+- 143 tests EditMode y PlaySmoke en PASS. Sin probar a mano.
+
 ## 2026-10-08 — Plan de la sexta tanda
 - Feedback de la prueba manual desglosado en `Docs/PLAN_SEXTA_TANDA.md`: 3 fases con reparto de agentes (Haiku/Sonnet/Opus) y decisiones por confirmar (teclas Z/X, slot del grimorio). Sin cambios de codigo.
 

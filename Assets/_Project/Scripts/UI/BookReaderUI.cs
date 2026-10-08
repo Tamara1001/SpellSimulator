@@ -32,6 +32,9 @@ namespace SpellSimulator.UI
         /// <summary>True mientras el libro esta en pantalla (la HUD se oculta).</summary>
         public static bool IsOpen => Instance != null && Instance.open;
 
+        /// <summary>Frame en que se cerro el lector por ultima vez (para que Esc no cierre y abra el grimorio a la vez).</summary>
+        public static int ClosedFrame { get; private set; } = -1;
+
         /// <summary>Se abrio o se cerro el lector.</summary>
         public static event Action<bool> OpenChanged;
 
@@ -172,6 +175,7 @@ namespace SpellSimulator.UI
         {
             if (!open) return;
             open = false;
+            ClosedFrame = Time.frameCount;
             onLearn = null;
             title = null;
             if (enteredFocus) FocusMode.Exit();

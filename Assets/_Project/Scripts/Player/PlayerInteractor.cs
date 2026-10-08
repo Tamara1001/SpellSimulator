@@ -146,6 +146,7 @@ namespace SpellSimulator.Player
             HandleThrow();
             HandleFlip();
             HandleWheel();
+            HandlePageKeys();
             HandleUsage();
             if (inputReader.IsReloading) Reload();
             if (inputReader.IsTogglingFocus) ToggleFocus();
@@ -406,8 +407,8 @@ namespace SpellSimulator.Player
         }
 
         /// <summary>
-        /// Rueda del mouse: con un cuaderno agarrado pasa de pagina; sin nada agarrado cambia el grosor de la herramienta
-        /// equipada. (Agarrando otra cosa, la rueda la acerca o aleja: lo hace ObjectMover.)
+        /// Rueda del mouse: cambia SOLO el grosor de la herramienta equipada (tambien con un cuaderno en la otra mano).
+        /// Las paginas pasan con Z / X (HandlePageKeys). Arrastrando otra cosa, la rueda la acerca o aleja (ObjectMover).
         /// </summary>
         private void HandleWheel()
         {
@@ -417,13 +418,22 @@ namespace SpellSimulator.Player
             if (book != null && book.IsOpen) return;
             int step = scroll > 0f ? 1 : -1;
 
-            if (mover != null && mover.IsHolding)
-            {
-                if (!inputReader.IsRunning && mover.HeldBody.TryGetComponent(out IPageable pageable)) pageable.Turn(step);
-                return;
-            }
-            if (handSecondary != null) return;
+            // Arrastrando algo que no es un cuaderno la rueda es del movedor (distancia).
+            if (mover != null && mover.IsHolding && !inputReader.IsRunning && !mover.HeldBody.TryGetComponent(out IPageable _)) return;
             if (heldMain != null && heldMain.TryGetComponent(out IWidthSelectable widths)) widths.CycleWidth(step);
+        }
+
+        /// <summary>Z (anterior) / X (siguiente): pasa la pagina del cuaderno agarrado o arrastrado (con el grimorio cerrado).</summary>
+        private void HandlePageKeys()
+        {
+            int delta = inputReader.PageDelta;
+            if (delta == 0) return;
+            var book = Learning.Grimoire.Instance;
+            if (book != null && book.IsOpen) return;
+            IPageable pages = null;
+            if (mover != null && mover.IsHolding) mover.HeldBody.TryGetComponent(out pages);
+            if (pages == null && handSecondary != null) pages = handSecondary.GetComponentInParent<IPageable>();
+            pages?.Turn(delta);
         }
 
         private void HandleUsage()

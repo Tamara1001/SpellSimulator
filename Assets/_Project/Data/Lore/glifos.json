@@ -9,6 +9,7 @@
     "crystal": { "name": "Cristal", "text": "Pariente de la tierra que forma cristales. Con columnas hacia afuera estalla en esquirlas." },
     "aeroform": { "name": "Aeroforma", "text": "Sigilo del aire que crea aire, pero no lo mueve por si solo: necesita signos que lo dirijan." },
     "wind-underfoot": { "name": "Viento bajo los pies", "text": "Sigilo del aire que ayuda a sostener y a planear. Su mecanismo exacto todavia es un misterio." },
+    "magic_circle": { "name": "Círculo Mágico", "text": "El anillo que contiene un sello. Se dibuja casi cerrado, con un pequeño hueco: la magia no corre hasta que lo cerrás a mano. Estampalo primero y después copiá dentro los sigilos y signos que quieras." },
     "column": { "name": "Columna", "text": "El motor del sello. Apunta desde su barra corta hacia la punta. Dos opuestas hacia adentro forman un chorro; hacia afuera, un abanico; en molinete, un vortice. Si una es mas larga, el chorro se inclina hacia donde apunta." },
     "dispersion": { "name": "Dispersion", "text": "Como una columna, pero la magia se derrama despacio: dura mas y empuja menos." },
     "levitation": { "name": "Levitacion", "text": "Une la magia con los cuerpos. Dos opuestas sostienen un orbe suspendido sobre el papel." },
@@ -22,12 +23,12 @@
     "repetition": { "name": "Repeticion", "text": "Devuelve las cosas a un estado anterior, como rebobinar. Todavia solo suma potencia." },
     "weave": { "name": "Tejido", "text": "Ablanda lo solido que toca el sello para estirarlo como una cinta. Todavia solo suma potencia." }
   },
-  "starting": [ "fire", "water", "wind-directs-air", "earth", "light", "crystal", "aeroform", "wind-underfoot", "column", "levitation", "dispersion", "pull" ],
+  "starting": [ "fire", "water", "wind-directs-air", "earth" ],
   "books": [
-    { "id": "elements", "title": "Los cuatro elementos", "color": [0.55, 0.18, 0.16], "glyphs": [ "water", "wind-directs-air", "earth" ] },
+    { "id": "elements", "title": "Los cuatro elementos", "color": [0.55, 0.18, 0.16], "glyphs": [ "fire", "water", "wind-directs-air", "earth" ] },
     { "id": "variants", "title": "Variantes y parientes", "color": [0.2, 0.35, 0.6], "glyphs": [ "light", "crystal", "aeroform", "wind-underfoot" ] },
-    { "id": "motion", "title": "Signos del movimiento", "color": [0.25, 0.48, 0.3], "glyphs": [ "dispersion", "pull", "float" ] },
-    { "id": "shape", "title": "Dar forma a la magia", "color": [0.62, 0.5, 0.2], "glyphs": [ "convergence", "region", "crush" ] },
+    { "id": "motion", "title": "Signos del movimiento", "color": [0.25, 0.48, 0.3], "glyphs": [ "dispersion", "pull", "float", "levitation" ] },
+    { "id": "shape", "title": "Dar forma a la magia", "color": [0.62, 0.5, 0.2], "glyphs": [ "magic_circle", "column", "convergence", "region", "crush" ] },
     { "id": "rare", "title": "Signos raros", "color": [0.42, 0.24, 0.52], "glyphs": [ "collection", "billowing", "repetition", "weave" ] }
   ]
 }

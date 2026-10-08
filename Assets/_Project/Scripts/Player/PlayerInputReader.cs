@@ -30,7 +30,7 @@ namespace SpellSimulator.Player
 
         /// <summary>Correr: Shift, click del stick izquierdo (gamepad y VR).</summary>
         public bool IsRunning { get; private set; }
-        /// <summary>Agacharse (mantener): Ctrl o C, click del stick derecho.</summary>
+        /// <summary>Agacharse (mantener): Ctrl o C (toque), click del stick derecho.</summary>
         public bool IsCrouching { get; private set; }
         /// <summary>Arrojar lo que se tiene en la mano: Q, hombro izquierdo.</summary>
         public bool IsThrowing { get; private set; }
@@ -38,17 +38,23 @@ namespace SpellSimulator.Player
         public bool IsFlipping { get; private set; }
         /// <summary>Fijar el lienzo en mano a la camara para dibujar comodo (alterna): V.</summary>
         public bool IsTogglingFocus { get; private set; }
-        /// <summary>Pasar pagina del grimorio abierto: -1 / +1 (flechas, cruceta).</summary>
+        /// <summary>Pasar pagina (cuaderno, grimorio, lector): -1 / +1 (Z / X, flechas, cruceta). Valido solo el frame en que se aprieta.</summary>
         public int PageDelta { get; private set; }
-        /// <summary>Rueda del mouse (acerca/aleja lo que se sostiene; pasa paginas con el grimorio abierto).</summary>
+        /// <summary>Pagina anterior (Z, flecha izquierda, cruceta izquierda) en este frame.</summary>
+        public bool IsTurningPagePrev => PageDelta < 0;
+        /// <summary>Pagina siguiente (X, flecha derecha, cruceta derecha) en este frame.</summary>
+        public bool IsTurningPageNext => PageDelta > 0;
+        /// <summary>Rueda del mouse (grosor del pincel; acerca/aleja lo que se sostiene). Ya no pasa paginas.</summary>
         public float Scroll { get; private set; }
+        /// <summary>Escape apretado en este frame (abre/cierra el grimorio).</summary>
+        public bool IsPressingEscape { get; private set; }
 
-        /// <summary>Tumbarse / levantarse (alterna): Z. Para dibujar en el piso.</summary>
+        /// <summary>Tumbarse / levantarse (alterna): mantener C ~0.35 s (o cruceta abajo). Para dibujar en el piso.</summary>
         public bool IsTogglingProne { get; private set; }
         /// <summary>Dejar lo que llevas flotando en el aire (en vez de soltarlo): G.</summary>
         public bool IsPinning { get; private set; }
 
-        /// <summary>Zoom (mantener): X.</summary>
+        /// <summary>Zoom (mantener): Alt izquierdo, cruceta arriba.</summary>
         public bool IsZooming { get; private set; }
         /// <summary>Sin uso: mover a distancia ahora se hace con E sobre algo movible (ObjectMover).</summary>
         public bool IsRemoteGrabbing { get; private set; }
@@ -75,6 +81,10 @@ namespace SpellSimulator.Player
         private InputAction pinAction;
         private InputAction runAction;
         private InputAction crouchAction;
+        private InputAction crouchKeyAction;
+        private InputAction escapeAction;
+        private const float ProneHoldSeconds = 0.35f;
+        private float crouchKeyHeldAt = -1f;
         private InputAction throwAction;
         private InputAction flipAction;
         private InputAction focusAction;
@@ -143,14 +153,13 @@ namespace SpellSimulator.Player
             resetWorldAction.AddBinding("<XRController>{LeftHand}/secondaryButton");
 
             proneAction = new InputAction("Prone", InputActionType.Button);
-            proneAction.AddBinding("<Keyboard>/z");
             proneAction.AddBinding("<Gamepad>/dpad/down");
             pinAction = new InputAction("Pin", InputActionType.Button);
             pinAction.AddBinding("<Keyboard>/t");
             pinAction.AddBinding("<Mouse>/middleButton"); // clic de la rueda: dejar lo que se sostiene donde esta
 
             zoomAction = new InputAction("Zoom", InputActionType.Button);
-            zoomAction.AddBinding("<Keyboard>/x");
+            zoomAction.AddBinding("<Keyboard>/leftAlt");
             zoomAction.AddBinding("<Gamepad>/dpad/up");
             remoteAction = new InputAction("RemoteGrab", InputActionType.Button);
             rotateAction = new InputAction("RotateHeld", InputActionType.Button);
@@ -180,7 +189,10 @@ namespace SpellSimulator.Player
 
             crouchAction = new InputAction("Crouch", InputActionType.Button);
             crouchAction.AddBinding("<Keyboard>/leftCtrl");
-            crouchAction.AddBinding("<Keyboard>/c");
+            crouchKeyAction = new InputAction("CrouchKey", InputActionType.Button);
+            crouchKeyAction.AddBinding("<Keyboard>/c");
+            escapeAction = new InputAction("Escape", InputActionType.Button);
+            escapeAction.AddBinding("<Keyboard>/escape");
             crouchAction.AddBinding("<Gamepad>/rightStickPress");
 
             throwAction = new InputAction("Throw", InputActionType.Button);
@@ -197,9 +209,11 @@ namespace SpellSimulator.Player
             focusAction.AddBinding("<Keyboard>/v");
 
             pagePrevAction = new InputAction("PagePrev", InputActionType.Button);
+            pagePrevAction.AddBinding("<Keyboard>/z");
             pagePrevAction.AddBinding("<Keyboard>/leftArrow");
             pagePrevAction.AddBinding("<Gamepad>/dpad/left");
             pageNextAction = new InputAction("PageNext", InputActionType.Button);
+            pageNextAction.AddBinding("<Keyboard>/x");
             pageNextAction.AddBinding("<Keyboard>/rightArrow");
             pageNextAction.AddBinding("<Gamepad>/dpad/right");
 
@@ -226,6 +240,8 @@ namespace SpellSimulator.Player
             foreach (var h in hotbarActions) h.Enable();
             pinAction.Enable();
             crouchAction.Enable();
+            crouchKeyAction.Enable();
+            escapeAction.Enable();
             throwAction.Enable();
             flipAction.Enable();
             focusAction.Enable();
@@ -256,6 +272,9 @@ namespace SpellSimulator.Player
             foreach (var h in hotbarActions) h.Disable();
             pinAction.Disable();
             crouchAction.Disable();
+            crouchKeyAction.Disable();
+            escapeAction.Disable();
+            crouchKeyHeldAt = -1f;
             throwAction.Disable();
             flipAction.Disable();
             focusAction.Disable();
@@ -289,6 +308,7 @@ namespace SpellSimulator.Player
             IsTogglingBook = bookAction.triggered;
             IsRunning = runAction.IsPressed();
             IsTogglingProne = proneAction.triggered;
+            IsPressingEscape = escapeAction.triggered;
             IsZooming = zoomAction.IsPressed();
             IsRemoteGrabbing = remoteAction.IsPressed();
             IsRotateHeld = rotateAction.IsPressed();
@@ -299,7 +319,19 @@ namespace SpellSimulator.Player
             HotbarKey = -1;
             for (int i = 0; i < hotbarActions.Length; i++) if (hotbarActions[i].triggered) HotbarKey = i;
             IsPinning = pinAction.triggered;
-            IsCrouching = crouchAction.IsPressed();
+            // C: toque = agacharse (mientras se mantiene); mantener ~0.35 s = tumbarse / levantarse (una vez por pulsacion).
+            bool cDown = crouchKeyAction.IsPressed();
+            if (cDown)
+            {
+                if (crouchKeyHeldAt < 0f) crouchKeyHeldAt = Time.unscaledTime;
+                else if (crouchKeyHeldAt < float.MaxValue && Time.unscaledTime - crouchKeyHeldAt >= ProneHoldSeconds)
+                {
+                    IsTogglingProne = true;
+                    crouchKeyHeldAt = float.MaxValue; // ya conmuto: no repite hasta soltar
+                }
+            }
+            else crouchKeyHeldAt = -1f;
+            IsCrouching = crouchAction.IsPressed() || cDown;
             IsThrowing = throwAction.triggered;
             IsFlipping = flipAction.triggered;
             IsTogglingFocus = focusAction.triggered;

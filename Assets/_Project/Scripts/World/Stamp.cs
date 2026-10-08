@@ -16,7 +16,7 @@ namespace SpellSimulator.World
     /// <summary>
     /// Estampa (GAME_DESIGN, objetos). Se carga apuntando al grimorio abierto en la pagina de un glifo y usando el
     /// secundario; despues el primario sobre un papel deja ese glifo:
-    /// - un sigilo con su anillo ABIERTO del tamaño de la estampa (el sello queda preparado; se cierra a mano);
+    /// - un sigilo: solo el simbolo, sin circulo; el glifo 'Circulo Magico' deja el anillo ABIERTO del tamaño de la estampa;
     /// - un signo del tamaño del anillo que ya hay, apuntando a su centro.
     /// Cargas limitadas por carga (decision de diseño): al agotarse hay que volver a cargarla.
     /// </summary>
@@ -132,9 +132,14 @@ namespace SpellSimulator.World
             canvas.NoteInkViewer(cam != null ? cam.transform.position : hit.point + hit.normal);
             Vector2 size = canvas.WorldSize;
             float width = Mathf.Max(0.004f, diameter * 0.03f);
-            var strokes = entry.Kind == GlyphKind.Sigil
-                ? StampPattern.Sigil(entry.TemplateStrokes, uv, diameter, size, width)
-                : SignStrokes(entry, canvas, uv, size, width);
+            // D1: un sigilo se copia SOLO como simbolo (sin circulo exterior); el circulo es el glifo "Circulo Magico".
+            System.Collections.Generic.List<Stroke> strokes;
+            if (entry.Id == StampPattern.MagicCircleId)
+                strokes = new System.Collections.Generic.List<Stroke> { StampPattern.OpenRing(uv, diameter, size, width) };
+            else if (entry.Kind == GlyphKind.Sigil)
+                strokes = StampPattern.SigilOnly(entry.TemplateStrokes, uv, diameter, size, width);
+            else
+                strokes = SignStrokes(entry, canvas, uv, size, width);
             if (strokes == null) return;
 
             foreach (var stroke in strokes)
@@ -145,7 +150,7 @@ namespace SpellSimulator.World
             charges--;
             RefreshLabel();
             Stamped?.Invoke(this, canvas);
-            // Un sigilo estampado deja el anillo abierto: queda preparado. Un signo puede completar un sello ya cerrado.
+            // Un circulo magico estampado queda abierto (preparado, se cierra a mano). Un signo puede completar un sello ya cerrado.
             if (caster != null) caster.OnSealEdited(canvas);
         }
 

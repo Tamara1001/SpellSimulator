@@ -92,7 +92,7 @@ namespace SpellSimulator.World
         public string HudHints => notebook != null ? NotebookHints : "Clic: dibujar con una herramienta | F: dar vuelta | V: a pantalla | T: dejar flotando | Q: arrojar";
         public float HudGauge => -1f;
 
-        private const string NotebookHints = "Rueda: pasar pagina | F: dar vuelta | V: a pantalla | Clic der. + mouse: girar | E: soltar";
+        private const string NotebookHints = "Z/X: pasar página | F: dar vuelta | V: a pantalla | Clic der.+mouse: girar | E: soltar";
 
         private void Awake()
         {

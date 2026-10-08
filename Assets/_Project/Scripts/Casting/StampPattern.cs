@@ -19,11 +19,25 @@ namespace SpellSimulator.Casting
         public const float RingGapDeg = 34f;
         public const int RingSegments = 64;
 
+        /// <summary>Id del glifo "Circulo Magico": al estamparlo deja solo el anillo abierto.</summary>
+        public const string MagicCircleId = "magic_circle";
+
         /// <summary>Sigilo + anillo abierto centrados en centerUv. diameter en metros.</summary>
         public static List<Stroke> Sigil(List<List<Vector2>> template, Vector2 centerUv, float diameter, Vector2 canvasSize, float width)
         {
+            var strokes = SigilOnly(template, centerUv, diameter, canvasSize, width);
+            strokes.Add(OpenRing(centerUv, diameter, canvasSize, width));
+            return strokes;
+        }
+
+        /// <summary>Solo el simbolo del sigilo (sin circulo exterior), a la proporcion que tiene dentro de un anillo de ese diametro.</summary>
+        public static List<Stroke> SigilOnly(List<List<Vector2>> template, Vector2 centerUv, float diameter, Vector2 canvasSize, float width) =>
+            Template(template, centerUv, diameter * 0.5f * SigilOfRadius, 0f, canvasSize, width);
+
+        /// <summary>Anillo ABIERTO (hueco arriba) del diametro dado: el "Circulo Magico" que se cierra a mano.</summary>
+        public static Stroke OpenRing(Vector2 centerUv, float diameter, Vector2 canvasSize, float width)
+        {
             float radius = diameter * 0.5f;
-            var strokes = Template(template, centerUv, radius * SigilOfRadius, 0f, canvasSize, width);
             var ring = new Stroke { Width = width };
             float from = 90f + RingGapDeg * 0.5f, span = 360f - RingGapDeg;
             for (int i = 0; i <= RingSegments; i++)
@@ -31,8 +45,7 @@ namespace SpellSimulator.Casting
                 float a = (from + span * i / RingSegments) * Mathf.Deg2Rad;
                 ring.AddPoint(ToUv(new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * radius, centerUv, canvasSize));
             }
-            strokes.Add(ring);
-            return strokes;
+            return ring;
         }
 
         /// <summary>

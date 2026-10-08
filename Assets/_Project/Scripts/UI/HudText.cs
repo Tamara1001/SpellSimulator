@@ -39,13 +39,20 @@ namespace SpellSimulator.UI
                 string part = raw.Trim();
                 if (part.Length == 0) continue;
                 int colon = part.IndexOf(':');
-                if (colon <= 0) { into.Add(new Hint("", part)); continue; }
+                if (colon <= 0) { into.Add(new Hint("", Capitalize(part))); continue; }
                 string key = part.Substring(0, colon).Trim();
-                string action = part.Substring(colon + 1).Trim();
+                string action = Capitalize(part.Substring(colon + 1).Trim());
                 if (key == "5-0" || key == "1-0") key = "Rueda";
                 into.Add(new Hint(key, action));
             }
             return into;
+        }
+
+        /// <summary>Primera letra en mayuscula ("dibujar" -> "Dibujar"). Solo se llama al armar la HUD, nunca por frame.</summary>
+        public static string Capitalize(string text)
+        {
+            if (string.IsNullOrEmpty(text) || !char.IsLower(text[0])) return text;
+            return char.ToUpperInvariant(text[0]) + text.Substring(1);
         }
 
         /// <summary>
@@ -57,12 +64,12 @@ namespace SpellSimulator.UI
             int mask = (pageable ? 1 : 0) | (flippable ? 2 : 0) | (focusable ? 4 : 0) | (pinnable ? 8 : 0);
             if (secondaryCache.TryGetValue(mask, out string cached)) return cached;
             var parts = new List<string>(8);
-            if (pageable) { parts.Add("Rueda: página"); parts.Add("Mayús+Rueda: distancia"); }
+            if (pageable) parts.Add("Z/X: página");
             else parts.Add("Rueda: distancia");
             parts.Add("Clic der.+mouse: girar");
             if (flippable) parts.Add("F: dar vuelta");
             if (focusable) parts.Add("V: a pantalla");
-            if (pinnable) parts.Add("Clic rueda: dejar flotando");
+            if (pinnable) parts.Add("Clic rueda: flotar");
             parts.Add("E: soltar");
             parts.Add("Q: arrojar");
             string text = string.Join(" | ", parts);
