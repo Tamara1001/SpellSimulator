@@ -5,6 +5,8 @@ dibuja glifos sobre un lienzo físico; un modelo ONNX (Unity Inference Engine / 
 reconoce, un compilador los traduce a un `SpellIR` y el módulo de salida instancia VFX.
 Target: **PC (mouse/teclado) y Meta Quest (OpenXR) en paralelo**.
 
+Si sos una persona o un agente nuevo: empezá por [Docs/ONBOARDING.md](Docs/ONBOARDING.md).
+
 Idioma del proyecto: **español** (docs, commits, logs, comentarios). Identificadores de código en inglés.
 
 ## Antes de tocar nada
@@ -15,7 +17,7 @@ Idioma del proyecto: **español** (docs, commits, logs, comentarios). Identifica
    - [Docs/CODESTYLE.md](Docs/CODESTYLE.md) — convenciones C#/Unity obligatorias.
    - [Docs/KNOWN_ISSUES.md](Docs/KNOWN_ISSUES.md) — bugs y deuda técnica ya detectados.
 2. Si la tarea toca reconocimiento/compilación, consultá el proyecto de referencia
-   `D:\Programas\wha-spell-simulator` (ver [Docs/REFERENCE.md](Docs/REFERENCE.md)). Es la fuente de verdad
+   el repo `wha-spell-simulator` clonado en una carpeta hermana (ver [Docs/REFERENCE.md](Docs/REFERENCE.md)). Es la fuente de verdad
    del modelo ONNX, del diccionario de glifos y de las constantes de tuning.
 3. Para navegar el código rápido existe el grafo de Graphify (ver [Docs/HARNESS.md](Docs/HARNESS.md#graphify)).
 

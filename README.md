@@ -1,5 +1,8 @@
 # 🪄 SpellSimulator — Simulador de Ejecución de Hechizos
 
+> **¿Vas a continuar el proyecto?** Empezá por [`Docs/ONBOARDING.md`](Docs/ONBOARDING.md) (instalación, primer arranque, verificación y builds) y [`Docs/STATUS.md`](Docs/STATUS.md) (estado actual). Reglas para agentes: [`CLAUDE.md`](CLAUDE.md).
+> Estado: modo **Libre** jugable en PC (menú principal, torre, pradera, grimorio, hechizos, VFX); build **WebGL** para itch.io; **Quest** pendiente (M7).
+
 > Evaluación Final — Asignatura: **Simuladores**  
 > Motor: **Unity 3D (URP)** | IA: **Unity Sentis (ONNX)** | Target: **PC → Oculus Quest (VR)**
 
@@ -21,8 +24,8 @@ El prototipo corre en PC (Mouse/Teclado) con un avanzado sistema híbrido de int
 |---|---|
 | Motor Gráfico | Unity 3D |
 | Pipeline de Renderizado | URP (Universal Render Pipeline) |
-| Inferencia de IA | Unity Sentis (local, sin red) |
-| Modelo de Reconocimiento | ResNet18 exportado como `.onnx` |
+| Inferencia de IA | Unity Inference Engine / Sentis (local, sin red; GPU en PC/Quest, CPU en WebGL) |
+| Modelo de Reconocimiento | GlyphStudent (CNN destilada 96×96) exportada como `.onnx` |
 | Renderizado de Interacción | `RenderTexture` + GPU Blitting |
 | Salida Visual / Física | VFX Graph + Shader Graph |
 | Módulo VR (Fase Futura) | XR Interaction Toolkit |

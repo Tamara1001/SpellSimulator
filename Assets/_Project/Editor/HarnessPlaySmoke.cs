@@ -29,6 +29,7 @@ namespace SpellSimulator.EditorTools
         private static readonly StringBuilder passed = new StringBuilder();
         private static int errorLogs;
 
+        [MenuItem("SpellSimulator/Harness/Run Play Smoke")]
         public static void Run()
         {
             Directory.CreateDirectory(Path.GetDirectoryName(ResultPath));

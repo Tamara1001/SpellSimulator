@@ -90,15 +90,19 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 ### M6b — Guardar hechizos (ver ADR-034)
 *Objetivo: sección HECHIZOS del grimorio; se guardan trazos, se re-lanzan con una estampa-hechizo vía `SpellCaster.Cast`.*
 - [ ] H1: `SpellRecord` + `SpellLibrary` puros (JSON versionado en `persistentDataPath`, límites, migración) + tests EditMode.
-- [ ] H2: sección HECHIZOS con prearmados de `Data/Spells/*.json` y vista con re-dibujo animado.
-- [ ] H3: estampa-hechizo (cargar un hechizo en `Stamp`, se cierra a mano) + chequeo en `HarnessPlaySmoke`.
-- [ ] H4: libros de hechizos que desbloquean prearmados.
+- [x] H2: sección HECHIZOS con prearmados de `Data/Spells/*.json` y vista con re-dibujo animado (hecho de forma simplificada: el JSON guarda la composición y `SpellStrokeBuilder` arma los trazos).
+- [x] H3: sello-hechizo (botón «Cargar en el sello» en el detalle del hechizo, `Stamp.LoadSpell`). Falta el chequeo en `HarnessPlaySmoke`.
+- [x] H4: libros de hechizos que desbloquean prearmados.
 - [ ] H5: guardar lo dibujado, renombrar y borrar (PC primero, después entrada de nombre en VR).
 
 ### M7 — Pulido y entrega del modo Libre
 - [ ] Build Quest estable, perfilado (inferencia TTA ×8 vs ×1, VFX, física).
 - [ ] Tutorial (después de M6): notas en la torre o el primer libro. Enseña a "cerrar el anillo al final".
 - [ ] PlayMode tests del cast (KI-026). Documentación final de la evaluación.
+- [x] Menú principal (Sandbox, Duelo «próximamente», Información, Créditos, Salir), calidad gráfica Baja/Media/Alta en Opciones y build **WebGL** para itch.io (`SpellSimulator/Build/WebGL (itch.io)`).
+- [ ] WebGL en equipos ajenos: no se ve la tinta/lienzos/parte del libro según la usuaria (KI-104); pedir navegador, GPU y consola F12.
+- [ ] UI en VR: HUD, grimorio, lector de libros y menú son solo PC (KI-095, KI-054); pasar a world-space para Quest.
+- [ ] Probar a mano la sexta y séptima tanda (HUD, inventario, grimorio, torre, VFX, sellos, calidad): nada de eso se verificó con teclado y mouse reales.
 
 ---
 
@@ -121,3 +125,16 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 ## Limpieza transversal
 - [ ] Decidir `_Recovery/0.unity` y `DebugCanvasCapture.png` (KI-024).
 - [ ] Aprovechar las cabezas de pose del modelo (KI-025).
+
+---
+
+## Siguiente (backlog priorizado para quien continúe)
+1. **Probar a mano** lo hecho (ver M7) y corregir lo que aparezca. Es lo que más valor da ahora.
+2. **WebGL/itch.io** (KI-104): con la consola del navegador de quien lo reporta, ubicar por qué no se ve la tinta/lienzos.
+3. **Reconocimiento agua vs viento** (KI-105): juntar sellos mal leídos como fixtures (`Tests/Fixtures`, ver su README) y, con ~20 casos,
+   afinar un desempate por estructura (cantidad de trazos rectos cortos) o reentrenar el modelo en la referencia.
+4. **Guardar hechizos** (M6b H1 y H5, ADR-034): `SpellLibrary` en `persistentDataPath`, guardar lo dibujado, renombrar, borrar.
+5. **Quest** (M7): build, perfilado, UI en world-space (KI-095, KI-085, KI-049, KI-102).
+6. Pendientes menores: estación de viento sin medir en Play (`HarnessWindProbe` necesita un harness que dibuje en lienzos no cuadrados),
+   fuente serif con licencia (KI-093), efectos de 6 glifos sin entrada, configuración de teclas y multijugador (próximamente en el menú).
+7. **Modo Duelo** (D1–D3) después del modo Libre.

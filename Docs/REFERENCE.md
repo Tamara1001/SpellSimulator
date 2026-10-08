@@ -3,7 +3,7 @@ tags: [doc, referencia]
 ---
 # Proyecto de referencia: wha-spell-simulator
 
-- Ruta local: `D:\Programas\wha-spell-simulator` · repo: https://github.com/cosykid/wha-spell-simulator
+- Ruta local (convención): carpeta hermana `../wha-spell-simulator` (la ruta se guarda en EditorPrefs al sincronizar) · repo: https://github.com/cosykid/wha-spell-simulator
 - Stack: SvelteKit + TypeScript, `onnxruntime-web`, Postgres (muestras), PyTorch (entrenamiento).
 - Fan project de *Witch Hat Atelier*; SpellSimulator porta su pipeline a Unity/VR.
 - Último pull: **2026-10-07** (`9a125ec` → `73606bf`, 54 commits). Para actualizar: `git pull --ff-only` en esa carpeta

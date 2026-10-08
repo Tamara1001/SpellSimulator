@@ -5,12 +5,12 @@ tags: [doc, estado]
 
 > Una pagina para retomar rapido. Actualizar al cerrar cada hito; el detalle va en CHANGELOG y KNOWN_ISSUES.
 
-**Hito:** M6 completo (aprendizaje, estampas, sellos en objetos y partidos, mundo inflamable, inventario de dos manos, HUD UI Toolkit,
+**Hito:** M6 completo + menú principal, calidad gráfica y build WebGL (itch.io) (aprendizaje, estampas, sellos en objetos y partidos, mundo inflamable, inventario de dos manos, HUD UI Toolkit,
 grimorio nuevo, contornos). Falta M7: build de Quest, medicion de rendimiento, tutorial, tests PlayMode ampliados.
-**Tests:** 141 EditMode (`HarnessTestRunner`) + test de humo de Play (`HarnessPlaySmoke`, ver HARNESS.md).
+**Tests:** 161 EditMode (`HarnessTestRunner`) + test de humo de Play (`HarnessPlaySmoke`, ~20 chequeos). Para empezar: [ONBOARDING](ONBOARDING.md).
 **Escenas:** `Pradera.unity` (mapa, indice 0) y `Escena.unity` (laboratorio, sin HUD nueva ni UI Toolkit).
 
-**Siguiente:** [PLAN_SEXTA_TANDA.md](PLAN_SEXTA_TANDA.md) (3 fases con agentes, feedback de la quinta prueba manual; Fases 1, 2 y 3 hechas el 2026-10-08; falta probar a mano y M7).
+**Siguiente:** el backlog priorizado está al final de [ROADMAP](ROADMAP.md). Lo hecho en las últimas tandas: [PLAN_SEXTA_TANDA](PLAN_SEXTA_TANDA.md). Falta **probar a mano** (nada de lo reciente se verificó con teclado/mouse reales ni en VR/Quest).
 
 ## Mapa mental rapido
 - Pipeline: `PlayerInteractor`/`PhysicalTool` -> `DrawingCanvas` -> `SpellCaster.Cast` -> `SpellOutputController` -> `MagicField`/`MagicWorld`.

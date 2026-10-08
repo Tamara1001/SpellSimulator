@@ -6,6 +6,7 @@ tags: [moc]
 Vault de Obsidian del proyecto. Abrí la carpeta `Docs/` como vault.
 
 ## Documentos
+- [[ONBOARDING]] — **empezar acá si sos nueva/o en el proyecto**: instalación, primer arranque, verificación, builds y trampas.
 - [[PROJECT]] — visión, alcance, glosario.
 - [[GAME_DESIGN]] — **diseño del juego**: modos Libre/Duelo, mapa, objetos, controles.
 - [[MAGIC_SYSTEM]] — sistema mágico de Witch Hat Atelier y su traducción a reglas jugables.
