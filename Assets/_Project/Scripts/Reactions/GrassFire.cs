@@ -14,9 +14,11 @@ namespace SpellSimulator.Reactions
     /// directa son g = 0 y cada salto suma 1; desde maxGenerations en adelante ya no propagan). Asi el incendio es local
     /// y se apaga solo, salvo que se lo alimente. Cada celda arde burnSeconds y queda quemada. El agua apaga las celdas
     /// que arden (no revive las quemadas).
-    /// Logica a pasos fijos de 0.25 s (sin Coroutines). Dibujo: quads quemados con DrawMeshInstanced (las tandas se
-    /// reconstruyen solo cuando cambia el conjunto) y un pool de llamas (ParticleSystem de BurnEffect) que se reasigna
-    /// cada 0.5 s a las celdas ardiendo mas cercanas a la camara.
+    /// Logica a pasos fijos de 0.25 s (sin Coroutines). Dibujo: un mapa de quemado global (_GrassBurnTex, 1 texel por
+    /// celda: quemado, calor de brasas y altura del suelo) que StylizedLit lee para pintar ceniza organica directamente
+    /// sobre el terreno y el pasto (Materials/BurntGround.hlsl; keyword global _GRASS_BURN solo mientras hay algo
+    /// quemado). El mapa se sube solo cuando cambia (a lo sumo una vez por frame). Llamas: pool de ParticleSystem bajos
+    /// (BurnEffect.CreateGround) que se reasigna cada 0.5 s a las celdas ardiendo mas cercanas a la camara.
     /// Sin allocations por frame: buffers preasignados en Awake y RNG xorshift propio.
     /// </summary>
     public class GrassFire : MonoBehaviour
@@ -75,9 +77,11 @@ namespace SpellSimulator.Reactions
         /// <summary>Altura del centro del chequeo de dano sobre el suelo (m).</summary>
         private const float DamageHeight = 0.5f;
         private const int MaxOverlaps = 32;
-        private const int BatchSize = 1023;
-        private const float BurnLift = 0.05f;
         private const float FlameLift = 0.05f;
+        /// <summary>Quemado visible de una celda al encenderse; crece hasta 1 mientras arde.</summary>
+        private const float BurningScorchStart = 0.35f;
+        /// <summary>Segundos que tardan en apagarse las brasas de una celda ya quemada.</summary>
+        private const float EmberSeconds = 7f;
 
         [SerializeField, Tooltip("Probabilidad base, por vecino y cada 0.5 s, de que una celda ardiendo encienda el pasto de al lado. Se multiplica por generationDecay^g.")]
         private float spreadChance = DefaultSpreadChance;
@@ -89,8 +93,6 @@ namespace SpellSimulator.Reactions
         private float generationDecay = DefaultGenerationDecay;
         [SerializeField, Min(0), Tooltip("Generacion maxima que propaga: una celda de generacion mayor no enciende vecinas (la generacion se cuenta desde la fuente directa).")]
         private int maxGenerations = DefaultMaxGenerations;
-        [SerializeField, Tooltip("Material de las celdas quemadas (debe tener enableInstancing).")]
-        private Material burnMaterial;
         [SerializeField, Tooltip("Look de las llamas (de aca salen material y gravedad).")]
         private ElementLook fireLook;
         [SerializeField, Tooltip("Cantidad maxima de llamas simultaneas (el pool crece bajo demanda hasta este numero).")]
@@ -131,11 +133,17 @@ namespace SpellSimulator.Reactions
         private float[] candDist;
         private Camera mainCamera;
 
-        // Dibujo instanciado de celdas quemadas.
-        private Mesh quad;
-        private Matrix4x4[][] burntBatches;
-        private int burntTotal;
+        // Mapa de quemado (RGBAHalf, GridSize x GridSize): r quemado, g calor de brasas, b altura del suelo.
+        private Texture2D burnMap;
+        private ushort[] burnPixels;
+        private float[] heat;
+        private int hotCells;
         private bool burntDirty;
+
+        private static readonly int BurnTexId = Shader.PropertyToID("_GrassBurnTex");
+        private static readonly int BurnParamsId = Shader.PropertyToID("_GrassBurnParams");
+        private const string BurnKeyword = "_GRASS_BURN";
+        private bool burnKeywordOn;
 
         private static readonly Collider[] overlaps = new Collider[MaxOverlaps];
         private static readonly ElementReactive[] hitReactives = new ElementReactive[MaxOverlaps];
@@ -164,8 +172,8 @@ namespace SpellSimulator.Reactions
 
             flameSystems = new ParticleSystem[Mathf.Max(maxFlames, 0)];
             flameCell = new int[flameSystems.Length];
-            burntBatches = new Matrix4x4[(Cells + BatchSize - 1) / BatchSize][];
-            for (int b = 0; b < burntBatches.Length; b++) burntBatches[b] = new Matrix4x4[BatchSize];
+            heat = new float[Cells];
+            burnPixels = new ushort[Cells * 4];
 
             for (int c = 0; c < Cells; c++)
             {
@@ -178,8 +186,7 @@ namespace SpellSimulator.Reactions
             }
             for (int s = 0; s < flameCell.Length; s++) flameCell[s] = -1;
 
-            quad = BuildQuad();
-            if (burnMaterial != null) burnMaterial.enableInstancing = true;
+            CreateBurnMap();
             burntDirty = true;
         }
 
@@ -197,7 +204,8 @@ namespace SpellSimulator.Reactions
 
         private void OnDestroy()
         {
-            if (quad != null) Destroy(quad);
+            SetBurnKeyword(false);
+            if (burnMap != null) Destroy(burnMap);
         }
 
         private void Update()
@@ -211,8 +219,9 @@ namespace SpellSimulator.Reactions
                 Step();
             }
 
-            if (burntDirty) RebuildBurnt();
-            if (burntTotal > 0 && burnMaterial != null) DrawBurnt();
+            // El mapa cambia con el estado (burntDirty), mientras algo arde (el quemado crece) o quedan brasas.
+            int done = Mathf.Min(steps, MaxStepsPerFrame);
+            if (burntDirty || (done > 0 && (burningCells > 0 || hotCells > 0))) UpdateBurnMap(done * LogicStep);
         }
 
         // ---------------------------------------------------------------- API publica
@@ -576,7 +585,7 @@ namespace SpellSimulator.Reactions
         private void PlaceFlame(int slot, int c)
         {
             if (flameSystems[slot] == null)
-                flameSystems[slot] = BurnEffect.Create(transform, new Bounds(transform.position, Vector3.one * CellSize), fireLook);
+                flameSystems[slot] = BurnEffect.CreateGround(transform, CellSize, fireLook);
             var ps = flameSystems[slot];
             ps.Clear(true);
             ps.transform.position = new Vector3(CellCenterX(c % GridSize), groundY[c] + FlameLift, CellCenterZ(c / GridSize));
@@ -597,46 +606,79 @@ namespace SpellSimulator.Reactions
 
         // ---------------------------------------------------------------- dibujo
 
-        /// <summary>Reconstruye las tandas de matrices de las celdas quemadas. Solo cuando cambia el conjunto.</summary>
-        private void RebuildBurnt()
+        /// <summary>Crea el mapa de quemado (bilineal, sin mips) y lo publica como global; b = altura del suelo.</summary>
+        private void CreateBurnMap()
         {
-            burntDirty = false;
-            int n = 0;
+            burnMap = new Texture2D(GridSize, GridSize, TextureFormat.RGBAHalf, false, true)
+            {
+                name = "GrassBurnMap",
+                filterMode = FilterMode.Bilinear,
+                wrapMode = TextureWrapMode.Clamp,
+            };
             for (int c = 0; c < Cells; c++)
             {
-                if (state[c] != Burnt) continue;
-                var pos = new Vector3(CellCenterX(c % GridSize), groundY[c] + BurnLift, CellCenterZ(c / GridSize));
-                burntBatches[n / BatchSize][n % BatchSize] = Matrix4x4.TRS(pos, Quaternion.identity, Vector3.one);
-                n++;
+                burnPixels[c * 4] = 0;
+                burnPixels[c * 4 + 1] = 0;
+                burnPixels[c * 4 + 2] = Mathf.FloatToHalf(groundY[c]);
+                burnPixels[c * 4 + 3] = 0;
             }
-            burntTotal = n;
+            burnMap.SetPixelData(burnPixels, 0);
+            burnMap.Apply(false, false);
+            Shader.SetGlobalTexture(BurnTexId, burnMap);
+            Shader.SetGlobalVector(BurnParamsId, new Vector4(GridOrigin, GridOrigin, 1f / (GridSize * CellSize), 0f));
+            burnKeywordOn = true;
+            SetBurnKeyword(false);
         }
 
-        private void DrawBurnt()
+        /// <summary>Keyword global de StylizedLit: sin nada quemado el terreno no paga la muestra del mapa.</summary>
+        private void SetBurnKeyword(bool on)
         {
-            int batches = (burntTotal + BatchSize - 1) / BatchSize;
-            for (int b = 0; b < batches; b++)
-            {
-                int count = Mathf.Min(BatchSize, burntTotal - b * BatchSize);
-                Graphics.DrawMeshInstanced(quad, 0, burnMaterial, burntBatches[b], count, null,
-                    UnityEngine.Rendering.ShadowCastingMode.Off, false);
-            }
+            if (on == burnKeywordOn) return;
+            burnKeywordOn = on;
+            if (on) Shader.EnableKeyword(BurnKeyword);
+            else Shader.DisableKeyword(BurnKeyword);
         }
 
-        /// <summary>Quad de 2x2 m en el plano XZ (normal hacia arriba), con el origen en el centro de la celda.</summary>
-        private static Mesh BuildQuad()
+        /// <summary>
+        /// Recalcula quemado y calor de cada celda y sube el mapa (4900 texeles; solo si algo cambio). Ardiendo: el
+        /// quemado crece de BurningScorchStart a 1 y el calor es 1. Quemada: quemado 1 y las brasas se apagan en
+        /// EmberSeconds. Pasto o no inflamable: 0. La keyword global se enciende solo si hay alguna celda marcada.
+        /// </summary>
+        private void UpdateBurnMap(float dt)
         {
-            var mesh = new Mesh { name = "GrassBurntQuad" };
-            mesh.vertices = new[]
+            burntDirty = false;
+            int marked = 0;
+            hotCells = 0;
+            float invBurn = burnSeconds > 0f ? 1f / burnSeconds : 1f;
+            for (int c = 0; c < Cells; c++)
             {
-                new Vector3(-1.6f, 0f, -1.6f), new Vector3(-1.6f, 0f, 1.6f), new Vector3(1.6f, 0f, 1.6f), new Vector3(1.6f, 0f, -1.6f)
-            };
-            // El shader GroundMark dibuja un disco procedural a partir de las UV.
-            mesh.uv = new[] { new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(1f, 0f) };
-            mesh.normals = new[] { Vector3.up, Vector3.up, Vector3.up, Vector3.up };
-            mesh.triangles = new[] { 0, 1, 2, 0, 2, 3 };
-            mesh.RecalculateBounds();
-            return mesh;
+                float scorch, h;
+                byte st = state[c];
+                if (st == Burning)
+                {
+                    scorch = Mathf.Lerp(BurningScorchStart, 1f, 1f - Mathf.Clamp01(timers[c] * invBurn));
+                    h = 1f;
+                }
+                else if (st == Burnt)
+                {
+                    scorch = 1f;
+                    h = Mathf.Max(0f, heat[c] - dt / EmberSeconds);
+                }
+                else
+                {
+                    scorch = 0f;
+                    h = 0f;
+                }
+                heat[c] = h;
+                if (h > 0f) hotCells++;
+                if (scorch > 0f) marked++;
+                burnPixels[c * 4] = Mathf.FloatToHalf(scorch);
+                burnPixels[c * 4 + 1] = Mathf.FloatToHalf(h);
+            }
+            burnMap.SetPixelData(burnPixels, 0);
+            burnMap.Apply(false, false);
+            SetBurnKeyword(marked > 0);
         }
+
     }
 }

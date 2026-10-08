@@ -119,6 +119,18 @@ Tamara; con muchas cosas ardiendo suenan muchos loops de fuego a la vez (poner u
 | KI-047 🟢 | **Nuevo (M4):** el estanque se armó a y=0 y el piso real está a 0.5 (cubo) | Estanque subido. Ojo al ubicar props: la cara de arriba del `Floor` es y=0.5. |
 | KI-056 🟠 | **Prueba manual:** no se podía entrar a la torre sin saltar (el zócalo subía 60 cm en la puerta) | Zócalo cortado en la puerta y bajado a 25 cm; umbral de 5 cm. |
 | KI-057 🟠 | **Prueba manual:** el jugador se trababa con muebles y bordes (cápsula de 1 m de ancho, esfera extra, fricción) | Cápsula de radio 0.3, sin la esfera, material sin fricción, subida automática de escalones (≤ 35 cm) y gravedad contra el piso cuando está quieto (no resbala en rampas). Silla y atril fuera del paso puerta → rampa. |
+| KI-095 🟡 | UI Toolkit en pantalla no se ve en VR (KI-054 sigue abierto); el grimorio 3D y el lector de libros son solo PC por ahora | Pasar la HUD a world-space para Quest en M7. |
+| KI-094 🟡 | `AudioDirector` no aplica los volumenes de Musica y Efectos del grimorio (solo el general via `AudioListener.volume`) | Leer `volMusic`/`volSfx` de PlayerPrefs en `AudioDirector`. |
+| KI-093 🟡 | Las fuentes de la HUD son las por defecto de UI Toolkit (no hay serif redistribuible en el proyecto) | Agregar una fuente serif con licencia libre. |
+| KI-092 🟢 | **Prueba manual:** HUD enorme y fea, miniaturas invisibles, avisos grandes | Nueva HUD UI Toolkit: barra de 3+1 slots con miniaturas 3D, contexto con teclas, avisos compactos arriba a la derecha. |
+| KI-091 🟢 | Agarrar un lienzo lo mandaba al inventario y no se podia rotar | Todo lo agarrado con E se arrastra (`ObjectMover`); el lienzo se rota, se da vuelta, se dibuja y se fija con V. |
+| KI-090 🟢 | El grimorio solo se agarraba por abajo y la barra lo tapaba | Se agarra de cualquier parte (trigger tras los botones, cinematico conducido por el movedor); abre mas arriba/lejos. |
+| KI-089 🟢 | Libros de la biblioteca "se leian" sin verse | `BookReaderUI`: lector a pantalla con paginas y boton "Aprender este conocimiento". |
+| KI-088 🟢 | Luz violeta en la torre, tintero/goma fuera del escritorio, piso 2 vacio, columnas de la terraza en el aire, lienzos flotantes | Luces quitadas, herramientas dentro de cada mesa, taller de alquimia en el piso 2, columnas solo sobre piso firme, sin lienzos flotantes. |
+| KI-087 🟢 | Reiniciar el mundo no reponia algunas cajas; herramientas que se perdian bajo el terreno | `EnsureRespawnables`, reinicio suelta lo arrastrado, `Respawnable` revisa objetos bajo el terreno o a mas de 150 m. |
+| KI-086 🟢 | Piso quemado con discos en cuadricula y llamas blancas | Ceniza organica por shader global (`_GRASS_BURN` en StylizedLit) y llamas bajas naranjas. |
+| KI-085 🟡 | Contorno cartoon por pantalla (`OutlineRendererFeature`) sin probar en Quest | Medir en M7; se apaga con `_OutlineStrength` = 0. |
+| KI-084 🟢 | Cuadernos de una sola pagina | `NotebookPages`: 10 paginas, la rueda las pasa. |
 | KI-083 🟡 | Mover a distancia (G), zoom (X), grosor 1-4 y tumbarse (Z) no tienen test automatico (solo se verifico la logica en el editor) | PlayMode en M7. |
 | KI-082 🟢 | **Prueba manual:** reiniciar el mundo no limpiaba los lienzos ni reponia lienzos flotantes y estampas | `MagicWorld.ResetWorld` borra todos los lienzos; `Respawnable` repone tambien lo flotante; `IResettable` (lienzo, estampa). |
 | KI-081 🟢 | **Prueba manual:** un fuego basico quemaba todo el mundo | `GrassFire` con decaimiento por generacion (0,78) y tope de 9, menos probabilidad y calor; arboles mas dificiles de encender y de contagiar. |

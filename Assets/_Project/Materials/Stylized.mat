@@ -26,8 +26,10 @@ Material:
     m_Ints: []
     m_Floats:
     - _Bands: 3
-    - _RimStrength: 0.15
-    - _Softness: 0.12
+    - _RimCut: 0.66
+    - _RimSharpness: 1
+    - _RimStrength: 0.12
+    - _Softness: 0.06
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _ShadowTint: {r: 0.8, g: 0.78, b: 0.9, a: 1}

@@ -119,7 +119,7 @@ namespace SpellSimulator.EditorTools.Map
 
         /// <summary>Particulas en bucle (cascada, velas, motas): un sistema simple con el look de un elemento.</summary>
         public static ParticleSystem Loop(string name, Transform parent, Vector3 at, ElementLook look, float rate, Vector2 size, Vector2 speed,
-            float gravity, float lifetime, float coneAngle, float shapeRadius = 0.6f)
+            float gravity, float lifetime, float coneAngle, float shapeRadius = 0.6f, Gradient tint = null)
         {
             if (look == null) return null;
             var go = new GameObject(name);
@@ -143,7 +143,7 @@ namespace SpellSimulator.EditorTools.Map
             shape.radius = shapeRadius;
             var col = ps.colorOverLifetime;
             col.enabled = true;
-            col.color = new ParticleSystem.MinMaxGradient(look.color);
+            col.color = new ParticleSystem.MinMaxGradient(tint ?? look.color);
             var renderer = go.GetComponent<ParticleSystemRenderer>();
             renderer.sharedMaterial = look.material;
             renderer.shadowCastingMode = ShadowCastingMode.Off;
@@ -247,8 +247,20 @@ namespace SpellSimulator.EditorTools.Map
             // Motas magicas flotando en la biblioteca y el estudio.
             if (output == null) return;
             var light = output.LookFor(ElementType.Light);
-            Loop("MagicMotes", root, o + Vector3.up * 0.5f, light, 6f, new Vector2(0.03f, 0.07f), new Vector2(0.05f, 0.2f), -0.02f, 6f, 70f, 3f);
-            Loop("MagicMotesStudy", root, o + Vector3.up * (TowerBuilder.FloorHeight + 0.5f), light, 4f, new Vector2(0.03f, 0.07f), new Vector2(0.05f, 0.2f), -0.02f, 6f, 70f, 2.5f);
+            // Motas chicas blanco-doradas (el color violeta del elemento Light se veia como mancha).
+            var gold = MoteGold();
+            Loop("MagicMotes", root, o + Vector3.up * 0.5f, light, 6f, new Vector2(0.03f, 0.06f), new Vector2(0.05f, 0.2f), -0.02f, 6f, 70f, 3f, gold);
+            Loop("MagicMotesStudy", root, o + Vector3.up * (TowerBuilder.FloorHeight + 0.5f), light, 4f, new Vector2(0.03f, 0.06f), new Vector2(0.05f, 0.2f), -0.02f, 6f, 70f, 2.5f, gold);
+        }
+
+        /// <summary>Gradiente de las motas: blanco calido que se desvanece al morir.</summary>
+        private static Gradient MoteGold()
+        {
+            var g = new Gradient();
+            g.SetKeys(
+                new[] { new GradientColorKey(new Color(1f, 0.93f, 0.72f), 0f), new GradientColorKey(new Color(1f, 0.85f, 0.5f), 1f) },
+                new[] { new GradientAlphaKey(0f, 0f), new GradientAlphaKey(0.9f, 0.15f), new GradientAlphaKey(0.7f, 0.7f), new GradientAlphaKey(0f, 1f) });
+            return g;
         }
 
         // ---------------------------------------------------------------- libros de la biblioteca

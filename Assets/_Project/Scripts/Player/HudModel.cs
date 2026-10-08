@@ -28,6 +28,17 @@ namespace SpellSimulator.Player
         float WidthSample(int index);
         /// <summary>Etiqueta corta del grosor, ej. "fino".</summary>
         string WidthLabel(int index);
+        /// <summary>Rueda del mouse (sin nada agarrado): pasa al grosor siguiente (+1) o anterior (-1).</summary>
+        void CycleWidth(int delta);
+    }
+
+    /// <summary>Objeto con paginas (cuaderno): la rueda pasa de pagina cuando se lo tiene agarrado.</summary>
+    public interface IPageable
+    {
+        /// <summary>Pagina actual, de 0 a PageCount - 1.</summary>
+        int Page { get; }
+        int PageCount { get; }
+        void Turn(int delta);
     }
 
     /// <summary>

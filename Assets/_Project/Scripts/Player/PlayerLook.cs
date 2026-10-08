@@ -55,11 +55,15 @@ namespace SpellSimulator.Player
             float sensitivity = inputReader.IsUsingTool ? lookSensitivity * drawingSensitivityMultiplier : lookSensitivity;
             // Con zoom la sensibilidad baja en la misma proporcion que el campo de vision (mas precision).
             if (mainCamera != null && baseFov > 0f) sensitivity *= currentFov / baseFov;
+            // Opcion del jugador (0.3 a 2.5), guardada en PlayerPrefs.
+            sensitivity *= PlayerSettings.LookSensitivity;
             // El delta del mouse ya depende del framerate: multiplicarlo por deltaTime agrega latencia.
             Vector2 look = inputReader.LookValue * sensitivity;
 
             transform.Rotate(Vector3.up * look.x);
-            pitch = Mathf.Clamp(pitch - look.y, bottomClamp, topClamp);
+            // Mouse hacia arriba mira hacia arriba (signo invertido respecto del delta); InvertY lo da vuelta.
+            float pitchSign = PlayerSettings.InvertY ? 1f : -1f;
+            pitch = Mathf.Clamp(pitch + pitchSign * look.y, bottomClamp, topClamp);
             cameraTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
         }
 

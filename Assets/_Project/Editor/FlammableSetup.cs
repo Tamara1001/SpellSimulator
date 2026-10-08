@@ -41,7 +41,10 @@ namespace SpellSimulator.EditorTools
             return $"Inflamable: {trees} pinos y {furniture} muebles. {grass}";
         }
 
-        /// <summary>Agrega el incendio de pasto a SystemManagers con su material de quemado y el look del fuego.</summary>
+        /// <summary>
+        /// Agrega el incendio de pasto a SystemManagers con el look del fuego. El suelo quemado ya no usa material propio:
+        /// lo pinta StylizedLit desde el mapa global de GrassFire (Materials/BurntGround.hlsl).
+        /// </summary>
         private static string SetupGrassFire()
         {
             var sys = GameObject.Find("SystemManagers");
@@ -49,21 +52,8 @@ namespace SpellSimulator.EditorTools
             if (sys == null || output == null) return "Sin SystemManagers.";
             var fire = output.LookFor(Compiler.ElementType.Fire);
 
-            const string burntPath = "Assets/_Project/Materials/BurntGrass.mat";
-            var burnt = AssetDatabase.LoadAssetAtPath<Material>(burntPath);
-            if (burnt == null)
-            {
-                burnt = new Material(Shader.Find("SpellSimulator/GroundMark")) { name = "BurntGrass" };
-                AssetDatabase.CreateAsset(burnt, burntPath);
-            }
-            burnt.SetColor("_BaseColor", new Color(0.05f, 0.04f, 0.035f, 0.92f));
-            burnt.SetFloat("_Rim", 0f);
-            burnt.enableInstancing = true;
-            EditorUtility.SetDirty(burnt);
-
             var grass = sys.GetComponent<GrassFire>() ?? sys.AddComponent<GrassFire>();
             var so = new SerializedObject(grass);
-            so.FindProperty("burnMaterial").objectReferenceValue = burnt;
             so.FindProperty("fireLook").objectReferenceValue = fire;
             so.ApplyModifiedProperties();
             grass.ApplyDefaults(); // los valores guardados en la escena pisan los del codigo

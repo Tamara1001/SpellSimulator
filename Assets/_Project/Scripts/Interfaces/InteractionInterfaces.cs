@@ -128,6 +128,8 @@ namespace SpellSimulator.Interfaces
     {
         void OnRemoteGrab();
         void OnRemoteRelease(bool pin);
+        /// <summary>True si el objeto es cinematico y el movedor lo lleva con MovePosition/MoveRotation (por ejemplo el grimorio).</summary>
+        bool DriveKinematic => false;
     }
 }
 

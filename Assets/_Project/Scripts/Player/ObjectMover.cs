@@ -81,7 +81,7 @@ namespace SpellSimulator.Player
                 float step = Mathf.Sign(scroll);
                 if (inputReader.IsRunning)
                     relativeRotation = Quaternion.AngleAxis(step * RollStep, Vector3.forward) * relativeRotation;
-                else
+                else if (held.GetComponentInParent<IPageable>() == null || inputReader.IsRunning)
                     holdDistance = Mathf.Clamp(holdDistance + step * DistanceStep, MinDistance, MaxDistance);
             }
 
@@ -97,9 +97,17 @@ namespace SpellSimulator.Player
         private void FixedUpdate()
         {
             if (!holding || held == null || cam == null) return;
-            if (held.isKinematic) return;
-
             Vector3 point = cam.transform.position + cam.transform.forward * holdDistance;
+            if (held.isKinematic)
+            {
+                // Cinematicos conducidos (el grimorio): se llevan con MovePosition/MoveRotation. Los demas (lienzo fijo a la camara) no.
+                if (grabbable != null && grabbable.DriveKinematic)
+                {
+                    held.MovePosition(point);
+                    held.MoveRotation(cam.transform.rotation * relativeRotation);
+                }
+                return;
+            }
             held.linearVelocity = Vector3.ClampMagnitude((point - held.position) * FollowGain, MaxLinearSpeed);
 
             Quaternion targetRotation = cam.transform.rotation * relativeRotation;
@@ -108,6 +116,12 @@ namespace SpellSimulator.Player
             if (angle > 180f) angle -= 360f;
             Vector3 angular = axis * (angle * Mathf.Deg2Rad * RotationGain);
             held.angularVelocity = Vector3.ClampMagnitude(angular, MaxAngularSpeed);
+        }
+
+        /// <summary>Da vuelta lo que se arrastra media vuelta sobre su propio eje vertical (F).</summary>
+        public void Flip()
+        {
+            if (holding) relativeRotation = relativeRotation * Quaternion.Euler(0f, 180f, 0f);
         }
 
         /// <summary>Cuerpo que se esta moviendo (null si ninguno).</summary>

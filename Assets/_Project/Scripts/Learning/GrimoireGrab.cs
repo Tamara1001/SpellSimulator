@@ -4,8 +4,10 @@ using SpellSimulator.Interfaces;
 namespace SpellSimulator.Learning
 {
     /// <summary>
-    /// Agarradera del grimorio abierto (el lomo inferior). Se lleva en la mano izquierda y, al soltarlo, queda flotando
-    /// donde se lo dejo: el libro se puede mover y apoyar a gusto. La logica del libro sigue en <see cref="Grimoire"/>.
+    /// Zona de agarre del grimorio abierto: un disparador grande detras de las paginas y los botones (cubre tapas,
+    /// lomo, bordes y paginas vacias), asi que los botones siguen ganando el rayo del interactor.
+    /// En PC el interactor lo arrastra con el movedor (el Rigidbody cinematico del libro + <see cref="Grimoire"/> como
+    /// IRemoteGrabbable). En VR se lleva en la mano secundaria (<see cref="OnInteract"/>) y al soltarlo queda flotando.
     /// </summary>
     public class GrimoireGrab : MonoBehaviour, IInteractable
     {

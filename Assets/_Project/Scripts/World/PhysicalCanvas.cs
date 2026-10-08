@@ -60,6 +60,11 @@ namespace SpellSimulator.World
         private float bobPhase;
         private bool focused;
 
+        // Cuaderno de paginas (si el objeto lo tiene): cacheado en Awake. El nombre de la HUD se rearma solo al cambiar de pagina.
+        private NotebookPages notebook;
+        private string hudName;
+        private int hudPage = -1;
+
         // Animacion de pose (sin allocations).
         private bool animating, animLocal;
         private float animT;
@@ -70,16 +75,31 @@ namespace SpellSimulator.World
         public bool Focused => focused;
 
         // ---- Interfaz (HUD de abajo)
-        public string HudName => objectName;
+        public string HudName
+        {
+            get
+            {
+                if (notebook == null) return objectName;
+                if (notebook.Page != hudPage || hudName == null)
+                {
+                    hudPage = notebook.Page;
+                    hudName = $"{objectName} (pag. {hudPage + 1}/{notebook.PageCount})";
+                }
+                return hudName;
+            }
+        }
         public Color HudColor => new Color(0.93f, 0.85f, 0.6f);
-        public string HudHints => "Clic: dibujar con una herramienta | F: dar vuelta | V: a pantalla | T: dejar flotando | Q: arrojar";
+        public string HudHints => notebook != null ? NotebookHints : "Clic: dibujar con una herramienta | F: dar vuelta | V: a pantalla | T: dejar flotando | Q: arrojar";
         public float HudGauge => -1f;
+
+        private const string NotebookHints = "Rueda: pasar pagina | F: dar vuelta | V: a pantalla | Clic der. + mouse: girar | E: soltar";
 
         private void Awake()
         {
             rb = GetComponent<Rigidbody>();
             col = GetComponent<Collider>();
             canvas = GetComponent<DrawingCanvas>();
+            TryGetComponent(out notebook);
             bobPhase = Random.value * 6.28f;
             initialKinematic = rb.isKinematic;
             initialGravity = rb.useGravity;
@@ -91,8 +111,13 @@ namespace SpellSimulator.World
 
         // ---------------------------------------------------------------- agarre a distancia (G) y reinicio
 
+        private bool remoteHeld;
+        // Un lienzo que cayo (soltado o arrojado) se acuesta cara arriba; uno apoyado de pie desde el arranque no.
+        private bool settling;
+
         public void OnRemoteGrab()
         {
+            remoteHeld = true;
             if (focused) SetFocus(null, false);
             floating = false;
             animating = false;
@@ -106,6 +131,8 @@ namespace SpellSimulator.World
 
         public void OnRemoteRelease(bool pin)
         {
+            remoteHeld = false;
+            if (focused) SetFocus(null, false);
             if (pin) StartFloating();
             else Fall();
         }
@@ -120,6 +147,7 @@ namespace SpellSimulator.World
             transform.SetParent(null);
             col.isTrigger = false;
             if (!rb.isKinematic) { rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+            settling = false;
             rb.isKinematic = initialKinematic;
             rb.useGravity = initialGravity;
             rb.linearDamping = initialDrag;
@@ -176,6 +204,7 @@ namespace SpellSimulator.World
 
         private void Fall()
         {
+            settling = true;
             floating = false;
             rb.isKinematic = false;
             col.isTrigger = false;
@@ -263,7 +292,7 @@ namespace SpellSimulator.World
         /// </summary>
         private void FixedUpdate()
         {
-            if (!settleFlat || holdParent != null || floating || rb.isKinematic) return;
+            if (!settleFlat || !settling || remoteHeld || holdParent != null || floating || rb.isKinematic) return;
             Vector3 normal = canvas != null ? canvas.FaceNormal : transform.forward;
             float facing = Vector3.Dot(normal, Vector3.up);
             Vector3 axis = Vector3.Cross(normal, Vector3.up);
@@ -293,7 +322,7 @@ namespace SpellSimulator.World
             if (on == focused) return;
             if (on)
             {
-                if (cameraTransform == null || holdParent == null) return;
+                if (cameraTransform == null || (holdParent == null && !remoteHeld)) return;
                 var cam = cameraTransform.GetComponent<Camera>();
                 float vfov = cam != null ? cam.fieldOfView : 60f;
                 float aspect = cam != null ? cam.aspect : 1.78f;
@@ -304,6 +333,7 @@ namespace SpellSimulator.World
 
                 focused = true;
                 animating = false;
+                rb.isKinematic = true;
                 transform.SetParent(cameraTransform, true);
                 Quaternion world = Orient(transform.rotation, canvas != null ? canvas.FaceNormal : transform.forward,
                     -cameraTransform.forward, cameraTransform.up);
@@ -314,7 +344,14 @@ namespace SpellSimulator.World
             {
                 focused = false;
                 FocusMode.Exit();
-                if (holdParent != null)
+                if (remoteHeld)
+                {
+                    // Vuelve a ser arrastrado por el movedor.
+                    transform.SetParent(null);
+                    rb.isKinematic = false;
+                    rb.useGravity = false;
+                }
+                else if (holdParent != null)
                 {
                     transform.SetParent(holdParent, false);
                     transform.localPosition = Vector3.zero;

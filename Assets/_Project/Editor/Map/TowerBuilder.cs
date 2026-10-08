@@ -7,7 +7,7 @@ namespace SpellSimulator.EditorTools.Map
     /// La torre del modo Libre (referencias: torre de piedra con almenas + torre de Rapunzel): muro cilindrico de
     /// piedra con puerta al sur y ventanas, tres pisos (biblioteca, estudio, terraza) unidos por rampas en espiral
     /// pegadas al muro (el jugador es un Rigidbody: rampas, no escalones), almenas y techo conico violeta sobre postes.
-    /// Interior: estantes con libros, mesas, sillas, escritorio con papel, luces calidas y violetas.
+    /// Interior: estantes con libros, mesas, sillas, escritorio con papel, luces calidas y un taller de alquimia arriba.
     /// Angulos: 0 = este (+X), 90 = norte (+Z), 270 = sur (puerta).
     /// </summary>
     public static class TowerBuilder
@@ -222,10 +222,15 @@ namespace SpellSimulator.EditorTools.Map
                 // Cornisa: anillo saliente bajo el parapeto.
                 b.Quad(Polar(OuterRadius, a0, y0 - 0.4f), Polar(OuterRadius + 0.2f, a0, y0), Polar(OuterRadius + 0.2f, a1, y0), Polar(OuterRadius, a1, y0 - 0.4f), StoneB);
             }
-            // Postes que sostienen el techo.
+            // Postes que sostienen el techo: seis, cada 24 grados, en el arco macizo de la terraza (centrado en 231).
+            // La rampa de arriba entra por 240 y el hueco del piso de la terraza va de 312 a 150: FloorHole descarta
+            // cualquier angulo en hueco, asi ningun poste queda en el aire.
+            const float postCenter = 231f;
             for (int p = 0; p < 6; p++)
             {
-                var m = Matrix4x4.Translate(Polar(3.6f, p * 60f + 30f, TerraceY));
+                float angle = postCenter + (p - 2.5f) * 24f;
+                if (FloorHole(Floors, angle)) continue;
+                var m = Matrix4x4.Translate(Polar(3.6f, angle, TerraceY));
                 b.Frustum(m, 0.18f, 0.18f, 0f, 3.6f, 6, WoodDark);
             }
             return b;
@@ -297,7 +302,8 @@ namespace SpellSimulator.EditorTools.Map
             return tris;
         }
 
-        private static int Shelf(Transform parent, Material material, float angle, float y)
+        /// <summary>Estante contra el muro (radio por defecto) o exento a un radio dado (radio menor que el muro).</summary>
+        public static int Shelf(Transform parent, Material material, float angle, float y, float? radius = null)
         {
             var b = new LowPolyMesh();
             const float width = 1.5f, depth = 0.45f, height = 2.3f;
@@ -321,7 +327,7 @@ namespace SpellSimulator.EditorTools.Map
                 }
             }
             var mesh = MapBuilder.SaveMesh(b.Build($"Shelf_{Mathf.RoundToInt(angle)}_{Mathf.RoundToInt(y)}"));
-            Vector3 pos = parent.position + Polar(InnerRadius - depth / 2f - 0.05f, angle, y + 0.05f);
+            Vector3 pos = parent.position + Polar(radius ?? InnerRadius - depth / 2f - 0.05f, angle, y + 0.05f);
             // Frente (-Z local) hacia el centro.
             var rot = Quaternion.LookRotation(new Vector3(Mathf.Cos(angle * Mathf.Deg2Rad), 0f, Mathf.Sin(angle * Mathf.Deg2Rad)));
             var go = MapBuilder.Place("Bookshelf", parent, mesh, material, pos, rot);
@@ -351,7 +357,7 @@ namespace SpellSimulator.EditorTools.Map
             return b.TriangleCount;
         }
 
-        private static int Chair(Transform parent, Material material, Vector3 local, float yaw)
+        public static int Chair(Transform parent, Material material, Vector3 local, float yaw)
         {
             var b = new LowPolyMesh();
             b.Box(Matrix4x4.Translate(new Vector3(0f, 0.45f, 0f)), new Vector3(0.45f, 0.06f, 0.45f), new Color(0.65f, 0.2f, 0.2f));
@@ -384,9 +390,9 @@ namespace SpellSimulator.EditorTools.Map
                 l.shadows = LightShadows.None;
             }
             PointLight("LibraryWarm", new Vector3(0f, 3.2f, 0f), new Color(1f, 0.75f, 0.45f), 8f, 2.2f);
-            PointLight("LibraryMagic", new Vector3(-2f, 2f, 2f), new Color(0.75f, 0.4f, 1f), 5f, 1.6f);
+            // Sin luces violetas: la de arriba pegaba una mancha magenta en el cielorraso (y no iluminaba nada).
             PointLight("StudyWarm", new Vector3(0f, FloorHeight + 3.2f, 0f), new Color(1f, 0.75f, 0.45f), 8f, 2f);
-            PointLight("SecondFloor", new Vector3(0f, FloorHeight * 2 + 3.2f, 0f), new Color(0.8f, 0.6f, 1f), 8f, 1.5f);
+            PointLight("AlchemyWarm", new Vector3(0f, FloorHeight * 2 + 2.6f, 0f), new Color(1f, 0.8f, 0.5f), 6f, 1.6f);
         }
     }
 }

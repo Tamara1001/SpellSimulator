@@ -16,7 +16,7 @@ namespace SpellSimulator.EditorTools
         private const string DecalMaterialPath = "Assets/_Project/Materials/InkDecal.mat";
 
         [MenuItem("SpellSimulator/Interaction/Setup Current Scene")]
-        public static string Apply() => FixInteractMask() + " " + FixHoldPoints() + " " + FixInkAndStance() + " " + MakePropsMovable() + " " + MakeSurfacesInscribable();
+        public static string Apply() => FixInteractMask() + " " + FixHoldPoints() + " " + FixInkAndStance() + " " + MakePropsMovable() + " " + EnsureRespawnables() + " " + MakeSurfacesInscribable();
 
         /// <summary>
         /// El rayo de E solo veia las capas Canvas e Interactable: libro, estampas y cajas (capa Default) no se podian apuntar.
@@ -126,6 +126,30 @@ namespace SpellSimulator.EditorTools
                 added++;
             }
             return $"Movable agregado a {added} objetos.";
+        }
+
+        /// <summary>
+        /// Todo lo de juego (cajas, herramientas, estampas, tinteros, lienzos, lo que reacciona al fuego) vuelve a su lugar al
+        /// reiniciar el mundo. Los kinematicos fijos (placas de presion, pizarras) no se tocan: son parte del mapa.
+        /// </summary>
+        public static string EnsureRespawnables()
+        {
+            int added = 0;
+            foreach (var rb in Object.FindObjectsByType<Rigidbody>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                var go = rb.gameObject;
+                if (go.GetComponent<Respawnable>() != null || go.GetComponent<Player.PlayerMovement>() != null) continue;
+                // Los fragmentos de Shatter son temporales: los borra el reinicio, no hace falta reubicarlos.
+                if (go.name.EndsWith("_Fragment")) continue;
+                bool piece = go.GetComponent<Movable>() != null || go.GetComponent<PhysicalTool>() != null ||
+                             go.GetComponent<Stamp>() != null || go.GetComponent<Inkwell>() != null ||
+                             go.GetComponent<PhysicalCanvas>() != null;
+                if (!piece && go.GetComponent<ElementReactive>() == null) continue;
+                if (rb.isKinematic && !piece) continue;
+                go.AddComponent<Respawnable>();
+                added++;
+            }
+            return $"Respawnable agregado a {added} objetos.";
         }
 
         /// <summary>Terreno, torre, plataforma y objetos movibles: se puede dibujar un sello en ellos.</summary>

@@ -7,8 +7,8 @@ namespace SpellSimulator.EditorTools.Map
 {
     /// <summary>
     /// Variedad de lienzos (copias del papel del laboratorio con otra forma y otro vestido):
-    /// cuadernos y lienzos grandes que se agarran y flotan al soltarlos, un pergamino que flota fijo en el aire,
-    /// y soportes fijos: pizarra de pared, caballete y mesa de dibujo inclinada.
+    /// cuadernos (con paginas) y lienzos grandes que se agarran y caen con gravedad, y soportes fijos: pizarra de pared,
+    /// caballetes y mesa de dibujo inclinada. Todo lienzo apoya sobre algo (mesa, caballete, pared, soportes o piso).
     /// Todos emiten por la cara con tinta (InkSide): dar vuelta la hoja cambia hacia donde apunta el hechizo.
     /// </summary>
     public static class CanvasDesigns
@@ -25,36 +25,62 @@ namespace SpellSimulator.EditorTools.Map
             var tower = GameObject.Find("Tower");
             float floor = TowerBuilder.FloorHeight;
 
+            // Lienzos flotantes de versiones anteriores del mapa: se quitan.
+            foreach (var oldName in new[] { "FloatingScroll_Study", "FloatingScroll_Field" })
+            {
+                var stale = GameObject.Find(oldName);
+                if (stale != null) Object.DestroyImmediate(stale);
+            }
+
             // Todos los lienzos de papel emiten por la cara con tinta.
             foreach (var c in Object.FindObjectsByType<DrawingCanvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 SetInkSide(c.gameObject);
 
-            // Biblioteca: cuadernos y un lienzo grande sobre la mesa de herramientas; pizarra en la pared libre.
+            // Biblioteca: cuadernos (con paginas) sobre la mesa de herramientas; pizarra en la pared libre.
             Vector3 bench = towerOrigin + new Vector3(0.4f, 0.82f, -2.35f);
-            Grabbable(template, material, "Notebook_A", bench + new Vector3(-0.7f, 0.012f, 0f), Quaternion.Euler(90f, 12f, 0f), 0.24f, 0.32f, Dressing.Notebook);
-            Grabbable(template, material, "Notebook_B", bench + new Vector3(-0.35f, 0.012f, 0.1f), Quaternion.Euler(90f, -20f, 0f), 0.2f, 0.28f, Dressing.Notebook);
-            Grabbable(template, material, "BigCanvas_Library", towerOrigin + new Vector3(1.8f, 1.2f, 1.0f), Quaternion.Euler(0f, 250f, 0f), 0.9f, 1.2f, Dressing.Framed, startFloating: true);
+            var notebookA = Grabbable(template, material, "Notebook_A", bench + new Vector3(-0.7f, 0.012f, 0f), Quaternion.Euler(90f, 12f, 0f), 0.24f, 0.32f, Dressing.Notebook);
+            AddPages(notebookA);
+            var notebookB = Grabbable(template, material, "Notebook_B", bench + new Vector3(-0.35f, 0.012f, 0.1f), Quaternion.Euler(90f, -20f, 0f), 0.2f, 0.28f, Dressing.Notebook);
+            AddPages(notebookB);
+
+            // Lienzo grande enmarcado de pie en el piso, contra la pared: a 4.4 m del centro de la torre y 40 grados
+            // (mismo sentido que Polar: 0 = +X, 90 = +Z), con el borde de arriba inclinado 10 grados hacia la pared.
+            float libraryAngle = 40f * Mathf.Deg2Rad;
+            Vector3 radial = new Vector3(Mathf.Cos(libraryAngle), 0f, Mathf.Sin(libraryAngle));
+            Quaternion libraryRotation = StandingRotation(-radial, 10f); // la cara mira al centro de la torre
+            Grabbable(template, material, "BigCanvas_Library", StandingPosition(towerOrigin + radial * 4.4f, libraryRotation, 1.2f),
+                libraryRotation, 0.9f, 1.2f, Dressing.Framed).GetComponent<Rigidbody>().isKinematic = true;
 
             float wallAngle = 283f * Mathf.Deg2Rad;
             Vector3 outward = new Vector3(Mathf.Cos(wallAngle), 0f, Mathf.Sin(wallAngle));
             Vector3 boardAt = towerOrigin + outward * (TowerBuilder.InnerRadius - 0.1f) + Vector3.up * 1.7f;
             Fixed(template, material, "WallBoard_Library", boardAt, Quaternion.LookRotation(outward), 1.5f, 1.0f, Dressing.Framed);
 
-            // Estudio (primer piso): mesa de dibujo inclinada, caballete y un pergamino flotante.
+            // Estudio (primer piso): mesa de dibujo inclinada y caballete.
             DraftingTable(template, material, "DraftingTable", towerOrigin + new Vector3(-1.6f, floor, -1.2f), 20f);
             Easel(template, material, "Easel_Study", towerOrigin + new Vector3(1.5f, floor, -1.0f), 250f);
-            Grabbable(template, material, "FloatingScroll_Study", towerOrigin + new Vector3(-0.2f, floor + 1.5f, -1.8f), Quaternion.Euler(0f, 180f, 0f), 0.8f, 1.0f, Dressing.Scroll, startFloating: true);
 
-            // Lienzos gigantes para sellos enormes: uno flotante enmarcado y un papel enorme en el piso del campo.
-            Grabbable(template, material, "GiantCanvas_Field", fieldOrigin + new Vector3(-14f, 2.2f, 2f), Quaternion.Euler(0f, 160f, 0f), 3f, 2.2f, Dressing.Framed, startFloating: true);
+            // Lienzo gigante de pie en el campo, con dos soportes de madera detras para que no se caiga ni flote.
+            // La cara mira al centro del campo. El papel enorme queda en el piso, como antes.
+            Vector3 giantBase = fieldOrigin + new Vector3(-8f, 0f, 3f);
+            Quaternion giantRotation = StandingRotation(fieldOrigin - giantBase, 0f);
+            Stand(material, "Stand_GiantCanvas_Field", giantBase, giantRotation);
+            // De pie sobre su soporte y quieto hasta que se lo agarre (si no, la gravedad lo tumba al arrancar).
+            Grabbable(template, material, "GiantCanvas_Field", StandingPosition(giantBase, giantRotation, 2.2f),
+                giantRotation, 3f, 2.2f, Dressing.Framed).GetComponent<Rigidbody>().isKinematic = true;
             Grabbable(template, material, "GiantPaper_Field", fieldOrigin + new Vector3(-6f, 0.15f, 5f), Quaternion.Euler(90f, 20f, 0f), 3.5f, 3.5f, Dressing.None);
 
-            // Campo de practica: caballete con un lienzo grande y un pergamino flotante.
+            // Campo de practica: caballete con un lienzo grande.
             Easel(template, material, "Easel_Field", fieldOrigin + new Vector3(-9f, 0f, -2f), 200f);
-            Grabbable(template, material, "FloatingScroll_Field", fieldOrigin + new Vector3(-9f, 1.3f, -5f), Quaternion.Euler(0f, 0f, 0f), 0.8f, 1.0f, Dressing.Scroll, startFloating: true);
         }
 
-        private enum Dressing { None, Notebook, Framed, Scroll }
+        private enum Dressing { None, Notebook, Framed }
+
+        /// <summary>Paginas por cuaderno (NotebookPages.pageCount).</summary>
+        private const int NotebookPageCount = 10;
+
+        /// <summary>Margen (m) del marco de madera que sobresale del papel (ver Dress, Dressing.Framed).</summary>
+        private const float FrameMargin = 0.045f;
 
         // ---------------------------------------------------------------- piezas
 
@@ -71,25 +97,73 @@ namespace SpellSimulator.EditorTools.Map
             return go;
         }
 
-        /// <summary>Lienzo que se agarra (y flota o se apoya al soltarlo).</summary>
+        /// <summary>Lienzo que se agarra y cae con gravedad (al soltarlo se acuesta si es una hoja).</summary>
         private static GameObject Grabbable(GameObject template, Material material, string name, Vector3 position, Quaternion rotation,
-            float width, float height, Dressing dressing, bool startFloating = false)
+            float width, float height, Dressing dressing)
         {
             var go = Spawn(template, name, position, rotation, width, height);
             var rb = go.GetComponent<Rigidbody>();
-            rb.isKinematic = startFloating;
-            rb.useGravity = !startFloating;
+            rb.isKinematic = false;
+            rb.useGravity = true;
             var grab = go.GetComponent<PhysicalCanvas>();
             if (grab != null)
             {
                 var so = new SerializedObject(grab);
-                so.FindProperty("objectName").stringValue = name.StartsWith("Notebook") ? "cuaderno" : name.StartsWith("Floating") ? "pergamino" : "lienzo grande";
-                so.FindProperty("startFloating").boolValue = startFloating;
+                so.FindProperty("objectName").stringValue = name.StartsWith("Notebook") ? "cuaderno" : "lienzo grande";
+                so.FindProperty("startFloating").boolValue = false;
                 so.ApplyModifiedProperties();
             }
             Dress(go, material, dressing, width, height);
             if (go.GetComponent<Respawnable>() == null) go.AddComponent<Respawnable>();
             return go;
+        }
+
+        /// <summary>Cuaderno con paginas: NotebookPages con pageCount (se configura por SerializedObject).</summary>
+        private static void AddPages(GameObject notebook)
+        {
+            var pages = notebook.AddComponent<NotebookPages>();
+            var so = new SerializedObject(pages);
+            so.FindProperty("pageCount").intValue = NotebookPageCount;
+            so.ApplyModifiedProperties();
+        }
+
+        /// <summary>
+        /// Rotacion de un lienzo de pie: la cara mira a faceDirection (horizontal) y el borde de arriba se inclina
+        /// leanDegrees hacia atras. El mesh mira a -Z, asi que la cara visible es -forward (como en Easel).
+        /// </summary>
+        private static Quaternion StandingRotation(Vector3 faceDirection, float leanDegrees)
+        {
+            Vector3 face = Vector3.ProjectOnPlane(faceDirection, Vector3.up).normalized;
+            float lean = leanDegrees * Mathf.Deg2Rad;
+            Vector3 normal = face * Mathf.Cos(lean) + Vector3.up * Mathf.Sin(lean);
+            Vector3 top = Vector3.up * Mathf.Cos(lean) - face * Mathf.Sin(lean);
+            return Quaternion.LookRotation(-normal, top);
+        }
+
+        /// <summary>Centro de un lienzo de pie cuyo borde de abajo (con marco) apoya en bottom.</summary>
+        private static Vector3 StandingPosition(Vector3 bottom, Quaternion rotation, float height) =>
+            bottom + rotation * Vector3.up * (height * 0.5f + FrameMargin);
+
+        /// <summary>Soportes de madera (dos patas y un travesaño) detras de un lienzo de pie, con la base en el piso.</summary>
+        private static void Stand(Material material, string name, Vector3 ground, Quaternion rotation)
+        {
+            var old = GameObject.Find(name);
+            if (old != null) Object.DestroyImmediate(old);
+            var root = new GameObject(name);
+            root.transform.SetPositionAndRotation(ground, rotation);
+            var b = new LowPolyMesh();
+            // En el espacio del soporte el lienzo mira a -Z: las patas van detras (+Z), desde el piso hasta la espalda.
+            foreach (float sx in new[] { -0.8f, 0.8f })
+            {
+                Vector3 bottom = new Vector3(sx, 0f, 0.6f);
+                Vector3 top = new Vector3(sx, 1.4f, 0.03f);
+                Vector3 axis = top - bottom;
+                b.Box(Matrix4x4.TRS((bottom + top) / 2f, Quaternion.FromToRotation(Vector3.up, axis), Vector3.one), new Vector3(0.08f, axis.magnitude, 0.08f), Wood);
+            }
+            b.Box(Matrix4x4.TRS(new Vector3(0f, 0.5f, 0.4f), Quaternion.identity, Vector3.one), new Vector3(1.8f, 0.07f, 0.07f), DarkWood);
+            root.AddComponent<MeshFilter>().sharedMesh = MapBuilder.SaveMesh(b.Build($"Stand_{name}"));
+            root.AddComponent<MeshRenderer>().sharedMaterial = material;
+            Undo.RegisterCreatedObjectUndo(root, name);
         }
 
         /// <summary>Lienzo fijo (no se agarra): pizarra, caballete, mesa.</summary>
@@ -156,16 +230,6 @@ namespace SpellSimulator.EditorTools.Map
                     b.Box(Matrix4x4.TRS(new Vector3(0f, -h / 2f - t / 2f, d), Quaternion.identity, Vector3.one), new Vector3(w + 0.1f, t, 0.03f), DarkWood);
                     b.Box(Matrix4x4.TRS(new Vector3(-w / 2f - t / 2f, 0f, d), Quaternion.identity, Vector3.one), new Vector3(t, h, 0.03f), DarkWood);
                     b.Box(Matrix4x4.TRS(new Vector3(w / 2f + t / 2f, 0f, d), Quaternion.identity, Vector3.one), new Vector3(t, h, 0.03f), DarkWood);
-                    break;
-                case Dressing.Scroll:
-                    // Pergamino: varillas arriba y abajo con remates dorados.
-                    var rod = new Color(0.5f, 0.32f, 0.18f);
-                    var gold = new Color(0.9f, 0.72f, 0.3f);
-                    b.Box(Matrix4x4.TRS(new Vector3(0f, h / 2f + 0.02f, 0.004f), Quaternion.identity, Vector3.one), new Vector3(w + 0.1f, 0.035f, 0.035f), rod);
-                    b.Box(Matrix4x4.TRS(new Vector3(0f, -h / 2f - 0.02f, 0.004f), Quaternion.identity, Vector3.one), new Vector3(w + 0.1f, 0.035f, 0.035f), rod);
-                    foreach (float sx in new[] { -1f, 1f })
-                        foreach (float sy in new[] { -1f, 1f })
-                            b.Box(Matrix4x4.TRS(new Vector3(sx * (w / 2f + 0.06f), sy * (h / 2f + 0.02f), 0.004f), Quaternion.identity, Vector3.one), new Vector3(0.03f, 0.05f, 0.05f), gold);
                     break;
             }
             Finish(b, wrapper, material, $"Dressing_{dressing}_{canvas.name}");

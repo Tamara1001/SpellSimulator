@@ -5,6 +5,20 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-07 — Quinta prueba manual: UI Toolkit, inventario de dos manos, grimorio nuevo, contornos y torre
+- **Inventario (ADR-033):** barra de 3 slots (1-2-3) en la mano principal (derecha/izquierda en Opciones) + mano secundaria que arrastra lo
+  agarrado con E (`PlayerInteractor` reescrito, `ObjectMover` con cinematicos conducidos y volteo). Rueda = grosor (pluma/goma) o pagina
+  (cuaderno) o distancia. Clic de la rueda deja flotando. Cuadernos de 10 paginas (`NotebookPages`).
+- **HUD UI Toolkit** (`Scripts/UI`, `Assets/_Project/UI`): barra con miniaturas 3D, contexto con keycaps, avisos compactos arriba a la derecha,
+  [E] junto a la mira, lector de libros literal (`BookReaderUI`) con "Aprender este conocimiento". Se oculta con el grimorio abierto.
+- **Grimorio** rehecho: se agarra de cualquier parte, secciones Magia/Glifos/Sellos/Controles/Opciones (mano principal, sensibilidad,
+  invertir Y, volumenes), estetica de cuero violeta y pergamino procedural.
+- **Render:** contorno cartoon por pantalla (RenderGraph) y rim cel en `StylizedLit`; piso quemado organico; llamas del pasto bajas.
+- **Mundo:** torre sin luces violetas ni lienzos flotantes, piso 2 amoblado, columnas sobre piso firme, herramientas dentro de las mesas;
+  reinicio repone todo y rescata objetos bajo el terreno.
+- Trabajo repartido: 6 agentes (Opus: UI, grimorio, render; Haiku: cuadernos, torre, reinicio). 141 tests. KI-084 a KI-095.
+- Pendiente: probar a mano; cablear volumenes de musica/efectos (KI-094); Quest (KI-085, KI-095).
+
 ## 2026-10-07 — Cuarta prueba manual: HUD tipo Minecraft, tinta lisa, agarre unificado (SIN VERIFICAR EN PLAY)
 - Tinta lisa: shader `InkBrush` (Min/Max) sin circulos apilados (verificado con captura); lienzos a 1024 px/m (tope 2048); 6 grosores en teclas 5-0 (1,6 mm a 8,8 cm).
 - HUD (`PlayerHud`, `Hud`, `IHudInfo`, `IWidthSelectable`): barra de 4 slots (1-2 mano derecha, 3-4 izquierda), barra de contexto con teclas

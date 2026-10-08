@@ -146,36 +146,30 @@ rocas que emergen, pasos según el piso (pasto, madera, piedra). Créditos: soni
 
 ## Controles
 
-Esquema (ADR-032): una tecla por idea, las parecidas juntas. Todo se puede repasar en el grimorio (Tab → Controles).
+Esquema (ADR-032/033). Se repasa en el grimorio (Tab → Controles).
 
 | Grupo | Acción | PC | VR |
 |---|---|---|---|
 | Moverse | Caminar / mirar | WASD + mouse | Stick izquierdo + cabeza |
-| | Correr | Shift | Click del stick izquierdo |
-| | Agacharse (mantener) | C o Ctrl | — |
-| | Tumbarse (alterna) | Z | — |
-| | Saltar | Espacio | — |
-| | Zoom (mantener) | X | — |
-| Manos | Agarrar / soltar (herramientas, lienzos, estampas) | E | Grip |
-| | Arrojar | Q | B |
-| | Dejar el lienzo flotando | T | — |
-| | Dar vuelta la hoja | F | Girar la mano / click del stick derecho |
-| | Lienzo a pantalla (dibujar con el mouse) | V | — |
-| Mover objetos | Sujetar a distancia (mantener) | G | — |
-| | Acercar / alejar | Rueda | — |
-| | Rotar | Clic derecho + mouse | — |
-| | Inclinar sobre el eje de la mira | Shift + rueda | — |
-| | Dejarlo flotando donde está | T mientras lo sostenés | — |
-| Dibujar | Dibujar / estampar / usar | Clic izquierdo | Gatillo |
-| | Deshacer | Clic derecho | A |
-| | Grosor de la pluma | 1, 2, 3, 4 | — |
-| | Recargar tinta | R | Mojar en un tintero |
-| Menú | Grimorio | Tab (a pantalla: B) | Botón de menú izquierdo |
+| | Correr / agacharse (mantener) / tumbarse (alterna) | Shift / C o Ctrl / Z | Click del stick izquierdo / — / — |
+| | Saltar / zoom (mantener) | Espacio / X | — |
+| **Mano principal** (barra de 3 slots) | Elegir slot | 1, 2, 3 | — |
+| | Equipar una herramienta o estampa del mundo | E (va al primer slot libre) | Grip |
+| | Usar / deshacer | Clic izquierdo / clic derecho | Gatillo / A |
+| | Cambiar el grosor de la pluma o el tamaño de la goma | Rueda del mouse (sin nada agarrado) | — |
+| | Recargar tinta / arrojar | R / Q | Mojar en un tintero / B |
+| **Mano secundaria** (lo agarrado con E se arrastra) | Agarrar / soltar | E | Grip |
+| | Acercar o alejar (cuaderno: pasar de página) | Rueda | — |
+| | Rotar / inclinar | Clic derecho + mouse / Shift + rueda | Girar la mano |
+| | Dar vuelta la hoja / lienzo a pantalla | F / V | Click del stick derecho / — |
+| | Dejar flotando / arrojar | Clic de la rueda (o T) / Q | — / B |
+| Menú | Grimorio / a pantalla | Tab / B | Botón de menú izquierdo |
 | | Botones del grimorio | Apuntar + clic izquierdo | Apuntar + gatillo |
-| | Cargar una estampa | Estampa en mano + glifo abierto + "Cargar en la estampa" | igual con el gatillo |
-| | Panel de depuración | F3 | — |
-| | Reiniciar el mundo | Retroceso | Y |
-| | Liberar el cursor | Escape | — |
+| | Panel de depuración / reiniciar el mundo | F3 / Retroceso | — / Y |
+
+**Inventario:** la mano principal (derecha por defecto; se cambia en Opciones) tiene 3 slots (lápiz, goma, estampas, tinta...) y la
+secundaria uno solo: lo que se agarra con E (lienzo, caja, el grimorio) y se arrastra por el mundo, siempre visible en la barra.
+Con un lienzo agarrado se puede rotar, dar vuelta, dibujar sobre él y fijarlo a la pantalla (V).
 
 ## Decisiones (2026-10-07)
 1. **Auto-activación**: el hechizo se lanza solo al **cerrar el anillo**. El secundario de las herramientas es deshacer.

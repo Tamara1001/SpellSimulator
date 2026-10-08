@@ -159,7 +159,7 @@ namespace SpellSimulator.Player
             debugAction.AddBinding("<Keyboard>/f3");
             bookFocusAction = new InputAction("BookFocus", InputActionType.Button);
             bookFocusAction.AddBinding("<Keyboard>/b");
-            hotbarActions = new InputAction[4];
+            hotbarActions = new InputAction[3];
             for (int i = 0; i < hotbarActions.Length; i++)
             {
                 hotbarActions[i] = new InputAction("Hotbar" + (i + 1), InputActionType.Button);

@@ -46,20 +46,11 @@ namespace SpellSimulator.EditorTools
             gso.FindProperty("coverMaterial").objectReferenceValue = cover;
             gso.ApplyModifiedProperties();
 
-            var canvas = GameObject.Find("Canvas");
-            if (canvas != null)
-            {
-                var ui = canvas.GetComponent<InteractionPromptUI>() ?? canvas.AddComponent<InteractionPromptUI>();
-                var uso = new SerializedObject(ui);
-                uso.FindProperty("interactor").objectReferenceValue = Object.FindFirstObjectByType<PlayerInteractor>();
-                uso.FindProperty("hud").objectReferenceValue = canvas.GetComponent<RectTransform>();
-                uso.ApplyModifiedProperties();
-            }
-
+            // La HUD y los avisos los arma UISetup (UI Toolkit).
             AssetDatabase.SaveAssets();
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
-            return $"Aprendizaje en {scene.name}: grimorio={grimoire != null}, HUD={(canvas != null)}";
+            return $"Aprendizaje en {scene.name}: grimorio={grimoire != null}";
         }
     }
 }

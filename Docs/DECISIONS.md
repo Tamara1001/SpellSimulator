@@ -97,6 +97,13 @@ por código (VFX Graph no). El viejo `Fire_VFX.vfx` queda sin uso.
 hechizo le explotaría en la cara. `DrawingCanvas.EmissionSide = AwayFromViewer` en papeles (la magia sale hacia el
 objetivo, como cuando los personajes giran el papel); `InkSide` queda para sellos en paredes, mesas y piedras.
 
+## ADR-033 — Inventario de dos manos: barra de 3 slots + una mano secundaria que arrastra
+**2026-10-07.** Reemplaza ADR-032 en el inventario. La mano principal (derecha o izquierda, `PlayerSettings.MainHandRight`) tiene 3
+slots (1-2-3) para lo que se usa (lápiz, goma, estampas); lo agarrado con E (lienzo, caja, el grimorio) va a la mano secundaria y se
+ARRASTRA en el mundo con `ObjectMover` (nunca se guarda). Así un lienzo agarrado se puede rotar, dar vuelta, dibujar y fijar a la
+pantalla (V), y un cuaderno pasa de página con la rueda. La rueda sin nada agarrado cambia el grosor. La HUD es UI Toolkit
+(`Scripts/UI`), temática de pergamino, con miniaturas renderizadas de cada objeto.
+
 ## ADR-032 — Dos modos de manipular: agarrar (E) y mover (G)
 **2026-10-07.** Llevar un objeto en la mano (E) no permite rotarlo ni acomodarlo, y sin eso es imposible unir dos mitades de un
 sello. Se separan: **E** = agarrar en la mano (herramientas, lienzos, estampas; las manos cuelgan de la cámara) y **G** = mover a

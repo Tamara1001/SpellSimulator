@@ -62,6 +62,7 @@ namespace SpellSimulator.EditorTools.Map
             CanvasDesigns.Build(map, lit, TowerOrigin(), stampTable);
             InteractionSetup.Apply();
             FlammableSetup.Apply();
+            UISetup.Apply();
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);

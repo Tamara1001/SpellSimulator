@@ -1,4 +1,5 @@
 using UnityEngine;
+using SpellSimulator.World.Map;
 
 namespace SpellSimulator.World
 {
@@ -9,11 +10,24 @@ namespace SpellSimulator.World
     public class Respawnable : MonoBehaviour
     {
         [SerializeField, Tooltip("Altura (m) por debajo de la cual el objeto vuelve a su lugar.")]
-        private float killHeight = -20f;
+        private float killHeight = -8f;
+
+        // Revision barata (cada 0.5 s, sin allocations) de objetos que atravesaron el terreno o se alejaron demasiado.
+        private const float CheckPeriod = 0.5f;
+        private const float MaxDistance = 150f;
+        private const float TowerRadius = 7f;
+        private const float GroundMargin = 1.5f;
+
+        // Referencias cacheadas para no buscarlas en cada reinicio por objeto.
+        private static Transform cachedCamera;
+        private static Transform cachedPlayer;
+
+        private static readonly System.Collections.Generic.List<Interfaces.IResettable> resettables = new System.Collections.Generic.List<Interfaces.IResettable>();
 
         private Rigidbody rb;
         private Vector3 startPosition;
         private Quaternion startRotation;
+        private float checkTimer;
 
         private void Awake()
         {
@@ -24,7 +38,28 @@ namespace SpellSimulator.World
 
         private void FixedUpdate()
         {
-            if (rb.position.y < killHeight) Respawn();
+            if (rb.position.y < killHeight)
+            {
+                Respawn();
+                return;
+            }
+            checkTimer += Time.fixedDeltaTime;
+            if (checkTimer < CheckPeriod) return;
+            checkTimer = 0f;
+            if (IsLost(rb.position)) Respawn();
+        }
+
+        /// <summary>
+        /// Perdido: a mas de MaxDistance del origen, o por debajo del terreno fuera de la torre (dentro de la torre el piso
+        /// esta por encima del terreno, asi que ahi no se compara).
+        /// </summary>
+        private static bool IsLost(Vector3 p)
+        {
+            if (p.sqrMagnitude > MaxDistance * MaxDistance) return true;
+            float dx = p.x - ValleyShape.TowerCenter.x;
+            float dz = p.z - ValleyShape.TowerCenter.y;
+            if (dx * dx + dz * dz <= TowerRadius * TowerRadius) return false;
+            return p.y < ValleyShape.Height(p.x, p.z) - GroundMargin;
         }
 
         public void Respawn()
@@ -37,7 +72,9 @@ namespace SpellSimulator.World
             rb.position = startPosition;
             rb.rotation = startRotation;
             transform.SetPositionAndRotation(startPosition, startRotation);
-            if (TryGetComponent(out Interfaces.IResettable resettable)) resettable.ResetToInitial();
+            // Todos los componentes con estado propio (lienzo, cuaderno con paginas, estampa...).
+            GetComponents(resettables);
+            for (int i = 0; i < resettables.Count; i++) resettables[i].ResetToInitial();
         }
 
         /// <summary>
@@ -46,9 +83,21 @@ namespace SpellSimulator.World
         /// </summary>
         public static void RespawnAll()
         {
+            if (cachedCamera == null && Camera.main != null) cachedCamera = Camera.main.transform;
+            if (cachedPlayer == null)
+            {
+                var interactor = Object.FindFirstObjectByType<Player.PlayerInteractor>();
+                if (interactor != null) cachedPlayer = interactor.transform;
+            }
             foreach (var r in FindObjectsByType<Respawnable>(FindObjectsSortMode.None))
-                // Los cinematicos con padre (en mano, fijos a la camara) no se tocan; los que flotan sueltos si.
-                if (r.rb != null && (!r.rb.isKinematic || r.transform.parent == null)) r.Respawn();
+            {
+                if (r.rb == null || IsHeldByPlayer(r.transform)) continue;
+                r.Respawn();
+            }
         }
+
+        /// <summary>Lo que cuelga de la camara o del jugador (manos, herramienta en la mano) no se reinicia.</summary>
+        private static bool IsHeldByPlayer(Transform t) =>
+            (cachedCamera != null && t.IsChildOf(cachedCamera)) || (cachedPlayer != null && t.IsChildOf(cachedPlayer));
     }
 }

@@ -105,11 +105,11 @@ namespace SpellSimulator.World
         // ---- Interfaz (HUD de abajo)
         public string HudName => toolName;
         public Color HudColor => kind == ToolKind.Pen ? fullInkColor : kind == ToolKind.Eraser ? new Color(0.93f, 0.62f, 0.66f) : new Color(0.92f, 0.87f, 0.74f);
-        public string HudHints => kind == ToolKind.Pen ? "Clic: dibujar | Clic der.: deshacer | 5-0: grosor | R: tinta | Q: arrojar"
-            : kind == ToolKind.Eraser ? "Clic: borrar | Clic der.: deshacer | Q: arrojar" : "Clic: limpiar el lienzo | Q: arrojar";
+        public string HudHints => kind == ToolKind.Pen ? "Clic: dibujar | Clic der.: deshacer | Rueda: grosor | R: tinta | Q: arrojar"
+            : kind == ToolKind.Eraser ? "Clic: borrar | Clic der.: deshacer | Rueda: tamaño | Q: arrojar" : "Clic: limpiar el lienzo | Q: arrojar";
         public float HudGauge => kind == ToolKind.Pen ? ink.Fraction : -1f;
         public int WidthIndex => widthIndex;
-        public int WidthCount => kind == ToolKind.Pen ? widthPresets.Length : 0;
+        public int WidthCount => kind == ToolKind.Rag ? 0 : widthPresets.Length;
         public float WidthSample(int index) => widthPresets[Mathf.Clamp(index, 0, widthPresets.Length - 1)] / widthPresets[widthPresets.Length - 1];
         public string WidthLabel(int index) => index >= 0 && index < widthNames.Length ? widthNames[index] : (index + 1).ToString();
         public InkReservoir Ink => ink;
@@ -136,7 +136,6 @@ namespace SpellSimulator.World
 
         private void Update()
         {
-            if (held && kind == ToolKind.Pen && currentCanvas == null) HandleWidthKeys();
             // VR: mojar la punta dentro de un tintero recarga.
             if (!held || !UsesInk || !PlatformDetector.IsVR || ink.Missing <= 0f) return;
             int count = Physics.OverlapSphereNonAlloc(raycastOrigin.position, vrDipRadius, dipHits, ~0, QueryTriggerInteraction.Collide);
@@ -154,16 +153,18 @@ namespace SpellSimulator.World
             }
         }
 
-        /// <summary>Teclas 1 a 4: grosor de la pluma. Fino para sellos chicos, grueso para sellos enormes.</summary>
-        private void HandleWidthKeys()
+        /// <summary>Rueda del mouse: grosor de la pluma o el radio de la goma (no cambia mientras se dibuja).</summary>
+        public void CycleWidth(int delta)
         {
-            if (input == null) input = FindFirstObjectByType<PlayerInputReader>();
-            int preset = input != null ? input.WidthPreset : -1;
-            if (preset < 0 || preset >= widthPresets.Length || preset == widthIndex) return;
-            widthIndex = preset;
+            if (kind == ToolKind.Rag || currentCanvas != null) return;
+            int count = widthPresets.Length;
+            int next = Mathf.Clamp(widthIndex + delta, 0, count - 1);
+            if (next == widthIndex) return;
+            widthIndex = next;
             float stabilizer = PlatformDetector.IsVR ? vrStabilizerSpeed : pcStabilizerSpeed;
-            tool = new PenTool(stabilizer, baseStrokeWidth * widthPresets[preset]);
-            Hud.Notify("width", "Grosor: " + WidthLabel(preset), 2f);
+            if (kind == ToolKind.Pen) tool = new PenTool(stabilizer, baseStrokeWidth * widthPresets[widthIndex]);
+            else tool = new EraserTool((definition != null ? definition.eraseRadius : 0.025f) * widthPresets[widthIndex]);
+            Hud.Notify("width", (kind == ToolKind.Pen ? "Grosor: " : "Tamaño de la goma: ") + WidthLabel(widthIndex), 2f);
         }
 
         private void ApplyDefinition()
@@ -204,6 +205,7 @@ namespace SpellSimulator.World
             held = false;
             transform.SetParent(null);
             rb.isKinematic = false;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
             col.enabled = true;
         }
 

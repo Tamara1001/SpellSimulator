@@ -1,0 +1,104 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" editor-extension-mode="False">
+    <Style src="SpellUI.uss" />
+    <ui:VisualElement name="screen" class="screen" picking-mode="Ignore">
+
+        <!-- HUD de juego: nada toma el mouse (picking Ignore, lo fuerza HudController). -->
+        <ui:VisualElement name="hud" class="hud" picking-mode="Ignore">
+            <ui:VisualElement name="hover-key" class="hover-key">
+                <ui:Label text="E" class="keycap keycap--hover" />
+            </ui:VisualElement>
+
+            <ui:VisualElement name="bottom" class="bottom">
+                <ui:VisualElement name="context" class="context">
+                    <ui:VisualElement name="ctx-main" class="ctx-row">
+                        <ui:Label name="ctx-main-name" class="ctx-name" />
+                        <ui:VisualElement name="widths" class="widths" />
+                        <ui:VisualElement name="ink" class="ink">
+                            <ui:VisualElement class="ink-drop" />
+                            <ui:VisualElement class="ink-track">
+                                <ui:VisualElement name="ink-fill" class="ink-fill" />
+                            </ui:VisualElement>
+                            <ui:Label name="ink-pct" class="ink-pct" />
+                        </ui:VisualElement>
+                        <ui:VisualElement name="ctx-main-hints" class="hints" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="ctx-sec" class="ctx-row ctx-row--sec">
+                        <ui:Label name="ctx-sec-name" class="ctx-name ctx-name--sec" />
+                        <ui:Label name="page" class="page-label" />
+                        <ui:VisualElement name="ctx-sec-hints" class="hints" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+
+                <ui:VisualElement name="bar" class="bar">
+                    <ui:VisualElement class="hand hand--sec">
+                        <ui:Label name="sec-hand-label" class="hand-label" text="Mano izquierda" />
+                        <ui:VisualElement name="sec-slots" class="slot-tray slot-tray--single" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="hand-gap" />
+                    <ui:VisualElement class="hand hand--main">
+                        <ui:Label name="main-hand-label" class="hand-label" text="Mano derecha" />
+                        <ui:VisualElement name="main-slots" class="slot-tray" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <ui:VisualElement name="notices" class="notices" picking-mode="Ignore" />
+
+        <!-- Lector de libros (modal): el unico que toma el mouse. -->
+        <ui:VisualElement name="reader" class="reader reader--hidden">
+            <ui:VisualElement name="reader-backdrop" class="reader-backdrop" />
+            <ui:VisualElement name="book" class="book">
+                <ui:VisualElement class="book-cover" picking-mode="Ignore" />
+                <ui:VisualElement name="pages" class="book-pages">
+                    <ui:VisualElement name="page-left" class="page page--left">
+                        <ui:VisualElement class="page-shade page-shade--left" picking-mode="Ignore" />
+                        <ui:VisualElement name="left-content" class="page-content page-content--left" picking-mode="Ignore">
+                            <ui:Label name="left-kicker" class="kicker" />
+                            <ui:Label name="cover-title" class="cover-title" />
+                            <ui:VisualElement name="cover-rule" class="divider divider--wide" />
+                            <ui:Label name="cover-subtitle" class="cover-subtitle" />
+                            <ui:VisualElement name="sketch-host" class="sketch-host" />
+                            <ui:Label name="left-caption" class="caption" />
+                        </ui:VisualElement>
+                        <ui:Label name="folio-left" class="folio" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                    <ui:VisualElement name="page-right" class="page page--right">
+                        <ui:VisualElement class="page-shade page-shade--right" picking-mode="Ignore" />
+                        <ui:VisualElement name="right-content" class="page-content page-content--right">
+                            <ui:Label name="right-kicker" class="kicker" />
+                            <ui:Label name="right-heading" class="heading" />
+                            <ui:VisualElement class="divider" />
+                            <ui:Label name="right-body" class="body" />
+                            <ui:VisualElement class="page-spacer" />
+                            <ui:VisualElement name="right-note" class="note">
+                                <ui:VisualElement class="note-seal" />
+                                <ui:Label name="right-note-text" class="note-text" />
+                            </ui:VisualElement>
+                            <ui:Button name="learn" class="learn-button">
+                                <ui:VisualElement class="learn-seal" picking-mode="Ignore" />
+                                <ui:Label text="Aprender este conocimiento" class="learn-text" picking-mode="Ignore" />
+                            </ui:Button>
+                        </ui:VisualElement>
+                        <ui:Label name="folio-right" class="folio" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="ribbon" picking-mode="Ignore" />
+                <ui:Button name="prev" class="nav nav--prev" text="‹" />
+                <ui:Button name="next" class="nav nav--next" text="›" />
+                <ui:Button name="close" class="close-button" text="Cerrar  ×" />
+            </ui:VisualElement>
+            <ui:VisualElement class="reader-footer" picking-mode="Ignore">
+                <ui:Label name="counter" class="counter" />
+                <ui:VisualElement class="reader-help">
+                    <ui:Label text="←  →" class="keycap keycap--dark" />
+                    <ui:Label text="pasar página" class="reader-help-text" />
+                    <ui:Label text="Clic" class="keycap keycap--dark" />
+                    <ui:Label text="en la hoja" class="reader-help-text" />
+                    <ui:Label text="Esc" class="keycap keycap--dark" />
+                    <ui:Label text="cerrar" class="reader-help-text" />
+                </ui:VisualElement>
+            </ui:VisualElement>
+        </ui:VisualElement>
+    </ui:VisualElement>
+</ui:UXML>
