@@ -185,4 +185,4 @@ graphify god-nodes                          # hubs arquitectónicos
   multilínea de `Edit` deben reproducir los finales de línea reales.
 - **Varios agentes con Unity:** un candado `mkdir Logs/unity.lock` / `rmdir` (si existe, esperar). Los agentes escriben código y yo compilo y
   verifico; delegar solo tareas de 1-2 archivos con la especificación cerrada.
-
+- **Ajustes manuales de la escena:** `MapBuilder.Build()` regenera todo, pero `MapLayout` conserva lo que muevas a mano (ver CHANGELOG 2026-10-08). Para fijar tu layout sin esperar un Build: menu `SpellSimulator/Map/Capturar mi layout manual`. `Borrar overrides del layout` vuelve al layout generado.

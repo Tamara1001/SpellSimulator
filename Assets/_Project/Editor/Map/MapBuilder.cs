@@ -36,6 +36,7 @@ namespace SpellSimulator.EditorTools.Map
             rng = new System.Random(Seed);
             lit = StylizedMaterial();
 
+            int manual = MapLayout.CaptureManualEdits(scene);   // lo que se movio a mano desde el ultimo Build se conserva
             var old = GameObject.Find("Map");
             if (old != null) Object.DestroyImmediate(old);
             var map = new GameObject("Map").transform;
@@ -66,6 +67,8 @@ namespace SpellSimulator.EditorTools.Map
             FlammableSetup.Apply();
             UISetup.Apply();
 
+            int kept = MapLayout.ApplyAndRecord(scene);
+            Debug.Log($"[MapLayout] ajustes manuales detectados: {manual}; reaplicados: {kept}");
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();

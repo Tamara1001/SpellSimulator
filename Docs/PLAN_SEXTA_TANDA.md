@@ -63,3 +63,16 @@ tags: [doc, plan]
 ## Presupuesto
 - Hoy (queda ~15 %): solo la **Fase 1** si se aprueba (no usa Opus). Fases 2 y 3 en la próxima ventana de 5 h, una por vez.
 - Cada agente recibe el prompt cerrado de su fila; evitar sondeos con sleeps largos y capturas innecesarias.
+
+---
+
+# Séptima tanda (feedback de la prueba de las Fases 2 y 3, 2026-10-08)
+
+| Agente | Modelo | Contenido |
+|---|---|---|
+| A — textos y HUD | Sonnet | "Taller" → "Simulador" en todo texto visible; créditos profesionales (Programación / Arte / Diseño / Música-Sonido… Tamara D'Angelo); "Estampa" → "Sello" en textos; tinta en reserva visible (HUD y tintero) |
+| S — sellos | Sonnet | Hechizos completos del grimorio se pueden cargar en un sello; el dibujo que dejan los sellos es más grande |
+| L — libros | Sonnet | Quitar el libro modelado de fondo en los atriles (se ve doble); outline de libros más marcado, aún más si nunca se leyeron |
+| W — mundo | Sonnet | Papeles de la mesa de viento visibles y volando (también en vista completa); estación de agua rediseñada (lienzo chico, no se borra al mojarlo); carteles tapados por su poste; objetos en pendientes que caen (cerca de la torre); zonas que se solapan |
+| R — reconocimiento | Sonnet | El modelo confunde sigilos de agua y viento: más peso a los signos laterales (desempate dirigido) |
+| V — cristal | Sonnet | Hechizos de Cristal con VFX propios celestes (hoy iguales a piedra) |

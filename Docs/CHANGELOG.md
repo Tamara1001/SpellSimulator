@@ -5,6 +5,10 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Los ajustes manuales de la escena sobreviven a MapBuilder.Build()
+- `Editor/Map/MapLayout.cs`: al empezar un Build compara la escena con la linea base (`Logs/MapBaseline.json`, al terminar el Build anterior); lo movido a mano (posicion/rotacion/escala locales) se guarda en `Data/MapOverrides.json` y se reaplica al terminar el Build (mismo camino jerarquico). Menus `SpellSimulator/Map/Capturar mi layout manual` y `Borrar overrides del layout`. Primera captura: 11 objetos (zonas Path8/Path9, GiantPaper_Field).
+- Quedan fuera terreno, vegetacion y agua. Si un objeto movido a mano ya no existe tras un Build, su override se ignora.
+
 ## 2026-10-08 — Build de WebGL para itch.io
 - `Editor/WebGLBuild.cs` (menu SpellSimulator/Build/WebGL (itch.io) o `WebGLBuild.Run()`): Gzip, sin hilos, memoria 256 MB-1 GB, solo `Pradera`; salida `Builds/WebGL` y resultado en `Logs/build-webgl.txt`. Build de 32 MB (~19 min la primera vez), `Builds/SpellSimulator-WebGL.zip` de 34 MB.
 - `SentisGlyphClassifier` usa `BackendType.CPU` en WebGL (no hay compute shaders).
