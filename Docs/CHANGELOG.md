@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Sexta tanda: ajustes de la Fase 1 y primera parte de la Fase 2
+- **Vista completa:** V sobre lo mirado (`SurfaceFocus`: lienzos enteros, ambiente = zona de 1,2 m, nunca el suelo), ESC la cierra, correccion del desfase en objetos chicos (UV por interseccion con el plano real, centrado en la superficie), hints `E / V / R` junto a la mira.
+- **Libros y herramientas:** luz mas tenue (~35 %) y contorno propio `OutlineHighlight` (casco invertido, shader en `Resources/`); "Circulo Magico" primero en Glifos con boton doble.
+- **Movibles:** masa realista y esfuerzo segun peso (`Movable`, `MovablesSetup`); sillas de la torre, props nuevos y 10 zonas de practica (lago y senderos, `CanvasDesigns.Practice`).
+- **Plan:** ADR-034 (guardar hechizos) y fases H1-H5 en ROADMAP. Pendiente de Fase 2: torre (Opus), spawn, puerta, apartado Hechizos; Fase 3: menu principal y VFX.
+- 143 tests y PlaySmoke en PASS. Sin probar a mano.
+
 ## 2026-10-08 — Sexta tanda, Fase 1: controles, grimorio, libros y HUD
 - **Controles:** la rueda solo cambia grosor (pincel) o distancia; paginas con Z/X; C = agacharse (toque) / tumbarse (mantener); zoom con Alt izq.
 - **Grimorio:** TAB visible (4.o slot fijo a la izquierda de la hotbar), ESC lo abre/cierra, ya no oculta la HUD fuera del modo fijo (B); layout de controles arreglado.

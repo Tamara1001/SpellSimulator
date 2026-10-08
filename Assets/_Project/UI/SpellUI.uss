@@ -84,6 +84,21 @@
     transition-duration: 0.12s, 0.12s;
 }
 
+/* Las pistas de la mira (E / V / R) van una debajo de otra, con contorno para leerse sobre el mundo. */
+.hover-key {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.hover-key .hint {
+    margin: 2px 0 2px 0;
+}
+
+.hover-key .hint-text {
+    -unity-text-outline-width: 1px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.85);
+}
+
 .hover-key--on {
     opacity: 1;
     scale: 1 1;

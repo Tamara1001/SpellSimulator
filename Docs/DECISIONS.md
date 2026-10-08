@@ -97,6 +97,55 @@ por código (VFX Graph no). El viejo `Fire_VFX.vfx` queda sin uso.
 hechizo le explotaría en la cara. `DrawingCanvas.EmissionSide = AwayFromViewer` en papeles (la magia sale hacia el
 objetivo, como cuando los personajes giran el papel); `InkSide` queda para sellos en paredes, mesas y piedras.
 
+## ADR-034 — Guardar hechizos: se guardan los trazos, no el `SpellIR`
+**2026-10-08.** Planificación, sin código. El grimorio suma una sección **HECHIZOS** con hechizos prearmados, hechizos
+aprendidos de libros de hechizos y, a futuro, hechizos dibujados por el jugador.
+
+**Qué se guarda.** La fuente de verdad son los **trazos vectoriales del lienzo** (`DrawingSession`: puntos en UV 0..1
+del anillo, con orden y grosor), normalizados al centro y radio del anillo. El `SpellIR` **no** se persiste como verdad: sólo
+se cachea un resumen de lectura (elemento, forma, potencia, versión del compilador) para mostrar la ficha sin re-compilar.
+Motivo: el modelo ONNX, el diccionario y el tuning cambian. Un IR guardado quedaría desfasado y salteando el reconocimiento
+rompería "lo que dibujás es lo que lanzás". Si el resumen trae otra `compilerVersion`, se recalcula al abrir la página.
+
+**Formato y persistencia.** Un único `hechizos.json` en `Application.persistentDataPath` (igual que `descubrimientos.json`),
+`JsonUtility`, con `schemaVersion` y un migrador por versión. Cada entrada: `id` (GUID), `name`, `createdAt`, `origin`
+(`Preset | Book | Player`), `strokes[]`, `summary`. Escritura atómica: `.tmp` y después reemplazar el archivo. Si el
+archivo está corrupto, se renombra a `.bak`, se loguea por `DiagnosticBus` y se arranca vacío.
+Los **prearmados y los de libros son data del proyecto** (`Assets/_Project/Data/Spells/*.json`, mismo esquema y
+`origin` fijo). Al save del jugador sólo van sus hechizos y los `id` desbloqueados por libros (no se copian los trazos).
+
+**Nombrar, editar, borrar.** "Guardar" sale del lienzo con un anillo cerrado y válido (cast en seco por el pipeline
+normal, sin lanzar VFX). El nombre por defecto se arma con el resumen ("Fuego · proyectil") y se renombra desde la
+página del grimorio: teclado en PC; en VR, teclado virtual del sistema o lista de nombres sugeridos si no hay. "Editar"
+= cargar los trazos en un lienzo, retocar y re-guardar (sobrescribe o "guardar como"). Borrar pide confirmación en la
+página. Prearmados y de libros son de sólo lectura (se pueden copiar como hechizo propio).
+
+**Cómo se re-lanza.** Nunca un cast directo desde datos: **todo pasa por `SpellCaster.Cast(DrawingCanvas)`**. Se
+reutiliza el camino de las estampas (`Stamp`/`StampPattern`, M6): el hechizo guardado se carga en una **estampa-hechizo**
+que imprime los trazos en el lienzo con el anillo abierto, y el jugador lo cierra a mano para activar (mantiene la
+regla de activación por cierre, ADR-009). La página del grimorio muestra un **re-dibujo animado** de los trazos (como las
+páginas de glifos) sólo como vista; no lanza. Usos por carga: los mismos 5 de las estampas.
+
+**Límites.** Máx. 32 hechizos del jugador, 64 trazos y 4096 puntos por hechizo (simplificados con `StrokeCleaner`
+al guardar), nombre ≤ 24 caracteres. Al llegar al tope, "guardar" avisa en la HUD y no sobrescribe nada solo.
+
+**PC/VR.** Los datos son iguales (UV normalizado, independiente del tamaño del lienzo y del dispositivo). Sólo cambia
+la entrada del nombre y el gesto de "guardar"; la bifurcación va por `PlatformDetector.IsVR`. El archivo es portable
+entre PC y Quest.
+
+**Consecuencias.** (+) Un solo esquema para los tres orígenes; si mejora el reconocedor, mejoran los hechizos viejos.
+(−) Un hechizo guardado puede leerse distinto tras cambiar el modelo: la ficha lo marca como "cambió" al detectar un
+resumen distinto. (−) Re-lanzar cuesta lo mismo que dibujar con estampa (inferencia completa), aceptable.
+
+**Fases.** H1: `SpellRecord` + `SpellLibrary` puros (serializar, validar límites, migrar) con tests EditMode.
+H2: sección HECHIZOS del grimorio leyendo `Data/Spells/*.json` (prearmados, vista con re-dibujo animado).
+H3: estampa-hechizo (cargar un registro en `Stamp`) + chequeo en `HarnessPlaySmoke`. H4: libros de hechizos que
+desbloquean `id`. H5: guardar desde el lienzo, renombrar y borrar (PC), luego entrada de nombre en VR.
+
+**Riesgos.** Cambios del modelo que alteran hechizos guardados (mitigado con `compilerVersion` y aviso); escalado de
+trazos al estampar en lienzos de otro tamaño (el anillo manda, no el lienzo); entrada de texto en Quest; save corrupto
+o escrito a medias (escritura atómica + `.bak`); alocaciones al imprimir muchos trazos (hacerlo fuera de `Update`).
+
 ## ADR-033 — Inventario de dos manos: barra de 3 slots + una mano secundaria que arrastra
 **2026-10-07.** Reemplaza ADR-032 en el inventario. La mano principal (derecha o izquierda, `PlayerSettings.MainHandRight`) tiene 3
 slots (1-2-3) para lo que se usa (lápiz, goma, estampas); lo agarrado con E (lienzo, caja, el grimorio) va a la mano secundaria y se

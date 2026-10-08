@@ -48,6 +48,8 @@ namespace SpellSimulator.Player
         public float Scroll { get; private set; }
         /// <summary>Escape apretado en este frame (abre/cierra el grimorio).</summary>
         public bool IsPressingEscape { get; private set; }
+        /// <summary>Escape apretado, sin filtrar por la vista completa (la usa el interactor para cerrarla).</summary>
+        public bool IsPressingEscapeRaw { get; private set; }
 
         /// <summary>Tumbarse / levantarse (alterna): mantener C ~0.35 s (o cruceta abajo). Para dibujar en el piso.</summary>
         public bool IsTogglingProne { get; private set; }
@@ -308,7 +310,9 @@ namespace SpellSimulator.Player
             IsTogglingBook = bookAction.triggered;
             IsRunning = runAction.IsPressed();
             IsTogglingProne = proneAction.triggered;
-            IsPressingEscape = escapeAction.triggered;
+            IsPressingEscapeRaw = escapeAction.triggered;
+            // Con la vista completa activa Esc la cierra (lo hace el interactor) y NO abre el grimorio.
+            IsPressingEscape = IsPressingEscapeRaw && !FocusMode.CanvasView && FocusMode.CanvasViewExitFrame != Time.frameCount;
             IsZooming = zoomAction.IsPressed();
             IsRemoteGrabbing = remoteAction.IsPressed();
             IsRotateHeld = rotateAction.IsPressed();

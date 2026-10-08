@@ -340,7 +340,7 @@ namespace SpellSimulator.World
             if (Physics.Raycast(ray, out RaycastHit hit, distance, canvasLayer, QueryTriggerInteraction.Collide) &&
                 hit.collider.TryGetComponent(out canvas))
             {
-                uv = canvas.GetUVFromWorldPosition(hit.point);
+                uv = canvas.GetUVFromRay(ray, hit.point);
                 return true;
             }
             canvas = null;
@@ -356,7 +356,7 @@ namespace SpellSimulator.World
             if (surface == null) return false;
             canvas = surface.CreateDecal(hit, ray.direction);
             if (canvas == null) return false;
-            uv = canvas.GetUVFromWorldPosition(hit.point);
+            uv = canvas.GetUVFromRay(ray, hit.point);
             return true;
         }
     }

@@ -60,6 +60,7 @@ namespace SpellSimulator.EditorTools.Map
             ToolModels.Apply(lit);
             TowerProps.Build(map, lit, TowerOrigin());
             CanvasDesigns.Build(map, lit, TowerOrigin(), stampTable);
+            MovablesSetup.Apply(map, lit);
             InteractionSetup.Apply();
             FlammableSetup.Apply();
             UISetup.Apply();

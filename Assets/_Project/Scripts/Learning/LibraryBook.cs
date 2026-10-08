@@ -34,7 +34,7 @@ namespace SpellSimulator.Learning
         private int hudUnread = -1;
         private Light glow;
         private float glowPhase;
-        private const float GlowMin = 0.25f, GlowMax = 0.9f, GlowSpeed = 1.6f;
+        private const float GlowMin = 0.09f, GlowMax = 0.32f, GlowSpeed = 1.6f;
 
         /// <summary>Numero de este libro (1..Total) segun el orden de glifos.json.</summary>
         public int Number
@@ -94,6 +94,7 @@ namespace SpellSimulator.Learning
             glow.intensity = GlowMin;
             glow.shadows = LightShadows.None;
             glowPhase = Mathf.Abs(transform.position.x * 3.1f + transform.position.z * 1.7f);
+            Rendering.OutlineHighlight.Mark(gameObject);
         }
 
         private void Update()

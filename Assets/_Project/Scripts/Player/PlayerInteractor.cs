@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using SpellSimulator.Canvas;
 using SpellSimulator.DebugTools;
 using SpellSimulator.Interfaces;
 
@@ -81,6 +82,73 @@ namespace SpellSimulator.Player
         /// <summary>Lo que se esta mirando y se puede agarrar o apretar (null si nada).</summary>
         public GameObject HoveredObject => currentHovered is MonoBehaviour mb ? mb.gameObject : hoveredPressable is MonoBehaviour pb ? pb.gameObject : null;
 
+        /// <summary>Pistas junto a la mira ("E: Agarrar | V: Vista completa | R: Recargar tinta"), vacio si no hay nada que hacer.</summary>
+        public string HoverHints { get; private set; } = "";
+
+        // Superficie mirada que admite vista completa (V): un lienzo, o una parte de una superficie del ambiente.
+        private DrawingCanvas viewCanvas;
+        private bool viewSurface;
+        private Vector3 viewPoint, viewNormal;
+
+        private static readonly string[] HoverHintTable = BuildHoverHintTable();
+        private IPressable hintPressable;
+        private string hintPressableText = "";
+
+        private static string[] BuildHoverHintTable()
+        {
+            // Mascara: 1 = agarrar, 2 = vista completa, 4 = recargar tinta.
+            var table = new string[8];
+            for (int mask = 0; mask < 8; mask++)
+            {
+                string text = "";
+                if ((mask & 1) != 0) text += "E: Agarrar";
+                if ((mask & 2) != 0) text += (text.Length > 0 ? " | " : "") + "V: Vista completa";
+                if ((mask & 4) != 0) text += (text.Length > 0 ? " | " : "") + "R: Recargar tinta";
+                table[mask] = text;
+            }
+            return table;
+        }
+
+        private string ComputeHoverHints()
+        {
+            if (hoveredPressable != null)
+            {
+                if (hoveredPressable.PressWithClick) return "";
+                if (!ReferenceEquals(hintPressable, hoveredPressable))
+                {
+                    hintPressable = hoveredPressable;
+                    string p = hoveredPressable.GetPressPrompt();
+                    hintPressableText = string.IsNullOrEmpty(p) ? "E" : "E: " + p;
+                }
+                return hintPressableText;
+            }
+            hintPressable = null;
+            int mask = 0;
+            if (currentHovered != null) mask |= 1;
+            if (viewCanvas != null || viewSurface) mask |= 2;
+            if (hoveredInkSource != null && !(hoveredInkSource is InkSupply)) mask |= 4;
+            return HoverHintTable[mask];
+        }
+
+        /// <summary>Decide si lo mirado admite vista completa: lienzos (no del grimorio) y superficies dibujables del ambiente (no el suelo).</summary>
+        private void FindViewTarget(RaycastHit hit)
+        {
+            if (PlatformDetector.IsVR) return;
+            Collider c = hit.collider;
+            DrawingCanvas canvas = c.GetComponentInParent<DrawingCanvas>();
+            if (canvas != null)
+            {
+                if (canvas.GetComponentInParent<Learning.Grimoire>() != null) return;
+                viewCanvas = canvas;
+                return;
+            }
+            if (c is TerrainCollider || hit.normal.y > 0.7f) return;
+            if (c.GetComponentInParent<World.Inscribable>() == null) return;
+            viewSurface = true;
+            viewPoint = hit.point;
+            viewNormal = hit.normal;
+        }
+
         /// <summary>Objeto de un slot de la barra (null si esta vacio).</summary>
         public GameObject HotbarItem(int index) => index >= 0 && index < HotbarSlots ? hotbar[index] : null;
         public int ActiveHotbar => activeSlot;
@@ -138,6 +206,28 @@ namespace SpellSimulator.Player
             // Con el lector de libros abierto el juego no recibe clics, rueda ni teclas de mano.
             if (UI.BookReaderUI.IsOpen) return;
 
+            // Esc: lector de libros -> vista completa -> grimorio (el lector ya cerro arriba; el grimorio ignora este Esc).
+            if (FocusMode.CanvasView && inputReader.IsPressingEscapeRaw && Time.frameCount != UI.BookReaderUI.ClosedFrame)
+            {
+                ExitCanvasView();
+                return;
+            }
+
+            // Vista completa de algo que no se agarro: solo se dibuja, se cambia de herramienta o se sale.
+            if (SurfaceFocus.IsActive)
+            {
+                currentHovered = null;
+                hoveredPressable = null;
+                hoveredFlippable = null;
+                hoveredInkSource = null;
+                HoverHints = "";
+                HandleHotbarKeys();
+                HandleWheel();
+                HandleUsage();
+                if (inputReader.IsTogglingFocus) ToggleFocus();
+                return;
+            }
+
             HandleHotbarKeys();
             HandleHover();
             HandleInteraction();
@@ -169,6 +259,8 @@ namespace SpellSimulator.Player
             hoveredPressable = null;
             hoveredInkSource = null;
             hoveredFlippable = null;
+            viewCanvas = null;
+            viewSurface = false;
             if (PickHit(origin.position, direction, out RaycastHit hit))
             {
                 end = hit.point;
@@ -178,9 +270,11 @@ namespace SpellSimulator.Player
                 hoveredFlippable = hit.collider.GetComponentInParent<IFlippable>();
                 var interactable = hit.collider.GetComponentInParent<IInteractable>();
                 if (interactable != null) currentHovered = interactable;
+                FindViewTarget(hit);
             }
             HoverPrompt = hoveredPressable != null ? (hoveredPressable.PressWithClick ? "" : hoveredPressable.GetPressPrompt())
                 : currentHovered != null ? currentHovered.GetInteractionPrompt() : "";
+            HoverHints = ComputeHoverHints();
 
             if (vrPointerLine != null)
             {
@@ -452,7 +546,12 @@ namespace SpellSimulator.Player
         /// <summary>Recargar tinta de la herramienta equipada. Fuente: el tintero que se mira, o la reserva personal.</summary>
         private void Reload()
         {
-            if (!(mainUsable is IInkUser user) || !user.UsesInk || user.Ink.Missing <= 0f) return;
+            if (!(mainUsable is IInkUser user) || !user.UsesInk)
+            {
+                if (hoveredInkSource != null && !(hoveredInkSource is InkSupply)) Hud.Notify("inkinfo", "Equipá una herramienta con tinta para recargar", 2f);
+                return;
+            }
+            if (user.Ink.Missing <= 0f) return;
 
             IInkSource source = hoveredInkSource ?? inkSupply;
             if (source == null) return;
@@ -468,9 +567,28 @@ namespace SpellSimulator.Player
         private void ToggleFocus()
         {
             if (PlatformDetector.IsVR) return;
+            // Ya hay una vista completa: V la cierra.
+            if (SurfaceFocus.IsActive) { SurfaceFocus.Close(); return; }
             GameObject target = SecondaryItem;
-            if (target == null || !target.TryGetComponent(out IFocusable focusable)) return;
-            focusable.SetFocus(cameraTransform, !focusable.Focused);
+            if (target != null && target.TryGetComponent(out IFocusable focusable))
+            {
+                focusable.SetFocus(cameraTransform, !focusable.Focused);
+                return;
+            }
+            if (FocusMode.CanvasView) return;
+            // Sin nada agarrado: vista completa de lo que se mira.
+            if (viewCanvas != null) SurfaceFocus.ShowCanvas(cameraTransform, viewCanvas);
+            else if (viewSurface) SurfaceFocus.ShowRegion(cameraTransform, viewPoint, viewNormal);
+        }
+
+        /// <summary>Esc con la vista completa activa: la cierra (la de un lienzo agarrado o la de lo que se miraba).</summary>
+        private void ExitCanvasView()
+        {
+            if (SurfaceFocus.IsActive) { SurfaceFocus.Close(); return; }
+            GameObject target = SecondaryItem;
+            if (target != null && target.TryGetComponent(out IFocusable focusable) && focusable.Focused)
+                focusable.SetFocus(cameraTransform, false);
+            else FocusMode.ExitCanvasView();
         }
 
         // ---------------------------------------------------------------- harness y tests

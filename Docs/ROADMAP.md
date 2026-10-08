@@ -87,6 +87,14 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 - [ ] Superficies inscribibles generales (decals en paredes y mesas) y piedra de rayar (sellos permanentes, cooldown y 5 usos).
 - [ ] Semántica para los 6 glifos sin entrada.
 
+### M6b — Guardar hechizos (ver ADR-034)
+*Objetivo: sección HECHIZOS del grimorio; se guardan trazos, se re-lanzan con una estampa-hechizo vía `SpellCaster.Cast`.*
+- [ ] H1: `SpellRecord` + `SpellLibrary` puros (JSON versionado en `persistentDataPath`, límites, migración) + tests EditMode.
+- [ ] H2: sección HECHIZOS con prearmados de `Data/Spells/*.json` y vista con re-dibujo animado.
+- [ ] H3: estampa-hechizo (cargar un hechizo en `Stamp`, se cierra a mano) + chequeo en `HarnessPlaySmoke`.
+- [ ] H4: libros de hechizos que desbloquean prearmados.
+- [ ] H5: guardar lo dibujado, renombrar y borrar (PC primero, después entrada de nombre en VR).
+
 ### M7 — Pulido y entrega del modo Libre
 - [ ] Build Quest estable, perfilado (inferencia TTA ×8 vs ×1, VFX, física).
 - [ ] Tutorial (después de M6): notas en la torre o el primer libro. Enseña a "cerrar el anillo al final".

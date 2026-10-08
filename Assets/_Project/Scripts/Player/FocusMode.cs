@@ -20,8 +20,29 @@ namespace SpellSimulator.Player
             Cursor.visible = true;
         }
 
+        /// <summary>True si la vista completa (V) de un lienzo/superficie esta activa; Esc la cierra antes que el grimorio.</summary>
+        public static bool CanvasView { get; private set; }
+
+        public static void EnterCanvasView()
+        {
+            if (PlatformDetector.IsVR) return;
+            CanvasView = true;
+            Enter();
+        }
+
+        /// <summary>Frame en que se cerro la vista completa (el Esc de ese frame no debe abrir el grimorio).</summary>
+        public static int CanvasViewExitFrame { get; private set; } = -1;
+
+        public static void ExitCanvasView()
+        {
+            if (CanvasView) CanvasViewExitFrame = Time.frameCount;
+            CanvasView = false;
+            Exit();
+        }
+
         public static void Exit()
         {
+            CanvasView = false;
             if (!Active) return;
             Active = false;
             if (PlatformDetector.IsVR) return;

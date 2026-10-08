@@ -75,7 +75,7 @@ namespace SpellSimulator.UI
         private IHudInfo mainInfo, secondaryInfo;
         private IWidthSelectable mainWidths;
         private IPageable secondaryPages;
-        private string mainHintsSource, secHintsSource;
+        private string mainHintsSource, secHintsSource, hoverHintsShown;
         private int lastInk = int.MinValue, lastWidth = -1, lastPage = -1, lastPageCount = -1;
         private string lastDiscovered;
         private float lastDiscoveredAt;
@@ -118,6 +118,7 @@ namespace SpellSimulator.UI
             hud = root.Q("hud");
             if (hud == null) return false;
             hoverKey = root.Q("hover-key");
+            hoverHintsShown = null;
             context = root.Q("context");
             ctxMain = root.Q("ctx-main");
             ctxSec = root.Q("ctx-sec");
@@ -250,7 +251,10 @@ namespace SpellSimulator.UI
 
         private void UpdateHover()
         {
-            bool show = interactor != null && interactor.HoverInteractable && !FocusMode.Active;
+            // Pistas junto a la mira ("E: Agarrar | V: Vista completa | R: Recargar tinta"), con keycaps como el resto de la HUD.
+            string hints = interactor != null && !FocusMode.Active ? interactor.HoverHints : "";
+            bool show = !string.IsNullOrEmpty(hints);
+            if (show) SetHints(hoverKey, hints, ref hoverHintsShown);
             if (show == hoverShown) return;
             hoverShown = show;
             hoverKey.EnableInClassList("hover-key--on", show);

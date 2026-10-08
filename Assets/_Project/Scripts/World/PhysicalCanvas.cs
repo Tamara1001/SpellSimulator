@@ -329,7 +329,9 @@ namespace SpellSimulator.World
                 Vector2 size = canvas != null ? canvas.WorldSize : Vector2.one * 0.5f;
                 float tan = Mathf.Tan(vfov * 0.5f * Mathf.Deg2Rad);
                 float distance = Mathf.Max(size.y / focusFill / (2f * tan), size.x / focusFill / (2f * tan * aspect));
-                distance = Mathf.Clamp(distance, 0.35f, 1.4f);
+                // Minimo: delante del plano cercano de la camara (un lienzo MUY chico se ve entero sin quedar recortado).
+                float near = cam != null ? cam.nearClipPlane : 0.1f;
+                distance = Mathf.Clamp(distance, Mathf.Max(0.1f, near * 2f), 1.4f);
 
                 focused = true;
                 animating = false;
@@ -337,13 +339,16 @@ namespace SpellSimulator.World
                 transform.SetParent(cameraTransform, true);
                 Quaternion world = Orient(transform.rotation, canvas != null ? canvas.FaceNormal : transform.forward,
                     -cameraTransform.forward, cameraTransform.up);
-                transform.SetPositionAndRotation(cameraTransform.position + cameraTransform.forward * distance, world);
-                FocusMode.Enter();
+                // El CENTRO de la superficie (no el pivote) queda en el eje de la camara: si el pivote esta corrido del
+                // centro del mesh, el lienzo se veia descentrado y el cursor no coincidia con la tinta.
+                Vector3 centerOffset = canvas != null ? world * canvas.CenterOffsetLocalScaled : Vector3.zero;
+                transform.SetPositionAndRotation(cameraTransform.position + cameraTransform.forward * distance - centerOffset, world);
+                FocusMode.EnterCanvasView();
             }
             else
             {
                 focused = false;
-                FocusMode.Exit();
+                FocusMode.ExitCanvasView();
                 if (remoteHeld)
                 {
                     // Vuelve a ser arrastrado por el movedor.

@@ -384,7 +384,13 @@ namespace SpellSimulator.Learning
         private static GrimoireSpread[] Spreads(GrimoireScreen s) =>
             s == GrimoireScreen.Magic ? GrimoireTexts.Magic : s == GrimoireScreen.Seals ? GrimoireTexts.Seals : GrimoireTexts.Controls;
 
-        private int IndexPageCount() => Mathf.Max(1, Mathf.CeilToInt(glyphs.Count / (float)IndexPageSize));
+        private int IndexPageCount() => Mathf.Max(1, Mathf.CeilToInt((glyphs.Count + CircleExtraSlots()) / (float)IndexPageSize));
+
+        /// <summary>El Circulo Magico (siempre primero) ocupa 2 casillas de la grilla: 1 casilla extra.</summary>
+        private int CircleExtraSlots() => glyphs.Count > 0 && glyphs[0] == Casting.StampPattern.MagicCircleId ? 1 : 0;
+
+        /// <summary>Casilla de la grilla (0-based, 2 columnas) donde empieza el glifo k.</summary>
+        private int SlotOf(int k) => k == 0 ? 0 : k + CircleExtraSlots();
 
         /// <summary>Glifos descubiertos: sigilos primero y despues signos, en el orden del diccionario.</summary>
         private void RefreshGlyphs()
@@ -396,6 +402,9 @@ namespace SpellSimulator.Learning
                 foreach (var entry in dictionary.Dictionary.Entries)
                     if (entry.Kind == kind && discovery.State.Knows(entry.Id) && entry.TemplateStrokes.Count > 0)
                         glyphs.Add(entry.Id);
+            // El Circulo Magico va primero (arriba de todo) aunque no este en el modelo ONNX.
+            int circle = glyphs.IndexOf(Casting.StampPattern.MagicCircleId);
+            if (circle > 0) { glyphs.RemoveAt(circle); glyphs.Insert(0, Casting.StampPattern.MagicCircleId); }
         }
 
         private void OnDiscovered(string glyphId, string source)
@@ -504,16 +513,19 @@ namespace SpellSimulator.Learning
                 SetBody(Right, "Aún no descubriste ningún glifo.\n\nLeé los libros de la biblioteca o dibujá bien un glifo nuevo para descubrirlo.", BodyTop, BodyBottom);
                 return;
             }
-            int first = indexPage * IndexPageSize;
             float colW = ContentWidth / 2f - 0.004f;
-            for (int k = 0; k < IndexPageSize && first + k < glyphs.Count; k++)
+            for (int g = 0; g < glyphs.Count; g++)
             {
-                string id = glyphs[first + k];
-                // Dos columnas, de arriba abajo.
-                float x = k % IndexColumns == 0 ? -ContentWidth / 4f : ContentWidth / 4f;
+                int slot = SlotOf(g);
+                if (slot / IndexPageSize != indexPage) continue;
+                int k = slot % IndexPageSize;
+                string id = glyphs[g];
+                // Dos columnas, de arriba abajo. El Circulo Magico (g == 0, slot 0) ocupa las dos columnas.
+                bool wide = g == 0 && CircleExtraSlots() == 1;
+                float x = wide ? 0f : (k % IndexColumns == 0 ? -ContentWidth / 4f : ContentWidth / 4f);
                 float y = 0.092f - k / IndexColumns * 0.041f;
                 string name = discovery != null ? discovery.Lore.Name(id) : id;
-                Place(Right, x, y, colW, 0.031f, name, ButtonSize * 0.92f, () => Go(GrimoireScreen.GlyphDetail, id));
+                Place(Right, x, y, wide ? ContentWidth - 0.004f : colW, 0.031f, name, ButtonSize * (wide ? 1.05f : 0.92f), () => Go(GrimoireScreen.GlyphDetail, id));
             }
             Pager(indexPage, pages, () => Step(-1), () => Step(1));
         }
@@ -532,7 +544,7 @@ namespace SpellSimulator.Learning
             QueueTemplate(entry.TemplateStrokes, new Vector2(0.5f, 0.5f), 0.19f);
             Place(Left, 0.034f, BarY, 0.088f, BarHeight, "Índice", ButtonSize * 0.9f, () =>
             {
-                indexPage = i >= 0 ? i / IndexPageSize : 0;
+                indexPage = i >= 0 ? SlotOf(i) / IndexPageSize : 0;
                 Go(GrimoireScreen.GlyphIndex);
             });
 

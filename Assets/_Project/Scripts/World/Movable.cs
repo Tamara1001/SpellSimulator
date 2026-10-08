@@ -32,6 +32,10 @@ namespace SpellSimulator.World
         public HandType PreferredHand => HandType.Both;
         public bool CanLift => rb != null && rb.mass <= maxMass;
 
+        /// <summary>Masa (kg) bajo la cual se considera liviano / mediano; desde ahi es pesado (afecta resorte, velocidad y el hint).</summary>
+        private const float LightMass = 5f, MediumMass = 25f;
+        private const float MinFollow = 0.6f, MinCarrySpeed = 0.8f;
+
         private void Awake()
         {
             rb = GetComponent<Rigidbody>();
@@ -46,7 +50,14 @@ namespace SpellSimulator.World
         }
 
         // Se arma una vez: el interactor lo pide en cada frame (sin GC).
-        public string GetInteractionPrompt() => prompt ??= rb.mass <= maxMass ? $"Mover {objectName}" : $"{objectName} (demasiado pesado)";
+        public string GetInteractionPrompt() => prompt ??= rb.mass > maxMass ? $"{objectName} (demasiado pesado)" : $"Mover {objectName} ({WeightWord()})";
+
+        private string WeightWord()
+        {
+            float m = rb.mass;
+            string kg = m < 10f ? m.ToString("0.#") : Mathf.Round(m).ToString("0");
+            return (m < LightMass ? "liviano" : m < MediumMass ? "mediano" : "pesado") + ", " + kg + " kg";
+        }
 
         public void OnInteract(Transform holdPoint)
         {
@@ -54,8 +65,9 @@ namespace SpellSimulator.World
             target = holdPoint;
             // Los grandes se sostienen mas lejos (su centro queda delante de la mano) y responden mas blando.
             carryOffsetForward = Mathf.Max(0f, ComputeRadius() - 0.35f);
-            carryFollow = follow / (1f + rb.mass / 150f);
-            carrySpeed = maxCarrySpeed / (1f + rb.mass / 300f);
+            // Cuanto mas pesado, mas blando el resorte y mas lenta la carga (1 kg: casi pleno; 25 kg: a la mitad; 300 kg: arrastra).
+            carryFollow = Mathf.Max(MinFollow, follow / (1f + rb.mass / 25f));
+            carrySpeed = Mathf.Max(MinCarrySpeed, maxCarrySpeed / (1f + rb.mass / 40f));
             wasGravity = rb.useGravity;
             wasDrag = rb.linearDamping;
             wasAngularDrag = rb.angularDamping;

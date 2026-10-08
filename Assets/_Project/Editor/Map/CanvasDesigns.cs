@@ -11,7 +11,7 @@ namespace SpellSimulator.EditorTools.Map
     /// caballetes y mesa de dibujo inclinada. Todo lienzo apoya sobre algo (mesa, caballete, pared, soportes o piso).
     /// Todos emiten por la cara con tinta (InkSide): dar vuelta la hoja cambia hacia donde apunta el hechizo.
     /// </summary>
-    public static class CanvasDesigns
+    public static partial class CanvasDesigns
     {
         private static readonly Color Leather = new Color(0.36f, 0.2f, 0.26f);
         private static readonly Color Wood = new Color(0.42f, 0.28f, 0.18f);
@@ -72,6 +72,9 @@ namespace SpellSimulator.EditorTools.Map
 
             // Campo de practica: caballete con un lienzo grande.
             Easel(template, material, "Easel_Field", fieldOrigin + new Vector3(-9f, 0f, -2f), 200f);
+
+            // Zonas de practica por la pradera (lago, senderos) con lienzos, carteles y props movibles.
+            PracticeZones(map, template, material, towerOrigin, fieldOrigin);
         }
 
         private enum Dressing { None, Notebook, Framed }

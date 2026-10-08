@@ -94,6 +94,12 @@ namespace SpellSimulator.Canvas
             }
         }
 
+        /// <summary>Centro de la superficie en mundo (el centro del mesh, que no siempre coincide con el pivote del objeto).</summary>
+        public Vector3 WorldCenter => transform.TransformPoint(meshBounds.center);
+
+        /// <summary>Desplazamiento (m, en espacio local escalado) del pivote al centro de la superficie.</summary>
+        public Vector3 CenterOffsetLocalScaled => Vector3.Scale(meshBounds.center, transform.lossyScale);
+
         public RenderTexture GetRenderTexture() => renderTexture;
 
         /// <summary>
@@ -226,6 +232,23 @@ namespace SpellSimulator.Canvas
             return new Vector2(
                 Mathf.InverseLerp(meshBounds.min.x, meshBounds.max.x, local.x),
                 Mathf.InverseLerp(meshBounds.min.y, meshBounds.max.y, local.y));
+        }
+
+        /// <summary>
+        /// Rayo -> UV intersectando el plano real del mesh. Un collider mas grueso que el papel (lienzos chicos) hace que
+        /// el punto de impacto quede adelantado y, por paralaje, la tinta salga corrida del cursor; el plano no tiene ese error.
+        /// </summary>
+        public Vector2 GetUVFromRay(Ray ray, Vector3 fallbackHit)
+        {
+            Vector3 planePoint = transform.TransformPoint(meshBounds.center);
+            Vector3 normal = FaceNormal;
+            float denom = Vector3.Dot(normal, ray.direction);
+            if (Mathf.Abs(denom) > 1e-5f)
+            {
+                float t = Vector3.Dot(normal, planePoint - ray.origin) / denom;
+                if (t > 0f) return GetUVFromWorldPosition(ray.origin + ray.direction * t);
+            }
+            return GetUVFromWorldPosition(fallbackHit);
         }
 
         private RenderTexture previousActive;

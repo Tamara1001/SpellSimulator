@@ -37,6 +37,12 @@ namespace SpellSimulator.EditorTools
                 var go = GameObject.Find(name);
                 if (go != null && AddReactive(go, wood, true)) furniture++;
             }
+            // Zonas de practica: caballetes y mesas de dibujo de madera.
+            var practice = GameObject.Find("Practice");
+            if (practice != null)
+                foreach (Transform t in practice.transform)
+                    if ((t.name.StartsWith("Easel_") || t.name.StartsWith("DraftingTable_") || t.name.StartsWith("Stand_") || t.name.StartsWith("Sign_")) &&
+                        AddReactive(t.gameObject, wood, true)) furniture++;
             string grass = SetupGrassFire();
             return $"Inflamable: {trees} pinos y {furniture} muebles. {grass}";
         }
