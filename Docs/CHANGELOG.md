@@ -5,6 +5,9 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Runa agarrada + vista completa (V) quedaba "congelada"
+- Causa (medida en Play): con la runa agarrada, `SurfaceFocus` coloca la camara frente a la runa y `ObjectMover` seguia llevando la runa a `camara + mirada * distancia`; ambos se perseguian y la runa se alejaba sin parar (y no se podia dibujar ni agarrar). Ahora `ObjectMover.FixedUpdate` deja el objeto quieto mientras `SurfaceFocus.IsActive`. Docs tocadas: ninguna mas.
+
 ## 2026-10-08 — Cuatro bugs de la prueba manual (fijado, flotacion, runa de fuego, atravesar el piso)
 - **Fijar/desfijar:** `ObjectMover` dejaba el objeto generico (banco, mesa) como `isKinematic=true` y al volver a agarrarlo guardaba ese estado como "original", asi que nunca se soltaba. Nuevo `PinnedBody` (World): recuerda la fisica original, se quita al agarrar de nuevo (`PinnedBody.Unpin`) y restaura todo.
 - **Flotacion:** `PinnedBody` aplica el mismo vaiven que `PhysicalCanvas` (menos cabeceo, para muebles grandes).

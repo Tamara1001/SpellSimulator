@@ -98,6 +98,13 @@ namespace SpellSimulator.Player
         private void FixedUpdate()
         {
             if (!holding || held == null || cam == null) return;
+            // Vista completa (V) de lo que se sostiene: la camara se coloca frente al objeto, asi que seguirla lo haria huir
+            // sin parar. Mientras dura, el objeto queda quieto donde esta.
+            if (SurfaceFocus.IsActive)
+            {
+                if (!held.isKinematic) { held.linearVelocity = Vector3.zero; held.angularVelocity = Vector3.zero; }
+                return;
+            }
             Vector3 point = cam.transform.position + cam.transform.forward * holdDistance;
             if (held.isKinematic)
             {
