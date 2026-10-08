@@ -39,17 +39,17 @@ Idioma del proyecto: **español** (docs, commits, logs, comentarios). Identifica
 
 ## Flujo de trabajo
 
-1. Entender → planear (si es > 1 archivo, contar el plan en 3-5 líneas antes).
+0. Leé [Docs/STATUS.md](Docs/STATUS.md) (una página con el estado, el mapa mental y las reglas baratas) y [Docs/HARNESS.md](Docs/HARNESS.md#trucos-del-mcp-de-unity-lo-que-cuesta-redescubrir).
+1. Entender → planear (si es > 1 archivo, contar el plan en 3-5 líneas antes; los rediseños, plan de media página y esperar aprobación).
 2. Implementar en `Assets/_Project/`.
-3. **Verificar** con el harness ([Docs/HARNESS.md](Docs/HARNESS.md)): compilación limpia en consola de Unity,
-   tests EditMode verdes y, si aplica, Play Mode con logs `[Modulo]` esperados.
-4. **Actualizar la documentación afectada en el mismo cambio** (ver tabla abajo) y agregar entrada a
-   [Docs/CHANGELOG.md](Docs/CHANGELOG.md).
+3. **Verificar** con el harness: compilación limpia, tests EditMode verdes y `HarnessPlaySmoke` (agregar un chequeo por sistema nuevo).
+4. **Documentar lo mínimo útil:** siempre `Docs/CHANGELOG.md` y, si aplica, `Docs/KNOWN_ISSUES.md`; el resto de la tabla de abajo **solo si cambió lo que
+   describe**. `graphify update .` solo si se pide (o antes de una refactorización grande).
 5. Commit atómico en `main` al cerrar la tarea, mensaje en español, estilo de los commits existentes
    (`Título corto` + cuerpo opcional). **Nunca push** sin pedido explícito. No commitear cambios de
    `ProjectSettings/`/escenas que no hizo el agente sin avisar.
 
-### Qué doc actualizar
+### Qué doc actualizar (solo si cambió)
 
 | Si cambiaste… | Actualizá |
 |---|---|
@@ -58,10 +58,9 @@ Idioma del proyecto: **español** (docs, commits, logs, comentarios). Identifica
 | Glifos, diccionario, deltas semánticos | `Docs/GLYPHS.md` |
 | Arreglaste o descubriste un bug/deuda | `Docs/KNOWN_ISSUES.md` |
 | Decisión de diseño no obvia | `Docs/DECISIONS.md` (ADR corto) |
-| Avance de hito / tarea | `Docs/ROADMAP.md` |
-| Mecánica, objeto o regla de juego | `Docs/GAME_DESIGN.md` (y `MAGIC_SYSTEM.md` si toca el canon) |
-| Sistema nuevo o cambio de su diseño | `Docs/SYSTEMS_DESIGN.md` |
-| Siempre | `Docs/CHANGELOG.md` y re-generar grafo (`graphify update .`) si cambió código |
+| Mecánica, objeto, regla o **control** de juego | `Docs/GAME_DESIGN.md` (y `MAGIC_SYSTEM.md` si toca el canon) |
+| Fin de hito | `Docs/ROADMAP.md` y `Docs/STATUS.md` |
+| Siempre | `Docs/CHANGELOG.md` |
 
 ## Comandos útiles
 

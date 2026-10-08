@@ -158,3 +158,31 @@ graphify god-nodes                          # hubs arquitectónicos
   no tiene backend configurado). Si un re-cluster los vuelve `Community N`, re-etiquetar y re-exportar con
   `--labels graphify-out/.graphify_labels.json`.
 - Colores por comunidad en la Graph view: `Docs/.obsidian/graph.json` (grupos por `tag:#community/...`).
+
+## Trucos del MCP de Unity (lo que cuesta redescubrir)
+- **Parámetros de `Unity_RunCommand`:** `Code` y `Title` (con mayúscula; antes eran `code`/`title`). El código es
+  `internal class CommandScript : IRunCommand { public void Execute(ExecutionResult result) {...} }`. Prohibido: reflexión con
+  `BindingFlags`, `System.Diagnostics.Stopwatch`; usar `Type.GetType("Ns.Clase, Ensamblado")` y `Time.realtimeSinceStartup`.
+  Ensamblados: `SpellSimulator.Runtime` y `SpellSimulator.Editor`.
+- **Compilar:** `AssetDatabase.Refresh()` y esperar ~40 s (loop `for i in $(seq 1 14); do sleep 3; done`, un `sleep` suelto largo está
+  bloqueado). Errores: `tail -n 3000 "$LOCALAPPDATA/Unity/Editor/Editor.log" | grep "error CS"` (la consola por MCP a veces no los muestra).
+  Un error de un asmdef frena toda la recarga.
+- **Editar scripts durante Play** provoca recarga y rompe estado privado: salir de Play antes (`Unity_ManageEditor` Action `Stop`).
+- **Reconstruir el mapa:** `SpellSimulator.EditorTools.Map.MapBuilder.Build()` (~15 s; guarda la escena y llama a los setups de interacción,
+  inflamables y UI). Todo lo de escena sale de ahí: nada se edita a mano.
+- **Build de jugador:** `BuildPipeline.BuildPlayer` falla con "inside the player loop" si se llama directo; usar `EditorApplication.delayCall`
+  y leer `[Build...] Succeeded` en Editor.log. Smoke test del exe: `-screen-width 640 -screen-height 360 -logFile Logs/smoke.txt`
+  (NO `-nographics`: la calibración del modelo necesita GPU) y buscar "Modo: PC" y "Pose calibrada: True".
+- **Tests EditMode:** `HarnessTestRunner.RunEditMode()`; si `Logs/harness-editmode.txt` queda en RUNNING (la recarga lo cortó) relanzar.
+- **Test de humo de Play:** `HarnessPlaySmoke.Run()` y leer `Logs/harness-playsmoke.txt` (PASS/FAIL, ~20 s). Cubre inventario de dos manos,
+  cuaderno, dibujo, reinicio del mundo, fuego, grimorio, HUD y errores de consola. **Agregar un chequeo por cada sistema nuevo.**
+- **Capturas:** `HarnessCapture.Capture(ruta, pos, mira, w, h, fov)` (no ve `Graphics.DrawMeshInstanced` ni UI Toolkit); para ver el juego real
+  `ScreenCapture.CaptureScreenshot(ruta)` en Play y leer el PNG 1-2 s después.
+- **Harness de interacción:** `PlayerInteractor.GrabItem(go)`, `SelectHotbar(i)`, `ObjectMover.End(pin)`, `NotebookPages.Turn(n)`, `Grimoire.Open()`,
+  `GrimoireButton.Press()`, `GrassFire.Ignite(pos, radio)`, `MagicWorld.ResetWorld()`, `Hud.Notify(id, texto, seg)`.
+- **Archivos:** los `.cs` del proyecto usan CRLF (ver `.gitattributes`); si una edición falla por "no se encuentra el texto", casi siempre es
+  un final de línea. Los scripts Python largos se escriben con la herramienta Write (los heredocs con `\n` o comillas se rompen); los patrones
+  multilínea de `Edit` deben reproducir los finales de línea reales.
+- **Varios agentes con Unity:** un candado `mkdir Logs/unity.lock` / `rmdir` (si existe, esperar). Los agentes escriben código y yo compilo y
+  verifico; delegar solo tareas de 1-2 archivos con la especificación cerrada.
+

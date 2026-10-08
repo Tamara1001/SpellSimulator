@@ -15,7 +15,8 @@ Vault de Obsidian del proyecto. Abrí la carpeta `Docs/` como vault.
 - [[GLYPHS]] — diccionario de los 26 glifos del modelo (rol, elemento, deltas).
 - [[ROADMAP]] — hitos jugables: modo Libre (M2–M7) y luego Duelo (D1–D3).
 - [[CODESTYLE]] — convenciones de código C#/Unity.
-- [[HARNESS]] — cómo verificar cambios (Unity MCP, tests, Graphify).
+- [[STATUS]] — estado actual en una página (leer primero).
+- [[HARNESS]] — cómo verificar cambios (Unity MCP, trucos, tests, test de humo de Play).
 - [[KNOWN_ISSUES]] — bugs y deuda técnica.
 - [[DECISIONS]] — registro de decisiones (ADR).
 - [[REFERENCE]] — proyecto de referencia `wha-spell-simulator`.
