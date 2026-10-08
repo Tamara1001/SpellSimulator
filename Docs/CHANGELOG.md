@@ -5,6 +5,9 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Volumenes de musica y efectos
+- `AudioDirector` aplica los volumenes de Opciones del grimorio (KI-094) y refresca la musica y el viento al instante.
+
 ## 2026-10-08 — Sexta tanda, Fase 3: menu principal y VFX de elementos
 - **Menu principal** (`MainMenu`, UI Toolkit, en Pradera): Sandbox, Duelo (proximamente), Informacion (grimorio a pantalla completa), Creditos (Tamara D'Angelo) y Salir; camara orbitando la torre; en VR se entra directo. `PlayerInputReader.Gate` (Full/BookOnly/None) congela el input mientras esta abierto. Se vuelve desde Opciones del grimorio ("Menu principal").
 - **VFX:** tierra rehecha (esquirlas y estacas low-poly que se desmoronan, polvo y fragmentos al impactar), agua (gotas azules translucidas, espuma y spray), viento (estelas curvas y hojas en vez de humo gris), objetos prendidos emiten desde su malla. Costo medido: agua ~520, tierra ~315-370, viento ~210 particulas. `ElementVfx`, `LowPolyMeshes`, `ElementVfxSetup` (menu SpellSimulator/VFX).

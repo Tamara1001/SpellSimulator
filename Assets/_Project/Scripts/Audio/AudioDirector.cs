@@ -50,9 +50,26 @@ namespace SpellSimulator.Audio
             nextBird = Time.time + birdInterval.x;
         }
 
+        private void OnEnable() => Learning.GrimoireOptions.VolumesChanged += OnVolumesChanged;
+
+        private void OnDisable() => Learning.GrimoireOptions.VolumesChanged -= OnVolumesChanged;
+
         private void OnDestroy()
         {
             if (Instance == this) Instance = null;
+        }
+
+        /// <summary>Volumenes de musica/efectos de las Opciones del grimorio: refresca la musica y el viento de fondo al instante.</summary>
+        private void OnVolumesChanged(int category)
+        {
+            RefreshBackground(musicSource, musicCue);
+            RefreshBackground(windSource, windCue);
+        }
+
+        private void RefreshBackground(AudioSource source, string id)
+        {
+            var cue = library != null ? library.Get(id) : null;
+            if (source != null && cue != null) source.volume = cue.volume * VolumeOf(cue.category);
         }
 
         private void Start()
@@ -80,9 +97,10 @@ namespace SpellSimulator.Audio
         {
             switch (category)
             {
-                case SoundCategory.Music: return master * music;
-                case SoundCategory.Ambience: return master * ambience;
-                default: return master * sfx;
+                // El volumen general lo aplica AudioListener.volume (GrimoireOptions.MasterVolume); aca solo musica y efectos.
+                case SoundCategory.Music: return master * music * Learning.GrimoireOptions.MusicVolume;
+                case SoundCategory.Ambience: return master * ambience * Learning.GrimoireOptions.EffectsVolume;
+                default: return master * sfx * Learning.GrimoireOptions.EffectsVolume;
             }
         }
 
