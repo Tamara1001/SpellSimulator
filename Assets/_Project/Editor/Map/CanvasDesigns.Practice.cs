@@ -89,6 +89,7 @@ namespace SpellSimulator.EditorTools.Map
             }
 
             MovablesSetup.BuildFieldProps(map, material, fieldOrigin);
+            Debug.Log($"[Practica] zonas creadas: {root.childCount} hijos en {root.name}");
         }
 
         /// <summary>Piso apto: sobre el agua, poco desnivel, sin arboles ni otra zona cerca.</summary>

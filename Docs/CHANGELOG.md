@@ -5,6 +5,11 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Ajustes tras la prueba: outlines, circulo inicial, zonas de practica y spawn
+- **Bug del generador:** la plantilla `PaperCanvas` habia desaparecido de `Pradera.unity` y `CanvasDesigns`, las zonas de practica y los props se omitian en silencio al regenerar; `MapBuilder.EnsureCanvasTemplate` la rehace desde `Paper_S`. Ahora hay 57 piezas en `Practice` y `Props_Field`.
+- Outline mas leve en herramientas (1,8 mm) y mas fuerte en libros (7,5 mm). `magic_circle` se conoce desde el inicio (5 glifos iniciales).
+- El jugador nace dentro de la torre, y el atril con el libro de los cuatro elementos esta junto a la puerta.
+
 ## 2026-10-08 — Sexta tanda: ajustes de la Fase 1 y primera parte de la Fase 2
 - **Vista completa:** V sobre lo mirado (`SurfaceFocus`: lienzos enteros, ambiente = zona de 1,2 m, nunca el suelo), ESC la cierra, correccion del desfase en objetos chicos (UV por interseccion con el plano real, centrado en la superficie), hints `E / V / R` junto a la mira.
 - **Libros y herramientas:** luz mas tenue (~35 %) y contorno propio `OutlineHighlight` (casco invertido, shader en `Resources/`); "Circulo Magico" primero en Glifos con boton doble.

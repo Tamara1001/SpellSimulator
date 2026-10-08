@@ -24,8 +24,18 @@ namespace SpellSimulator.Rendering
         private Material material;
         private readonly List<GameObject> hulls = new List<GameObject>();
 
+        // Valores para el proximo componente (Awake corre dentro de AddComponent).
+        private static float nextWidth = -1f;
+        private static Color nextColor;
+
+        /// <summary>Contorno leve de las herramientas sueltas.</summary>
+        public const float ToolWidth = 0.0018f;
+        /// <summary>Contorno marcado de los libros.</summary>
+        public const float BookWidth = 0.0075f;
+
         private void Awake()
         {
+            if (nextWidth > 0f) { width = nextWidth; color = nextColor; nextWidth = -1f; }
             var shader = Shader.Find(ShaderName);
             if (shader == null) return;
             material = new Material(shader) { name = "OutlineHighlight (runtime)", hideFlags = HideFlags.DontSave };
@@ -65,20 +75,25 @@ namespace SpellSimulator.Rendering
         }
 
         /// <summary>Agrega el resaltado a un objeto (idempotente).</summary>
-        public static OutlineHighlight Mark(GameObject go)
+        public static OutlineHighlight Mark(GameObject go) => Mark(go, 0.0035f, new Color(1f, 0.8f, 0.5f, 1f));
+
+        public static OutlineHighlight Mark(GameObject go, float width, Color color)
         {
             var h = go.GetComponent<OutlineHighlight>();
-            return h != null ? h : go.AddComponent<OutlineHighlight>();
+            if (h != null) return h;
+            nextWidth = width;
+            nextColor = color;
+            return go.AddComponent<OutlineHighlight>();
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void AutoApply()
         {
             // Una sola pasada al cargar: libros, herramientas, tinteros y estampas.
-            foreach (var b in Object.FindObjectsByType<LibraryBook>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(b.gameObject);
-            foreach (var t in Object.FindObjectsByType<PhysicalTool>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(t.gameObject);
-            foreach (var i in Object.FindObjectsByType<Inkwell>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(i.gameObject);
-            foreach (var s in Object.FindObjectsByType<Stamp>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(s.gameObject);
+            foreach (var b in Object.FindObjectsByType<LibraryBook>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(b.gameObject, BookWidth, new Color(1f, 0.86f, 0.5f, 1f));
+            foreach (var t in Object.FindObjectsByType<PhysicalTool>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(t.gameObject, ToolWidth, new Color(0.85f, 0.72f, 0.55f, 1f));
+            foreach (var i in Object.FindObjectsByType<Inkwell>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(i.gameObject, ToolWidth, new Color(0.85f, 0.72f, 0.55f, 1f));
+            foreach (var s in Object.FindObjectsByType<Stamp>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)) Mark(s.gameObject, ToolWidth, new Color(0.85f, 0.72f, 0.55f, 1f));
         }
     }
 }

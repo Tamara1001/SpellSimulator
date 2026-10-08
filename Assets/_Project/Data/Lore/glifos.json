@@ -23,12 +23,12 @@
     "repetition": { "name": "Repeticion", "text": "Devuelve las cosas a un estado anterior, como rebobinar. Todavia solo suma potencia." },
     "weave": { "name": "Tejido", "text": "Ablanda lo solido que toca el sello para estirarlo como una cinta. Todavia solo suma potencia." }
   },
-  "starting": [ "fire", "water", "wind-directs-air", "earth" ],
+  "starting": [ "magic_circle", "fire", "water", "wind-directs-air", "earth" ],
   "books": [
     { "id": "elements", "title": "Los cuatro elementos", "color": [0.55, 0.18, 0.16], "glyphs": [ "fire", "water", "wind-directs-air", "earth" ] },
     { "id": "variants", "title": "Variantes y parientes", "color": [0.2, 0.35, 0.6], "glyphs": [ "light", "crystal", "aeroform", "wind-underfoot" ] },
     { "id": "motion", "title": "Signos del movimiento", "color": [0.25, 0.48, 0.3], "glyphs": [ "dispersion", "pull", "float", "levitation" ] },
-    { "id": "shape", "title": "Dar forma a la magia", "color": [0.62, 0.5, 0.2], "glyphs": [ "magic_circle", "column", "convergence", "region", "crush" ] },
+    { "id": "shape", "title": "Dar forma a la magia", "color": [0.62, 0.5, 0.2], "glyphs": [ "column", "convergence", "region", "crush" ] },
     { "id": "rare", "title": "Signos raros", "color": [0.42, 0.24, 0.52], "glyphs": [ "collection", "billowing", "repetition", "weave" ] }
   ]
 }

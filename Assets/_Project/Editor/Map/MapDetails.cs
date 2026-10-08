@@ -234,7 +234,7 @@ namespace SpellSimulator.EditorTools.Map
             }
             // Atril con un libro abierto, junto a la puerta.
             // Atril del lado oeste (antes estaba en el camino de la puerta a la rampa).
-            var lectern = Matrix4x4.TRS(new Vector3(-2.3f, 0f, 1.0f), Quaternion.Euler(0f, 115f, 0f), Vector3.one);
+            var lectern = Matrix4x4.TRS(new Vector3(-1.3f, 0f, -2.6f), Quaternion.Euler(0f, -52f, 0f), Vector3.one);
             b.Frustum(lectern, 0.25f, 0.12f, 0f, 0.1f, 6, new Color(0.36f, 0.22f, 0.15f));
             b.Box(lectern * Matrix4x4.Translate(new Vector3(0f, 0.6f, 0f)), new Vector3(0.1f, 1.1f, 0.1f), new Color(0.36f, 0.22f, 0.15f));
             var desk = lectern * Matrix4x4.TRS(new Vector3(0f, 1.15f, 0f), Quaternion.Euler(-25f, 0f, 0f), Vector3.one);
@@ -278,7 +278,7 @@ namespace SpellSimulator.EditorTools.Map
             float floor = TowerBuilder.FloorHeight;
             var spots = new (string id, Vector3 at, float yaw, float tilt)[]
             {
-                ("elements", new Vector3(-2.3f, 1.22f, 1.0f), 115f, -25f),
+                ("elements", new Vector3(-1.3f, 1.22f, -2.6f), -52f, -25f),
                 ("variants", new Vector3(-0.6f, 0.86f, 0.35f), 15f, 0f),
                 ("motion", new Vector3(0.9f, floor + 0.86f, 0.2f), 60f, 0f),
                 ("shape", new Vector3(0.25f, floor + 0.86f, 0.75f), 95f, 0f),

@@ -32,6 +32,7 @@ namespace SpellSimulator.EditorTools.Map
             if (!File.Exists(ScenePath)) AssetDatabase.CopyAsset(LabScenePath, ScenePath);
             var scene = EditorSceneManager.OpenScene(ScenePath, OpenSceneMode.Single);
             Directory.CreateDirectory(GeneratedFolder);
+            EnsureCanvasTemplate();
             rng = new System.Random(Seed);
             lit = StylizedMaterial();
 
@@ -69,6 +70,21 @@ namespace SpellSimulator.EditorTools.Map
             EditorSceneManager.SaveScene(scene);
             AssetDatabase.SaveAssets();
             return $"Pradera generada: {tris} triangulos.";
+        }
+
+        /// <summary>La plantilla PaperCanvas desaparecio de la escena guardada: se rehace desde un papel existente para que los lienzos, zonas y cuadernos se regeneren.</summary>
+        private static void EnsureCanvasTemplate()
+        {
+            if (GameObject.Find("PaperCanvas") != null) return;
+            var src = GameObject.Find("Paper_S");
+            if (src == null) return;
+            var copy = Object.Instantiate(src);
+            copy.name = "PaperCanvas";
+            copy.transform.SetParent(null);
+            var rb = copy.GetComponent<Rigidbody>();
+            if (rb != null) rb.isKinematic = true;
+            copy.transform.SetPositionAndRotation(new Vector3(0f, 2.5f, 2f), Quaternion.identity);
+            copy.transform.localScale = new Vector3(1f, 1f, src.transform.localScale.z);
         }
 
         public static Vector3 Ground(float x, float z) => new Vector3(x, ValleyShape.Height(x, z), z);
@@ -401,8 +417,9 @@ namespace SpellSimulator.EditorTools.Map
             var player = GameObject.Find("Player");
             if (player != null)
             {
-                player.transform.position = Ground(ValleyShape.Spawn.x, ValleyShape.Spawn.y) + Vector3.up * 1.6f;
-                player.transform.rotation = Quaternion.identity; // mirando a la torre (+Z)
+                // Nace dentro de la torre, un paso despues de la puerta, mirando el atril con el libro de los cuatro elementos.
+                player.transform.position = TowerOrigin() + new Vector3(0f, 1.7f, -3.6f);
+                player.transform.rotation = Quaternion.Euler(0f, -52f, 0f);
             }
 
             // Escritorio de la biblioteca: un papel horizontal que emite por la cara con tinta (hacia arriba).
