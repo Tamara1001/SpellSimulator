@@ -277,7 +277,8 @@
     color: var(--cream-dim);
     font-size: 13px;
     margin-left: 6px;
-    min-width: 38px;
+    min-width: 78px;
+    white-space: nowrap;
 }
 
 .ink--low .ink-fill {
@@ -366,6 +367,26 @@
     left: 20px; top: 20px; right: 20px; bottom: 20px;
     background-image: url("Sprites/empty.png");
     opacity: 0.35;
+}
+
+/* Barra fina de tinta en la base del slot (herramientas con tinta). */
+.slot-ink {
+    position: absolute;
+    left: 7px; right: 7px; bottom: 5px;
+    height: 4px;
+    border-radius: 2px;
+    background-color: rgba(0, 0, 0, 0.6);
+    overflow: hidden;
+}
+
+.slot-ink-fill {
+    height: 100%;
+    width: 100%;
+    background-color: rgb(150, 104, 210);
+}
+
+.slot-ink--low .slot-ink-fill {
+    background-color: var(--danger);
 }
 
 .slot-key {

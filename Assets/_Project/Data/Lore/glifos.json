@@ -9,7 +9,7 @@
     "crystal": { "name": "Cristal", "text": "Pariente de la tierra que forma cristales. Con columnas hacia afuera estalla en esquirlas." },
     "aeroform": { "name": "Aeroforma", "text": "Sigilo del aire que crea aire, pero no lo mueve por si solo: necesita signos que lo dirijan." },
     "wind-underfoot": { "name": "Viento bajo los pies", "text": "Sigilo del aire que ayuda a sostener y a planear. Su mecanismo exacto todavia es un misterio." },
-    "magic_circle": { "name": "Círculo Mágico", "text": "El anillo que contiene un sello. Se dibuja casi cerrado, con un pequeño hueco: la magia no corre hasta que lo cerrás a mano. Estampalo primero y después copiá dentro los sigilos y signos que quieras." },
+    "magic_circle": { "name": "Círculo Mágico", "text": "El anillo que contiene un sello. Se dibuja casi cerrado, con un pequeño hueco: la magia no corre hasta que lo cerrás a mano. Ponelo primero y después copiá dentro los sigilos y signos que quieras." },
     "column": { "name": "Columna", "text": "El motor del sello. Apunta desde su barra corta hacia la punta. Dos opuestas hacia adentro forman un chorro; hacia afuera, un abanico; en molinete, un vortice. Si una es mas larga, el chorro se inclina hacia donde apunta." },
     "dispersion": { "name": "Dispersion", "text": "Como una columna, pero la magia se derrama despacio: dura mas y empuja menos." },
     "levitation": { "name": "Levitacion", "text": "Une la magia con los cuerpos. Dos opuestas sostienen un orbe suspendido sobre el papel." },

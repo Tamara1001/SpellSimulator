@@ -199,7 +199,7 @@ namespace SpellSimulator.Learning
                 Kicker = "Para aprender",
                 Heading = unknown > 0 ? "Copia los glifos en tu grimorio" : "Nada nuevo en estas páginas",
                 Body = unknown > 0
-                    ? $"Al aprender este conocimiento, {(unknown == 1 ? "el glifo nuevo pasa" : $"los {unknown} glifos nuevos pasan")} a tu grimorio (Tab). Desde ahí podés repasarlos y cargarlos en una estampa."
+                    ? $"Al aprender este conocimiento, {(unknown == 1 ? "el glifo nuevo pasa" : $"los {unknown} glifos nuevos pasan")} a tu grimorio (Tab). Desde ahí podés repasarlos y cargarlos en un sello."
                     : "Ya conocías todos los glifos de este libro. Podés repasarlos en tu grimorio (Tab).",
             });
             return pages;

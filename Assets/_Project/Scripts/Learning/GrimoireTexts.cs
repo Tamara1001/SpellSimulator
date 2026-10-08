@@ -66,7 +66,7 @@ namespace SpellSimulator.Learning
                 Row("Goma", "borra trazo a trazo", 30) +
                 Row("Trapo", "limpia toda la hoja", 30) +
                 Row("Tintero", "recarga la pluma (R)", 30) +
-                Row("Estampa", "copia un glifo del libro", 30) +
+                Row("Sello", "copia un glifo del libro", 30) +
                 "\nPapeles, cuadernos, pizarras y caballetes son superficies para dibujar. Cajas, pesas y piedras se mueven y se arrojan.",
                 "Cómo se usan",
                 "Con <b>E</b> tomás una herramienta y queda en tu barra (<b>1-2-3</b>): <b>clic izquierdo</b> la usa y <b>clic derecho</b> deshace.\n\n" +
@@ -90,9 +90,9 @@ namespace SpellSimulator.Learning
                 "Sellos",
                 "Un sello cerrado se lanza al instante por la cara con tinta. Si el anillo queda <b>abierto</b>, el sello está preparado: brilla y espera a que lo cierres.\n\n" +
                 "También se dibuja sobre el piso, la torre y las cajas: el sello se pega ahí y sale hacia afuera. Un cráter, fuego o agua encima lo rompen.",
-                "Estampas",
-                "Hay estampas en la mesa del campo y en el escritorio. Tomá una (<b>E</b>), abrí un glifo en <b>Glifos</b> y apretá <b>Cargar en la estampa</b>.\n\n" +
-                "Después, <b>clic izquierdo</b> sobre un papel o el piso la estampa (5 usos). Un sigilo sale con el anillo abierto: cerralo con la pluma."),
+                "Sellos",
+                "Hay sellos en la mesa del campo y en el escritorio. Tomá uno (<b>E</b>), abrí un glifo en <b>Glifos</b> y apretá <b>Cargar en el sello</b>.\n\n" +
+                "Después, <b>clic izquierdo</b> sobre un papel o el piso para estamparlo (5 usos). Un sigilo sale con el anillo abierto: cerralo con la pluma."),
             new GrimoireSpread(
                 "En objetos",
                 "Las <b>piedras de impacto</b> y la <b>placa de presión</b> guardan el sello armado: dibujalo cerrado y se lanza con un golpe fuerte o con peso encima.\n\n" +
@@ -122,7 +122,7 @@ namespace SpellSimulator.Learning
                 Row("Retroceso", "reiniciar el mundo"),
                 "Mano principal",
                 Intro("La barra 1-2-3: el objeto equipado.") +
-                Row("E", "agarra herramientas y estampas a la barra") +
+                Row("E", "agarra herramientas y sellos a la barra") +
                 Row("Clic izq.", "usa") +
                 Row("Clic der.", "deshace") +
                 Row("Rueda", "grosor de la pluma o la goma") +

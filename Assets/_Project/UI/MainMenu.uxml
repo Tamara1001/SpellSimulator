@@ -16,7 +16,7 @@
                     <ui:VisualElement class="mm-crest-glow" />
                     <ui:VisualElement class="mm-crest-seal" />
                 </ui:VisualElement>
-                <ui:Label text="TALLER DE HECHICERÍA" class="mm-kicker" />
+                <ui:Label text="SIMULADOR DE HECHICERÍA" class="mm-kicker" />
                 <ui:Label text="SpellSimulator" class="mm-title" />
                 <ui:VisualElement class="mm-divider" />
                 <ui:Label text="Dibujá el sello, nombrá el mundo." class="mm-subtitle" />
@@ -27,7 +27,7 @@
                     <ui:VisualElement class="mm-gem" picking-mode="Ignore" />
                     <ui:VisualElement class="mm-button-text" picking-mode="Ignore">
                         <ui:Label text="Modo Sandbox" class="mm-label" picking-mode="Ignore" />
-                        <ui:Label text="El taller libre: la torre y la pradera" class="mm-sub" picking-mode="Ignore" />
+                        <ui:Label text="El simulador libre: la torre y la pradera" class="mm-sub" picking-mode="Ignore" />
                     </ui:VisualElement>
                 </ui:Button>
                 <ui:Button name="duel" class="mm-button">
@@ -49,7 +49,7 @@
                     <ui:VisualElement class="mm-gem" picking-mode="Ignore" />
                     <ui:VisualElement class="mm-button-text" picking-mode="Ignore">
                         <ui:Label text="Créditos" class="mm-label" picking-mode="Ignore" />
-                        <ui:Label text="Quién hizo este taller" class="mm-sub" picking-mode="Ignore" />
+                        <ui:Label text="Quién hizo este simulador" class="mm-sub" picking-mode="Ignore" />
                     </ui:VisualElement>
                 </ui:Button>
                 <ui:Button name="quit" class="mm-button mm-button--quiet">
@@ -83,11 +83,35 @@
                     <ui:Label text="CRÉDITOS" class="kicker" />
                     <ui:Label text="SpellSimulator" class="mm-sheet-title" />
                     <ui:VisualElement class="divider divider--wide" />
-                    <ui:Label text="Tamara D'Angelo" class="mm-sheet-name" />
-                    <ui:Label text="diseño, programación, arte, sonido y todo lo demás" class="mm-sheet-role" />
-                    <ui:VisualElement class="mm-sheet-seal" />
-                    <ui:Label text="Gracias por abrir el taller. Que cada sello que dibujes encuentre su forma." class="mm-sheet-thanks" />
-                    <ui:Label text="Inspirado en la estética de los grimorios ilustrados." class="mm-sheet-note" />
+                    <ui:VisualElement class="mm-credit-grid">
+                    <ui:VisualElement class="mm-credit">
+                        <ui:Label text="PROGRAMACIÓN" class="mm-credit-role" />
+                        <ui:Label text="Tamara D'Angelo" class="mm-credit-name" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mm-credit">
+                        <ui:Label text="ARTE" class="mm-credit-role" />
+                        <ui:Label text="Tamara D'Angelo" class="mm-credit-name" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mm-credit">
+                        <ui:Label text="DISEÑO DE JUEGO" class="mm-credit-role" />
+                        <ui:Label text="Tamara D'Angelo" class="mm-credit-name" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mm-credit">
+                        <ui:Label text="DISEÑO DE INTERFAZ" class="mm-credit-role" />
+                        <ui:Label text="Tamara D'Angelo" class="mm-credit-name" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mm-credit">
+                        <ui:Label text="MÚSICA Y SONIDO" class="mm-credit-role" />
+                        <ui:Label text="Tamara D'Angelo" class="mm-credit-name" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="mm-credit">
+                        <ui:Label text="VFX" class="mm-credit-role" />
+                        <ui:Label text="Tamara D'Angelo" class="mm-credit-name" />
+                    </ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:VisualElement class="divider divider--wide mm-sheet-rule" />
+                    <ui:Label text="Hecho con Unity 6" class="mm-sheet-made" />
+                    <ui:Label text="v0.1.0 · prototipo" class="mm-sheet-ver" />
                     <ui:Button name="credits-back" class="mm-back" text="Volver" />
                 </ui:VisualElement>
             </ui:VisualElement>

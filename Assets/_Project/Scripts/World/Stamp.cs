@@ -70,9 +70,9 @@ namespace SpellSimulator.World
             Mathf.Min(diameter * PatternScale, MaxCanvasFill * Mathf.Min(canvasSize.x, canvasSize.y));
 
         // ---- Interfaz (HUD de abajo)
-        public string HudName => string.IsNullOrEmpty(glyph) ? $"Estampa {sizeName}" : $"Estampa {sizeName}: {DisplayName} ({charges})";
+        public string HudName => string.IsNullOrEmpty(glyph) ? $"Sello {sizeName}" : $"Sello {sizeName}: {DisplayName} ({charges})";
         public Color HudColor => new Color(0.65f, 0.4f, 0.85f);
-        public string HudHints => string.IsNullOrEmpty(glyph) ? "Vacia: abri un glifo en el grimorio (Tab) y 'Cargar en la estampa' | Q: arrojar" : "Clic: estampar | Q: arrojar";
+        public string HudHints => string.IsNullOrEmpty(glyph) ? "Vacia: abri un glifo en el grimorio (Tab) y 'Cargar en el sello' | Q: arrojar" : "Clic: estampar | Q: arrojar";
         public float HudGauge => -1f;
 
         // En la mano una estampa enorme taparia la camara: se ve a un tamaño comodo (estampa igual al tamaño real).
@@ -101,7 +101,7 @@ namespace SpellSimulator.World
 
         // ---------------------------------------------------------------- agarrar
 
-        public string GetInteractionPrompt() => prompt ??= $"Agarrar estampa {sizeName}";
+        public string GetInteractionPrompt() => prompt ??= $"Agarrar sello {sizeName}";
 
         public void OnInteract(Transform holdPoint)
         {
@@ -140,7 +140,7 @@ namespace SpellSimulator.World
             if (!AimAtCanvas(out RaycastHit hit, out DrawingCanvas canvas)) return;
             if (string.IsNullOrEmpty(glyph) || charges <= 0)
             {
-                Say("La estampa esta vacia. Abri el grimorio en un glifo y cargala (clic derecho / A apuntando al libro).");
+                Say("El sello esta vacio. Abri el grimorio en un glifo y cargalo (clic derecho / A apuntando al libro).");
                 return;
             }
             var entry = spellStrokes == null && dictionary != null ? dictionary.Dictionary.Get(glyph) : null;
@@ -195,10 +195,10 @@ namespace SpellSimulator.World
         public void OnSecondaryUseStart()
         {
             var book = Grimoire.Instance;
-            if (book == null || !book.IsOpen) { Say("Abri el grimorio (Tab) en un glifo y apreta el boton Cargar en la estampa."); return; }
-            if (!Aim(out RaycastHit hit, ~0) || !book.Owns(hit.collider)) { Say("Apunta al grimorio para cargar la estampa."); return; }
+            if (book == null || !book.IsOpen) { Say("Abri el grimorio (Tab) en un glifo y apreta el boton Cargar en el sello."); return; }
+            if (!Aim(out RaycastHit hit, ~0) || !book.Owns(hit.collider)) { Say("Apunta al grimorio para cargar el sello."); return; }
             string g = book.CurrentGlyph;
-            if (g == null) { Say("Abri un glifo en el grimorio y apreta el boton Cargar en la estampa."); return; }
+            if (g == null) { Say("Abri un glifo en el grimorio y apreta el boton Cargar en el sello."); return; }
             Load(g);
         }
 
@@ -210,7 +210,7 @@ namespace SpellSimulator.World
             charges = chargesPerLoad;
             RefreshLabel();
             Loaded?.Invoke(this, g);
-            Say($"Estampa {sizeName} cargada: {Discovery.Instance?.Lore.Name(g) ?? g} ({charges} usos).");
+            Say($"Sello {sizeName} cargado: {Discovery.Instance?.Lore.Name(g) ?? g} ({charges} usos).");
         }
 
         /// <summary>Carga un hechizo completo (trazos en unidades de anillo, ver SpellStrokeBuilder). Lo llama el boton de la pagina del hechizo.</summary>
@@ -277,6 +277,6 @@ namespace SpellSimulator.World
             label.text = string.IsNullOrEmpty(glyph) ? $"{sizeName}\nvacia" : $"{sizeName}\n{name}\n{charges}";
         }
 
-        private static void Say(string text) => DiagnosticBus.OnDiagnosticsUpdated?.Invoke($"<b>[Estampa]</b> {text}");
+        private static void Say(string text) => DiagnosticBus.OnDiagnosticsUpdated?.Invoke($"<b>[Sello]</b> {text}");
     }
 }

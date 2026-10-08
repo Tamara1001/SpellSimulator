@@ -20,6 +20,8 @@ namespace SpellSimulator.World
         private Collider col;
 
         public InkReservoir Ink => ink;
+        /// <summary>Tintero inagotable (los de la torre en modo Libre): la HUD muestra "inagotable" en vez de un porcentaje.</summary>
+        public bool Infinite => infinite;
         public HandType PreferredHand => HandType.Both;
 
         private void Awake()

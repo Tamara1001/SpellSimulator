@@ -131,7 +131,23 @@ namespace SpellSimulator.Player
             if (currentHovered != null) mask |= 1;
             if (viewCanvas != null || viewSurface) mask |= 2;
             if (hoveredInkSource != null && !(hoveredInkSource is InkSupply)) mask |= 4;
+            if ((mask & 4) != 0 && hoveredInkSource is World.Inkwell well) return InkwellHint(mask, well);
             return HoverHintTable[mask];
+        }
+
+        // Estado del tintero junto a las pistas ("Tintero 72 % | E: Agarrar | R: Recargar tinta"). Un string por (mascara,
+        // porcentaje entero), armado la primera vez y reutilizado: sin allocations por frame. Indice 101 = inagotable.
+        private readonly string[,] inkwellHints = new string[8, 102];
+
+        private string InkwellHint(int mask, World.Inkwell well)
+        {
+            int q = well.Infinite ? 101 : Mathf.Clamp(Mathf.RoundToInt(well.Ink.Fraction * 100f), 0, 100);
+            string text = inkwellHints[mask, q];
+            if (text != null) return text;
+            string state = q == 101 ? "Tintero inagotable" : "Tintero " + q + " %";
+            text = state + " | " + HoverHintTable[mask];
+            inkwellHints[mask, q] = text;
+            return text;
         }
 
         /// <summary>Decide si lo mirado admite vista completa: lienzos (no del grimorio) y superficies dibujables del ambiente (no el suelo).</summary>

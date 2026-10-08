@@ -346,7 +346,7 @@
 
 .mm-sheet {
     width: 720px;
-    height: 600px;
+    height: 640px;
     scale: 1 1;
     translate: 0 0;
     transition-property: scale, translate;
@@ -382,40 +382,55 @@
     letter-spacing: 1px;
 }
 
-.mm-sheet-name {
-    color: var(--violet);
-    font-size: 34px;
-    -unity-font-style: bold;
-    margin-top: 10px;
+.mm-sheet-rule {
+    margin: 10px 0 8px 0;
 }
 
-.mm-sheet-role {
-    color: var(--ink-soft);
+.mm-credit-grid {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-self: stretch;
+    margin-top: 4px;
+}
+
+.mm-credit {
+    width: 50%;
+    align-items: center;
+    margin: 8px 0 8px 0;
+}
+
+.mm-credit-role {
+    color: var(--bronze);
+    font-size: 13px;
+    letter-spacing: 3px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+}
+
+.mm-credit-name {
+    color: var(--violet);
+    font-size: 25px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    margin-top: 1px;
+}
+
+.mm-sheet-made {
+    color: var(--ink);
     font-size: 18px;
     -unity-font-style: italic;
-    margin-top: 2px;
-}
-
-.mm-sheet-seal {
-    width: 64px;
-    height: 64px;
-    margin: 22px 0 14px 0;
-    background-image: url("Sprites/seal.png");
-    -unity-background-scale-mode: scale-to-fit;
-}
-
-.mm-sheet-thanks {
-    color: var(--ink);
-    font-size: 20px;
-    white-space: normal;
     -unity-text-align: middle-center;
 }
 
-.mm-sheet-note {
+.mm-sheet-ver {
     color: var(--ink-soft);
-    font-size: 15px;
-    -unity-font-style: italic;
-    margin-top: 8px;
+    font-size: 14px;
+    letter-spacing: 2px;
+    -unity-text-align: middle-center;
+    margin-top: 3px;
 }
 
 .mm-back {

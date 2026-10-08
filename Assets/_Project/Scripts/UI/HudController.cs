@@ -38,6 +38,10 @@ namespace SpellSimulator.UI
             public Label Name;
             public GameObject Item;
             public string ShownName;
+            /// <summary>Barra fina de tinta del slot (solo herramientas con tinta) y su ultimo valor entero mostrado.</summary>
+            public VisualElement InkBar, InkFill;
+            public IHudInfo Info;
+            public int LastInk = int.MinValue;
         }
 
         private sealed class NoticeCard
@@ -178,6 +182,13 @@ namespace SpellSimulator.UI
             slot.Frame.Add(glow);
             slot.Frame.Add(slot.Icon);
             slot.Frame.Add(keycap);
+            slot.InkBar = new VisualElement { pickingMode = PickingMode.Ignore };
+            slot.InkBar.AddToClassList("slot-ink");
+            slot.InkFill = new VisualElement { pickingMode = PickingMode.Ignore };
+            slot.InkFill.AddToClassList("slot-ink-fill");
+            slot.InkBar.Add(slot.InkFill);
+            slot.InkBar.style.display = DisplayStyle.None;
+            slot.Frame.Add(slot.InkBar);
             slot.Name = new Label();
             slot.Name.AddToClassList("slot-name");
             slot.Root.Add(slot.Frame);
@@ -275,6 +286,7 @@ namespace SpellSimulator.UI
                     ink.EnableInClassList("ink--blink", blinkOn);
                 }
             }
+            for (int i = 0; i < mainSlots.Length; i++) UpdateSlotInk(mainSlots[i]);
             if (q == lastInk) return;
             lastInk = q;
             ink.style.display = q < 0 ? DisplayStyle.None : DisplayStyle.Flex;
@@ -283,6 +295,19 @@ namespace SpellSimulator.UI
             inkPct.text = Percents[q];
             ink.EnableInClassList("ink--low", low);
             if (!low) { blinkOn = false; ink.EnableInClassList("ink--blink", false); }
+        }
+
+        /// <summary>Barra fina de tinta en el slot de la barra: solo se toca al cambiar el porcentaje entero.</summary>
+        private static void UpdateSlotInk(Slot slot)
+        {
+            float gauge = slot.Item != null && slot.Info != null ? slot.Info.HudGauge : -1f;
+            int q = gauge < 0f ? -1 : Mathf.Clamp(Mathf.RoundToInt(gauge * 100f), 0, 100);
+            if (q == slot.LastInk) return;
+            slot.LastInk = q;
+            slot.InkBar.style.display = q < 0 ? DisplayStyle.None : DisplayStyle.Flex;
+            if (q < 0) return;
+            slot.InkFill.style.width = Length.Percent(q);
+            slot.InkBar.EnableInClassList("slot-ink--low", q < LowInk * 100f);
         }
 
         private void UpdateWidth()
@@ -305,7 +330,7 @@ namespace SpellSimulator.UI
             pageLabel.text = $"Página {page + 1} / {count}";
         }
 
-        /// <summary>Algunos nombres cambian sin evento (cargas de una estampa): se comparan cada medio segundo.</summary>
+        /// <summary>Algunos nombres cambian sin evento (cargas de un sello): se comparan cada medio segundo.</summary>
         private void PollNames()
         {
             if (mainInfo != null && mainInfo.HudName != mainName.text) inventoryDirty = true;
@@ -375,6 +400,8 @@ namespace SpellSimulator.UI
                 return;
             }
             slot.Item = item;
+            slot.Info = item != null ? item.GetComponentInParent<IHudInfo>() : null;
+            slot.LastInk = int.MinValue;
             slot.Icon.RemoveFromClassList("slot-icon--color");
             slot.Icon.RemoveFromClassList("slot-icon--empty");
             slot.Icon.style.backgroundImage = StyleKeyword.Null;
@@ -400,7 +427,7 @@ namespace SpellSimulator.UI
             slot.Icon.style.unityBackgroundImageTintColor = info != null ? info.HudColor : new Color(0.85f, 0.75f, 0.55f);
         }
 
-        /// <summary>Nombre corto del slot: el del objeto sin el detalle tras ":" (estampa "Estampa grande: Fuego (3)").</summary>
+        /// <summary>Nombre corto del slot: el del objeto sin el detalle tras ":" (sello "Sello grande: Fuego (3)").</summary>
         private static string NameOf(GameObject item)
         {
             IHudInfo info = item.GetComponentInParent<IHudInfo>();
@@ -589,7 +616,7 @@ namespace SpellSimulator.UI
         private static string[] BuildPercents()
         {
             var p = new string[101];
-            for (int i = 0; i <= 100; i++) p[i] = i + "%";
+            for (int i = 0; i <= 100; i++) p[i] = "Tinta " + i + " %";
             return p;
         }
     }

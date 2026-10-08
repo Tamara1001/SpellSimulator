@@ -9,6 +9,12 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - El sigilo `crystal` sigue siendo elemento Tierra (reacciones/fisica/danio intactos) pero usa su propio `ElementLook` (`Data/Elements/Crystal.asset`): esquirlas facetadas celestes (`LowPolyMeshes.Crystal`), motas brillantes, impactos con fragmentos y destellos, y estacas de cristal + escarcha celeste en el suelo (`GroundMarks`, `ElementLook.crystalline`).
 - `SpellOutputController.LookFor(element, sigilId)` elige la variante; `MagicField.SigilId`. `ElementVfxSetup` (idempotente, menu VFX/Setup Cristal) crea el look y lo asigna en `SystemManagers.prefab`.
 
+## 2026-10-08 — Septima tanda (parte 2): textos, creditos y tinta
+- 'Taller' -> 'Simulador' en el menu; creditos en grilla de roles (Programacion, Arte, Diseño de juego, Diseño de interfaz, Musica y sonido, VFX) con cierre 'Hecho con Unity 6 / v0.1.0 · prototipo'.
+- 'Estampa' -> 'Sello' en HUD, hints, grimorio y libros.
+- Tinta visible: 'Tinta 72 %' en el contexto, barra fina en los slots con herramienta de tinta y hint del tintero ('Tintero 72 %', `[R] Recargar tinta`; `Inkwell.Infinite`).
+- Cristal: VFX celestes propios (ver arriba). Regenerar el mapa conserva los 11 ajustes manuales (`MapLayout`). 161 tests y PlaySmoke en PASS.
+
 ## 2026-10-08 — Septima tanda (parte 1): sellos, calidad grafica y libros
 - **Hechizos a sello:** boton 'Cargar en el sello' en el detalle de un hechizo (`Stamp.LoadSpell`, `StampPattern.Compound`); sellos con dibujo ~1,8x mas grande (`Stamp.PatternScale`, tope `MaxCanvasFill` 0,9 del lienzo).
 - **Calidad grafica Baja/Media/Alta** en Opciones del grimorio (`GraphicsQuality`, `GraphicsQualityApplier`): escala de render, sombras, MSAA, contorno y particulas; default Alta en PC y Media en WebGL/Quest; persiste en PlayerPrefs.

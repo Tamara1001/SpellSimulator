@@ -596,10 +596,10 @@ namespace SpellSimulator.Learning
             string kind = sigil ? "Sigilo: elige el elemento del sello." : "Signo: da forma, tamaño o rumbo.";
             SetBody(Right, $"<i><color={GrimoireTexts.Faded}>{kind}</color></i>\n\n{text}", BodyTop, -0.09f);
             // Cargar el glifo que se ve en la estampa que se lleva en la mano.
-            Place(Right, 0f, -0.112f, ContentWidth * 0.86f, 0.031f, "Cargar en la estampa", ButtonSize, () =>
+            Place(Right, 0f, -0.112f, ContentWidth * 0.86f, 0.031f, "Cargar en el sello", ButtonSize, () =>
             {
                 if (World.Stamp.Held != null) World.Stamp.Held.Load(id);
-                else DebugTools.DiagnosticBus.OnDiagnosticsUpdated?.Invoke("<b>[Estampa]</b> Agarra una estampa (E) y volve a apretar el boton.");
+                else DebugTools.DiagnosticBus.OnDiagnosticsUpdated?.Invoke("<b>[Sello]</b> Agarra un sello (E) y volve a apretar el boton.");
             });
             Pager(i, glyphs.Count, () => Step(-1), () => Step(1));
         }
