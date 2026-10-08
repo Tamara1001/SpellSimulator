@@ -126,7 +126,7 @@ Tamara; con muchas cosas ardiendo suenan muchos loops de fuego a la vez (poner u
 | KI-098 🟡 | **Prueba manual:** spawn fuera de la torre, puerta no interactuable, pocos objetos movibles/lienzos, torre sin recorrido de experimentos | Fase 2 de `PLAN_SEXTA_TANDA.md`. |
 | KI-097 🟡 | **Prueba manual:** sin menu principal; VFX de tierra feo, agua/viento mejorables | Fase 3 de `PLAN_SEXTA_TANDA.md`. |
 | KI-095 🟡 | UI Toolkit en pantalla no se ve en VR (KI-054 sigue abierto); el grimorio 3D y el lector de libros son solo PC por ahora | Pasar la HUD a world-space para Quest en M7. |
-| KI-094 🟡 | `AudioDirector` no aplica los volumenes de Musica y Efectos del grimorio (solo el general via `AudioListener.volume`) | Leer `volMusic`/`volSfx` de PlayerPrefs en `AudioDirector`. |
+| KI-094 🟢 | `AudioDirector` no aplica los volumenes de Musica y Efectos del grimorio (solo el general via `AudioListener.volume`) | `AudioDirector` aplica `GrimoireOptions.MusicVolume`/`EffectsVolume` y refresca musica y viento al cambiarlos. |
 | KI-093 🟡 | Las fuentes de la HUD son las por defecto de UI Toolkit (no hay serif redistribuible en el proyecto) | Agregar una fuente serif con licencia libre. |
 | KI-092 🟢 | **Prueba manual:** HUD enorme y fea, miniaturas invisibles, avisos grandes | Nueva HUD UI Toolkit: barra de 3+1 slots con miniaturas 3D, contexto con teclas, avisos compactos arriba a la derecha. |
 | KI-091 🟢 | Agarrar un lienzo lo mandaba al inventario y no se podia rotar | Todo lo agarrado con E se arrastra (`ObjectMover`); el lienzo se rota, se da vuelta, se dibuja y se fija con V. |
