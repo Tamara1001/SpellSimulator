@@ -55,12 +55,14 @@ namespace SpellSimulator.Output
         private void Update()
         {
             // Cualquier cambio en el lienzo (trazo, goma, trapo, deshacer) invalida las marcas.
-            for (int i = 0; i < canvases.Count; i++)
+            for (int i = canvases.Count - 1; i >= 0; i--)
             {
                 var canvas = canvases[i];
-                var m = marks[canvas];
+                // Un lienzo destruido (por ejemplo al reiniciar el mundo) arrastra sus marcas: se olvida sin tocarlas.
+                if (canvas == null) { canvases.RemoveAt(i); continue; }
+                if (!marks.TryGetValue(canvas, out var m)) { canvases.RemoveAt(i); continue; }
                 if (m.StrokeCount < 0) continue;
-                if (canvas == null || canvas.Session.Strokes.Count != m.StrokeCount) Hide(m);
+                if (canvas.Session.Strokes.Count != m.StrokeCount) Hide(m);
             }
         }
 
@@ -158,8 +160,9 @@ namespace SpellSimulator.Output
 
         private static void Hide(CanvasMarks m)
         {
-            foreach (var l in m.Labels) l.gameObject.SetActive(false);
-            foreach (var a in m.Arrows) a.gameObject.SetActive(false);
+            // Las marcas cuelgan del lienzo: si este se destruyo, sus textos y flechas tambien (referencias nulas de Unity).
+            foreach (var l in m.Labels) if (l != null) l.gameObject.SetActive(false);
+            foreach (var a in m.Arrows) if (a != null) a.gameObject.SetActive(false);
             if (m.Warnings != null) m.Warnings.gameObject.SetActive(false);
             m.StrokeCount = -1;
         }

@@ -344,9 +344,10 @@ namespace SpellSimulator.EditorTools
         }
 
         /// <summary>
-        /// Sello partido para cualquier lienzo: Paper_S y Paper_M, cada uno con MEDIO anillo (y el sigilo repartido sobre el borde
-        /// comun), planos en el piso del claro. Pegados lado a lado o uno encima del otro se unen y lanzan (ambos quedan vacios);
-        /// separados 0,5 m no pasa nada. Se activa con Only = "HALVES".
+        /// Sello partido para cualquier lienzo: Paper_S y Paper_M, cada uno con un ARCO del anillo (con un hueco en la costura; el
+        /// sigilo repartido sobre el borde comun), planos en el piso del claro. Casos: 45 % + 55 % lado a lado separados 0,05 m, 45 % +
+        /// 55 % una encima de la otra con 0,04 m de solape y 40 % + 50 % pegados SE UNEN y lanzan (ambos quedan vacios); separados
+        /// 0,5 m y 40 % + 40 % (80 %, bajo el 85 %) no pasa nada. Se activa con Only = "HALVES".
         /// </summary>
         private static IEnumerator HalvesProbe(Vector3 spot)
         {
@@ -363,9 +364,18 @@ namespace SpellSimulator.EditorTools
             void OnCompiled(Compiler.SpellIR spell, DrawingCanvas c) { if (spell.valid && spell.active) compiled++; }
             caster.SpellCompiled += OnCompiled;
 
-            string[] names = { "lado a lado", "separadas 0,5 m", "una encima de la otra" };
-            for (int sc = 0; sc < names.Length; sc++)
+            // (nombre, apiladas, hueco entre bordes (m; negativo = solape), fraccion de A, fraccion de B, se une)
+            var cases = new (string name, bool stacked, float gap, float fa, float fb, bool joins)[]
             {
+                ("lado a lado, separadas 0,05 m, 45 % + 55 %", false, 0.05f, 0.45f, 0.55f, true),
+                ("separadas 0,5 m", false, 0.5f, 0.45f, 0.55f, false),
+                ("una encima de la otra, solape 0,04 m, 45 % + 55 %", true, -0.04f, 0.45f, 0.55f, true),
+                ("40 % + 40 % (80 %)", false, 0f, 0.40f, 0.40f, false),
+                ("40 % + 50 % (90 %)", false, 0f, 0.40f, 0.50f, true),
+            };
+            for (int sc = 0; sc < cases.Length; sc++)
+            {
+                var names = cases[sc];
                 pca.ResetToInitial(); pcb.ResetToInitial();
                 rba.isKinematic = true; rbb.isKinematic = true;
                 Quaternion flat = Quaternion.Euler(90f, 0f, 0f);
@@ -374,10 +384,9 @@ namespace SpellSimulator.EditorTools
                 PlaceFlat(ca, centerA, flat);
                 Vector3 right = ca.transform.right, up = ca.transform.up;
 
-                bool stacked = sc == 2;
-                float gap = sc == 1 ? 0.5f : 0f;
-                Vector3 edgeDir = stacked ? up : right;
-                float halfA = (stacked ? sa.y : sa.x) * 0.5f, halfB = (stacked ? sb.y : sb.x) * 0.5f;
+                float gap = names.gap;
+                Vector3 edgeDir = names.stacked ? up : right;
+                float halfA = (names.stacked ? sa.y : sa.x) * 0.5f, halfB = (names.stacked ? sb.y : sb.x) * 0.5f;
                 PlaceFlat(cb, centerA + edgeDir * (halfA + halfB + gap), flat);
                 Vector3 edgeMid = centerA + edgeDir * halfA;
                 Physics.SyncTransforms();
@@ -385,24 +394,31 @@ namespace SpellSimulator.EditorTools
                 // Un sello entero en un cuadrado unitario, repartido a cada lado del borde comun segun donde caiga cada punto.
                 HarnessSeals.Draw(ca, "fire");
                 var full = new List<Core.Stroke>(ca.Session.Strokes);
+                Core.Stroke ringStroke = full[full.Count - 1]; // Draw agrega el anillo al final
+                full.RemoveAt(full.Count - 1);
                 ca.Clear(); cb.Clear();
                 caster.OnSealEdited(ca); caster.OnSealEdited(cb);
                 float radius = 0.45f * Mathf.Min(Mathf.Min(sa.x, sa.y), Mathf.Min(sb.x, sb.y));
                 SplitSeal(ca, cb, full, edgeMid, edgeDir, edgeDir * gap, right, up, radius / HarnessSeals.RingRadius);
+                // Arcos del anillo alrededor del punto medio de la costura, con 4 grados de hueco en cada costura.
+                Vector3 ringCenter = edgeMid + edgeDir * (gap * 0.5f);
+                float edgeAngle = Mathf.Atan2(Vector3.Dot(edgeDir, up), Vector3.Dot(edgeDir, right)) * Mathf.Rad2Deg;
+                AddRingArc(ca, ringStroke, ringCenter, right, up, radius, edgeAngle + 180f, names.fa * 360f - 8f);
+                AddRingArc(cb, ringStroke, ringCenter, right, up, radius, edgeAngle, names.fb * 360f - 8f);
                 ca.Redraw(); cb.Redraw();
 
                 compiled = 0;
                 caster.OnStrokeFinished(ca);
                 caster.OnStrokeFinished(cb);
-                Check(compiled == 0, $"mitades [{names[sc]}]: una mitad sola no lanza nada (lanzados={compiled})");
+                Check(compiled == 0, $"mitades [{names.name}]: una mitad sola no lanza nada (lanzados={compiled})");
                 yield return 2.5f;
 
-                if (sc == 1)
+                if (!names.joins)
                     Check(compiled == 0 && !ca.Session.IsEmpty && !cb.Session.IsEmpty,
-                        $"mitades [{names[sc]}]: separadas no pasa nada (lanzados={compiled}, trazos A={ca.Session.Strokes.Count} B={cb.Session.Strokes.Count})");
+                        $"mitades [{names.name}]: no se unen, no pasa nada (lanzados={compiled}, trazos A={ca.Session.Strokes.Count} B={cb.Session.Strokes.Count})");
                 else
                     Check(compiled >= 1 && ca.Session.IsEmpty && cb.Session.IsEmpty,
-                        $"mitades [{names[sc]}]: se unen, lanzan y las dos quedan vacias (lanzados={compiled}, trazos A={ca.Session.Strokes.Count} B={cb.Session.Strokes.Count})");
+                        $"mitades [{names.name}]: se unen, lanzan y las dos quedan vacias (lanzados={compiled}, trazos A={ca.Session.Strokes.Count} B={cb.Session.Strokes.Count})");
 
                 ca.Clear(); cb.Clear();
                 caster.OnSealEdited(ca); caster.OnSealEdited(cb);
@@ -415,119 +431,164 @@ namespace SpellSimulator.EditorTools
         }
 
         /// <summary>
-        /// Portales: dos portales de prueba apareados (placa A = Paper_S). Una receta incorrecta (signo de mas, o la de otro portal) no
-        /// abre y la placa lanza su hechizo normal; la receta de tower-study abre (Charging y luego Open), borra la placa sin lanzar
-        /// un hechizo, y el jugador a 1 m del ancla A aparece cerca de la llegada de B. Se activa con Only = "PORTAL".
+        /// Portales (v2): tres portales de prueba con los ids reales (tower-study = A con la placa Paper_S, watchtower = B sin placa,
+        /// field-circle = C con la placa Paper_M), cada uno con su volumen de cruce. Una identidad equivocada o la propia no abren;
+        /// la de B (con un signo de mas) escrita en A abre la ruta A-B (Charging, Open; B abierto de vuelta); cruzar el trigger viaja,
+        /// estar cerca sin cruzar no; B devuelve a A; abrir C -> B cancela A -> B; y al vencer el tiempo (OpenSecondsOverride) se cierra.
+        /// Se activa con Only = "PORTAL".
         /// </summary>
         private static IEnumerator PortalProbe(Vector3 spot)
         {
-            var go = GameObject.Find("Paper_S");
+            var goA = GameObject.Find("Paper_S");
+            var goC = GameObject.Find("Paper_M");
             var player = GameObject.Find("Player");
-            if (go == null || player == null) { failures.Add("faltan Paper_S/Player"); yield break; }
-            var rb = go.GetComponent<Rigidbody>();
-            var pc = go.GetComponent<PhysicalCanvas>();
-            var canvas = go.GetComponent<DrawingCanvas>();
+            if (goA == null || goC == null || player == null) { failures.Add("faltan Paper_S/Paper_M/Player"); yield break; }
+            var rbA = goA.GetComponent<Rigidbody>(); var rbC = goC.GetComponent<Rigidbody>();
+            var pcA = goA.GetComponent<PhysicalCanvas>(); var pcC = goC.GetComponent<PhysicalCanvas>();
+            var canvasA = goA.GetComponent<DrawingCanvas>(); var canvasC = goC.GetComponent<DrawingCanvas>();
             var playerBody = player.GetComponent<Rigidbody>();
             var caster = Object.FindFirstObjectByType<Casting.SpellCaster>();
-            Place(pc, rb, spot + new Vector3(0f, 1.2f, 0f));
-            rb.isKinematic = true;
-            go.transform.SetPositionAndRotation(spot + new Vector3(0f, 1.2f, 0f), Quaternion.identity);
+            Place(pcA, rbA, spot + new Vector3(0f, 1.2f, 0f)); rbA.isKinematic = true;
+            goA.transform.SetPositionAndRotation(spot + new Vector3(0f, 1.2f, 0f), Quaternion.identity);
+            Place(pcC, rbC, spot + new Vector3(2f, 1.2f, 0f)); rbC.isKinematic = true;
+            goC.transform.SetPositionAndRotation(spot + new Vector3(2f, 1.2f, 0f), Quaternion.identity);
 
-            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", Casting.PortalRecipes.AssetPath));
-            var recipes = Casting.PortalRecipes.Load(File.ReadAllText(path));
+            var recipes = Casting.PortalRecipes.LoadDefault();
             Portal.SetRecipes(recipes);
-            var tower = recipes.Find("tower-study");
-            var watch = recipes.Find("watchtower");
-            Check(tower != null && watch != null && tower.PairId == "watchtower", "portals.json tiene tower-study <-> watchtower");
-            if (tower == null || watch == null) yield break;
+            var defA = recipes.Find("tower-study"); var defB = recipes.Find("watchtower"); var defC = recipes.Find("field-circle");
+            Check(defA != null && defB != null && defC != null, "portals.json (v2) tiene tower-study, watchtower y field-circle");
+            if (defA == null || defB == null || defC == null) yield break;
 
             // Los portales reales del mapa comparten id con los de prueba: se apagan durante la prueba y se reactivan al final.
-            var realTower = Portal.Find("tower-study");
-            var realWatch = Portal.Find("watchtower");
-            if (realTower != null) realTower.gameObject.SetActive(false);
-            if (realWatch != null) realWatch.gameObject.SetActive(false);
-
-            Transform Point(string name, Vector3 at)
+            var reals = new List<Portal>();
+            foreach (string rid in new[] { "tower-study", "watchtower", "field-circle" })
             {
-                var t = new GameObject(name).transform;
-                t.position = at;
-                return t;
+                var real = Portal.Find(rid);
+                if (real != null) { reals.Add(real); real.gameObject.SetActive(false); }
             }
-            var anchorA = Point("PortalProbe_AnchorA", spot + new Vector3(0f, 0f, 4f));
-            var arrivalA = Point("PortalProbe_ArrivalA", spot + new Vector3(0f, 0.3f, 3f));
-            var anchorB = Point("PortalProbe_AnchorB", spot + new Vector3(30f, 0f, 0f));
-            var arrivalB = Point("PortalProbe_ArrivalB", spot + new Vector3(30f, 0.6f, -4f));
-            var portalA = new GameObject("PortalProbe_A").AddComponent<Portal>();
-            var portalB = new GameObject("PortalProbe_B").AddComponent<Portal>();
-            portalA.Configure("tower-study", canvas, arrivalA, anchorA);
-            portalB.Configure("watchtower", null, arrivalB, anchorB);
-            Check(Portal.Find("tower-study") == portalA && portalA.PairId == "watchtower" && portalA.State == PortalState.Dormant && !portalA.IsOpen,
-                "portal A registrado, con su par y dormido");
 
-            int traveled = 0, compiledOnPlate = 0;
-            void OnTraveled(Portal from, Portal to) { if (from == portalA && to == portalB) traveled++; }
-            void OnCompiled(Compiler.SpellIR spell, DrawingCanvas c) { if (c == canvas) compiledOnPlate++; }
-            Portal.Traveled += OnTraveled;
+            var created = new List<GameObject>();
+            Portal MakePortal(string id, Vector3 center, DrawingCanvas plate, out Transform arrival)
+            {
+                var root = new GameObject("PortalProbe_" + id); created.Add(root);
+                var anchor = new GameObject("Anchor").transform; anchor.SetParent(root.transform); anchor.position = center;
+                arrival = new GameObject("Arrival").transform; arrival.SetParent(root.transform);
+                arrival.position = center + new Vector3(0f, 0.3f, -3f);
+                arrival.rotation = Quaternion.LookRotation(Vector3.back);
+                var volume = new GameObject("CrossTrigger"); volume.transform.SetParent(root.transform);
+                volume.transform.position = center + Vector3.up * 1.25f;
+                var trigger = volume.AddComponent<BoxCollider>();
+                trigger.size = new Vector3(2f, 2.5f, 0.6f);
+                var portal = root.AddComponent<Portal>();
+                portal.Configure(id, plate, arrival, anchor, trigger);
+                return portal;
+            }
+            var pA = MakePortal("tower-study", spot + new Vector3(0f, 0f, 6f), canvasA, out Transform arrivalA);
+            var pB = MakePortal("watchtower", spot + new Vector3(30f, 0f, 6f), null, out Transform arrivalB);
+            var pC = MakePortal("field-circle", spot + new Vector3(-30f, 0f, 6f), canvasC, out Transform arrivalC);
+            Check(Portal.Find("tower-study") == pA && pA.State == PortalState.Dormant && pA.Identity.Sigil == defA.Identity.Sigil && pA.Destination == null,
+                "portal A registrado, dormido, con su identidad y sin destino");
+
+            int traveled = 0, routes = 0, compiledOnPlate = 0;
+            Portal lastFrom = null, lastTo = null;
+            void OnTraveled(Portal from, Portal to) { traveled++; lastFrom = from; lastTo = to; }
+            void OnRoute(Portal from, Portal to) { if (from == pA && to == pB) routes++; }
+            void OnCompiled(Compiler.SpellIR spell, DrawingCanvas c) { if (c == canvasA) compiledOnPlate++; }
+            Portal.Traveled += OnTraveled; Portal.RouteOpened += OnRoute;
             caster.SpellCompiled += OnCompiled;
             Vector3 playerStart = player.transform.position;
 
-            void DrawRecipe(Casting.PortalRecipe recipe, string extraSign)
+            void Draw(DrawingCanvas canvas, string sigil, IList<string> signIds)
             {
-                var ids = new List<string>(recipe.Signs);
-                if (extraSign != null) ids.Add(extraSign);
-                var signs = new (string, float)[ids.Count];
-                for (int i = 0; i < ids.Count; i++) signs[i] = (ids[i], 90f + i * 360f / ids.Count);
+                var signs = new (string, float)[signIds.Count];
+                for (int i = 0; i < signIds.Count; i++) signs[i] = (signIds[i], 90f + i * 360f / signIds.Count);
                 canvas.Clear(); caster.OnSealEdited(canvas);
-                HarnessSeals.Draw(canvas, recipe.Sigil, signs);
+                HarnessSeals.Draw(canvas, sigil, signs);
                 caster.OnStrokeFinished(canvas);
             }
+            void DrawIdentity(DrawingCanvas canvas, Casting.PortalIdentity identity, string extraSign)
+            {
+                var ids = new List<string>(identity.Signs);
+                if (extraSign != null) ids.Add(extraSign);
+                Draw(canvas, identity.Sigil, ids);
+            }
+            void PutPlayer(Vector3 at)
+            {
+                playerBody.linearVelocity = Vector3.zero;
+                playerBody.position = at;
+                player.transform.position = at;
+                Physics.SyncTransforms();
+            }
+            void ResetSpells() => Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
 
-            // 1) un signo de mas: no abre (la placa se comporta como un lienzo cualquiera)
-            DrawRecipe(tower.Recipe, "weave");
+            // 1) una identidad incorrecta (sigilo de B con los signos de C): no abre
+            Draw(canvasA, defB.Identity.Sigil, defC.Identity.Signs);
             yield return 0.4f;
-            Check(portalA.State == PortalState.Dormant, $"portal: un signo de mas no abre (estado={portalA.State})");
-            Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
+            Check(pA.State == PortalState.Dormant && pA.Destination == null, $"portal: una identidad incorrecta no abre (estado={pA.State})");
+            ResetSpells();
 
-            // 2) la receta de otro portal: tampoco
-            DrawRecipe(watch.Recipe, null);
+            // 2) la identidad del propio portal: no abre (avisa "Ya estas en ese portal")
+            DrawIdentity(canvasA, defA.Identity, null);
             yield return 0.4f;
-            Check(portalA.State == PortalState.Dormant, $"portal: la receta de otro portal no abre (estado={portalA.State})");
-            Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
+            Check(pA.State == PortalState.Dormant, $"portal: la identidad del propio portal no abre (estado={pA.State})");
+            ResetSpells();
 
-            // 3) la receta correcta: Charging y despues Open; la placa queda limpia y no lanza un hechizo normal
+            // 3) la identidad de B con un signo de mas abre la ruta A -> B
             compiledOnPlate = 0;
-            DrawRecipe(tower.Recipe, null);
+            DrawIdentity(canvasA, defB.Identity, "weave");
             yield return 0.4f;
-            Check(portalA.State == PortalState.Charging && portalA.Progress01 > 0f, $"portal: la receta correcta carga (estado={portalA.State})");
-            yield return 2.2f;
-            Check(portalA.IsOpen && canvas.Session.IsEmpty && compiledOnPlate == 0,
-                $"portal: se abre, la placa queda vacia y no lanza hechizo (estado={portalA.State}, trazos={canvas.Session.Strokes.Count}, hechizos={compiledOnPlate})");
+            Check(pA.State == PortalState.Charging && pA.Progress01 > 0f && pA.DestinationId == "watchtower",
+                $"portal: la identidad de B (+1 signo) carga A hacia B (estado={pA.State}, destino={pA.DestinationId})");
+            yield return 1.6f;
+            Check(pA.IsOpen && pB.IsOpen && pA.DestinationId == "watchtower" && pB.DestinationId == "tower-study",
+                $"portal: A abierto hacia B y B abierto de vuelta (A={pA.State}/{pA.DestinationId}, B={pB.State}/{pB.DestinationId})");
+            Check(canvasA.Session.IsEmpty && compiledOnPlate == 0 && routes == 1,
+                $"portal: la placa queda vacia, no lanza hechizo y se publica RouteOpened (trazos={canvasA.Session.Strokes.Count}, hechizos={compiledOnPlate}, rutas={routes})");
+            Check(pA.OpenSecondsLeft > 20f && pA.OpenSecondsLeft <= 30f, $"portal: queda abierto ~30 s (quedan {pA.OpenSecondsLeft:F1} s)");
 
-            // 4) el jugador a 1 m del ancla viaja a la llegada del par
-            Vector3 near = anchorA.position + new Vector3(1f, 1f, 0f);
-            playerBody.linearVelocity = Vector3.zero;
-            playerBody.position = near;
-            player.transform.position = near;
-            Physics.SyncTransforms();
+            // 4) cerca pero fuera del volumen de cruce: no viaja; dentro del volumen: viaja a la llegada de B
+            PutPlayer(pA.EffectAnchor.position + new Vector3(0f, 1f, 1.8f));
             yield return 0.5f;
-            float distance = Vector3.Distance(player.transform.position, arrivalB.position);
-            Check(distance < 2f && traveled == 1, $"portal: el jugador viaja al par (distancia a la llegada={distance:F2} m, viajes={traveled})");
+            Check(traveled == 0, $"portal: cerca del portal pero sin cruzarlo no viaja (viajes={traveled})");
+            PutPlayer(pA.EffectAnchor.position + new Vector3(0f, 1f, 0f));
+            yield return 0.5f;
+            float distB = Vector3.Distance(player.transform.position, arrivalB.position);
+            Check(distB < 2f && traveled == 1 && lastFrom == pA && lastTo == pB, $"portal: cruzar A lleva a la llegada de B (distancia={distB:F2} m, viajes={traveled})");
 
-            Portal.Traveled -= OnTraveled;
+            // 5) la vuelta: cruzar B (abierto de vuelta) lleva a la llegada de A (tras el enfriamiento del viajero)
+            yield return 2.2f;
+            PutPlayer(pB.EffectAnchor.position + new Vector3(0f, 1f, 0f));
+            yield return 0.5f;
+            float distA = Vector3.Distance(player.transform.position, arrivalA.position);
+            Check(distA < 2f && traveled == 2 && lastFrom == pB && lastTo == pA, $"portal: cruzar B vuelve a la llegada de A (distancia={distA:F2} m, viajes={traveled})");
+
+            // 6) abrir C -> B cancela la ruta A -> B (A se cierra) y B queda abierto de vuelta hacia C
+            DrawIdentity(canvasC, defB.Identity, null);
+            yield return 0.4f;
+            Check(!pA.IsOpen && pA.State != PortalState.Charging && pA.Destination == null && pC.DestinationId == "watchtower" && pB.DestinationId == "field-circle",
+                $"portal: C -> B cancela A -> B (A={pA.State}, C={pC.State}/{pC.DestinationId}, B={pB.State}/{pB.DestinationId})");
+            yield return 1.6f;
+            Check(pC.IsOpen && pB.IsOpen && pB.DestinationId == "field-circle", $"portal: C y B abiertos entre si (C={pC.State}, B={pB.State})");
+
+            // 7) al vencer el tiempo (acelerado) se cierran los dos y vuelven a Dormant tras el enfriamiento corto
+            Portal.OpenSecondsOverride = 1f;
+            yield return 0.4f;
+            Check(!pC.IsOpen && !pB.IsOpen && pC.Destination == null && pB.Destination == null, $"portal: al vencer el tiempo se cierran (C={pC.State}, B={pB.State})");
+            yield return 3.3f;
+            Check(pC.State == PortalState.Dormant && pB.State == PortalState.Dormant, $"portal: vuelven a Dormant (C={pC.State}, B={pB.State})");
+
+            Portal.OpenSecondsOverride = 0f;
+            Portal.Traveled -= OnTraveled; Portal.RouteOpened -= OnRoute;
             caster.SpellCompiled -= OnCompiled;
-            playerBody.linearVelocity = Vector3.zero;
-            playerBody.position = playerStart;
-            player.transform.position = playerStart;
-            Object.Destroy(portalA.gameObject); Object.Destroy(portalB.gameObject);
-            Object.Destroy(anchorA.gameObject); Object.Destroy(arrivalA.gameObject);
-            Object.Destroy(anchorB.gameObject); Object.Destroy(arrivalB.gameObject);
+            PutPlayer(playerStart);
+            foreach (var g in created) Object.Destroy(g);
             Portal.SetRecipes(null);
-            if (realTower != null) realTower.gameObject.SetActive(true);
-            if (realWatch != null) realWatch.gameObject.SetActive(true);
-            Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
-            canvas.Clear(); caster.OnSealEdited(canvas);
-            pc.ResetToInitial();
-            rb.isKinematic = false;
+            foreach (var real in reals) if (real != null) real.gameObject.SetActive(true);
+            ResetSpells();
+            canvasA.Clear(); caster.OnSealEdited(canvasA);
+            canvasC.Clear(); caster.OnSealEdited(canvasC);
+            pcA.ResetToInitial(); pcC.ResetToInitial();
+            rbA.isKinematic = false; rbC.isKinematic = false;
         }
 
         /// <summary>Apoya el lienzo con el CENTRO de su superficie (no el pivote) en center.</summary>
@@ -535,6 +596,24 @@ namespace SpellSimulator.EditorTools
         {
             canvas.transform.rotation = rotation;
             canvas.transform.position += center - canvas.WorldCenter;
+        }
+
+        /// <summary>
+        /// Agrega a canvas un arco del anillo (en el plano right/up, centro y radio en metros del mundo) de span grados centrado en
+        /// el angulo centerAngle, con el ancho y la tinta del trazo de anillo original.
+        /// </summary>
+        private static void AddRingArc(DrawingCanvas canvas, Core.Stroke template, Vector3 center, Vector3 right, Vector3 up,
+            float radius, float centerAngle, float span)
+        {
+            var arc = new Core.Stroke { Width = template.Width, Ink = template.Ink };
+            int n = Mathf.Max(8, Mathf.CeilToInt(span / 4f) + 1);
+            for (int i = 0; i < n; i++)
+            {
+                float angle = (centerAngle - span * 0.5f + span * i / (n - 1)) * Mathf.Deg2Rad;
+                Vector3 world = center + right * (Mathf.Cos(angle) * radius) + up * (Mathf.Sin(angle) * radius);
+                arc.AddPoint(canvas.GetUVFromWorldPosition(world));
+            }
+            canvas.Session.AddStroke(arc);
         }
 
         /// <summary>

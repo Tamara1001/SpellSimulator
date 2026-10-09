@@ -2,6 +2,7 @@ using NUnit.Framework;
 using UnityEngine;
 using SpellSimulator.Casting;
 using SpellSimulator.Core;
+using SpellSimulator.Parsing;
 
 namespace SpellSimulator.Tests
 {
@@ -102,6 +103,117 @@ namespace SpellSimulator.Tests
         {
             Assert.IsFalse(CanvasJoinMath.AreAdjacent(Rect(Vector3.zero), Rect(new Vector3(0.05f, 0f, 0f))), "Una casi encima de otra.");
             Assert.IsFalse(CanvasJoinMath.AreAdjacent(Rect(Vector3.zero), Rect(Vector3.zero)), "Superpuestas.");
+        }
+
+        // ---------------------------------------------------------------- tolerancias generosas (hojas apoyadas casi tocandose)
+
+        [Test]
+        public void SmallGapAndSmallOverlap_AreAdjacent()
+        {
+            Assert.IsTrue(CanvasJoinMath.AreAdjacent(Rect(Vector3.zero), Rect(new Vector3(0.35f, 0f, 0f))), "Hueco de 0,05 m.");
+            Assert.IsTrue(CanvasJoinMath.AreAdjacent(Rect(Vector3.zero), Rect(new Vector3(0.26f, 0f, 0f))), "Solape de 0,04 m.");
+            Assert.IsTrue(CanvasJoinMath.AreAdjacent(Rect(Vector3.zero), Rect(new Vector3(0f, 0.24f, 0f))), "Apiladas con solape de 0,04 m.");
+            Assert.IsTrue(CanvasJoinMath.AreAdjacent(Rect(Vector3.zero), Rect(new Vector3(0.3f, 0f, 0.08f))), "8 cm fuera del plano.");
+        }
+
+        [Test]
+        public void GapOverLimit_OrOverlapOverLimit_AreNotAdjacent()
+        {
+            Assert.IsFalse(CanvasJoinMath.AreAdjacent(Rect(Vector3.zero), Rect(new Vector3(0.45f, 0f, 0f))), "Hueco de 0,15 m > 0,12.");
+            Assert.IsFalse(CanvasJoinMath.AreAdjacent(Rect(Vector3.zero), Rect(new Vector3(0.18f, 0f, 0f))), "Solape de 0,12 m > 35 % del lado menor (0,105).");
+            Assert.IsFalse(CanvasJoinMath.AreAdjacent(Rect(Vector3.zero), Rect(new Vector3(0.3f, 0f, 0.12f))), "12 cm fuera del plano > 0,10.");
+        }
+
+        [Test]
+        public void SlightlyTiltedFace_StillAdjacent()
+        {
+            var tilted = new CanvasRect(new Vector3(0.3f, 0f, 0f), Vector3.right, Vector3.up, new Vector3(0f, 0.4f, 1f).normalized, 0.3f, 0.2f);
+            Assert.IsTrue(CanvasJoinMath.AreAdjacent(Rect(Vector3.zero), tilted), "dot ~0,93 >= 0,8.");
+        }
+
+        // ---------------------------------------------------------------- costura y aporte de cada mitad
+
+        private static Stroke Arc(float fromDeg, float toDeg, float stepDeg = 4f)
+        {
+            var stroke = new Stroke { Width = 0.012f, Ink = InkKind.Normal };
+            int n = Mathf.Max(3, Mathf.CeilToInt((toDeg - fromDeg) / stepDeg) + 1);
+            for (int i = 0; i < n; i++)
+                stroke.AddPoint(new Vector2(0.5f, 0.5f) + GeometryUtils.VectorFromAngleDeg(Mathf.Lerp(fromDeg, toDeg, i / (float)(n - 1))) * 0.3f);
+            return stroke;
+        }
+
+        [Test]
+        public void HealSeam_ClosesARingWithSmallGaps()
+        {
+            var session = new DrawingSession();
+            session.AddStroke(Arc(10f, 170f));   // mitad izquierda
+            session.AddStroke(Arc(185f, 350f));  // mitad derecha, huecos de 15 y 20 grados (~90 % de cobertura)
+            RingInfo ring = RingDetector.Detect(session.Scaled(Vector2.one));
+            Assert.IsTrue(ring.Found && !ring.Complete);
+            Assert.GreaterOrEqual(ring.Completeness, CanvasJoinMath.MinHealCompleteness);
+
+            int added = CanvasJoinMath.HealSeam(session, ring, Vector2.one);
+            Assert.AreEqual(2, added, "Un puente por hueco.");
+            Assert.AreEqual(0.012f, session.Strokes[2].Width, 1e-6f, "El puente conserva el ancho.");
+            Assert.AreEqual(InkKind.Normal, session.Strokes[2].Ink);
+            Assert.IsTrue(RingDetector.Detect(session.Scaled(Vector2.one)).Complete, "Tras el puente el anillo queda cerrado.");
+        }
+
+        [Test]
+        public void HealSeam_DoesNothing_WhenTooOpenOrAlreadyClosed()
+        {
+            var half = new DrawingSession();
+            half.AddStroke(Arc(0f, 200f)); // 55 %: hay anillo pero mucho hueco
+            RingInfo open = RingDetector.Detect(half.Scaled(Vector2.one));
+            Assert.AreEqual(0, CanvasJoinMath.HealSeam(half, open, Vector2.one));
+            Assert.AreEqual(1, half.Strokes.Count);
+
+            var closed = new DrawingSession();
+            closed.AddStroke(Arc(0f, 360f));
+            RingInfo full = RingDetector.Detect(closed.Scaled(Vector2.one));
+            Assert.AreEqual(0, CanvasJoinMath.HealSeam(closed, full, Vector2.one));
+            Assert.AreEqual(0, CanvasJoinMath.HealSeam(closed, null, Vector2.one));
+        }
+
+        // Dos mitades como (grados de A, grados de B) de un anillo de 360: A de 180 hacia atras, B de 0 hacia adelante, sin tocarse.
+        private static DrawingSession Halves(float degA, float degB, out RingInfo ring)
+        {
+            var s = new DrawingSession();
+            s.AddStroke(Arc(180f - degA * 0.5f, 180f + degA * 0.5f)); // A (primer trazo)
+            s.AddStroke(Arc(-degB * 0.5f, degB * 0.5f));              // B
+            ring = RingDetector.Detect(s.Scaled(Vector2.one));
+            return s;
+        }
+
+        [Test]
+        public void EachHalfContributes_RequiresAQuarterOfTheCircleFromBoth()
+        {
+            var ok = Halves(162f, 198f, out RingInfo ringOk); // 45 % + 55 %
+            Assert.IsTrue(CanvasJoinMath.EachHalfContributes(ok.Scaled(Vector2.one), 1, ringOk));
+
+            var okSmall = Halves(144f, 180f, out RingInfo ringSmall); // 40 % + 50 %
+            Assert.IsTrue(CanvasJoinMath.EachHalfContributes(okSmall.Scaled(Vector2.one), 1, ringSmall));
+
+            var scribble = new DrawingSession();
+            scribble.AddStroke(Arc(100f, 140f));   // ~11 % del circulo
+            scribble.AddStroke(Arc(150f, 420f));   // 75 %
+            RingInfo ring = RingDetector.Detect(scribble.Scaled(Vector2.one));
+            Assert.IsTrue(ring.Found);
+            Assert.IsFalse(CanvasJoinMath.EachHalfContributes(scribble.Scaled(Vector2.one), 1, ring), "Una mitad con casi nada no cuenta.");
+        }
+
+        [Test]
+        public void FortyPlusForty_IsBelowHealThreshold_FortyPlusFifty_Heals()
+        {
+            var low = Halves(144f, 144f, out RingInfo ringLow); // 80 % total
+            Assert.IsTrue(ringLow.Found);
+            Assert.Less(ringLow.Completeness, CanvasJoinMath.MinHealCompleteness);
+            Assert.AreEqual(0, CanvasJoinMath.HealSeam(low, ringLow, Vector2.one));
+
+            var high = Halves(144f, 180f, out RingInfo ringHigh); // 90 % total
+            Assert.GreaterOrEqual(ringHigh.Completeness, CanvasJoinMath.MinHealCompleteness);
+            Assert.Greater(CanvasJoinMath.HealSeam(high, ringHigh, Vector2.one), 0);
+            Assert.IsTrue(RingDetector.Detect(high.Scaled(Vector2.one)).Complete);
         }
 
         [Test]

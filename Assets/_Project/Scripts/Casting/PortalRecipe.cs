@@ -1,36 +1,26 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 using SpellSimulator.Compiler;
 
 namespace SpellSimulator.Casting
 {
-    // ---- Esquema del JSON (Data/Portals/portals.json, version 1). Solo para JsonUtility: la logica usa PortalRecipe. ----
+    // ---- Esquema del JSON (Data/Portals/portals.json, version 2). Solo para JsonUtility: la logica usa PortalIdentity. ----
 
     [Serializable]
-    public sealed class PortalInnerData
+    public sealed class PortalIdentityData
     {
         public string sigil;
         public string[] signs;
-    }
-
-    [Serializable]
-    public sealed class PortalRecipeData
-    {
-        public string sigil;
-        public string[] signs;
-        public bool nested;
-        /// <summary>Solo si nested: la receta de cada circulo interior (un nivel).</summary>
-        public PortalInnerData[] inner;
     }
 
     [Serializable]
     public sealed class PortalEntryData
     {
         public string id;
-        public string pair;
         public string displayName;
-        public PortalRecipeData recipe;
+        public PortalIdentityData identity;
     }
 
     [Serializable]
@@ -41,60 +31,61 @@ namespace SpellSimulator.Casting
     }
 
     /// <summary>
-    /// Receta de un portal: un sigilo y un multiconjunto de signos (el orden no importa). En una receta anidada el exterior
-    /// no lleva sigilo ni signos: lo que cuenta es la receta de cada interior.
+    /// Identidad de un portal: 1 sigilo + N signos (el orden no importa). Es lo que esta grabado en el portal y lo que hay que
+    /// escribir en la placa de OTRO portal para viajar hasta este. Los signos quedan ordenados (ordinal) para mostrar estable.
     /// </summary>
-    public sealed class PortalRecipe
+    public readonly struct PortalIdentity
     {
-        public string Sigil { get; }
-        /// <summary>Signos ordenados (ordinal) para comparar y mostrar de forma estable.</summary>
-        public IReadOnlyList<string> Signs => signs;
-        public bool Nested { get; }
-        /// <summary>Recetas de los interiores (vacio si no es anidada).</summary>
-        public IReadOnlyList<PortalRecipe> Inner => inner;
+        public readonly string Sigil;
+        public readonly string[] Signs;
 
-        private readonly string[] signs;
-        private readonly PortalRecipe[] inner;
-
-        public PortalRecipe(string sigil, IEnumerable<string> signIds, bool nested = false, IEnumerable<PortalRecipe> innerRecipes = null)
+        public PortalIdentity(string sigil, IEnumerable<string> signIds)
         {
             Sigil = sigil ?? "";
             var list = new List<string>();
             if (signIds != null) foreach (string s in signIds) if (!string.IsNullOrEmpty(s)) list.Add(s);
-            signs = list.ToArray();
-            Array.Sort(signs, StringComparer.Ordinal);
-            Nested = nested;
-            inner = innerRecipes != null ? new List<PortalRecipe>(innerRecipes).ToArray() : Array.Empty<PortalRecipe>();
+            Signs = list.ToArray();
+            Array.Sort(Signs, StringComparer.Ordinal);
         }
+
+        /// <summary>Tiene sigilo y al menos un signo.</summary>
+        public bool IsValid => !string.IsNullOrEmpty(Sigil) && Signs != null && Signs.Length > 0;
     }
 
-    /// <summary>Un portal declarado en los datos: su id, el id del portal par y su receta.</summary>
+    /// <summary>Un portal declarado en los datos: su id, su nombre y su identidad.</summary>
     public sealed class PortalDefinition
     {
         public string Id { get; }
-        public string PairId { get; }
         public string DisplayName { get; }
-        public PortalRecipe Recipe { get; }
+        public PortalIdentity Identity { get; }
 
-        public PortalDefinition(string id, string pairId, string displayName, PortalRecipe recipe)
+        public PortalDefinition(string id, string displayName, PortalIdentity identity)
         {
-            Id = id; PairId = pairId; DisplayName = displayName; Recipe = recipe;
+            Id = id; DisplayName = displayName; Identity = identity;
         }
     }
 
     /// <summary>Catalogo de portales cargado de portals.json.</summary>
     public sealed class PortalRecipes
     {
-        public const int SupportedVersion = 1;
+        public const int SupportedVersion = 2;
         /// <summary>Ruta del archivo de datos en el proyecto (el editor lo carga de aca; en un build va como TextAsset asignado).</summary>
         public const string AssetPath = "Assets/_Project/Data/Portals/portals.json";
 
         public static readonly PortalRecipes Empty = new PortalRecipes(new List<PortalDefinition>());
 
         private readonly List<PortalDefinition> portals;
+        private readonly List<PortalIdentity> identities;
         public IReadOnlyList<PortalDefinition> Portals => portals;
+        /// <summary>Identidades en el mismo orden que <see cref="Portals"/> (para <see cref="PortalMath.BestMatch"/>).</summary>
+        public IReadOnlyList<PortalIdentity> Identities => identities;
 
-        public PortalRecipes(List<PortalDefinition> definitions) { portals = definitions; }
+        public PortalRecipes(List<PortalDefinition> definitions)
+        {
+            portals = definitions;
+            identities = new List<PortalIdentity>(definitions.Count);
+            foreach (PortalDefinition d in definitions) identities.Add(d.Identity);
+        }
 
         public PortalDefinition Find(string id)
         {
@@ -102,6 +93,21 @@ namespace SpellSimulator.Casting
             for (int i = 0; i < portals.Count; i++)
                 if (portals[i].Id == id) return portals[i];
             return null;
+        }
+
+        /// <summary>
+        /// Carga portals.json por ruta de proyecto. Sirve en el EDITOR sin escena (builders, tests); en un build devuelve el
+        /// catalogo vacio (alli el Portal usa el TextAsset asignado).
+        /// </summary>
+        public static PortalRecipes LoadDefault()
+        {
+#if UNITY_EDITOR
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", AssetPath));
+            if (!File.Exists(path)) return Empty;
+            return Load(File.ReadAllText(path));
+#else
+            return Empty;
+#endif
         }
 
         /// <summary>Parsea el JSON (solo al cargar). Devuelve un catalogo vacio y avisa si el texto o la version no sirven.</summary>
@@ -125,22 +131,10 @@ namespace SpellSimulator.Casting
             var list = new List<PortalDefinition>(file.portals.Length);
             foreach (PortalEntryData entry in file.portals)
             {
-                if (entry == null || string.IsNullOrEmpty(entry.id) || entry.recipe == null) continue;
-                list.Add(new PortalDefinition(entry.id, entry.pair, entry.displayName, ToRecipe(entry.recipe)));
+                if (entry == null || string.IsNullOrEmpty(entry.id) || entry.identity == null) continue;
+                list.Add(new PortalDefinition(entry.id, entry.displayName, new PortalIdentity(entry.identity.sigil, entry.identity.signs)));
             }
             return new PortalRecipes(list);
-        }
-
-        private static PortalRecipe ToRecipe(PortalRecipeData data)
-        {
-            List<PortalRecipe> inner = null;
-            if (data.nested && data.inner != null)
-            {
-                inner = new List<PortalRecipe>(data.inner.Length);
-                foreach (PortalInnerData i in data.inner)
-                    if (i != null) inner.Add(new PortalRecipe(i.sigil, i.signs));
-            }
-            return new PortalRecipe(data.sigil, data.signs, data.nested, inner);
         }
     }
 
@@ -154,7 +148,7 @@ namespace SpellSimulator.Casting
 
     /// <summary>
     /// Lo que se leyo de un sello, reducido a ids y confianzas (sin depender del reconocedor ni del lienzo). Inners es null
-    /// si el sello es de un solo circulo.
+    /// si el sello es de un solo circulo (un sello compuesto nunca coincide con una identidad de portal).
     /// </summary>
     public sealed class PortalReading
     {
@@ -184,78 +178,68 @@ namespace SpellSimulator.Casting
         }
     }
 
-    /// <summary>Logica pura de portales: decide si lo leido en la placa coincide con la receta.</summary>
+    /// <summary>Logica pura de portales: decide a que identidad corresponde lo leido en la placa.</summary>
     public static class PortalMath
     {
         /// <summary>Confianza minima de cada glifo leido para que cuente (valor inicial, ajustable tras probar).</summary>
-        public const float DefaultMinConfidence = 0.35f;
+        public const float DefaultMinConfidence = 0.2f;
+
+        /// <summary>Signos de mas tolerados en la lectura respecto de la identidad.</summary>
+        public const int DefaultMaxExtraSigns = 1;
 
         /// <summary>
-        /// Coincidencia de un sello de un solo circulo con una receta NO anidada: mismo sigilo y mismo multiconjunto de signos
-        /// (el orden no importa; signos de mas o de menos no coinciden). Los ids vienen ya filtrados por confianza (se leen con
-        /// confianza 1): <paramref name="minConfidence"/> pesa de verdad en la sobrecarga que recibe un <see cref="PortalReading"/>.
+        /// Coincidencia de una lectura con UNA identidad: mismo sigilo y todos los signos de la identidad presentes (multiconjunto,
+        /// sin reutilizar un glifo leido para dos signos). Los glifos con confianza menor a <paramref name="minConfidence"/> no
+        /// cuentan (ni como presentes ni como sobrantes). Se toleran hasta <paramref name="maxExtraSigns"/> signos sobrantes;
+        /// <paramref name="excess"/> es cuantos sobraron.
         /// </summary>
-        public static bool Matches(PortalRecipe recipe, string sigilId, IReadOnlyList<string> signIds, float minConfidence)
+        public static bool Matches(PortalIdentity identity, PortalReading reading, float minConfidence, out int excess, int maxExtraSigns = DefaultMaxExtraSigns)
         {
-            var reading = new PortalReading { SigilId = sigilId };
-            if (signIds != null) foreach (string id in signIds) reading.Signs.Add(new PortalGlyph(id, 1f));
-            return Matches(recipe, reading, minConfidence);
-        }
+            excess = 0;
+            if (!identity.IsValid || reading == null || reading.Inners != null) return false;
+            if (string.IsNullOrEmpty(reading.SigilId) || reading.SigilId != identity.Sigil || reading.SigilConfidence < minConfidence) return false;
+            if (reading.Signs.Count > 32) return false;
 
-        /// <summary>
-        /// Coincidencia de una lectura (plana o anidada) con la receta. Un glifo con confianza menor a
-        /// <paramref name="minConfidence"/> hace fallar la coincidencia (lectura dudosa). En una receta anidada cada interior de la
-        /// receta debe coincidir con un interior distinto de la lectura (sin repetir) y la cantidad de interiores debe ser la misma.
-        /// </summary>
-        public static bool Matches(PortalRecipe recipe, PortalReading reading, float minConfidence)
-        {
-            if (recipe == null || reading == null) return false;
-            if (recipe.Nested)
-            {
-                if (reading.Inners == null || reading.Inners.Count != recipe.Inner.Count || recipe.Inner.Count == 0) return false;
-                return AssignInner(recipe, reading, 0, 0u, minConfidence);
-            }
-            if (reading.Inners != null) return false;
-            return MatchesFlat(recipe, reading, minConfidence);
-        }
-
-        private static bool AssignInner(PortalRecipe recipe, PortalReading reading, int index, uint used, float minConfidence)
-        {
-            if (index == recipe.Inner.Count) return true;
-            for (int j = 0; j < reading.Inners.Count && j < 32; j++)
-            {
-                if ((used & (1u << j)) != 0) continue;
-                if (!MatchesFlat(recipe.Inner[index], reading.Inners[j], minConfidence)) continue;
-                if (AssignInner(recipe, reading, index + 1, used | (1u << j), minConfidence)) return true;
-            }
-            return false;
-        }
-
-        private static bool MatchesFlat(PortalRecipe recipe, PortalReading reading, float minConfidence)
-        {
-            if (recipe.Nested || string.IsNullOrEmpty(reading.SigilId) || reading.SigilId != recipe.Sigil) return false;
-            if (reading.SigilConfidence < minConfidence) return false;
-            if (reading.Signs.Count != recipe.Signs.Count || reading.Signs.Count > 32) return false;
+            int valid = 0;
+            for (int j = 0; j < reading.Signs.Count; j++)
+                if (reading.Signs[j].Confidence >= minConfidence) valid++;
+            if (valid < identity.Signs.Length || valid - identity.Signs.Length > maxExtraSigns) return false;
 
             uint used = 0u;
-            for (int i = 0; i < recipe.Signs.Count; i++)
+            for (int i = 0; i < identity.Signs.Length; i++)
             {
                 bool found = false;
                 for (int j = 0; j < reading.Signs.Count; j++)
                 {
-                    if ((used & (1u << j)) != 0 || reading.Signs[j].Id != recipe.Signs[i]) continue;
-                    if (reading.Signs[j].Confidence < minConfidence) return false;
+                    if ((used & (1u << j)) != 0 || reading.Signs[j].Confidence < minConfidence || reading.Signs[j].Id != identity.Signs[i]) continue;
                     used |= 1u << j;
                     found = true;
                     break;
                 }
                 if (!found) return false;
             }
+            excess = valid - identity.Signs.Length;
             return true;
         }
 
-        /// <summary>El jugador esta dentro del radio de viaje del portal.</summary>
-        public static bool InRange(Vector3 playerPosition, Vector3 anchorPosition, float radius)
-            => (playerPosition - anchorPosition).sqrMagnitude <= radius * radius;
+        /// <summary>
+        /// Indice de la identidad que mejor explica la lectura, o -1 si ninguna coincide. Gana la de mayor cobertura (mas signos
+        /// de identidad cubiertos) y, a igualdad, la de menor exceso; si empatan del todo, la primera.
+        /// </summary>
+        public static int BestMatch(IReadOnlyList<PortalIdentity> identities, PortalReading reading, float minConfidence, int maxExtraSigns = DefaultMaxExtraSigns)
+        {
+            if (identities == null) return -1;
+            int best = -1, bestCover = -1, bestExcess = int.MaxValue;
+            for (int i = 0; i < identities.Count; i++)
+            {
+                if (!Matches(identities[i], reading, minConfidence, out int excess, maxExtraSigns)) continue;
+                int cover = identities[i].Signs.Length;
+                if (cover > bestCover || (cover == bestCover && excess < bestExcess))
+                {
+                    best = i; bestCover = cover; bestExcess = excess;
+                }
+            }
+            return best;
+        }
     }
 }

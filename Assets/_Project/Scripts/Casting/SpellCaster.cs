@@ -215,6 +215,33 @@ namespace SpellSimulator.Casting
             return ring.Found && ring.Complete;
         }
 
+        /// <summary>
+        /// Union de mitades: decide si la sesion fusionada forma un anillo cerrado, curando la costura si hace falta. Si
+        /// <paramref name="halfACount"/> &gt;= 0 (los primeros trazos son de la mitad A), exige que cada mitad aporte al menos
+        /// <see cref="CanvasJoinMath.MinHalfShare"/> de la circunferencia. Con cobertura &gt;= 0,85 pero sin cerrar, agrega trazos
+        /// puente (<see cref="CanvasJoinMath.HealSeam"/>) y los conserva solo si el anillo queda cerrado. No toca el camino de un
+        /// solo lienzo.
+        /// </summary>
+        public bool TryCloseRing(ref DrawingSession merged, Vector2 worldSize, int halfACount = -1)
+        {
+            if (merged == null || merged.IsEmpty) return false;
+            float largest = Mathf.Max(worldSize.x, worldSize.y, 1e-6f);
+            var iso = new Vector2(worldSize.x / largest, worldSize.y / largest);
+
+            // Anillo en crudo (sin limpiar): sirve para medir el aporte de cada mitad y para saber donde esta la costura.
+            DrawingSession scaled = merged.Scaled(iso);
+            RingInfo ring = RingDetector.Detect(scaled);
+            if (!ring.Found) return false;
+            if (halfACount >= 0 && !CanvasJoinMath.EachHalfContributes(scaled, halfACount, ring)) return false;
+            if (IsRingClosed(merged, worldSize)) return true;
+
+            int before = merged.Strokes.Count;
+            if (CanvasJoinMath.HealSeam(merged, ring, iso) == 0) return false;
+            if (IsRingClosed(merged, worldSize)) return true;
+            merged.Strokes.RemoveRange(before, merged.Strokes.Count - before); // no cerro: se deshace el puente
+            return false;
+        }
+
         private void Reevaluate(DrawingCanvas canvas, bool castAllowed)
         {
             if (canvas == null) return;

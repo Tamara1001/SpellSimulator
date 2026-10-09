@@ -1,22 +1,22 @@
+using System.Collections.Generic;
+using System.IO;
 using NUnit.Framework;
+using UnityEngine;
 using SpellSimulator.Casting;
 
 namespace SpellSimulator.Tests
 {
-    /// <summary>Portales: carga de portals.json y coincidencia de lo leido con la receta.</summary>
+    /// <summary>Portales: carga de portals.json (v2) y coincidencia de lo leido con las identidades.</summary>
     public class PortalRecipeTests
     {
+        private const float Min = 0.2f;
+
         private const string Json = @"{
-  ""version"": 1,
+  ""version"": 2,
   ""portals"": [
-    { ""id"": ""a"", ""pair"": ""b"", ""displayName"": ""Portal A"",
-      ""recipe"": { ""sigil"": ""light"", ""signs"": [""levitation"", ""convergence"", ""repetition""], ""nested"": false } },
-    { ""id"": ""b"", ""pair"": ""a"", ""displayName"": ""Portal B"",
-      ""recipe"": { ""sigil"": ""earth"", ""signs"": [""crush"", ""pull""], ""nested"": false } },
-    { ""id"": ""n"", ""pair"": ""b"", ""displayName"": ""Anidado"",
-      ""recipe"": { ""sigil"": """", ""signs"": [], ""nested"": true, ""inner"": [
-        { ""sigil"": ""wind-underfoot"", ""signs"": [""levitation"", ""billowing""] },
-        { ""sigil"": ""crystal"", ""signs"": [""collection""] } ] } }
+    { ""id"": ""a"", ""displayName"": ""Portal A"", ""identity"": { ""sigil"": ""light"", ""signs"": [""levitation"", ""convergence""] } },
+    { ""id"": ""b"", ""displayName"": ""Portal B"", ""identity"": { ""sigil"": ""earth"", ""signs"": [""crush"", ""pull""] } },
+    { ""id"": ""c"", ""displayName"": ""Portal C"", ""identity"": { ""sigil"": ""light"", ""signs"": [""levitation"", ""convergence"", ""weave""] } }
   ]
 }";
 
@@ -30,118 +30,162 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
-        public void Load_ReadsPortalsPairsAndRecipes()
+        public void Load_ReadsPortalsAndIdentities()
         {
             var recipes = Recipes();
             Assert.AreEqual(3, recipes.Portals.Count);
+            Assert.AreEqual(3, recipes.Identities.Count);
             var a = recipes.Find("a");
-            Assert.AreEqual("b", a.PairId);
-            Assert.AreEqual("light", a.Recipe.Sigil);
-            Assert.AreEqual(3, a.Recipe.Signs.Count);
-            Assert.IsFalse(a.Recipe.Nested);
-            var n = recipes.Find("n");
-            Assert.IsTrue(n.Recipe.Nested);
-            Assert.AreEqual(2, n.Recipe.Inner.Count);
-            Assert.AreEqual("wind-underfoot", n.Recipe.Inner[0].Sigil);
+            Assert.AreEqual("light", a.Identity.Sigil);
+            CollectionAssert.AreEqual(new[] { "convergence", "levitation" }, a.Identity.Signs); // ordenados
+            Assert.IsTrue(a.Identity.IsValid);
             Assert.IsNull(recipes.Find("zzz"));
         }
 
         [Test]
-        public void Load_RejectsUnknownVersionAndGarbage()
+        public void Load_RejectsOldVersionAndGarbage()
         {
             Assert.AreEqual(0, PortalRecipes.Load("").Portals.Count);
-            UnityEngine.TestTools.LogAssert.Expect(UnityEngine.LogType.Error, new System.Text.RegularExpressions.Regex("version 9"));
-            Assert.AreEqual(0, PortalRecipes.Load(@"{ ""version"": 9, ""portals"": [] }").Portals.Count);
+            UnityEngine.TestTools.LogAssert.Expect(LogType.Error, new System.Text.RegularExpressions.Regex("version 1"));
+            Assert.AreEqual(0, PortalRecipes.Load(@"{ ""version"": 1, ""portals"": [] }").Portals.Count);
         }
 
         [Test]
-        public void Matches_SameRecipe()
+        public void Matches_SameIdentityAnyOrder()
         {
-            var recipe = Recipes().Find("a").Recipe;
-            Assert.IsTrue(PortalMath.Matches(recipe, Flat("light", "levitation", "convergence", "repetition"), 0.35f));
-            Assert.IsTrue(PortalMath.Matches(recipe, "light", new[] { "levitation", "convergence", "repetition" }, 0.35f));
+            var id = Recipes().Find("b").Identity;
+            Assert.IsTrue(PortalMath.Matches(id, Flat("earth", "crush", "pull"), Min, out int excess));
+            Assert.AreEqual(0, excess);
+            Assert.IsTrue(PortalMath.Matches(id, Flat("earth", "pull", "crush"), Min, out _));
         }
 
         [Test]
-        public void Matches_IgnoresSignOrder()
+        public void Matches_ToleratesOneExtraSignButNotTwo()
         {
-            var recipe = Recipes().Find("a").Recipe;
-            Assert.IsTrue(PortalMath.Matches(recipe, "light", new[] { "repetition", "levitation", "convergence" }, 0.35f));
+            var id = Recipes().Find("b").Identity;
+            Assert.IsTrue(PortalMath.Matches(id, Flat("earth", "crush", "pull", "weave"), Min, out int excess));
+            Assert.AreEqual(1, excess);
+            Assert.IsFalse(PortalMath.Matches(id, Flat("earth", "crush", "pull", "weave", "column"), Min, out _));
         }
 
         [Test]
-        public void Matches_ExtraOrMissingSignsFail()
+        public void Matches_MissingSignOrWrongSigilFails()
         {
-            var recipe = Recipes().Find("a").Recipe;
-            Assert.IsFalse(PortalMath.Matches(recipe, "light", new[] { "levitation", "convergence" }, 0.35f));
-            Assert.IsFalse(PortalMath.Matches(recipe, "light", new[] { "levitation", "convergence", "repetition", "weave" }, 0.35f));
-            // Mismo tamano pero con un signo repetido en vez de otro: no es el mismo multiconjunto.
-            Assert.IsFalse(PortalMath.Matches(recipe, "light", new[] { "levitation", "levitation", "repetition" }, 0.35f));
+            var id = Recipes().Find("b").Identity;
+            Assert.IsFalse(PortalMath.Matches(id, Flat("earth", "crush"), Min, out _));
+            Assert.IsFalse(PortalMath.Matches(id, Flat("fire", "crush", "pull"), Min, out _));
+            Assert.IsFalse(PortalMath.Matches(id, Flat(null, "crush", "pull"), Min, out _));
+            // Un glifo repetido no cubre dos signos distintos.
+            Assert.IsFalse(PortalMath.Matches(id, Flat("earth", "crush", "crush"), Min, out _));
         }
 
         [Test]
-        public void Matches_DifferentSigilFails()
+        public void Matches_LowConfidenceGlyphsDoNotCount()
         {
-            var recipe = Recipes().Find("a").Recipe;
-            Assert.IsFalse(PortalMath.Matches(recipe, "fire", new[] { "levitation", "convergence", "repetition" }, 0.35f));
-            Assert.IsFalse(PortalMath.Matches(recipe, null, new[] { "levitation", "convergence", "repetition" }, 0.35f));
-        }
-
-        [Test]
-        public void Matches_LowConfidenceFails()
-        {
-            var recipe = Recipes().Find("b").Recipe;
+            var id = Recipes().Find("b").Identity;
             var reading = Flat("earth", "crush", "pull");
-            Assert.IsTrue(PortalMath.Matches(recipe, reading, 0.35f));
-            reading.Signs[1] = new PortalGlyph("pull", 0.2f);
-            Assert.IsFalse(PortalMath.Matches(recipe, reading, 0.35f));
+            reading.Signs[1] = new PortalGlyph("pull", 0.1f);
+            Assert.IsFalse(PortalMath.Matches(id, reading, Min, out _));
+
+            // Un sobrante dudoso no cuenta como signo de mas.
+            var noisy = Flat("earth", "crush", "pull", "weave", "column");
+            noisy.Signs[3] = new PortalGlyph("weave", 0.05f);
+            Assert.IsTrue(PortalMath.Matches(id, noisy, Min, out int excess));
+            Assert.AreEqual(1, excess);
         }
 
         [Test]
-        public void Matches_NestedAcceptsInnersInAnyOrder()
+        public void Matches_NestedReadingNeverMatches()
         {
-            var recipe = Recipes().Find("n").Recipe;
-            var reading = new PortalReading();
-            reading.Inners = new System.Collections.Generic.List<PortalReading>
+            var id = Recipes().Find("b").Identity;
+            var nested = new PortalReading { Inners = new List<PortalReading> { Flat("earth", "crush", "pull") } };
+            Assert.IsFalse(PortalMath.Matches(id, nested, Min, out _));
+        }
+
+        [Test]
+        public void BestMatch_PrefersHigherCoverageThenLowerExcess()
+        {
+            var recipes = Recipes();
+            // a = light + {levitation, convergence}; c = light + {levitation, convergence, weave}.
+            // Con los tres signos coinciden las dos (c exacta, a con 1 de mas): gana c.
+            int full = PortalMath.BestMatch(recipes.Identities, Flat("light", "levitation", "convergence", "weave"), Min);
+            Assert.AreEqual("c", recipes.Portals[full].Id);
+            // Con dos signos solo coincide a.
+            int two = PortalMath.BestMatch(recipes.Identities, Flat("light", "levitation", "convergence"), Min);
+            Assert.AreEqual("a", recipes.Portals[two].Id);
+            // Con un sobrante ajeno coincide a (con exceso 1).
+            int extra = PortalMath.BestMatch(recipes.Identities, Flat("light", "levitation", "convergence", "crush"), Min);
+            Assert.AreEqual("a", recipes.Portals[extra].Id);
+        }
+
+        [Test]
+        public void BestMatch_NoneReturnsMinusOne()
+        {
+            var recipes = Recipes();
+            Assert.AreEqual(-1, PortalMath.BestMatch(recipes.Identities, Flat("fire", "crush"), Min));
+            Assert.AreEqual(-1, PortalMath.BestMatch(recipes.Identities, Flat("earth", "crush"), Min));
+            Assert.AreEqual(-1, PortalMath.BestMatch(null, Flat("earth", "crush", "pull"), Min));
+        }
+
+        // ---- Datos reales (Data/Portals/portals.json) ----
+
+        [Test]
+        public void RealFile_FourDistinctWellFormedIdentities()
+        {
+            var recipes = PortalRecipes.LoadDefault();
+            string[] ids = { "tower-study", "watchtower", "field-circle", "cave" };
+            foreach (string id in ids)
             {
-                Flat("crystal", "collection"),
-                Flat("wind-underfoot", "billowing", "levitation"),
-            };
-            Assert.IsTrue(PortalMath.Matches(recipe, reading, 0.35f));
+                var def = recipes.Find(id);
+                Assert.IsNotNull(def, "falta el portal " + id);
+                Assert.IsTrue(def.Identity.IsValid, id);
+                Assert.AreEqual(2, def.Identity.Signs.Length, id + ": 1 sigilo + 2 signos");
+                Assert.AreNotEqual(def.Identity.Signs[0], def.Identity.Signs[1], id + ": signos distintos");
+            }
+            AssertGlyphExists("sigils", recipes.Find(ids[0]).Identity.Sigil);
+            foreach (string id in ids)
+            {
+                AssertGlyphExists("sigils", recipes.Find(id).Identity.Sigil);
+                foreach (string s in recipes.Find(id).Identity.Signs) AssertGlyphExists("signs", s);
+            }
         }
 
         [Test]
-        public void Matches_NestedFailsWithRepeatedOrWrongInner()
+        public void RealFile_NoIdentityMatchesAnotherEvenWithTolerance()
         {
-            var recipe = Recipes().Find("n").Recipe;
-            var repeated = new PortalReading { Inners = new System.Collections.Generic.List<PortalReading>
-                { Flat("crystal", "collection"), Flat("crystal", "collection") } };
-            Assert.IsFalse(PortalMath.Matches(recipe, repeated, 0.35f));
-
-            var wrong = new PortalReading { Inners = new System.Collections.Generic.List<PortalReading>
-                { Flat("wind-underfoot", "billowing", "levitation"), Flat("crystal", "collection", "weave") } };
-            Assert.IsFalse(PortalMath.Matches(recipe, wrong, 0.35f));
-
-            var oneInner = new PortalReading { Inners = new System.Collections.Generic.List<PortalReading>
-                { Flat("wind-underfoot", "billowing", "levitation") } };
-            Assert.IsFalse(PortalMath.Matches(recipe, oneInner, 0.35f));
+            var recipes = PortalRecipes.LoadDefault();
+            Assert.GreaterOrEqual(recipes.Portals.Count, 4);
+            for (int i = 0; i < recipes.Portals.Count; i++)
+            {
+                for (int j = 0; j < recipes.Portals.Count; j++)
+                {
+                    if (i == j) continue;
+                    // Escribir la identidad j (y j con cualquier signo de mas) nunca debe leerse como la identidad i.
+                    var exact = Flat(recipes.Portals[j].Identity.Sigil, recipes.Portals[j].Identity.Signs);
+                    Assert.IsFalse(PortalMath.Matches(recipes.Portals[i].Identity, exact, Min, out _),
+                        $"{recipes.Portals[i].Id} coincide con la identidad de {recipes.Portals[j].Id}");
+                    foreach (string extra in recipes.Portals[i].Identity.Signs)
+                    {
+                        var withExtra = Flat(recipes.Portals[j].Identity.Sigil, Append(recipes.Portals[j].Identity.Signs, extra));
+                        Assert.IsFalse(PortalMath.Matches(recipes.Portals[i].Identity, withExtra, Min, out _),
+                            $"{recipes.Portals[i].Id} coincide con {recipes.Portals[j].Id} + {extra}");
+                    }
+                    Assert.AreEqual(j, PortalMath.BestMatch(recipes.Identities, exact, Min), "BestMatch debe devolver la propia identidad");
+                }
+            }
         }
 
-        [Test]
-        public void Matches_NestedAndFlatDoNotMix()
+        private static string[] Append(string[] signs, string extra)
         {
-            var flatRecipe = Recipes().Find("a").Recipe;
-            var nestedReading = new PortalReading { Inners = new System.Collections.Generic.List<PortalReading>
-                { Flat("light", "levitation", "convergence", "repetition") } };
-            Assert.IsFalse(PortalMath.Matches(flatRecipe, nestedReading, 0.35f));
-            Assert.IsFalse(PortalMath.Matches(Recipes().Find("n").Recipe, Flat("light"), 0.35f));
+            var list = new List<string>(signs) { extra };
+            return list.ToArray();
         }
 
-        [Test]
-        public void InRange_UsesRadius()
+        private static void AssertGlyphExists(string folder, string id)
         {
-            Assert.IsTrue(PortalMath.InRange(UnityEngine.Vector3.zero, new UnityEngine.Vector3(2f, 0f, 0f), 2.5f));
-            Assert.IsFalse(PortalMath.InRange(UnityEngine.Vector3.zero, new UnityEngine.Vector3(3f, 0f, 0f), 2.5f));
+            string dir = Path.GetFullPath(Path.Combine(Application.dataPath, "_Project", "Data", "Dictionary", folder));
+            string[] files = Directory.GetFiles(dir, "*-" + id + ".json");
+            Assert.AreEqual(1, files.Length, $"{folder}/{id} no esta en el diccionario");
         }
     }
 }

@@ -1,49 +1,25 @@
 {
-  "version": 1,
+  "version": 2,
   "portals": [
     {
       "id": "tower-study",
-      "pair": "watchtower",
       "displayName": "Portal del estudio",
-      "recipe": {
-        "sigil": "light",
-        "signs": ["levitation", "convergence", "repetition"],
-        "nested": false
-      }
+      "identity": { "sigil": "crystal", "signs": ["collection", "region"] }
     },
     {
       "id": "watchtower",
-      "pair": "tower-study",
       "displayName": "Portal de la atalaya",
-      "recipe": {
-        "sigil": "aeroform",
-        "signs": ["float", "billowing", "region", "weave"],
-        "nested": false
-      }
+      "identity": { "sigil": "aeroform", "signs": ["column", "pull"] }
     },
     {
       "id": "field-circle",
-      "pair": "cave",
       "displayName": "Circulo de la pradera",
-      "recipe": {
-        "sigil": "",
-        "signs": [],
-        "nested": true,
-        "inner": [
-          { "sigil": "wind-underfoot", "signs": ["levitation", "billowing"] },
-          { "sigil": "crystal", "signs": ["collection", "convergence", "weave"] }
-        ]
-      }
+      "identity": { "sigil": "earth", "signs": ["crush", "weave"] }
     },
     {
       "id": "cave",
-      "pair": "field-circle",
       "displayName": "Portal de la cueva",
-      "recipe": {
-        "sigil": "earth",
-        "signs": ["crush", "pull", "collection", "region"],
-        "nested": false
-      }
+      "identity": { "sigil": "fire", "signs": ["dispersion", "column"] }
     }
   ]
 }

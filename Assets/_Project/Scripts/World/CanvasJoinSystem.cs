@@ -24,14 +24,11 @@ namespace SpellSimulator.World
         [SerializeField, Tooltip("Segundos entre revisiones de los pares de candidatos.")]
         private float checkInterval = 0.25f;
         [SerializeField, Tooltip("Segundos que deben estar pegadas las mitades para unirse.")]
-        private float joinSeconds = 0.4f;
+        private float joinSeconds = 0.25f;
         [SerializeField, Tooltip("Segundos de enfriamiento de las mitades tras unirse.")]
         private float cooldownSeconds = 2f;
         [SerializeField, Tooltip("Segundos que sigue vivo el lienzo temporal del hechizo (es la fuente del campo magico).")]
         private float mergedLifetime = 10f;
-        [SerializeField, Tooltip("Tolerancia (m) de distancia al plano y entre bordes.")]
-        private float tolerance = CanvasJoinMath.DefaultTolerance;
-
         private struct Pair
         {
             public DrawingCanvas a;
@@ -40,6 +37,8 @@ namespace SpellSimulator.World
             /// <summary>Ya se evaluo y no se pudo unir: no reintenta hasta que se separen o se edite alguna.</summary>
             public bool blocked;
             public bool seen;
+            /// <summary>Ya se aviso "las mitades encajan" a este par.</summary>
+            public bool announced;
         }
 
         private struct Cooldown
@@ -74,6 +73,10 @@ namespace SpellSimulator.World
 
         // ---------------------------------------------------------------- candidatos
 
+        /// <summary>
+        /// Candidato: cualquier lienzo con trazos cuyo anillo propio NO esta cerrado (fase Drawing, aunque tenga un arco de menos
+        /// del 52 %, o Prepared). Armed/Spent/Charging tienen el anillo cerrado: esos no (las runas se fusionan con RuneJoin).
+        /// </summary>
         private bool Qualifies(DrawingCanvas canvas)
         {
             if (canvas == null || !canvas.isActiveAndEnabled || canvas.Session.IsEmpty) return false;
@@ -142,12 +145,20 @@ namespace SpellSimulator.World
                 if (!usable[i]) continue;
                 for (int j = i + 1; j < count; j++)
                 {
-                    if (!usable[j] || !CanvasJoinMath.AreAdjacent(rects[i], rects[j], tolerance)) continue;
+                    if (!usable[j] || !CanvasJoinMath.AreAdjacent(rects[i], rects[j])) continue;
                     int k = FindOrAddPair(candidates[i], candidates[j]);
                     if (k < 0) continue;
                     Pair p = pairs[k];
                     p.seen = true;
-                    if (!p.blocked) p.held += elapsed;
+                    if (!p.blocked)
+                    {
+                        p.held += elapsed;
+                        if (!p.announced)
+                        {
+                            p.announced = true;
+                            Player.Hud.Notify("join", "Las mitades encajan...", 1f);
+                        }
+                    }
                     pairs[k] = p;
                 }
             }
@@ -201,7 +212,8 @@ namespace SpellSimulator.World
             CanvasRect ra = RectOf(a), rb = RectOf(b);
             // Lo que pasa una vez por union (no por frame): la fusion reserva memoria.
             DrawingSession merged = CanvasJoinMath.Merge(ra, a.Session, rb, b.Session, out MergedLayout layout);
-            if (!caster.IsRingClosed(merged, new Vector2(layout.width, layout.height))) return false;
+            // Cada mitad debe aportar >= 25 % del anillo; si la costura quedo abierta (>= 85 % de cobertura) se cierra con un puente.
+            if (!caster.TryCloseRing(ref merged, new Vector2(layout.width, layout.height), a.Session.Strokes.Count)) return false;
 
             DrawingCanvas joined = CreateJoinedCanvas(a, layout, merged, out GameObject go);
             DiagnosticBus.OnDiagnosticsUpdated?.Invoke("<b>[Sello partido]</b> Las dos mitades se unieron.");
@@ -210,6 +222,7 @@ namespace SpellSimulator.World
             SpellIR spell = caster.Cast(joined);
             Destroy(go, mergedLifetime);
             if (!(spell.valid && spell.active)) return false;
+            Player.Hud.Notify("join", "Sello completado al unir las mitades", 3f);
 
             // Las mitades se gastan: se borran y descansan un rato.
             a.Clear();
