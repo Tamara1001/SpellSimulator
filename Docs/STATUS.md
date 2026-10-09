@@ -10,7 +10,7 @@ tags: [doc, estado]
 **Escenas:** `Pradera.unity` (mapa, indice 0; las posiciones movidas a mano se conservan en `Data/MapOverrides.json`) y `Escena.unity` (laboratorio).
 
 **Hecho en la octava tanda ([PLAN_OCTAVA_TANDA](PLAN_OCTAVA_TANDA.md)):** controles nuevos (E agarra/deja en el aire, T grimorio, Esc pantalla+pausa, Tab vista completa), tinta por metro normalizada + cartuchos + clases de tinta + cinturon (V cambia), retardo de lanzamiento con brillo, hechizos con fisica (roca, cristal, agua, viento), runas por material con desgaste y fusion, mitades de cualquier lienzo, circulos anidados, estructuras y 4 portales circulares con identidad de 3 runas, reposicion y reciclaje, 19 hechizos prearmados con descubrimiento, menu de pausa dentro del grimorio.
-**Siguiente:** F1 del multijugador; antes resolver KI-104 (WebGL) y verificar Relay sobre WebSocket (WebGL esta DENTRO del alcance). Contenido diferido del modo Libre: crear y guardar hechizos propios, aprender identidades de portal en libros, colocar los 3 libros nuevos y mostrar las pistas de hechizos en el grimorio. F0 incompleto: KI-118.
+**Siguiente:** F1 del multijugador (KI-104, WebGL, ya resuelto); verificar Relay sobre WebSocket (WebGL esta DENTRO del alcance). Contenido diferido del modo Libre: crear y guardar hechizos propios, aprender identidades de portal en libros, colocar los 3 libros nuevos y mostrar las pistas de hechizos en el grimorio. F0 incompleto: KI-118.
 
 ## Mapa mental rapido
 - Pipeline: `PlayerInteractor`/`PhysicalTool` -> `DrawingCanvas` -> `SpellCaster.Cast` -> `SpellOutputController` -> `MagicField`/`MagicWorld`.

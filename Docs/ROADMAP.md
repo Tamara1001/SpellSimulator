@@ -100,7 +100,7 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 - [ ] Tutorial (después de M6): notas en la torre o el primer libro. Enseña a "cerrar el anillo al final".
 - [ ] PlayMode tests del cast (KI-026). Documentación final de la evaluación.
 - [x] Menú principal (Sandbox, Duelo «próximamente», Información, Créditos, Salir), calidad gráfica Baja/Media/Alta en Opciones y build **WebGL** para itch.io (`SpellSimulator/Build/WebGL (itch.io)`).
-- [ ] WebGL en equipos ajenos: no se ve la tinta/lienzos/parte del libro según la usuaria (KI-104); pedir navegador, GPU y consola F12.
+- [x] WebGL en equipos ajenos (KI-104): resuelto 2026-10-09.
 - [ ] UI en VR: HUD, grimorio, lector de libros y menú son solo PC (KI-095, KI-054); pasar a world-space para Quest.
 - [ ] Probar a mano la sexta y séptima tanda (HUD, inventario, grimorio, torre, VFX, sellos, calidad): nada de eso se verificó con teclado y mouse reales.
 
@@ -131,7 +131,7 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 ## Siguiente (backlog priorizado para quien continúe)
 > Plan vigente de la octava tanda (controles, tinta, hechizos, runas, cinturón, mundo y portales, multijugador): [PLAN_OCTAVA_TANDA](PLAN_OCTAVA_TANDA.md).
 1. **Probar a mano** lo hecho (ver M7) y corregir lo que aparezca. Es lo que más valor da ahora.
-2. **WebGL/itch.io** (KI-104): con la consola del navegador de quien lo reporta, ubicar por qué no se ve la tinta/lienzos.
+2. ~~WebGL/itch.io (KI-104)~~ resuelto 2026-10-09.
 3. **Reconocimiento agua vs viento** (KI-105): juntar sellos mal leídos como fixtures (`Tests/Fixtures`, ver su README) y, con ~20 casos,
    afinar un desempate por estructura (cantidad de trazos rectos cortos) o reentrenar el modelo en la referencia.
 4. **Más hechizos prearmados + descubrirlos todos** y **crear/guardar hechizos propios** (ver `PLAN_OCTAVA_TANDA.md`, «Pendientes agregados»).

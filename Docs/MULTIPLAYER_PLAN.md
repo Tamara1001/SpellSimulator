@@ -499,7 +499,7 @@ cada 0,5 s. Los objetos agarrados y los cuerpos de hechizos siempre se ven.
 - **Todos tienen que usar el mismo transporte.** Si se aceptan clientes WebGL, el host y los demás también van por
   WebSocket/`wss`. Se puede, pero suma un poco de latencia.
 - El SDK de sesiones (`com.unity.services.multiplayer`) tiene soporte para WebGL: **a verificar**, versión y API.
-- Recordar KI-104: la tinta y los lienzos no se ven en WebGL. Eso hay que resolverlo antes.
+- KI-104 (tinta y lienzos invisibles en WebGL) quedó resuelto el 2026-10-09; ya no bloquea.
 - Sentis en WebGL es sólo CPU: conviene la lectura delegada (2.4, punto 4).
 
 ## 6. Plan por fases

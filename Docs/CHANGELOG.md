@@ -5,6 +5,11 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+
+## 2026-10-09 — F1 del multijugador: paquetes
+
+- Instalados Netcode for GameObjects 2.13.3 y Multiplayer Services 2.4.0 (trae Unity Transport 2.7.4, con WebSocket y `wss` para Relay: WebGL entra en el alcance). KI-104 (WebGL en equipos ajenos) marcado como resuelto. 409 tests EditMode en verde.
+
 ## 2026-10-09 — Cierre de la octava tanda
 - Ale probo a mano toda la checklist de PC de `TESTING.md`: en orden. Se marcan como resueltos KI-111, 112, 113, 115 y 116; quedan como **diferidos** (mejoras o contenido futuro, no bugs) KI-106..109, 114, 117 y 118. `STATUS.md` reescrito con el estado real (409 tests, plan 1-6 completo, F0 hecho, siguiente F1). Documentacion al dia para retomar el multijugador.
 
