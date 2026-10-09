@@ -27,7 +27,7 @@ Fuente de verdad: `GAME_DESIGN.md#controles`; repetir en `Learning/GrimoireTexts
 - **Tintas especiales** (tinteros de color propio, consumen más por metro): **poderosa** (aumenta mucho la potencia del hechizo) y **resistente** (el hechizo funciona en el agua). Se distinguen por el color del tintero y del trazo.
 - **Retardo de lanzamiento:** entre 0,5 y 2 s según el tamaño del hechizo; el anillo **brilla del color del elemento** (fuego rojo, agua celeste…); se puede mover el lienzo y apuntar; si se borra el anillo, se cancela. La dirección se toma al final.
 
-## 3. Hechizos
+## 3. Hechizos (HECHO 2026-10-09 salvo lo anotado en KI-106..109; falta la prueba a mano)
 - **Piedra:** crea **una roca** (tamaño = tamaño del anillo; la tinta poderosa la agranda y pesa más) que al terminar de formarse **cae al suelo**. Es un objeto físico: sirve de **defensa** (muro), **ataque** (arrojarla/lanzarla con modificadores) y **movilidad** (escalón para subir). Se puede mover, apilar y romper sellos. **Desaparece con el tiempo.**
 - **Cosas en el aire (fijadas con E):** a **1 min** se caen solas; las rocas desaparecen a los **2 min** (aplica a toda cosa que quedó volando).
 - **Agua:** chorro/caudal que empuja objetos y al jugador (partículas con colisión); moja, apaga fuego y rompe sellos (ya existe); **charcos** que escurren por la pendiente; **llena recipientes/zonas** y hace flotar objetos livianos; reacciona con cristal (**hielo**).

@@ -123,6 +123,12 @@ namespace SpellSimulator.EditorTools
             if (spot == Vector3.zero) { failures.Add("no se encontro un terreno plano para las pruebas"); yield break; }
             float ground = spot.y;
 
+            if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "SPELLS")
+            {
+                var probe = SpellsProbe(spot);
+                while (probe.MoveNext()) yield return probe.Current;
+                yield break;
+            }
             if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "CHARGE")
             {
                 var probe = ChargeProbe();
@@ -278,6 +284,55 @@ namespace SpellSimulator.EditorTools
 
         private static string Info(Rigidbody rb, float ground) =>
             $"[y={rb.position.y:F2} suelo={ground:F2} padre={(rb.transform.parent != null ? rb.transform.parent.name : "-")} cin={rb.isKinematic}]";
+
+        /// <summary>
+        /// Hechizos del bloque 3: lanza tierra (roca), cristal, agua y viento y revisa sus cuerpos fisicos y que no haya errores en consola.
+        /// Se activa con Only = "SPELLS".
+        /// </summary>
+        private static IEnumerator SpellsProbe(Vector3 spot)
+        {
+            var go = GameObject.Find("Paper_S");
+            var rb = go.GetComponent<Rigidbody>();
+            var pc = go.GetComponent<PhysicalCanvas>();
+            var canvas = go.GetComponent<DrawingCanvas>();
+            var caster = Object.FindFirstObjectByType<Casting.SpellCaster>();
+            caster.GetType(); // asegura referencia
+            var crate = GameObject.Find("Crate_1");
+
+            // Todos sobre el claro: el papel de pie mirando hacia el jugador (+Z -> la normal sale hacia -Z).
+            foreach (var sigil in new[] { "earth", "crystal", "water", "wind" })
+            {
+                Place(pc, rb, spot + new Vector3(0f, 1.2f, 0f));
+                rb.isKinematic = true;
+                go.transform.SetPositionAndRotation(spot + new Vector3(0f, 1.2f, 0f), Quaternion.identity);
+                if (crate != null)
+                {
+                    var crb = crate.GetComponent<Rigidbody>();
+                    if (crb != null) { crb.isKinematic = false; crb.position = spot + new Vector3(0.6f, 1.0f, 0f); crb.linearVelocity = Vector3.zero; }
+                }
+                yield return 0.3f;
+                var spell = sigil == "wind" ? HarnessSeals.Cast("Paper_S", "wind-directs-air", ("column", 270f), ("column", 90f)) : HarnessSeals.Cast("Paper_S", sigil);
+                Check(spell.valid && spell.active, $"{sigil}: el sello se compila y esta activo (estado: {spell.status})");
+                yield return 2.5f;
+                switch (sigil)
+                {
+                    case "earth":
+                        Check(Object.FindObjectsByType<ExpiringBody>(FindObjectsSortMode.None).Length > 0, "tierra: se creo una roca (ExpiringBody)");
+                        break;
+                    case "crystal":
+                        Check(Object.FindObjectsByType<Crystallized>(FindObjectsSortMode.None).Length > 0, "cristal: algo quedo cristalizado");
+                        break;
+                    case "water":
+                        Check(Object.FindObjectsByType<Reactions.WaterDropSink>(FindObjectsSortMode.None).Length > 0, "agua: las gotas tienen su WaterDropSink");
+                        break;
+                    case "wind":
+                        Check(Object.FindObjectsByType<Output.WindCone>(FindObjectsSortMode.None).Length > 0, "viento: el hechizo tiene su WindCone");
+                        break;
+                }
+                Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
+                yield return 0.3f;
+            }
+        }
 
         /// <summary>
         /// Retardo de lanzamiento: un sello cerrado en una hoja carga (brilla) y despues lanza; si se borra durante la carga, se cancela;

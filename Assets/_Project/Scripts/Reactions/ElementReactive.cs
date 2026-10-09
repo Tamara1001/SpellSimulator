@@ -31,6 +31,13 @@ namespace SpellSimulator.Reactions
         /// <summary>Lo que arde es fuego; si no, el elemento de su material.</summary>
         public Compiler.ElementType Element => state.Burning ? Compiler.ElementType.Fire : profile != null ? profile.element : Compiler.ElementType.None;
         public ReactiveState State => state;
+        private bool crystallized;
+        /// <summary>Cristalizado por el hechizo de cristal: no arde, no se moja ni se rompe mientras dure. Al soltarlo se repinta.</summary>
+        public bool Crystallized
+        {
+            get => crystallized;
+            set { crystallized = value; pending = default; if (!value) RefreshLook(); }
+        }
         public Bounds WorldBounds => rend != null ? rend.bounds : new Bounds(transform.position, Vector3.one * 0.5f);
 
         private Exposure pending;
@@ -59,12 +66,12 @@ namespace SpellSimulator.Reactions
             RefreshLook();
         }
 
-        public void AddExposure(in Exposure exposure, float scale) => pending.Add(exposure, scale);
+        public void AddExposure(in Exposure exposure, float scale) { if (!crystallized) pending.Add(exposure, scale); }
 
         /// <summary>Avanza el estado con lo acumulado desde el ultimo tick. Lo llama MagicWorld.</summary>
         public ReactionEvents Tick(float dt)
         {
-            if (profile == null) { pending = default; return ReactionEvents.None; }
+            if (profile == null || crystallized) { pending = default; return ReactionEvents.None; }
             ReactionEvents events = ReactionModel.Step(ref state, profile.parameters, pending, dt);
             pending = default;
             if (events != ReactionEvents.None)
@@ -107,7 +114,7 @@ namespace SpellSimulator.Reactions
 
         private void RefreshLook()
         {
-            if (!tintRenderer || rend == null) return;
+            if (!tintRenderer || rend == null || crystallized) return;
             rend.GetPropertyBlock(block);
             block.SetColor(BaseColorId, Tint(baseColor));
             rend.SetPropertyBlock(block);

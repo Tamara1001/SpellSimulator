@@ -36,7 +36,9 @@ namespace SpellSimulator.World
         private void OnReacted(ElementReactive source, ReactionEvents events)
         {
             string reason = null;
-            if ((events & ReactionEvents.Soaked) != 0) reason = "El papel se mojo: la tinta se corrio.";
+            // Tinta resistente: el agua no corre el sello (funciona mojado y bajo el agua); el fuego si lo quema.
+            bool waterproof = Core.InkKindInfo.IsWaterproof(Core.InkMath.Dominant(canvas.Session.Strokes));
+            if ((events & ReactionEvents.Soaked) != 0 && !waterproof) reason = "El papel se mojo: la tinta se corrio.";
             else if ((events & ReactionEvents.Ignited) != 0) reason = "El papel se prendio fuego.";
             if (reason == null || canvas.Session.IsEmpty) return;
 

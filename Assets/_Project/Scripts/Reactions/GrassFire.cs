@@ -148,6 +148,16 @@ namespace SpellSimulator.Reactions
         private static readonly Collider[] overlaps = new Collider[MaxOverlaps];
         private static readonly ElementReactive[] hitReactives = new ElementReactive[MaxOverlaps];
 
+        /// <summary>Instancia activa (la usa el viento para sesgar la propagacion).</summary>
+        public static GrassFire Current { get; private set; }
+
+        // Sesgo de viento: zonas (del cono de un hechizo de viento) donde el fuego se propaga mas a favor del viento y menos en contra.
+        // Cada entrada expira sola si no se refresca (AddWindBias). Preasignado, sin allocations.
+        private const int MaxWindBiases = 6;
+        private const float WindBiasSeconds = 0.4f;
+        private struct WindBias { public float X, Z, Dx, Dz, Strength, RadiusSq, Expires; }
+        private readonly WindBias[] windBiases = new WindBias[MaxWindBiases];
+
         /// <summary>Celdas que estan ardiendo ahora.</summary>
         public int BurningCells => burningCells;
         /// <summary>Celdas ya quemadas (no vuelven a arder hasta el reinicio).</summary>
@@ -192,12 +202,14 @@ namespace SpellSimulator.Reactions
 
         private void OnEnable()
         {
+            Current = this;
             GroundMarks.Marked += OnMarked;
             MagicWorld.WorldReset += ResetAll;
         }
 
         private void OnDisable()
         {
+            if (Current == this) Current = null;
             GroundMarks.Marked -= OnMarked;
             MagicWorld.WorldReset -= ResetAll;
         }
@@ -225,6 +237,47 @@ namespace SpellSimulator.Reactions
         }
 
         // ---------------------------------------------------------------- API publica
+
+        /// <summary>
+        /// Sesga la propagacion del fuego hacia la direccion del viento (solo componente horizontal) dentro de un radio (m) alrededor
+        /// de <paramref name="point"/>, con intensidad 0..1. Expira en WindBiasSeconds si no se vuelve a llamar (el hechizo lo refresca).
+        /// </summary>
+        public void AddWindBias(Vector3 point, Vector3 direction, float strength, float radius)
+        {
+            float hx = direction.x, hz = direction.z;
+            float len = Mathf.Sqrt(hx * hx + hz * hz);
+            if (len < 0.2f || strength <= 0f) return; // viento casi vertical: no empuja el fuego por el suelo
+            hx /= len; hz /= len;
+            float now = Time.time;
+            int slot = 0;
+            float oldest = float.MaxValue;
+            for (int i = 0; i < MaxWindBiases; i++)
+            {
+                ref WindBias b = ref windBiases[i];
+                // Refresca la entrada del mismo cono (centro cercano y misma direccion).
+                if (b.Expires > now && Mathf.Abs(b.X - point.x) < 0.75f && Mathf.Abs(b.Z - point.z) < 0.75f && b.Dx * hx + b.Dz * hz > 0.9f) { slot = i; break; }
+                if (b.Expires < oldest) { oldest = b.Expires; slot = i; }
+            }
+            windBiases[slot] = new WindBias
+            {
+                X = point.x, Z = point.z, Dx = hx, Dz = hz, Strength = Mathf.Clamp01(strength) * len,
+                RadiusSq = radius * radius, Expires = now + WindBiasSeconds
+            };
+        }
+
+        /// <summary>Indice de la zona de viento (vigente) que contiene el centro de la celda, o -1.</summary>
+        private int FindWindBias(int cx, int cz, float now)
+        {
+            float x = CellCenterX(cx), z = CellCenterZ(cz);
+            for (int i = 0; i < MaxWindBiases; i++)
+            {
+                ref WindBias b = ref windBiases[i];
+                if (b.Expires <= now) continue;
+                float dx = x - b.X, dz = z - b.Z;
+                if (dx * dx + dz * dz <= b.RadiusSq) return i;
+            }
+            return -1;
+        }
 
         /// <summary>Enciende la celda que contiene el punto y las celdas cuyo centro esta dentro del radio (m).</summary>
         public void Ignite(Vector3 worldPoint, float radius)
@@ -367,6 +420,7 @@ namespace SpellSimulator.Reactions
         {
             // Snapshot: las celdas nuevas se agregan al final y arden desde la proxima pasada.
             int count = listCount;
+            float now = Time.time;
             for (int r = 0; r < count; r++)
             {
                 int c = burning[r];
@@ -376,6 +430,7 @@ namespace SpellSimulator.Reactions
                 float chance = spreadChance * decayPowers[Mathf.Min(g, DecayTableSize - 1)];
                 int cx = c % GridSize;
                 int cz = c / GridSize;
+                int wind = FindWindBias(cx, cz, now);
                 for (int dz = -1; dz <= 1; dz++)
                 {
                     int nz = cz + dz;
@@ -386,7 +441,10 @@ namespace SpellSimulator.Reactions
                         if ((dx == 0 && dz == 0) || nx < 0 || nx >= GridSize) continue;
                         int n = nz * GridSize + nx;
                         if (state[n] != Grass) continue;
-                        if (NextUnit() < chance) TryIgnite(n, (byte)(g + 1));
+                        float p = chance;
+                        // Viento: a favor del cono se propaga mas, en contra menos (WindMath.SpreadBias).
+                        if (wind >= 0) p = Mathf.Min(1f, chance * WindMath.SpreadBias(dx, dz, windBiases[wind].Dx, windBiases[wind].Dz, windBiases[wind].Strength));
+                        if (NextUnit() < p) TryIgnite(n, (byte)(g + 1));
                     }
                 }
             }

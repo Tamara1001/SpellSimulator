@@ -45,6 +45,7 @@ namespace SpellSimulator.Reactions
             ExposeToSpells();
             ExposeToWater();
             SpreadFire();
+            SnuffSmallFlames();
             DamageHealth(dt);
 
             var all = ElementReactive.All;
@@ -114,6 +115,21 @@ namespace SpellSimulator.Reactions
                     float submerged = water.Submerged(found[i].WorldBounds);
                     if (submerged > 0f) found[i].AddExposure(Immersion, submerged);
                 }
+            }
+        }
+
+        /// <summary>Enfriamiento brusco con el que un soplo de viento apaga una llama chica (vela, antorcha).</summary>
+        private static readonly Exposure Snuff = new Exposure { Heat = -40f };
+
+        /// <summary>El cono de un hechizo de viento apaga las llamas chicas que alcanza.</summary>
+        private void SnuffSmallFlames()
+        {
+            var all = ElementReactive.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                var r = all[i];
+                if (r == null || !r.isActiveAndEnabled || !r.State.Burning) continue;
+                if (Output.WindCone.IsSmallFlame(r) && Output.WindCone.ShouldSnuff(r.WorldBounds.center)) r.AddExposure(Snuff, 1f);
             }
         }
 

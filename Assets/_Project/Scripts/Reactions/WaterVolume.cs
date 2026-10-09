@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Compiler;
+using SpellSimulator.Interfaces;
 using SpellSimulator.Output;
 
 namespace SpellSimulator.Reactions
@@ -12,9 +13,10 @@ namespace SpellSimulator.Reactions
     /// - Succion de agua (canon: el pull atrae su mismo elemento): un hechizo de agua con pull cerca tira un chorro desde
     ///   la superficie hacia el sello.
     /// Lo que esta adentro se moja (MagicWorld). Sin GC por frame.
+    /// Congelable (agua + cristal, <see cref="IFreezable"/>): placa de hielo solida en la superficie dentro de la esfera.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
-    public class WaterVolume : MonoBehaviour
+    public class WaterVolume : MonoBehaviour, IFreezable
     {
         public static readonly List<WaterVolume> All = new List<WaterVolume>();
         /// <summary>(punto, fuerza 0-1) cuando algo cae al agua.</summary>
@@ -88,6 +90,24 @@ namespace SpellSimulator.Reactions
             Bounds water = volume.bounds;
             if (b.max.x < water.min.x || b.min.x > water.max.x || b.max.z < water.min.z || b.min.z > water.max.z) return 0f;
             return Mathf.Clamp01((SurfaceY - b.min.y) / Mathf.Max(b.size.y, 1e-3f));
+        }
+
+        /// <summary>
+        /// Congela la superficie dentro de la esfera: una placa de hielo (IceSheet) del tamano del corte de la esfera con el
+        /// plano del agua, recortada a la pileta, que sostiene peso <paramref name="seconds"/> s y se derrite.
+        /// </summary>
+        public bool Freeze(Vector3 center, float radius, float seconds)
+        {
+            float dy = SurfaceY - center.y;
+            if (seconds <= 0f || Mathf.Abs(dy) >= radius) return false;
+            float r = Mathf.Sqrt(radius * radius - dy * dy);
+            Bounds b = volume.bounds;
+            float minX = Mathf.Max(center.x - r, b.min.x), maxX = Mathf.Min(center.x + r, b.max.x);
+            float minZ = Mathf.Max(center.z - r, b.min.z), maxZ = Mathf.Min(center.z + r, b.max.z);
+            if (maxX - minX < 0.05f || maxZ - minZ < 0.05f) return false;
+            var top = new Vector3((minX + maxX) * 0.5f, SurfaceY, (minZ + maxZ) * 0.5f);
+            AddRipple(top, 0.5f);
+            return IceSheet.Create(top, (maxX - minX) * 0.5f, (maxZ - minZ) * 0.5f, IceSheet.DefaultThickness, seconds) != null;
         }
 
         public void AddRipple(Vector3 at, float strength)

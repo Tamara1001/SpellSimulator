@@ -17,6 +17,10 @@ namespace SpellSimulator.World
         private Vector3 anchor;
         private Quaternion baseRotation;
         private float phase;
+        private float pinnedAt;
+
+        /// <summary>Segundos que una cosa dejada flotando con E se sostiene antes de caerse sola (regla general de las cosas en el aire).</summary>
+        public const float FloatSeconds = 60f;
 
         /// <summary>Deja el cuerpo flotando donde esta. originalKinematic/originalGravity: lo que tenia antes de agarrarlo.</summary>
         public static void Pin(Rigidbody body, bool originalKinematic, bool originalGravity)
@@ -29,6 +33,7 @@ namespace SpellSimulator.World
             pin.anchor = body.position;
             pin.baseRotation = body.rotation;
             pin.phase = Random.value * 6.28f;
+            pin.pinnedAt = Time.time;
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.zero;
             body.useGravity = false;
@@ -57,6 +62,7 @@ namespace SpellSimulator.World
         private void Update()
         {
             if (rb == null || !rb.isKinematic) return;
+            if (Time.time - pinnedAt >= FloatSeconds) { Release(); return; }
             float t = Time.time * BobSpeed + phase;
             // Tres ondas de periodos distintos: no se repite de forma obvia.
             Vector3 offset = new Vector3(Mathf.Sin(t * 0.61f) * DriftMeters, Mathf.Sin(t) * BobHeight, Mathf.Cos(t * 0.47f) * DriftMeters);

@@ -57,6 +57,16 @@ namespace SpellSimulator.Output
         private float areaFactor;
         private bool burstApplied;
 
+        // Viento: arrastre cuadratico (WindMath.Drag) en vez del acople lineal; la tinta poderosa lo potencia y alarga el cono.
+        private bool isWind;
+        private float windGain;
+        private float coneSpread;
+
+        /// <summary>Velocidad del flujo (m/s); en el viento ya incluye la tinta poderosa.</summary>
+        public float WindSpeed => flowSpeed;
+        /// <summary>Largo del chorro/cono (m); en el viento escala con la tinta poderosa.</summary>
+        public float ConeLength { get; private set; }
+
         public void Init(SpellIR compiled, SealFrame sealFrame, ElementLook look, GameObject source = null)
         {
             Source = source;
@@ -68,9 +78,24 @@ namespace SpellSimulator.Output
             areaFactor = Mathf.Clamp((frame.Radius * frame.Radius) / (ReferenceRadius * ReferenceRadius), 0.25f, 4f);
             // Misma velocidad que las particulas: lo que se ve es lo que empuja.
             flowSpeed = (2f + 8f * compiled.force) * look.speed;
+            isWind = compiled.element == ElementType.Wind;
+            float inkBoost = isWind && compiled.inkPower > 0f ? compiled.inkPower : 1f;
+            if (isWind) flowSpeed = Mathf.Min(flowSpeed * inkBoost, 30f);
+            windGain = push * Mathf.Sqrt(areaFactor) * Mathf.Lerp(0.6f, 1f, compiled.quality);
+            coneSpread = Mathf.Clamp01(compiled.spread);
+            ConeLength = frame.Scale * (4f + 10f * compiled.range) * inkBoost;
             coupling = BaseCoupling * push * areaFactor * Mathf.Lerp(0.6f, 1f, compiled.quality);
-            ReachRadius = frame.Scale * Mathf.Max(4f + 10f * compiled.range, 6f);
+            ReachRadius = frame.Scale * Mathf.Max(4f + 10f * compiled.range, 6f) * inkBoost;
         }
+
+        /// <summary>Radio del chorro a una distancia axial. Viento: se abre como cono segun la dispersion (spread).</summary>
+        private float JetRadiusAt(float along, float length)
+        {
+            float radius = frame.Scale * 0.9f / plan.Focus;
+            return isWind ? radius * (1f + 1.5f * coneSpread * Mathf.Clamp01(along / length)) : radius;
+        }
+
+        private float JetMaxRadius => JetRadiusAt(ConeLength, ConeLength);
 
         private void OnEnable() => Active.Add(this);
         private void OnDisable() => Active.Remove(this);
@@ -99,9 +124,9 @@ namespace SpellSimulator.Output
             if (plan.Has(PlanPrimitive.Jet))
             {
                 Vector3 dir = frame.Direction(plan.Aim);
-                float length = frame.Scale * (4f + 10f * spell.range);
-                float radius = frame.Scale * 0.9f / plan.Focus;
+                float length = ConeLength;
                 float along = Vector3.Dot(offset, dir);
+                float radius = JetRadiusAt(along, length);
                 float off = (offset - dir * along).magnitude;
                 if (along >= 0f && along <= length && off <= radius)
                     best = Mathf.Max(best, envelope * (1f - 0.5f * along / length) * (1f - 0.5f * off / radius));
@@ -177,6 +202,7 @@ namespace SpellSimulator.Output
         /// </summary>
         private void Drag(Rigidbody rb, Vector3 desiredVelocity, float strength)
         {
+            if (isWind) { WindDrag(rb, desiredVelocity, strength); return; }
             float speed = desiredVelocity.magnitude;
             if (speed < 1e-4f) return;
             Vector3 dir = desiredVelocity / speed;
@@ -184,6 +210,19 @@ namespace SpellSimulator.Output
             if (missing <= 0f) return;
             float a = Mathf.Min(missing * coupling * strength * MassFactor(rb), MaxAcceleration);
             rb.AddForce(dir * a, ForceMode.Acceleration);
+        }
+
+        /// <summary>
+        /// Viento: arrastre cuadratico F = 0.5 rho Cd A (vViento - vCuerpo)|.|, a = F/m, con A = cara mas grande de las bounds del
+        /// collider y tope MaxAcceleration. Los livianos vuelan, los pesados casi no se mueven. Cd = 1 (no hay Cd por material aun).
+        /// </summary>
+        private void WindDrag(Rigidbody rb, Vector3 windVelocity, float strength)
+        {
+            float area = 0f;
+            if (rb.TryGetComponent(out Collider col)) area = WindMath.ProjectedArea(col.bounds.size);
+            if (area < 0.01f) area = 0.5f; // collider apagado/sin bounds (p. ej. el jugador): area tipica
+            Vector3 a = WindMath.Drag(windVelocity, rb.linearVelocity, rb.mass, area, WindMath.DefaultCd, MaxAcceleration);
+            rb.AddForce(a * (Mathf.Min(strength, 2f) * windGain), ForceMode.Acceleration);
         }
 
         private void ApplyBurst()
@@ -206,9 +245,8 @@ namespace SpellSimulator.Output
         private void ApplyJet(float envelope)
         {
             Vector3 dir = frame.Direction(plan.Aim);
-            float length = frame.Scale * (4f + 10f * spell.range);
-            float radius = frame.Scale * 0.9f / plan.Focus;
-            int n = Gather(frame.Origin + dir * length * 0.5f, length * 0.5f + radius);
+            float length = ConeLength;
+            int n = Gather(frame.Origin + dir * length * 0.5f, length * 0.5f + JetMaxRadius);
             for (int i = 0; i < n; i++)
             {
                 var rb = bodies[i];
@@ -216,6 +254,7 @@ namespace SpellSimulator.Output
                 float along = Vector3.Dot(offset, dir);
                 if (along < 0f || along > length) continue;
                 float off = (offset - dir * along).magnitude;
+                float radius = JetRadiusAt(along, length);
                 if (off > radius) continue;
                 float falloff = (1f - 0.5f * along / length) * (1f - off / radius);
                 // La lente concentra el caudal: mas acople en un tubo mas angosto.

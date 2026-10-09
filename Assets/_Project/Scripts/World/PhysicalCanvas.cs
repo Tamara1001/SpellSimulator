@@ -55,6 +55,10 @@ namespace SpellSimulator.World
 
         // Estado de reposo.
         private bool floating;
+        // Lo que el jugador deja flotando se cae solo al minuto (los que flotan por diseno no).
+        private const float FloatSeconds = 60f;
+        private bool floatTimed;
+        private float floatSince;
         private Vector3 floatAnchor;
         private Quaternion floatRotation = Quaternion.identity;
         private float bobPhase;
@@ -135,7 +139,7 @@ namespace SpellSimulator.World
             if (focused) SetFocus(null, false);
             // La vista completa (V) lo habia hecho hijo de la camara: sin esto, soltarlo con E/Q/rueda lo dejaba pegado al centro de la pantalla.
             transform.SetParent(null);
-            if (pin) StartFloating();
+            if (pin) StartFloating(true);
             else Fall();
         }
 
@@ -191,7 +195,7 @@ namespace SpellSimulator.World
         }
 
         /// <summary>G: lo deja flotando en el aire, enderezado, con un vaiven suave. El interactor ya lo solto.</summary>
-        public void Pin() => StartFloating();
+        public void Pin() => StartFloating(true);
 
         /// <summary>Arrojado (Q): cae con fisica y se acuesta con la cara hacia arriba.</summary>
         public void Throw(Vector3 velocity)
@@ -228,8 +232,10 @@ namespace SpellSimulator.World
         }
 
         /// <summary>Queda en el aire, parado y derecho, mirando hacia donde mira su cara.</summary>
-        private void StartFloating()
+        private void StartFloating(bool timed = false)
         {
+            floatTimed = timed;
+            floatSince = Time.time;
             Vector3 normal = canvas != null ? canvas.FaceNormal : transform.forward;
             Vector3 face = Mathf.Abs(normal.y) > 0.75f
                 ? (normal.y > 0f ? Vector3.up : Vector3.down)
@@ -281,6 +287,12 @@ namespace SpellSimulator.World
             }
             if (floating)
             {
+                if (floatTimed)
+                {
+                    // Enfocado: no cae (se vuelve a contar el minuto).
+                    if (focused) floatSince = Time.time;
+                    else if (Time.time - floatSince >= FloatSeconds) { Fall(); return; }
+                }
                 float t = Time.time * bobSpeed + bobPhase;
                 // Tres ondas de periodos distintos: se mueve sin repetirse de forma obvia.
                 Vector3 offset = new Vector3(Mathf.Sin(t * 0.61f) * driftMeters, Mathf.Sin(t) * bobHeight, Mathf.Cos(t * 0.47f) * driftMeters);

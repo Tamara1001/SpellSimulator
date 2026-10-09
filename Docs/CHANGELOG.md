@@ -5,6 +5,15 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-09 — Bloque 3 del plan: roca, cristal, agua, viento y efectos de la tinta
+- **Punto de enganche:** `Output/Bodies/SpellBodies.cs` (llamado desde `SpellOutputController.SpawnSpellEffect`) agrega el cuerpo fisico propio de cada elemento. Modulos: `RockSpell`, `CrystalSpell`, `WaterSpell`, `WindSpell` (+ `*Math` puros con tests: 231 EditMode en total).
+- **Roca (tierra):** una roca fisica (radio = anillo, mas grande con tinta poderosa) que se forma flotando y cae; agarrable, arrojable, sirve de muro/escalon/proyectil; maximo 10; desaparece a los 120 s (`ExpiringBody`). **Cosas en el aire:** lo fijado con E se cae solo al minuto (`PinnedBody`, `PhysicalCanvas`).
+- **Cristal:** esfera de radio anillo x4 (8-25 s): cristaliza los cuerpos cercanos (rigidos, quietos, indestructibles, celestes), placa de cristal en el piso y congela agua (`IFreezable`).
+- **Agua:** gotas que colisionan, charcos que escurren por la pendiente (16), recipientes que se llenan (`WaterContainer`, menu `SpellSimulator/Water/Setup Containers`), zona inundada que hace flotar objetos livianos y hielo sobre lagos/charcos.
+- **Viento:** arrastre ~ v^2/masa en un cono (los livianos vuelan mas), columna de aire que hace planear al jugador (`WindColumn`/`PlayerMovement`), el fuego del pasto se propaga segun el viento (`GrassFire.AddWindBias`) y el cono apaga llamas chicas (`MagicWorld.SnuffSmallFlames`).
+- **Tinta:** la poderosa ya agranda roca, cristal y caudal de agua/viento (`inkPower`); la resistente impide que el agua rompa el sello (`SealBreaker`: funciona mojado y bajo el agua).
+- Verificado: compilacion, 231 tests, smoke de Play y `HarnessCanvasMatrix Only=SPELLS` (lanza tierra, cristal, agua y viento sin errores: 8 chequeos). Hecho por subagentes (Sonnet: roca, cristal, viento; Opus: agua). Pendiente de probar a mano. Pendientes conocidos en KNOWN_ISSUES (KI-106 a KI-109).
+
 ## 2026-10-09 — Retardo de lanzamiento con brillo del anillo
 - Cerrar el anillo de un sello (sin disparador) ya no lanza al instante: pasa a la fase `Charging` entre 0,5 y 2 s segun el tamano del anillo (`SealCharge.Duration`). Se puede mover el lienzo y apuntar; si se borra o edita durante la carga se cancela, y un trazo nuevo la reinicia. Runas, placas, estampas y `Cast` directo siguen instantaneos. `SpellCaster.castDelayEnabled` lo apaga.
 - Brillo (`Output/SealGlowDirector` + `Resources/SealGlow.shader`): el anillo brilla del color del elemento (fuego rojo, agua celeste...), pulsa mas rapido y hace un destello al lanzar. Se crea solo junto al `SpellCaster`.

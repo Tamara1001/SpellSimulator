@@ -263,6 +263,14 @@ namespace SpellSimulator.Player
             // Quieto sobre una rampa: la gravedad empuja contra el piso (no a lo largo) para no resbalar.
             Vector3 gravity = Vector3.up * customGravity;
             if (isGrounded && !hasInput) gravity = -groundNormal * Mathf.Abs(customGravity);
+            // Corriente de aire ascendente (hechizo de viento hacia arriba): planea con poca gravedad y sube suave hasta la velocidad de la columna.
+            float updraft = Output.WindColumn.UpdraftAt(rb.position);
+            if (updraft > 0f)
+            {
+                gravity = Vector3.up * (customGravity * 0.2f);
+                float missing = updraft - rb.linearVelocity.y;
+                if (missing > 0f) gravity += Vector3.up * Mathf.Min(missing * 8f, 30f);
+            }
             rb.AddForce(gravity, ForceMode.Acceleration);
         }
     }

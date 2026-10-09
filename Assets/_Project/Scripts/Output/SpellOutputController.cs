@@ -60,6 +60,7 @@ namespace SpellSimulator.Output
             var manifestation = go.AddComponent<SpellManifestation>();
             manifestation.Init(spell, frame, look);
             go.AddComponent<MagicField>().Init(spell, frame, look, canvas.gameObject);
+            SpellBodies.Spawn(spell, frame, look, canvas, go);
 
             Track(manifestation);
             Debug.Log($"[VFX Output] {spell.element} ({spell.sigilId}) | {spell.plan?.Primitives} | " +

@@ -364,9 +364,10 @@ namespace SpellSimulator.EditorTools.Map
             bucket.Frustum(Matrix4x4.identity, 0.13f, 0.16f, 0f, 0.28f, 8, WoodLight, false, true);
             bucket.Frustum(Matrix4x4.Translate(new Vector3(0f, 0.05f, 0f)), 0.138f, 0.14f, 0f, 0.03f, 8, Iron, false);
             bucket.Frustum(Matrix4x4.Translate(new Vector3(0f, 0.22f, 0f)), 0.152f, 0.155f, 0f, 0.03f, 8, Iron, false);
-            bucket.Frustum(Matrix4x4.identity, 0.145f, 0.145f, 0.2f, 0.21f, 8, new Color(0.35f, 0.55f, 0.7f), true, false);
-            LightProp(map, material, "Bucket_Water", bucket, origin + TowerBuilder.Polar(3.35f, 194f, 0.05f), 0f,
+            // El agua del balde ya no va en la malla: la dibuja WaterContainer (nivel que sube, baja y se derrama).
+            var bucketGo = LightProp(map, material, "Bucket_Water", bucket, origin + TowerBuilder.Polar(3.35f, 194f, 0.05f), 0f,
                 new Vector3(0.3f, 0.28f, 0.3f), new Vector3(0f, 0.14f, 0f), 1.5f, "balde", WoodPath, 0.1f);
+            WaterContainerSetup.Configure(bucketGo);
 
             Sign(stations, material, "Sign_WaterStation", origin + TowerBuilder.Polar(3.45f, 160f, 0.05f), origin + new Vector3(0f, 0f, -1.5f),
                 "2 · Estación de agua", "Dibujá el sigilo <b>Agua</b>\nen la pizarra del muro: el chorro\ncae sobre la pila y mueve el barquito.\n<size=75%>Ojo: el agua borra la tinta.</size>");
