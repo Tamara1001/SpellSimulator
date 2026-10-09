@@ -81,6 +81,11 @@ namespace SpellSimulator.Learning
         private const int ButtonPool = 20, LabelPool = 20, OrnamentPool = 4;
         private const int Left = 0, Right = 1;
 
+        /// <summary>Distancia (m) a la que un grimorio suelto vuelve al inventario (tras GrimoireMath.ReturnSeconds).</summary>
+        public const float ReturnDistance = 12f;
+        private const float ReturnCheckInterval = 0.5f;
+        private float nextReturnCheck, awaySeconds;
+
         private Transform root;
         private Rigidbody body;
         private readonly Transform[] pages = new Transform[2];
@@ -194,7 +199,8 @@ namespace SpellSimulator.Learning
                 else if (!focused) EnterFocus();
                 else Close();
             }
-            if (!IsOpen) return;
+            if (!IsOpen) { awaySeconds = 0f; return; }
+            CheckReturnToInventory();
 
             // Flanco de subida del clic: en modo fijo presiona el boton bajo el puntero.
             bool usingTool = input.IsUsingTool;
@@ -208,6 +214,29 @@ namespace SpellSimulator.Learning
 
             UpdateHover();
             AnimateStroke();
+        }
+
+        /// <summary>
+        /// Libro suelto (flotando en el mundo: ni arrastrado, ni en la mano de VR, ni a pantalla completa) y lejos del
+        /// jugador: tras unos segundos se oculta y vuelve al inventario (T lo abre de nuevo). Chequeo cada 0.5 s.
+        /// </summary>
+        private void CheckReturnToInventory()
+        {
+            if (Time.time < nextReturnCheck) return;
+            float dt = nextReturnCheck <= 0f ? ReturnCheckInterval : Time.time - (nextReturnCheck - ReturnCheckInterval);
+            nextReturnCheck = Time.time + ReturnCheckInterval;
+            if (viewer == null) viewer = Camera.main;
+            if (viewer == null || root == null) return;
+
+            float distance = Vector3.Distance(viewer.transform.position, root.position);
+            bool held = remoteHeld || root.parent != transform;
+            bool inHand = focused;
+            awaySeconds = distance > ReturnDistance && !held && !inHand ? awaySeconds + dt : 0f;
+            if (!GrimoireMath.ShouldReturn(distance, held, inHand, awaySeconds)) return;
+
+            awaySeconds = 0f;
+            Close();
+            Hud.Notify("book", "El grimorio volvio a tu inventario (T)", 3f);
         }
 
         // ---------------------------------------------------------------- abrir / cerrar

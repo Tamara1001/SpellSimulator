@@ -193,6 +193,14 @@ namespace SpellSimulator.EditorTools
                 Check(closing && reopening && door.IsOpen && !door.IsMoving, "la puerta alterna y el reinicio la deja abierta");
             }
 
+            // --- Runas de material (bloque 4): la de metal del campo y la de oro del estudio, con su Rune y sus grietas.
+            var metalGo = Find("ImpactMetal_M");
+            var goldGo = Find("ImpactGold_S");
+            var metalRune = metalGo != null ? metalGo.GetComponent<Rune>() : null;
+            var goldRune = goldGo != null ? goldGo.GetComponent<Rune>() : null;
+            Check(metalRune != null && metalRune.Kind == RuneKind.Metal && goldRune != null && goldRune.Kind == RuneKind.Gold
+                && metalGo.GetComponent<RuneVisuals>() != null && goldGo.GetComponent<RuneVisuals>() != null, "runas de metal y oro con su tipo");
+
             // --- Fijar en el aire un objeto generico (banco, mesa...) y poder desfijarlo al volver a agarrarlo.
             var pinMover = player != null ? player.GetComponent<ObjectMover>() : null;
             if (pinMover != null)
@@ -208,6 +216,20 @@ namespace SpellSimulator.EditorTools
                 Check(pinned && !probeRb.isKinematic && probeRb.useGravity, "un objeto generico fijado en el aire se puede desfijar");
                 Object.DestroyImmediate(probe);
             }
+
+            // --- Cinturon: suma 2 slots chicos (teclas 4 y 5) y la HUD los muestra.
+            var hudCtl = Object.FindFirstObjectByType<SpellSimulator.UI.HudController>();
+            if (hudCtl != null && interactor != null)
+            {
+                int before = hudCtl.SlotsShown;
+                interactor.SetBelt(true);
+                int withBelt = hudCtl.SlotsShown;
+                int count5 = interactor.SlotCount;
+                interactor.SetBelt(false);
+                Check(before == 3 && count5 == 5 && interactor.SlotCount == 3, "el cinturon pasa de 3 a 5 slots y vuelve a 3");
+                Check(withBelt >= 3, "la HUD informa los slots visibles");
+            }
+            else failures.Add("falta HudController para el chequeo del cinturon");
 
             // --- HUD
             Check(Object.FindFirstObjectByType<UnityEngine.UIElements.UIDocument>() != null, "HUD UI Toolkit presente");

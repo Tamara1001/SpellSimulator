@@ -10,11 +10,12 @@ teclado/mouse reales va en la checklist manual de abajo. VR/Quest: casos escrito
 ## Tipos de lienzo y su nombre en la escena
 | Tipo | Ejemplos | Cómo se maneja |
 |---|---|---|
-| Agarrable (`PhysicalCanvas`, dinámico) | `Paper_S`, `Paper_M`, `GiantPaper_Field`, `Notebook_A/B`, `SplitHalf_A_L/R` | E agarra y luego fija en el aire, Tab vista completa, Q arroja |
+| Agarrable (`PhysicalCanvas`, dinámico) | `Paper_S`, `Paper_M`, `GiantPaper_Field`, `Notebook_A/B`, `ImpactStone_J1/J2`, `ImpactMetal_M`, `ImpactGold_S` | E agarra y luego fija en el aire, Tab vista completa, Q arroja |
 | Runa (`PhysicalCanvas` + `SealTrigger`) | `ImpactStone_S`, `ImpactStone_M` | igual que arriba + se activa al golpear |
 | Flotante (`PhysicalCanvas` cinemático) | `PaperCanvas`, `Canvas_Lake1/4`, `GiantCanvas_Field` | se agarran y vuelven a flotar al reiniciar |
 | Fijo | caballetes `Easel_*`, `DraftingTable_*`, `WallBoard_Library`, `WallPaper`, `DeskPaper`, `BigCanvas_Library` | solo Tab (vista completa, `SurfaceFocus`) y dibujar |
 | Placa de presión | `PressurePlate` | fija; Tab y dibujar |
+| Runas por material | `ImpactStone_*` (piedra), `ImpactMetal_M`, `ImpactGold_S` | todas iguales; se fusionan al tocarse armadas |
 | Sello (`Stamp`) | `Stamp_S_0`, `Stamp_M_1`… | en la mano principal; cargar con el grimorio |
 | Calcomanías (`Inscribable`) | piso, paredes, cajas | fuera de esta matriz (no pedido) |
 
@@ -30,7 +31,7 @@ Para cada **fijo**: Tab abre, dibujar deja trazos, salir devuelve la cámara a s
 Para **herramientas, sellos y movibles**: caída a 45 m/s no atraviesa el piso; los genéricos (movibles) se pueden fijar y desfijar.
 
 ### Pruebas dirigidas (Only = ...)
-`SessionState "HarnessCanvasMatrix.Only"`: `RUNE` (la runa armada dispara en 3 variantes), `SPELLS` (lanza tierra, cristal, agua y viento y revisa sus cuerpos fisicos), `CHARGE` (retardo de lanzamiento: carga, lanzamiento y cancelacion), `FOCUSRAY` (lienzos en su lugar original, agarrados desde 4 lados: el puntero en vista completa debe dibujar en ese lienzo), o nombres separados por coma para repetir solo algunos casos.
+`SessionState "HarnessCanvasMatrix.Only"`: `RUNE` (la runa armada dispara en 3 variantes), `RUNEJOIN` (dos runas armadas se fusionan y se gastan), `SPELLS` (lanza tierra, cristal, agua y viento y revisa sus cuerpos fisicos), `CHARGE` (retardo de lanzamiento: carga, lanzamiento y cancelacion), `FOCUSRAY` (lienzos en su lugar original, agarrados desde 4 lados: el puntero en vista completa debe dibujar en ese lienzo), o nombres separados por coma para repetir solo algunos casos.
 
 ## Checklist manual (teclado y mouse reales)
 Marcá cada ítem con `[x]` y la fecha/versión cuando lo pruebes.

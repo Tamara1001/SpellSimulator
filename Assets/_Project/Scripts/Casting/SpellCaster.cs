@@ -176,6 +176,12 @@ namespace SpellSimulator.Casting
             SealPhase previous = GetPhase(canvas);
             bool deferred = canvas.GetComponentInParent<Interfaces.ISealTrigger>() != null;
             SealPhase next = SealActivation.Evaluate(ring, previous, castAllowed, deferred, out bool shouldCast);
+            // Runa agotada: ni se arma ni se lanza; un anillo cerrado queda como gastado.
+            if (IsBlocked(canvas))
+            {
+                shouldCast = false;
+                if (ring.Found && ring.Complete) next = SealPhase.Spent;
+            }
 
             if (shouldCast)
             {
@@ -199,7 +205,7 @@ namespace SpellSimulator.Casting
         /// <summary>Dispara un sello armado (lo llaman los disparadores). Devuelve si se lanzo.</summary>
         public bool Trigger(DrawingCanvas canvas)
         {
-            if (canvas == null || !SealActivation.ShouldFire(GetPhase(canvas))) return false;
+            if (canvas == null || !SealActivation.ShouldFire(GetPhase(canvas)) || IsBlocked(canvas)) return false;
             SpellIR spell = Cast(canvas);
             bool launched = spell.valid && spell.active;
             SetPhase(canvas, launched ? SealPhase.Spent : SealPhase.Armed);
@@ -209,8 +215,20 @@ namespace SpellSimulator.Casting
         /// <summary>Vuelve a armar un sello gastado (sellos permanentes). El anillo sigue cerrado en el papel.</summary>
         public void Rearm(DrawingCanvas canvas)
         {
-            if (canvas == null) return;
+            if (canvas == null || IsBlocked(canvas)) return;
             SetPhase(canvas, SealActivation.Rearm(GetPhase(canvas)));
+        }
+
+        /// <summary>Marca un sello como gastado (lo usan las fusiones de runas, que lanzan sin pasar por Trigger).</summary>
+        public void MarkSpent(DrawingCanvas canvas)
+        {
+            if (canvas != null) SetPhase(canvas, SealPhase.Spent);
+        }
+
+        private static bool IsBlocked(DrawingCanvas canvas)
+        {
+            var gate = canvas.GetComponentInParent<Interfaces.ISealGate>();
+            return gate != null && gate.SealBlocked;
         }
 
         private void SetPhase(DrawingCanvas canvas, SealPhase phase)
@@ -262,24 +280,7 @@ namespace SpellSimulator.Casting
                 return SpellIR.Invalid("Sin reconocedor", null);
             }
 
-            SealReading reading = SealReader.Read(Clean(canvas, out float boost, out Vector2 pivot), classifier, dictionary.Dictionary, Time.time);
-            GlyphAST ast = reading.Ast;
-            SpellIR spell = reading.Spell;
-
-            // Tamanio real del sello: el pipeline trabaja en espacio isotropico (lado mayor del lienzo = 1).
-            Vector2 iso = canvas.UvToIsotropic;
-            Vector2 worldSize = canvas.WorldSize;
-            spell.analysisBoost = boost;
-            spell.analysisPivot = pivot;
-            spell.sealRadius = ast.Ring.Radius * Mathf.Max(worldSize.x, worldSize.y) / boost;
-            // Centro del anillo en el espacio original (deshace el agrandado alrededor del pivote).
-            Vector2 ringCenter = boost > 1f ? pivot + (ast.Ring.Center - pivot) / boost : ast.Ring.Center;
-            Vector2 ringCenterUV = new Vector2(ringCenter.x / Mathf.Max(iso.x, 1e-6f), ringCenter.y / Mathf.Max(iso.y, 1e-6f));
-            GlyphPrediction[] predictions = reading.Predictions;
-
-            InkKind inkKind = InkMath.Dominant(canvas.Session.Strokes);
-            spell.inkPower = InkKindInfo.PowerMultiplier(inkKind);
-            spell.waterproof = InkKindInfo.IsWaterproof(inkKind);
+            SpellIR spell = Analyze(canvas, out GlyphAST ast, out GlyphPrediction[] predictions, out Vector2 iso, out Vector2 ringCenterUV);
 
             LastSpell = spell;
             string summary = PublishDiagnostics(ast, spell, predictions, dictionary.Dictionary);
@@ -289,6 +290,54 @@ namespace SpellSimulator.Casting
 
             if (spell.valid && spell.active && output != null)
                 output.SpawnSpellEffect(spell, canvas, ringCenterUV);
+            return spell;
+        }
+
+        /// <summary>
+        /// Lee y compila el lienzo sin lanzar nada ni publicar eventos (para fusionar runas). Devuelve true si el
+        /// hechizo es valido y activo. Es la misma lectura que usa <see cref="Cast"/>.
+        /// </summary>
+        public bool Compile(DrawingCanvas canvas, out SpellIR spell, out Vector2 ringCenterUV)
+        {
+            ringCenterUV = new Vector2(0.5f, 0.5f);
+            if (canvas == null || canvas.Session.IsEmpty || classifier == null || dictionary == null)
+            {
+                spell = SpellIR.Invalid("Sin lectura", null);
+                return false;
+            }
+            spell = Analyze(canvas, out _, out _, out _, out ringCenterUV);
+            return spell.valid && spell.active;
+        }
+
+        /// <summary>Publica un hechizo ya compilado (eventos) y lo instancia en el mundo desde el lienzo dado.</summary>
+        public void Emit(SpellIR spell, DrawingCanvas canvas, Vector2 ringCenterUV)
+        {
+            LastSpell = spell;
+            SpellCompiled?.Invoke(spell, canvas);
+            if (spell.valid && spell.active && output != null)
+                output.SpawnSpellEffect(spell, canvas, ringCenterUV);
+        }
+
+        private SpellIR Analyze(DrawingCanvas canvas, out GlyphAST ast, out GlyphPrediction[] predictions, out Vector2 iso, out Vector2 ringCenterUV)
+        {
+            SealReading reading = SealReader.Read(Clean(canvas, out float boost, out Vector2 pivot), classifier, dictionary.Dictionary, Time.time);
+            ast = reading.Ast;
+            SpellIR spell = reading.Spell;
+
+            // Tamanio real del sello: el pipeline trabaja en espacio isotropico (lado mayor del lienzo = 1).
+            iso = canvas.UvToIsotropic;
+            Vector2 worldSize = canvas.WorldSize;
+            spell.analysisBoost = boost;
+            spell.analysisPivot = pivot;
+            spell.sealRadius = ast.Ring.Radius * Mathf.Max(worldSize.x, worldSize.y) / boost;
+            // Centro del anillo en el espacio original (deshace el agrandado alrededor del pivote).
+            Vector2 ringCenter = boost > 1f ? pivot + (ast.Ring.Center - pivot) / boost : ast.Ring.Center;
+            ringCenterUV = new Vector2(ringCenter.x / Mathf.Max(iso.x, 1e-6f), ringCenter.y / Mathf.Max(iso.y, 1e-6f));
+            predictions = reading.Predictions;
+
+            InkKind inkKind = InkMath.Dominant(canvas.Session.Strokes);
+            spell.inkPower = InkKindInfo.PowerMultiplier(inkKind);
+            spell.waterproof = InkKindInfo.IsWaterproof(inkKind);
             return spell;
         }
 

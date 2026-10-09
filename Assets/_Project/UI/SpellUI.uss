@@ -475,6 +475,158 @@
     opacity: 0.45;
 }
 
+/* ------------------------------------------------------------ cinturon */
+
+/* Slots 4 y 5 (cinturon): ~70 % de los principales, a los costados de la bandeja, apoyados abajo. */
+.slot--belt {
+    width: 54px;
+    margin: 0 2px 2px 2px;
+    align-self: flex-end;
+    transition-property: opacity, scale;
+    transition-duration: 0.28s, 0.28s;
+    transition-timing-function: ease-out-back, ease-out-back;
+}
+
+.slot--belt .slot-frame {
+    width: 45px;
+    height: 45px;
+}
+
+.slot--belt .slot-glow {
+    left: -11px; top: -11px; right: -11px; bottom: -11px;
+}
+
+.slot--belt .slot-icon {
+    left: 4px; top: 4px; right: 4px; bottom: 4px;
+}
+
+.slot--belt .slot-icon--color {
+    left: 13px; top: 13px; right: 13px; bottom: 13px;
+}
+
+.slot--belt .slot-icon--empty {
+    left: 14px; top: 14px; right: 14px; bottom: 14px;
+}
+
+.slot--belt .slot-ink {
+    left: 5px; right: 5px; bottom: 4px;
+    height: 3px;
+}
+
+.slot--belt .slot-key {
+    left: -7px;
+    top: -8px;
+    scale: 0.85 0.85;
+}
+
+.slot--belt .slot-name {
+    font-size: 10px;
+    max-width: 54px;
+    height: 14px;
+}
+
+/* Aparicion al equipar el cinturon: la clase se quita un instante despues y corre la transicion. */
+.slot--belt-enter {
+    opacity: 0;
+    scale: 0.5 0.5;
+}
+
+/* Tira de cuero detras del marco que asoma hacia la bandeja, con un broche de laton. */
+.belt-strap {
+    position: absolute;
+    top: 17px;
+    height: 11px;
+    background-color: rgb(122, 74, 40);
+    border-top-width: 1px; border-bottom-width: 1px;
+    border-color: rgb(78, 44, 22);
+    border-radius: 2px;
+}
+
+.slot--belt-left .belt-strap {
+    left: 26px;
+    right: -10px;
+}
+
+.slot--belt-right .belt-strap {
+    left: -10px;
+    right: 26px;
+}
+
+.belt-buckle {
+    position: absolute;
+    top: -3px;
+    width: 10px;
+    height: 15px;
+    border-width: 2px;
+    border-color: var(--gold);
+    border-radius: 2px;
+}
+
+.slot--belt-left .belt-buckle {
+    right: 0;
+}
+
+.slot--belt-right .belt-buckle {
+    left: 0;
+}
+
+.belt-prong {
+    position: absolute;
+    left: 0; right: 0; top: 4px;
+    height: 2px;
+    background-color: var(--gold-light);
+}
+
+/* Distintivo del cinturon equipado, a la izquierda del grimorio. */
+.belt-badge {
+    display: none;
+    width: 34px;
+    height: 34px;
+    margin: 0 6px 34px 0;
+    background-image: url("Sprites/slot.png");
+    -unity-slice-left: 14; -unity-slice-right: 14; -unity-slice-top: 14; -unity-slice-bottom: 14;
+    transition-property: opacity, scale;
+    transition-duration: 0.28s, 0.28s;
+    transition-timing-function: ease-out-back, ease-out-back;
+}
+
+.belt-badge--enter {
+    opacity: 0;
+    scale: 0.5 0.5;
+}
+
+.belt-badge-icon {
+    position: absolute;
+    left: 3px; top: 3px; right: 3px; bottom: 3px;
+    -unity-background-scale-mode: scale-to-fit;
+}
+
+/* Dibujo de respaldo (sin miniatura 3D): tira en diagonal con su hebilla. */
+.belt-badge-strap {
+    position: absolute;
+    left: 1px; right: 1px; top: 10px;
+    height: 8px;
+    background-color: rgb(122, 74, 40);
+    border-top-width: 1px; border-bottom-width: 1px;
+    border-color: rgb(78, 44, 22);
+    border-radius: 2px;
+    rotate: -20deg;
+}
+
+.belt-badge-buckle {
+    position: absolute;
+    right: 5px; top: -4px;
+    width: 9px;
+    height: 14px;
+    border-width: 2px;
+    border-color: var(--gold);
+    border-radius: 2px;
+}
+
+.belt-badge-icon--3d .belt-badge-strap {
+    display: none;
+}
+
 /* ------------------------------------------------------------ cartuchos de tinta */
 
 /* Frasquito dibujado con cajas: corcho, cuello de vidrio y panza con la tinta (color en linea desde HudController). */

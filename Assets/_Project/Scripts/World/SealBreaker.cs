@@ -23,11 +23,13 @@ namespace SpellSimulator.World
 
         private DrawingCanvas canvas;
         private ElementReactive reactive;
+        private Rune rune;
 
         private void Awake()
         {
             canvas = GetComponent<DrawingCanvas>();
             reactive = GetComponent<ElementReactive>();
+            rune = GetComponent<Rune>();
         }
 
         private void OnEnable() => reactive.Reacted += OnReacted;
@@ -37,9 +39,11 @@ namespace SpellSimulator.World
         {
             string reason = null;
             // Tinta resistente: el agua no corre el sello (funciona mojado y bajo el agua); el fuego si lo quema.
-            bool waterproof = Core.InkKindInfo.IsWaterproof(Core.InkMath.Dominant(canvas.Session.Strokes));
+            // Runas de metal y oro: resisten agua y fuego por el material.
+            bool waterproof = Core.InkKindInfo.IsWaterproof(Core.InkMath.Dominant(canvas.Session.Strokes)) || (rune != null && rune.Waterproof);
+            bool fireProof = rune != null && rune.FireProof;
             if ((events & ReactionEvents.Soaked) != 0 && !waterproof) reason = "El papel se mojo: la tinta se corrio.";
-            else if ((events & ReactionEvents.Ignited) != 0) reason = "El papel se prendio fuego.";
+            else if ((events & ReactionEvents.Ignited) != 0 && !fireProof) reason = "El papel se prendio fuego.";
             if (reason == null || canvas.Session.IsEmpty) return;
 
             canvas.Clear();

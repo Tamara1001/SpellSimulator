@@ -35,13 +35,13 @@ Fuente de verdad: `GAME_DESIGN.md#controles`; repetir en `Learning/GrimoireTexts
 - **Cristal:** **esfera** alrededor del lienzo, radio = tamaño del anillo × factor (valor en datos); lo que toca queda cristalizado: rígido y quieto un rato (pared/puente).
 - **Hojas doradas:** cara de emisión **invertida** (el hechizo sale por el dorso sin dar vuelta); objeto raro en repisas/cofres.
 
-## 4. Runas
+## 4. Runas (HECHO 2026-10-09; el reciclaje va en el bloque 6)
 - **Una sola lógica para todas** (se eliminan las «mitades» sueltas del piso): cada runa funciona por su cuenta.
 - **Tipos:** **piedra** (1–2 usos, común), **metal** (3–5 usos, pesada, resiste agua/fuego), **oro** (8+ usos, cooldown corto, rara, brillo propio).
 - **Unir:** al tocarse dos runas **armadas** sus dibujos se **fusionan en un solo hechizo**; la más grande manda el tamaño. Es una regla general, no un tipo de runa.
 - **Desgaste visible:** la runa se **agrieta** a medida que gasta usos; una gastada se ve gastada → el jugador sabe que hay que **reciclarla** en vez de borrarla y reescribirla (hoy una gastada se reutiliza al borrarla; con el reciclaje cambia: ver bloque 6).
 
-## 5. Cinturón y grimorio
+## 5. Cinturón y grimorio (HECHO 2026-10-09)
 - **Cinturón:** objeto que agrega **2 slots chicos laterales** a la barra (5 en total); valores en un SO.
 - **Grimorio:** si el jugador se aleja **más de 12 m** desaparece y vuelve al inventario.
 

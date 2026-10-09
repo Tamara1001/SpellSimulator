@@ -62,6 +62,7 @@ namespace SpellSimulator.EditorTools.Map
             ToolModels.Apply(lit);
             FieldPortableInkwell();
             TowerProps.Build(map, lit, TowerOrigin());
+            MapBelt.Build(map, lit, MapBelt.AlchemyTableSpot());   // cinturon sobre la mesa de alquimia (2do piso)
             CanvasDesigns.Build(map, lit, TowerOrigin(), stampTable);
             MovablesSetup.Apply(map, lit);
             InteractionSetup.Apply();

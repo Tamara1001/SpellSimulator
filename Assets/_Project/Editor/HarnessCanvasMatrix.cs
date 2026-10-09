@@ -28,11 +28,11 @@ namespace SpellSimulator.EditorTools
         private static IEnumerator routine;
         private static float waitUntil;
 
-        // Lienzos que se agarran (PhysicalCanvas): hojas, cuadernos, runas, mitades de sello, lienzos flotantes.
+        // Lienzos que se agarran (PhysicalCanvas): hojas, cuadernos, runas (piedra, metal, oro), lienzos flotantes.
         private static readonly string[] Grabbables =
         {
             "Paper_S", "Paper_M", "Notebook_A", "GiantPaper_Field", "ImpactStone_S", "ImpactStone_M",
-            "SplitHalf_A_L", "SplitHalf_A_R", "PaperCanvas", "Canvas_Lake1", "GiantCanvas_Field",
+            "ImpactStone_J1", "ImpactMetal_M", "ImpactGold_S", "PaperCanvas", "Canvas_Lake1", "GiantCanvas_Field",
         };
 
         // Lienzos fijos: solo vista completa (V), dibujo y salida.
@@ -123,6 +123,12 @@ namespace SpellSimulator.EditorTools
             if (spot == Vector3.zero) { failures.Add("no se encontro un terreno plano para las pruebas"); yield break; }
             float ground = spot.y;
 
+            if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "RUNEJOIN")
+            {
+                var probe = RuneJoinProbe(spot);
+                while (probe.MoveNext()) yield return probe.Current;
+                yield break;
+            }
             if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "SPELLS")
             {
                 var probe = SpellsProbe(spot);
@@ -284,6 +290,40 @@ namespace SpellSimulator.EditorTools
 
         private static string Info(Rigidbody rb, float ground) =>
             $"[y={rb.position.y:F2} suelo={ground:F2} padre={(rb.transform.parent != null ? rb.transform.parent.name : "-")} cin={rb.isKinematic}]";
+
+        /// <summary>
+        /// Dos runas armadas que se tocan se fusionan en un solo hechizo (la mas grande manda) y ambas quedan gastadas.
+        /// Se activa con Only = "RUNEJOIN".
+        /// </summary>
+        private static IEnumerator RuneJoinProbe(Vector3 spot)
+        {
+            var a = GameObject.Find("ImpactStone_J1");
+            var b = GameObject.Find("ImpactStone_J2");
+            if (a == null || b == null) { failures.Add("faltan ImpactStone_J1/J2"); yield break; }
+            var caster = Object.FindFirstObjectByType<Casting.SpellCaster>();
+            var ca = a.GetComponent<DrawingCanvas>(); var cb = b.GetComponent<DrawingCanvas>();
+            var ra = a.GetComponent<Rigidbody>(); var rb2 = b.GetComponent<Rigidbody>();
+            Check(a.GetComponent<Rune>() != null && b.GetComponent<Rune>() != null && a.GetComponent<RuneJoin>() != null, "las dos runas tienen Rune y RuneJoin");
+            int compiled = 0;
+            void OnCompiled(Compiler.SpellIR spell, DrawingCanvas c) { if (c == ca || c == cb) compiled++; }
+            caster.SpellCompiled += OnCompiled;
+            foreach (var pc in new[] { a.GetComponent<PhysicalCanvas>(), b.GetComponent<PhysicalCanvas>() }) pc.ResetToInitial();
+            Quaternion flat = Quaternion.Euler(90f, 0f, 0f);
+            ra.isKinematic = false; rb2.isKinematic = false;
+            ra.position = spot + new Vector3(0f, 0.15f, 0f); ra.rotation = flat;
+            rb2.position = spot + new Vector3(0.26f, 0.15f, 0f); rb2.rotation = flat;
+            ra.linearVelocity = rb2.linearVelocity = Vector3.zero;
+            ca.Clear(); cb.Clear(); caster.OnSealEdited(ca); caster.OnSealEdited(cb);
+            HarnessSeals.Draw(ca, "fire"); HarnessSeals.Draw(cb, "wind-directs-air", ("column", 270f), ("column", 90f));
+            caster.OnStrokeFinished(ca); caster.OnStrokeFinished(cb);
+            Check(caster.GetPhase(ca) == Casting.SealPhase.Armed && caster.GetPhase(cb) == Casting.SealPhase.Armed, $"las dos runas quedan armadas (fases {caster.GetPhase(ca)} y {caster.GetPhase(cb)})");
+            yield return 2.5f;
+            Check(compiled >= 1, $"al tocarse se lanza el hechizo fusionado (compilaciones={compiled})");
+            Check(caster.GetPhase(ca) == Casting.SealPhase.Spent && caster.GetPhase(cb) == Casting.SealPhase.Spent, $"las dos quedan gastadas (fases {caster.GetPhase(ca)} y {caster.GetPhase(cb)})");
+            var wa = a.GetComponent<Rune>(); var wb = b.GetComponent<Rune>();
+            Check(wa.Wear == 1 && wb.Wear == 1, $"cada una gasta un uso de desgaste (desgaste {wa.Wear} y {wb.Wear})");
+            caster.SpellCompiled -= OnCompiled;
+        }
 
         /// <summary>
         /// Hechizos del bloque 3: lanza tierra (roca), cristal, agua y viento y revisa sus cuerpos fisicos y que no haya errores en consola.

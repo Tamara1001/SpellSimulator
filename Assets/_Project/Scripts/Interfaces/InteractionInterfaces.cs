@@ -90,6 +90,15 @@ namespace SpellSimulator.Interfaces
     /// presion). SpellCaster lo busca en el lienzo para dejar el sello armado.
     /// </summary>
     public interface ISealTrigger { }
+
+    /// <summary>
+    /// Objeto que puede vetar su sello (una runa agotada): SpellCaster no lo arma ni lo dispara mientras
+    /// <see cref="SealBlocked"/> sea true.
+    /// </summary>
+    public interface ISealGate
+    {
+        bool SealBlocked { get; }
+    }
 }
 
 namespace SpellSimulator.Interfaces

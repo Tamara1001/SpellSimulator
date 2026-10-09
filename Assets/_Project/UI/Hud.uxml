@@ -35,6 +35,14 @@
                 </ui:VisualElement>
 
                 <ui:VisualElement name="bar" class="bar">
+                    <!-- Distintivo del cinturon equipado (lo muestra HudController con HasBelt): miniatura 3D o tira y hebilla dibujadas. -->
+                    <ui:VisualElement name="belt-badge" class="belt-badge">
+                        <ui:VisualElement name="belt-badge-icon" class="belt-badge-icon">
+                            <ui:VisualElement class="belt-badge-strap">
+                                <ui:VisualElement class="belt-badge-buckle" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
+                    </ui:VisualElement>
                     <ui:VisualElement class="hand hand--book">
                         <ui:VisualElement name="book-slots" class="slot-tray slot-tray--single" />
                     </ui:VisualElement>

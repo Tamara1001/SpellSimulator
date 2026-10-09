@@ -169,7 +169,7 @@ namespace SpellSimulator.Player
             debugAction.AddBinding("<Keyboard>/f3");
             bookFocusAction = new InputAction("BookFocus", InputActionType.Button);
             // B eliminada: el grimorio a pantalla completa ahora es Esc (lo maneja Grimoire).
-            hotbarActions = new InputAction[3];
+            hotbarActions = new InputAction[5];
             for (int i = 0; i < hotbarActions.Length; i++)
             {
                 hotbarActions[i] = new InputAction("Hotbar" + (i + 1), InputActionType.Button);

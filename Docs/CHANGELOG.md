@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-09 — Bloques 4 y 5 del plan: runas por material, fusion, cinturon y grimorio
+- **Runas:** todas con la misma logica (`Rune` + `SealTrigger` + `DrawingCanvas`); tipos Piedra (2 usos de por vida), Metal (5, resiste agua y fuego) y Oro (10, enfriamiento corto, brillo y luz propios). Se **agrietan** al gastarse (`RuneVisuals`) y una agotada ya no sirve («hay que reciclarla», bloque 6). Se eliminan las «mitades» (`SplitSealHalf`). Colocadas: 2 piedras de campo + 2 para probar la union + 1 metal (campo) + 1 oro (pedestal del estudio) + la placa de presion.
+- **Fusion:** dos runas armadas que se tocan (`RuneJoin`, `SpellFusion`) lanzan UN hechizo: la mas grande manda tamano/origen/direccion y se unen las primitivas del plan; ademas se emite el efecto de la chica en el mismo origen (combos fuego+viento, agua+cristal). Cada una gasta un uso. `SpellCaster` gana `Compile`/`Emit`.
+- **Cinturon** (`World/Belt`, `MapBelt`): en la mesa de alquimia (piso 2); al equiparlo suma 2 slots chicos laterales (teclas 4 y 5, `HotbarMath`). **Grimorio:** si queda suelto y te alejas mas de 12 m (2 s) vuelve al inventario (`GrimoireMath`, T lo reabre).
+- Pruebas: 256 EditMode; smoke de Play (+chequeos de runas metal/oro y del cinturon); `HarnessCanvasMatrix Only=RUNEJOIN` (fusion y desgaste). Hecho por subagentes (Sonnet: logica; Opus: arte y HUD). Pendiente de probar a mano.
+
 ## 2026-10-09 — Bloque 3 del plan: roca, cristal, agua, viento y efectos de la tinta
 - **Punto de enganche:** `Output/Bodies/SpellBodies.cs` (llamado desde `SpellOutputController.SpawnSpellEffect`) agrega el cuerpo fisico propio de cada elemento. Modulos: `RockSpell`, `CrystalSpell`, `WaterSpell`, `WindSpell` (+ `*Math` puros con tests: 231 EditMode en total).
 - **Roca (tierra):** una roca fisica (radio = anillo, mas grande con tinta poderosa) que se forma flotando y cae; agarrable, arrojable, sirve de muro/escalon/proyectil; maximo 10; desaparece a los 120 s (`ExpiringBody`). **Cosas en el aire:** lo fijado con E se cae solo al minuto (`PinnedBody`, `PhysicalCanvas`).

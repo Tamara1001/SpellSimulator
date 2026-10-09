@@ -10,7 +10,8 @@ using SpellSimulator.Player;
 namespace SpellSimulator.UI
 {
     /// <summary>
-    /// HUD de juego en UI Toolkit (reemplaza la HUD uGUI): barra de la mano principal (3 slots, teclas 1-3) y slot de la
+    /// HUD de juego en UI Toolkit (reemplaza la HUD uGUI): barra de la mano principal (3 slots, teclas 1-3; con cinturon,
+    /// 2 slots chicos mas a los costados, teclas 4 y 5, y un distintivo junto al grimorio) y slot de la
     /// mano secundaria con miniaturas 3D (<see cref="ItemIcons"/>), panel de contexto con keycaps, selector de grosor,
     /// tinta (con su clase) y pagina, el slot de cartuchos de tinta (frasco, cantidad y usos; se refresca solo por
     /// <see cref="InkCartridgeStock.Changed"/>), la tecla [E] junto a la mira y los avisos (<see cref="Hud"/>) arriba a la
@@ -36,7 +37,9 @@ namespace SpellSimulator.UI
         private static readonly string[] BarePercents = BuildPercents("");
         private static readonly string[] Counts = BuildCounts(16);
         private const int CartridgeBumpMilliseconds = 170;
-        private static readonly string[] SlotKeys = { "1", "2", "3" };
+        private static readonly string[] SlotKeys = { "1", "2", "3", "4", "5" };
+        /// <summary>Retardo para quitar la clase de entrada de los slots del cinturon (deja correr la transicion de USS).</summary>
+        private const int BeltEnterMilliseconds = 30;
 
         private sealed class Slot
         {
@@ -81,6 +84,14 @@ namespace SpellSimulator.UI
         private int lastCartCount = -1;
         /// <summary>Cantidad de cartuchos que muestra el contador del HUD (-1 antes de armarse). Lo usa el test de humo.</summary>
         public int CartridgeCountShown { get; private set; } = -1;
+
+        // Cinturon: 2 slots chicos a los costados de la bandeja principal (4 a la izquierda, 5 a la derecha) y un
+        // distintivo junto al grimorio. Se muestran solo con PlayerInteractor.HasBelt (se compara un bool por frame).
+        private VisualElement beltBadge, beltBadgeIcon;
+        private IVisualElementScheduledItem beltEnterEnd;
+        private bool beltShown;
+        /// <summary>Cantidad de slots de la mano principal visibles en la barra (3, o 5 con cinturon). Lo usa el test de humo.</summary>
+        public int SlotsShown { get; private set; }
 
         private bool bound;
         private bool inventoryDirty = true;
@@ -214,7 +225,14 @@ namespace SpellSimulator.UI
 
             VisualElement mainTray = root.Q("main-slots");
             mainTray.Clear();
-            for (int i = 0; i < mainSlots.Length; i++) mainSlots[i] = MakeSlot(mainTray, SlotKeys[i]);
+            for (int i = 0; i < mainSlots.Length; i++)
+            {
+                mainSlots[i] = MakeSlot(mainTray, SlotKeys[i]);
+                if (i >= PlayerInteractor.BaseHotbarSlots) MakeBeltSlot(mainSlots[i], i == PlayerInteractor.BaseHotbarSlots);
+            }
+            beltBadge = root.Q("belt-badge");
+            beltBadgeIcon = root.Q("belt-badge-icon");
+            beltEnterEnd = null;
             VisualElement secTray = root.Q("sec-slots");
             secTray.Clear();
             secondarySlot = MakeSlot(secTray, "E");
@@ -238,7 +256,84 @@ namespace SpellSimulator.UI
             hoverShown = false;
             lastInk = int.MinValue;
             RefreshCartridges(false);
+            ApplyBelt(interactor != null && interactor.HasBelt, false);
             return true;
+        }
+
+        /// <summary>
+        /// Convierte un slot de la mano principal en slot de cinturon: mas chico (clase slot--belt), con una tira de cuero
+        /// y un broche de laton del lado que da a la bandeja. El 4 va primero (a la izquierda) y el 5 queda ultimo.
+        /// </summary>
+        private static void MakeBeltSlot(Slot slot, bool left)
+        {
+            slot.Root.AddToClassList("slot--belt");
+            slot.Root.AddToClassList(left ? "slot--belt-left" : "slot--belt-right");
+            var strap = new VisualElement { pickingMode = PickingMode.Ignore };
+            strap.AddToClassList("belt-strap");
+            var buckle = new VisualElement { pickingMode = PickingMode.Ignore };
+            buckle.AddToClassList("belt-buckle");
+            var prong = new VisualElement { pickingMode = PickingMode.Ignore };
+            prong.AddToClassList("belt-prong");
+            buckle.Add(prong);
+            strap.Add(buckle);
+            // Primer hijo del slot: se dibuja detras del marco y asoma por el costado que da a la bandeja.
+            slot.Root.Insert(0, strap);
+            slot.Root.style.display = DisplayStyle.None;
+            if (left) slot.Root.SendToBack();
+        }
+
+        /// <summary>Muestra u oculta los slots del cinturon y su distintivo. Solo corre cuando cambia HasBelt (o al armar).</summary>
+        private void ApplyBelt(bool on, bool animate)
+        {
+            beltShown = on;
+            int shown = 0;
+            for (int i = 0; i < mainSlots.Length; i++)
+            {
+                Slot slot = mainSlots[i];
+                if (slot == null) continue;
+                bool visible = i < PlayerInteractor.BaseHotbarSlots || on;
+                if (visible) shown++;
+                if (i < PlayerInteractor.BaseHotbarSlots) continue;
+                slot.Root.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
+                slot.Root.EnableInClassList("slot--belt-enter", on && animate);
+            }
+            SlotsShown = shown;
+
+            if (beltBadge != null)
+            {
+                beltBadge.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
+                beltBadge.EnableInClassList("belt-badge--enter", on && animate);
+                if (on) SetBeltBadgeIcon();
+            }
+            if (on && animate && hud != null)
+            {
+                // Un instante despues se quita la clase de entrada y corre la transicion (aparecen con un saltito).
+                if (beltEnterEnd == null) beltEnterEnd = hud.schedule.Execute(EndBeltEnter);
+                beltEnterEnd.ExecuteLater(BeltEnterMilliseconds);
+            }
+            inventoryDirty = true;
+        }
+
+        private void EndBeltEnter()
+        {
+            for (int i = PlayerInteractor.BaseHotbarSlots; i < mainSlots.Length; i++)
+                mainSlots[i]?.Root.RemoveFromClassList("slot--belt-enter");
+            beltBadge?.RemoveFromClassList("belt-badge--enter");
+        }
+
+        /// <summary>
+        /// Miniatura 3D del cinturon (ItemIcons, mismo estilo que los slots) si el objeto sigue en la escena; si no, queda
+        /// el dibujo de USS (tira y hebilla). Solo al equiparlo, nunca por frame.
+        /// </summary>
+        private void SetBeltBadgeIcon()
+        {
+            if (beltBadgeIcon == null) return;
+            var belt = FindFirstObjectByType<SpellSimulator.World.Belt>(FindObjectsInactive.Include);
+            Texture icon = belt != null ? ItemIcons.Get(belt.gameObject) : null;
+            bool has3d = icon is RenderTexture;
+            beltBadgeIcon.EnableInClassList("belt-badge-icon--3d", has3d);
+            if (has3d) beltBadgeIcon.style.backgroundImage = Background.FromRenderTexture((RenderTexture)icon);
+            else beltBadgeIcon.style.backgroundImage = StyleKeyword.Null;
         }
 
         /// <summary>Slot de cartuchos: crea las 5 rayitas de usos (el frasco y el contador vienen del UXML).</summary>
@@ -323,6 +418,9 @@ namespace SpellSimulator.UI
             }
 
             UpdateHidden();
+            // Equipar el cinturon puede no disparar InventoryChanged: se compara el bool (sin GC) y se rearma solo al cambiar.
+            bool belt = interactor != null && interactor.HasBelt;
+            if (belt != beltShown) ApplyBelt(belt, true);
             if (inventoryDirty) RefreshInventory();
             if (noticesDirty) RefreshNotices();
             AnimateCards();

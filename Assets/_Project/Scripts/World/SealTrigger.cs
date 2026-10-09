@@ -33,13 +33,31 @@ namespace SpellSimulator.World
         private float cooldownSeconds = 3f;
 
         private DrawingCanvas canvas;
+        private Rune rune;
         private int uses;
+        private float lastFireTime = -100f;
         private float rearmAt = -1f;
         private float held;
         private float lastLoad;
 
         public Mode TriggerMode => mode;
-        public int UsesLeft => Mathf.Max(0, maxUses - uses);
+        public int UsesLeft => Mathf.Max(0, EffectiveMaxUses - uses);
+
+        // Con runa, el limite de por vida lo marca su desgaste; los usos por dibujo se reinician al borrar.
+        private int EffectiveMaxUses => rune != null ? rune.Durability : maxUses;
+        private float EffectiveCooldown => rune != null ? rune.CooldownSeconds : cooldownSeconds;
+
+        public DrawingCanvas Canvas => canvas;
+        public SpellCaster Caster => caster;
+        public float ImpactSpeed => impactSpeed;
+        public Rune Rune => rune;
+
+        /// <summary>Armado y listo para disparar: anillo cerrado, dibujo presente y runa (si la hay) no agotada.</summary>
+        public bool IsArmed => canvas != null && caster != null && !canvas.Session.IsEmpty
+            && caster.GetPhase(canvas) == SealPhase.Armed && (rune == null || !rune.IsExhausted);
+
+        /// <summary>Se disparo hace menos de <paramref name="seconds"/> segundos.</summary>
+        public bool FiredRecently(float seconds) => Time.time - lastFireTime < seconds;
 
         public void SetPermanent(int uses, float cooldown)
         {
@@ -49,11 +67,24 @@ namespace SpellSimulator.World
 
         private void Fire()
         {
+            if (rune != null && rune.IsExhausted) { rune.NotifyExhausted(); return; }
             bool launched = caster.Trigger(canvas);
             Debug.Log($"[SealTrigger] {name} dispara: {(launched ? "hechizo lanzado" : "no se lanzo (fase " + caster.GetPhase(canvas) + ")")}", this);
             if (!launched) return;
+            RegisterFired();
+        }
+
+        /// <summary>
+        /// Cuenta un lanzamiento (uso del dibujo + desgaste de por vida de la runa) y programa el rearme. Lo llama Fire
+        /// y tambien RuneJoin cuando la runa se lanza fusionada (el hechizo ya se emitio por otra via).
+        /// </summary>
+        public void RegisterFired()
+        {
             uses++;
-            if (uses < maxUses) rearmAt = Time.time + cooldownSeconds;
+            lastFireTime = Time.time;
+            if (rune != null) rune.RegisterUse();
+            bool exhausted = rune != null && rune.IsExhausted;
+            if (!exhausted && uses < EffectiveMaxUses) rearmAt = Time.time + EffectiveCooldown;
         }
 
         public void Configure(Mode newMode, SpellCaster spellCaster, float threshold)
@@ -63,7 +94,11 @@ namespace SpellSimulator.World
             if (mode == Mode.Impact) impactSpeed = threshold; else pressureMass = threshold;
         }
 
-        private void Awake() => canvas = GetComponentInChildren<DrawingCanvas>();
+        private void Awake()
+        {
+            canvas = GetComponentInChildren<DrawingCanvas>();
+            rune = GetComponent<Rune>();
+        }
 
         /// <summary>Un sello nuevo (el lienzo se borro) empieza con todos sus usos.</summary>
         private void OnEnable() => SealBreaker.SealBroken += OnBroken;
@@ -81,6 +116,7 @@ namespace SpellSimulator.World
             if (speed >= 1f)
                 Debug.Log($"[SealTrigger] {name} golpea {collision.collider.name} a {speed:F1} m/s (umbral {impactSpeed:F1}), fase={caster.GetPhase(canvas)}, usos {uses}/{maxUses}", this);
             if (speed < impactSpeed) return;
+            if (rune != null && rune.IsExhausted) { rune.NotifyExhausted(); return; }
             Fire();
         }
 
@@ -100,6 +136,7 @@ namespace SpellSimulator.World
         {
             if (rearmAt < 0f || Time.time < rearmAt || caster == null) return;
             rearmAt = -1f;
+            if (rune != null && rune.IsExhausted) return;
             caster.Rearm(canvas);
         }
 

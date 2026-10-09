@@ -41,7 +41,12 @@ namespace SpellSimulator.Player
         private float throwSpeed = 7f;
         [SerializeField] private LayerMask interactLayer = Physics.DefaultRaycastLayers;
 
-        public const int HotbarSlots = 3;
+        /// <summary>Slots de la barra sin cinturon (teclas 1-3).</summary>
+        public const int BaseHotbarSlots = HotbarMath.BaseSlots;
+        /// <summary>Slots con el cinturon equipado (teclas 1-5).</summary>
+        public const int MaxHotbarSlots = HotbarMath.MaxSlots;
+        /// <summary>Alias de <see cref="MaxHotbarSlots"/>: para dimensionar arrays (la HUD).</summary>
+        public const int HotbarSlots = MaxHotbarSlots;
 
         private static readonly RaycastHit[] hoverHits = new RaycastHit[24];
 
@@ -60,7 +65,8 @@ namespace SpellSimulator.Player
         private LineRenderer vrPointerLine;
 
         // Mano principal.
-        private readonly GameObject[] hotbar = new GameObject[HotbarSlots];
+        private readonly GameObject[] hotbar = new GameObject[MaxHotbarSlots];
+        private readonly bool[] slotFree = new bool[MaxHotbarSlots];
         private int activeSlot;
         private GameObject heldMain;
         private IUsable mainUsable;
@@ -172,7 +178,37 @@ namespace SpellSimulator.Player
         }
 
         /// <summary>Objeto de un slot de la barra (null si esta vacio).</summary>
-        public GameObject HotbarItem(int index) => index >= 0 && index < HotbarSlots ? hotbar[index] : null;
+        public GameObject HotbarItem(int index) => index >= 0 && index < MaxHotbarSlots ? hotbar[index] : null;
+        /// <summary>True con el cinturon equipado (5 slots).</summary>
+        public bool HasBelt { get; private set; }
+        /// <summary>Slots disponibles: 3, o 5 con el cinturon.</summary>
+        public int SlotCount => HotbarMath.SlotCount(HasBelt);
+
+        /// <summary>Equipa o quita el cinturon. Al quitarlo, lo de los slots 4-5 se suelta delante del jugador.</summary>
+        public void SetBelt(bool equipped)
+        {
+            if (HasBelt == equipped) return;
+            HasBelt = equipped;
+            if (!equipped)
+            {
+                for (int i = BaseHotbarSlots; i < MaxHotbarSlots; i++)
+                {
+                    GameObject obj = hotbar[i];
+                    if (obj == null) continue;
+                    if (obj == heldMain) { activeSlot = i; DropMain(false); }
+                    else
+                    {
+                        hotbar[i] = null;
+                        Transform view = cameraTransform != null ? cameraTransform : transform;
+                        obj.transform.position = view.position + view.forward * 0.8f;
+                        obj.SetActive(true);
+                        if (obj.TryGetComponent(out IInteractable it)) it.OnDrop();
+                    }
+                }
+                if (activeSlot >= BaseHotbarSlots) activeSlot = 0;
+            }
+            Changed();
+        }
         public int ActiveHotbar => activeSlot;
         /// <summary>Lo que esta en la mano principal (null si ninguno).</summary>
         public GameObject MainItem => heldMain;
@@ -358,6 +394,20 @@ namespace SpellSimulator.Player
                 return;
             }
 
+            // Cinturon: se equipa y suma 2 slots (teclas 4 y 5).
+            if (currentHovered is World.Belt belt)
+            {
+                if (HasBelt) Hud.Notify("belt", "Ya llevas un cinturon", 2f);
+                else
+                {
+                    SetBelt(true);
+                    Hud.Notify("belt", "Cinturon equipado: 5 slots (teclas 1-5)", 3f);
+                    currentHovered = null;
+                    Destroy(belt.gameObject);
+                }
+                return;
+            }
+
             if (currentHovered is World.PhysicalTool || currentHovered is World.Stamp) PickUpToHotbar(currentHovered);
             else GrabSecondary(currentHovered);
         }
@@ -366,8 +416,8 @@ namespace SpellSimulator.Player
         private void PickUpToHotbar(IInteractable interactable)
         {
             if (!(interactable is MonoBehaviour mb)) return;
-            int slot = -1;
-            for (int i = 0; i < HotbarSlots; i++) if (hotbar[i] == null) { slot = i; break; }
+            for (int i = 0; i < MaxHotbarSlots; i++) slotFree[i] = hotbar[i] == null;
+            int slot = HotbarMath.FirstFreeSlot(slotFree, SlotCount);
             if (slot < 0)
             {
                 slot = activeSlot;
@@ -416,7 +466,8 @@ namespace SpellSimulator.Player
         private void HandleHotbarKeys()
         {
             int key = inputReader.HotbarKey;
-            if (key < 0 || key >= HotbarSlots) return;
+            key = HotbarMath.ClampKey(key, SlotCount);
+            if (key < 0) return;
             SelectSlotInternal(key);
         }
 
@@ -653,7 +704,7 @@ namespace SpellSimulator.Player
             else GrabSecondary(interactable);
         }
 
-        /// <summary>Elige un slot como si se apretara su tecla (0 a 2).</summary>
-        public void SelectHotbar(int key) => SelectSlotInternal(Mathf.Clamp(key, 0, HotbarSlots - 1));
+        /// <summary>Elige un slot como si se apretara su tecla (0 a 4).</summary>
+        public void SelectHotbar(int key) => SelectSlotInternal(Mathf.Clamp(key, 0, SlotCount - 1));
     }
 }
