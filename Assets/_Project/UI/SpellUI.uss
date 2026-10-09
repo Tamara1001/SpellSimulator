@@ -281,6 +281,49 @@
     white-space: nowrap;
 }
 
+/* Clase de tinta cargada en la pluma (InkKindInfo.Color: poderosa #D81B60, resistente #00A896). La normal conserva el
+   violeta de la HUD (su azul oscuro no se leeria sobre la pista). Van ANTES de --low/--blink: el aviso de poca tinta manda. */
+.ink-kind {
+    font-size: 13px;
+    -unity-font-style: bold;
+    margin-left: 6px;
+    display: none;
+    white-space: nowrap;
+}
+
+.ink--special .ink-kind {
+    display: flex;
+}
+
+.ink--special .ink-pct {
+    min-width: 40px;
+    margin-left: 4px;
+}
+
+.ink--powerful .ink-fill {
+    background-color: rgb(216, 27, 96);
+}
+
+.ink--powerful .ink-drop {
+    -unity-background-image-tint-color: rgb(240, 96, 140);
+}
+
+.ink--powerful .ink-kind {
+    color: rgb(255, 128, 166);
+}
+
+.ink--resistant .ink-fill {
+    background-color: rgb(0, 168, 150);
+}
+
+.ink--resistant .ink-drop {
+    -unity-background-image-tint-color: rgb(80, 210, 192);
+}
+
+.ink--resistant .ink-kind {
+    color: rgb(110, 228, 210);
+}
+
 .ink--low .ink-fill {
     background-color: var(--danger);
 }
@@ -310,6 +353,10 @@
 
 .hand-gap {
     width: 26px;
+}
+
+.hand-gap--narrow {
+    width: 12px;
 }
 
 .slot-tray {
@@ -426,6 +473,121 @@
 
 .slot--empty .slot-name {
     opacity: 0.45;
+}
+
+/* ------------------------------------------------------------ cartuchos de tinta */
+
+/* Frasquito dibujado con cajas: corcho, cuello de vidrio y panza con la tinta (color en linea desde HudController). */
+.cart-jar {
+    position: absolute;
+    left: 17px; right: 17px; top: 8px; bottom: 9px;
+    align-items: center;
+    transition-property: opacity;
+    transition-duration: 0.25s;
+}
+
+.cart-cork {
+    width: 11px;
+    height: 7px;
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+    background-color: rgb(168, 124, 78);
+    border-bottom-width: 1px;
+    border-color: rgb(110, 76, 44);
+}
+
+.cart-neck {
+    width: 13px;
+    height: 5px;
+    background-color: rgba(200, 222, 232, 0.35);
+    border-left-width: 1px; border-right-width: 1px;
+    border-color: rgba(236, 244, 248, 0.75);
+}
+
+.cart-body {
+    flex-grow: 1;
+    width: 30px;
+    overflow: hidden;
+    border-width: 2px;
+    border-color: rgba(236, 244, 248, 0.8);
+    border-top-left-radius: 8px; border-top-right-radius: 8px;
+    border-bottom-left-radius: 11px; border-bottom-right-radius: 11px;
+    background-color: rgba(190, 215, 225, 0.16);
+}
+
+.cart-ink {
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    height: 68%;
+    background-color: rgb(31, 36, 77);
+    border-top-width: 1px;
+    border-color: rgba(255, 255, 255, 0.35);
+    transition-property: background-color, height;
+    transition-duration: 0.3s, 0.3s;
+}
+
+.cart-shine {
+    position: absolute;
+    left: 4px; top: 4px;
+    width: 4px; height: 13px;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.55);
+}
+
+.cart-count {
+    position: absolute;
+    right: -6px; bottom: -6px;
+    padding: 0 5px 0 5px;
+    font-size: 13px;
+    -unity-font-style: bold;
+    color: var(--gold-light);
+    background-color: var(--violet-deep);
+    border-width: 1px;
+    border-color: rgba(222, 172, 78, 0.8);
+    border-radius: 8px;
+    -unity-text-align: middle-center;
+}
+
+/* Usos del cartucho en uso: 5 rayitas bajo el frasco (ocupan el lugar del nombre de los otros slots). */
+.cart-pips {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    height: 17px;
+    margin-top: 2px;
+}
+
+.cart-pip {
+    width: 8px;
+    height: 5px;
+    margin: 0 1px 0 1px;
+    border-radius: 2px;
+    background-color: rgba(0, 0, 0, 0.5);
+    border-width: 1px;
+    border-color: rgba(222, 172, 78, 0.4);
+}
+
+.cart-pip--on {
+    border-color: var(--gold-light);
+}
+
+.cartridge--empty .cart-jar {
+    opacity: 0.4;
+}
+
+.cartridge--empty .cart-ink {
+    height: 0;
+}
+
+.cartridge--empty .cart-count {
+    color: var(--cream-dim);
+    border-color: rgba(150, 140, 120, 0.6);
+}
+
+/* Al sumar o gastar un cartucho, el frasco da un saltito (usa la transicion de .slot-frame). */
+.cartridge--bump .slot-frame {
+    scale: 1.12 1.12;
+    translate: 0 -3px;
 }
 
 /* ------------------------------------------------------------ avisos */

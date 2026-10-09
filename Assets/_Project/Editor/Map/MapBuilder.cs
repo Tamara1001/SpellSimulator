@@ -60,6 +60,7 @@ namespace SpellSimulator.EditorTools.Map
             MapContraptions.Build(map, lit, stampTable + new Vector3(-5f, 0f, 0f));
             MapDetails.PostProcess();
             ToolModels.Apply(lit);
+            FieldPortableInkwell();
             TowerProps.Build(map, lit, TowerOrigin());
             CanvasDesigns.Build(map, lit, TowerOrigin(), stampTable);
             MovablesSetup.Apply(map, lit);
@@ -416,16 +417,18 @@ namespace SpellSimulator.EditorTools.Map
                 go.transform.position = lab + offset;
             }
 
-            // Mesa de herramientas al lado del atril, con lapiz, pincel, goma, trapo y tintero encima.
+            // Mesa de herramientas al lado del atril, con lapiz, pincel, goma, trapo y tintero FIJO encima (kinematico: se
+            // apoya a ras de la cubierta, 0.82 m; lo demas cae desde un poco mas arriba).
             var mapRoot = GameObject.Find("Map").transform;
             Vector3 tableAt = Ground(field.x - 2.2f, field.z - 10.5f);
+            fieldToolTable = tableAt;
             TowerBuilder.Table(mapRoot, lit, "ToolTable", tableAt - mapRoot.position, 0f, 1.6f, 0.7f);
             float x = -0.6f;
             foreach (var name in new[] { "Pen", "Brush", "Eraser", "Rag", "Inkwell" })
             {
                 var go = GameObject.Find(name);
                 if (go == null) continue;
-                go.transform.position = tableAt + new Vector3(x, 0.95f, 0f);
+                go.transform.position = tableAt + new Vector3(x, name == "Inkwell" ? 0.82f : 0.95f, 0f);
                 x += 0.3f;
             }
 
@@ -456,6 +459,29 @@ namespace SpellSimulator.EditorTools.Map
             var existingDeskPaper = GameObject.Find("DeskPaper");
             if (desk != null && existingDeskPaper != null)
                 existingDeskPaper.transform.SetPositionAndRotation(desk.transform.position + Vector3.up * 0.86f, Quaternion.Euler(90f, 0f, 0f));
+        }
+
+        private static Vector3 fieldToolTable;
+
+        /// <summary>
+        /// Tintero PORTATIL normal suelto en la mesa de herramientas del campo, delante del FIJO (x 0.6). Vive en la raiz
+        /// como los clones de TowerProps.Tools y se rehace por nombre (idempotente).
+        /// </summary>
+        private static void FieldPortableInkwell()
+        {
+            const string name = "InkwellPortable_Field";
+            var old = GameObject.Find(name);
+            if (old != null) Object.DestroyImmediate(old);
+            var source = GameObject.Find("Inkwell");
+            if (source == null) return;
+            var clone = Object.Instantiate(source);
+            clone.name = name;
+            clone.transform.SetPositionAndRotation(fieldToolTable + new Vector3(0.62f, 0.85f, -0.24f), Quaternion.Euler(0f, 200f, 0f));
+            ToolModels.MakeInkwell(clone, lit, Core.InkKind.Normal, true);
+            var respawn = clone.GetComponent<World.Respawnable>();
+            if (respawn != null) Object.DestroyImmediate(respawn);
+            clone.AddComponent<World.Respawnable>();
+            Undo.RegisterCreatedObjectUndo(clone, name);
         }
 
         /// <summary>Posiciones originales en el laboratorio (para que regenerar no acumule desplazamientos).</summary>

@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-09 — Bloque 2 del plan: tinta, cartuchos y tinteros fijos/portatiles
+- **Logica** (`Core/InkKind`, `InkMath`, `InkCartridgeStock`; +14 tests, 175 en total): el gasto por metro se normaliza al tamano del lienzo (referencia 0,5 m, tope x8); tintas Normal/Poderosa/Resistente (las especiales gastan x2; poderosa x2,5 de potencia; resistente = `waterproof`). Cada `Stroke` lleva su `Ink` y `SpellCaster` fija `SpellIR.inkPower/waterproof` con la tinta dominante (el efecto real va en el bloque 3).
+- **Cartuchos:** `InkSupply.Cartridges` (5 usos cada uno, 2 al empezar, maximo 4). R gasta un uso, llena la pluma y la deja con la clase del cartucho; apuntando a un tintero fijo recarga desde el.
+- **Tinteros:** fijos (pedestal de piedra, inagotables, no se levantan) y portatiles (frasco; E lo guarda como cartucho). Torre: 3 fijos + 4 portatiles (Normal x2, Poderosa, Resistente) y 1 portatil en el campo de practica.
+- **HUD:** slot de cartuchos (frasco del color de la clase, contador y 5 pips de usos) y medidor de la pluma con el color/nombre de la tinta. Chequeo nuevo en `HarnessPlaySmoke`.
+- Hecho por subagentes (Sonnet: logica; Opus: HUD y arte); verificado con compilacion, tests, smoke y captura. Pendiente de probar a mano. Docs tocadas: PLAN_OCTAVA_TANDA, STRUCTURE.
+
 ## 2026-10-08 — Cuaderno agarrado + vista completa a veces no dejaba dibujar
 - Causa medida (`HarnessCanvasMatrix` con `Only=FOCUSRAY`, 40 chequeos): el rayo del lapiz tomaba el PRIMER collider; si otro objeto (otro papel, un mueble) quedaba entre la camara y el lienzo enfocado, no se dibujaba. Ahora `FocusMode.FocusedCanvas` (lo fijan `PhysicalCanvas.SetFocus` y `SurfaceFocus`) hace que, en vista completa, `PhysicalTool.TryShootRay` solo vea el lienzo enfocado (sin allocations: `RaycastNonAlloc`).
 - Diagnostico nuevo: `Respawnable` loguea por que reaparece un objeto (cualquier objeto que reaparece pierde su vista completa). Docs tocadas: PLAN_OCTAVA_TANDA (pendientes: mas hechizos prearmados + descubrirlos, crear/guardar hechizos, menu de pausa), ROADMAP, STATUS, Home.

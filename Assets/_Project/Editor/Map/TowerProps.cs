@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using SpellSimulator.Core;
 using SpellSimulator.Reactions;
 using SpellSimulator.World;
 
@@ -13,7 +14,8 @@ namespace SpellSimulator.EditorTools.Map
     /// - Estacion de agua (oeste, bajo la ventana): pila de piedra con agua de verdad (WaterVolume), un barquito que flota,
     ///   un balde y el lienzo grande enmarcado (BigCanvas_Library) al lado.
     /// Cada estacion tiene un cartel en tablilla con el glifo a dibujar. El fuego queda para la terraza y el exterior.
-    /// Ademas: mesas de trabajo con herramientas (plumas, pinceles, gomas, trapos y tinteros) en la biblioteca y el estudio,
+    /// Ademas: mesas de trabajo con herramientas (plumas, pinceles, gomas, trapos, tinteros FIJOS y PORTATILES de las tres
+    /// clases de tinta) en la biblioteca y el estudio,
     /// el taller de alquimia del segundo piso y cajas movibles. Las herramientas se clonan de las del campo.
     /// </summary>
     public static class TowerProps
@@ -63,12 +65,15 @@ namespace SpellSimulator.EditorTools.Map
             // Mesa de trabajo de la biblioteca: herramientas a la derecha (los cuadernos van a la izquierda, ver CanvasDesigns).
             var library = new Desk(LibraryBench, 0f, LibraryBenchWidth, LibraryBenchDepth);
             TowerBuilder.Table(tower.transform, material, "Workbench_Library", library.Center, library.Yaw, library.Width, library.Depth);
-            Tools(origin, library, new[] { "Pen", "Pen", "Brush", "Brush", "Eraser", "Rag", "Inkwell", "Inkwell" }, 0.25f, 0.3f);
+            // Los dos tinteros de la biblioteca son FIJOS (clones de la plantilla del campo); al final, dos PORTATILES.
+            Tools(origin, library, new[] { "Pen", "Pen", "Brush", "Brush", "Eraser", "Rag", "Inkwell", "Inkwell",
+                PortablePrefix + nameof(InkKind.Powerful), PortablePrefix + nameof(InkKind.Normal) }, 0.25f, 0.4f, material);
 
             // Estudio (primer piso): otra mesa con herramientas y tinta.
             var study = new Desk(new Vector3(-0.5f, floor, 2.1f), 170f, 1.8f, 0.7f);
             TowerBuilder.Table(tower.transform, material, "Workbench_Study", study.Center, study.Yaw, study.Width, study.Depth);
-            Tools(origin, study, new[] { "Pen", "Brush", "Eraser", "Rag", "Inkwell" }, 0.3f, 0f);
+            Tools(origin, study, new[] { "Pen", "Brush", "Eraser", "Rag", "Inkwell",
+                PortablePrefix + nameof(InkKind.Normal), PortablePrefix + nameof(InkKind.Resistant) }, 0.3f, 0f, material);
 
             // Segundo piso: taller de alquimia.
             Alchemy(map, tower.transform, material, origin);
@@ -88,12 +93,16 @@ namespace SpellSimulator.EditorTools.Map
             Crate(map, material, "Crate_Study_A", origin + new Vector3(1.9f, floor + 0.25f, -1.0f), Vector3.one * 0.5f, 5f);
         }
 
+        /// <summary>Plantilla de Tools: tintero PORTATIL de la clase que sigue ("InkwellPortable:Powerful"), clonado del tintero del campo.</summary>
+        private const string PortablePrefix = "InkwellPortable:";
+
         /// <summary>
         /// Clona herramientas del campo sobre una mesa, en dos filas ordenadas. Las posiciones se calculan en el sistema
         /// local de la mesa (girado por su yaw), corridas shiftX sobre su ancho, y quedan dentro de la cubierta: en X,
-        /// +-(ancho/2 - 0.1); en Z, +-(fondo/2 - 0.08). Plumas y pinceles van echados; los tinteros, parados.
+        /// +-(ancho/2 - 0.1); en Z, +-(fondo/2 - 0.08). Plumas y pinceles van echados; los tinteros, parados. Los clones de "Inkwell" son FIJOS
+        /// (como la plantilla); los <see cref="PortablePrefix"/> se reconfiguran como portatiles de su clase.
         /// </summary>
-        private static void Tools(Vector3 origin, Desk desk, string[] templates, float spacing, float shiftX)
+        private static void Tools(Vector3 origin, Desk desk, string[] templates, float spacing, float shiftX, Material material)
         {
             Vector3 deskAt = origin + desk.Center;
             float halfX = desk.Width / 2f - 0.1f;
@@ -104,9 +113,13 @@ namespace SpellSimulator.EditorTools.Map
             for (int index = 0; index < templates.Length; index++)
             {
                 string template = templates[index];
-                var source = GameObject.Find(template);
+                bool portable = template.StartsWith(PortablePrefix);
+                InkKind inkKind = InkKind.Normal;
+                if (portable && !System.Enum.TryParse(template.Substring(PortablePrefix.Length), out inkKind)) continue;
+                var source = GameObject.Find(portable ? "Inkwell" : template);
                 if (source == null) continue;
-                string name = $"{template}_{(int)((deskAt.y + 0.84f) * 100)}_{index}";
+                string baseName = portable ? "InkwellPortable" + inkKind : template;
+                string name = $"{baseName}_{(int)((deskAt.y + 0.84f) * 100)}_{index}";
                 var old = GameObject.Find(name);
                 if (old != null) Object.DestroyImmediate(old);
                 var clone = Object.Instantiate(source);
@@ -116,10 +129,12 @@ namespace SpellSimulator.EditorTools.Map
                 float x = Mathf.Clamp((column - (columns - 1) * 0.5f) * step + shiftX, -halfX, halfX);
                 float z = (row == 0 ? -0.5f : 0.5f) * halfZ;
                 // Plumas, pinceles y demas quedan echados; los tinteros, parados (sin inclinacion en X ni Z).
-                bool upright = template == "Inkwell";
+                // Los fijos son kinematicos: van a ras de la cubierta (0.82 m, TowerBuilder.Table); lo demas cae un poco.
+                bool upright = template == "Inkwell" || portable;
                 clone.transform.SetPositionAndRotation(
-                    deskAt + deskRotation * new Vector3(x, 0f, z) + new Vector3(0f, 0.84f + (upright ? 0.01f : 0.04f), 0f),
+                    deskAt + deskRotation * new Vector3(x, 0f, z) + new Vector3(0f, template == "Inkwell" ? 0.82f : 0.84f + (upright ? 0.01f : 0.04f), 0f),
                     Quaternion.Euler(0f, desk.Yaw + 90f + index * 15f, upright ? 0f : 90f));
+                if (portable) ToolModels.MakeInkwell(clone, material, inkKind, true);
                 var respawn = clone.GetComponent<Respawnable>();
                 if (respawn != null) Object.DestroyImmediate(respawn);
                 clone.AddComponent<Respawnable>();

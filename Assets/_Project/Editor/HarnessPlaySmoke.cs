@@ -211,6 +211,23 @@ namespace SpellSimulator.EditorTools
 
             // --- HUD
             Check(Object.FindFirstObjectByType<UnityEngine.UIElements.UIDocument>() != null, "HUD UI Toolkit presente");
+
+            // --- Slot de cartuchos: existe y su contador sigue al stock (sumar un cartucho poderoso lo cambia en el acto).
+            var hud = Object.FindFirstObjectByType<SpellSimulator.UI.HudController>();
+            var supply = player.GetComponent<InkSupply>();
+            var hudDoc = hud != null ? hud.GetComponent<UnityEngine.UIElements.UIDocument>() : null;
+            bool hasSlot = hudDoc != null && hudDoc.rootVisualElement != null && UnityEngine.UIElements.UQueryExtensions.Q(hudDoc.rootVisualElement, "cartridge") != null;
+            if (hud != null && supply != null && hasSlot)
+            {
+                var stock = supply.Cartridges;
+                // Si el stock esta lleno se gasta un cartucho entero para hacer lugar.
+                while (stock.CartridgeCount >= stock.MaxCartridges && stock.TryUse(out _)) { }
+                int before = stock.CartridgeCount;
+                bool added = stock.TryAdd(SpellSimulator.Core.InkKind.Powerful);
+                Check(added && hud.CartridgeCountShown == before + 1 && hud.CartridgeCountShown == stock.CartridgeCount,
+                    "el HUD muestra el slot de cartuchos y su contador cambia al sumar uno");
+            }
+            else failures.Add("falta el slot de cartuchos del HUD (o el InkSupply del jugador)");
         }
     }
 }

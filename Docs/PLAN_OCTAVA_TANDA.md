@@ -20,7 +20,7 @@ valores iniciales en datos/SO, ajustables tras probar a mano.
 | Rotar objeto | clic der. + mouse (congela la vista) | más sensible y **se puede rotar mientras se camina** |
 Fuente de verdad: `GAME_DESIGN.md#controles`; repetir en `Learning/GrimoireTexts.cs` y `PlayerInputReader`.
 
-## 2. Tinta, tinteros y HUD
+## 2. Tinta, tinteros y HUD (HECHO 2026-10-09, falta el retardo de lanzamiento y la prueba a mano)
 - El gasto por metro se **normaliza al tamaño del lienzo** (un lienzo grande ya no se agota enseguida); el HUD muestra la reserva (%) y los cartuchos.
 - **Cartuchos:** slot propio en el HUD con contador (no ocupa los 3 slots de mano). 1 cartucho = 5 usos; **R** gasta un uso y recarga la pluma por completo.
 - **Tinteros** de dos familias bien distinguibles (color/forma/etiqueta): **fijos** (zonas del mundo, no equipables, inagotables o de recarga lenta) y **portátiles** (se llevan; dan cartuchos).

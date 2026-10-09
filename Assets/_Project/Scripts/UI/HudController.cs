@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UIElements;
+using SpellSimulator.Core;
 using SpellSimulator.DebugTools;
 using SpellSimulator.Interfaces;
 using SpellSimulator.Learning;
@@ -11,7 +12,9 @@ namespace SpellSimulator.UI
     /// <summary>
     /// HUD de juego en UI Toolkit (reemplaza la HUD uGUI): barra de la mano principal (3 slots, teclas 1-3) y slot de la
     /// mano secundaria con miniaturas 3D (<see cref="ItemIcons"/>), panel de contexto con keycaps, selector de grosor,
-    /// tinta y pagina, la tecla [E] junto a la mira y los avisos (<see cref="Hud"/>) arriba a la derecha. Nada toma el
+    /// tinta (con su clase) y pagina, el slot de cartuchos de tinta (frasco, cantidad y usos; se refresca solo por
+    /// <see cref="InkCartridgeStock.Changed"/>), la tecla [E] junto a la mira y los avisos (<see cref="Hud"/>) arriba a la
+    /// derecha. Nada toma el
     /// mouse (salvo el slot del grimorio, a la izquierda de la barra, que abre/cierra el libro con clic o TAB). Se oculta
     /// (salvo avisos) con el grimorio a pantalla completa o el lector de libros abiertos.
     /// Rendimiento: el arbol solo se reconstruye ante <see cref="PlayerInteractor.InventoryChanged"/> o
@@ -29,7 +32,10 @@ namespace SpellSimulator.UI
         private const float BlinkInterval = 0.45f;
         private const int OutMilliseconds = 300;
 
-        private static readonly string[] Percents = BuildPercents();
+        private static readonly string[] Percents = BuildPercents("Tinta ");
+        private static readonly string[] BarePercents = BuildPercents("");
+        private static readonly string[] Counts = BuildCounts(16);
+        private const int CartridgeBumpMilliseconds = 170;
         private static readonly string[] SlotKeys = { "1", "2", "3" };
 
         private sealed class Slot
@@ -66,6 +72,16 @@ namespace SpellSimulator.UI
         private readonly List<HudText.Hint> hintBuffer = new List<HudText.Hint>(10);
         private readonly List<NoticeCard> cards = new List<NoticeCard>(8);
 
+        // Cartuchos de tinta del jugador (se refresca solo por InkCartridgeStock.Changed).
+        private InkSupply inkSupply;
+        private VisualElement cartridge, cartInk;
+        private Label cartCount, inkKindLabel;
+        private readonly VisualElement[] cartPips = new VisualElement[InkCartridgeStock.UsesPerCartridge];
+        private IVisualElementScheduledItem cartBumpEnd;
+        private int lastCartCount = -1;
+        /// <summary>Cantidad de cartuchos que muestra el contador del HUD (-1 antes de armarse). Lo usa el test de humo.</summary>
+        public int CartridgeCountShown { get; private set; } = -1;
+
         private bool bound;
         private bool inventoryDirty = true;
         private bool noticesDirty = true;
@@ -77,6 +93,8 @@ namespace SpellSimulator.UI
         // Estado cacheado para comparar por frame.
         private GameObject mainItem, secondaryItem;
         private IHudInfo mainInfo, secondaryInfo;
+        private IInkUser mainInk;
+        private InkKind lastInkKind = (InkKind)(-1);
         private IWidthSelectable mainWidths;
         private IPageable secondaryPages;
         private string mainHintsSource, secHintsSource, hoverHintsShown;
@@ -88,6 +106,7 @@ namespace SpellSimulator.UI
         {
             document = GetComponent<UIDocument>();
             if (interactor == null) interactor = FindFirstObjectByType<PlayerInteractor>();
+            if (interactor != null) inkSupply = interactor.GetComponent<InkSupply>();
         }
 
         private void OnEnable()
@@ -97,6 +116,7 @@ namespace SpellSimulator.UI
             DiagnosticBus.OnDiagnosticsUpdated += HandleDiagnostics;
             Discovery.Discovered += OnDiscovered;
             if (interactor != null) interactor.InventoryChanged += MarkInventory;
+            if (inkSupply != null) inkSupply.Cartridges.Changed += OnCartridgesChanged;
             bound = false;
         }
 
@@ -107,9 +127,61 @@ namespace SpellSimulator.UI
             DiagnosticBus.OnDiagnosticsUpdated -= HandleDiagnostics;
             Discovery.Discovered -= OnDiscovered;
             if (interactor != null) interactor.InventoryChanged -= MarkInventory;
+            if (inkSupply != null) inkSupply.Cartridges.Changed -= OnCartridgesChanged;
         }
 
         private void MarkInventory() => inventoryDirty = true;
+
+        /// <summary>El stock cambia por eventos (R, guardar un tintero): se refresca en el acto, nunca por frame.</summary>
+        private void OnCartridgesChanged()
+        {
+            if (bound) RefreshCartridges(true);
+        }
+
+        private void RefreshCartridges(bool animate)
+        {
+            if (cartridge == null || cartCount == null) return;
+            InkCartridgeStock stock = inkSupply != null ? inkSupply.Cartridges : null;
+            int count = stock != null ? stock.CartridgeCount : 0;
+            int uses = stock != null ? stock.CurrentUses : 0;
+            bool empty = count == 0;
+            Color color = InkKindInfo.Color(stock != null ? stock.CurrentKind : InkKind.Normal);
+            // Las rayitas, un poco mas claras que la tinta para que el azul oscuro de la normal se lea sobre el marco.
+            Color pipColor = Color.Lerp(color, Color.white, 0.3f);
+
+            cartCount.text = count < Counts.Length ? Counts[count] : "x" + count;
+            CartridgeCountShown = count;
+            cartridge.EnableInClassList("cartridge--empty", empty);
+            if (cartInk != null)
+            {
+                cartInk.style.backgroundColor = color;
+                // La panza se vacia con los usos del cartucho actual (lleno = 85 %).
+                cartInk.style.height = empty ? Length.Percent(0f) : Length.Percent(25f + 60f * uses / InkCartridgeStock.UsesPerCartridge);
+            }
+            for (int i = 0; i < cartPips.Length; i++)
+            {
+                VisualElement pip = cartPips[i];
+                if (pip == null) continue;
+                bool on = i < uses;
+                pip.EnableInClassList("cart-pip--on", on);
+                if (on) pip.style.backgroundColor = pipColor;
+                else pip.style.backgroundColor = StyleKeyword.Null;
+            }
+
+            if (animate && count != lastCartCount && lastCartCount >= 0) Bump();
+            lastCartCount = count;
+        }
+
+        /// <summary>Saltito del frasco al sumar o gastar un cartucho (evento, no por frame).</summary>
+        private void Bump()
+        {
+            cartridge.AddToClassList("cartridge--bump");
+            if (cartBumpEnd == null) cartBumpEnd = cartridge.schedule.Execute(EndBump);
+            cartBumpEnd.ExecuteLater(CartridgeBumpMilliseconds);
+        }
+
+        private void EndBump() => cartridge?.RemoveFromClassList("cartridge--bump");
+
         private void MarkNotices() => noticesDirty = true;
 
         // ---------------------------------------------------------------- armado
@@ -135,6 +207,9 @@ namespace SpellSimulator.UI
             mainName = root.Q<Label>("ctx-main-name");
             secName = root.Q<Label>("ctx-sec-name");
             inkPct = root.Q<Label>("ink-pct");
+            inkKindLabel = root.Q<Label>("ink-kind");
+            lastInkKind = (InkKind)(-1);
+            BindCartridge(root);
             pageLabel = root.Q<Label>("page");
 
             VisualElement mainTray = root.Q("main-slots");
@@ -162,7 +237,29 @@ namespace SpellSimulator.UI
             hidden = false;
             hoverShown = false;
             lastInk = int.MinValue;
+            RefreshCartridges(false);
             return true;
+        }
+
+        /// <summary>Slot de cartuchos: crea las 5 rayitas de usos (el frasco y el contador vienen del UXML).</summary>
+        private void BindCartridge(VisualElement root)
+        {
+            cartridge = root.Q("cartridge");
+            cartInk = root.Q("cart-ink");
+            cartCount = root.Q<Label>("cart-count");
+            VisualElement pips = root.Q("cart-pips");
+            cartBumpEnd = null;
+            lastCartCount = -1;
+            CartridgeCountShown = -1;
+            if (pips == null) return;
+            pips.Clear();
+            for (int i = 0; i < cartPips.Length; i++)
+            {
+                var pip = new VisualElement { pickingMode = PickingMode.Ignore };
+                pip.AddToClassList("cart-pip");
+                pips.Add(pip);
+                cartPips[i] = pip;
+            }
         }
 
         private static Slot MakeSlot(VisualElement parent, string key)
@@ -287,12 +384,23 @@ namespace SpellSimulator.UI
                 }
             }
             for (int i = 0; i < mainSlots.Length; i++) UpdateSlotInk(mainSlots[i]);
-            if (q == lastInk) return;
+            InkKind kind = mainInk != null ? mainInk.LoadedInk : InkKind.Normal;
+            if (q == lastInk && (q < 0 || kind == lastInkKind)) return;
             lastInk = q;
             ink.style.display = q < 0 ? DisplayStyle.None : DisplayStyle.Flex;
-            if (q < 0) return;
+            if (q < 0) { lastInkKind = (InkKind)(-1); return; }
+            bool kindChanged = kind != lastInkKind;
+            lastInkKind = kind;
+            if (kindChanged)
+            {
+                ink.EnableInClassList("ink--special", kind != InkKind.Normal);
+                ink.EnableInClassList("ink--powerful", kind == InkKind.Powerful);
+                ink.EnableInClassList("ink--resistant", kind == InkKind.Resistant);
+                if (inkKindLabel != null) inkKindLabel.text = ShortInkName(kind);
+            }
             inkFill.style.width = Length.Percent(q);
-            inkPct.text = Percents[q];
+            // Tinta especial: "Poderosa 54 %"; normal: "Tinta 54 %".
+            inkPct.text = kind == InkKind.Normal ? Percents[q] : BarePercents[q];
             ink.EnableInClassList("ink--low", low);
             if (!low) { blinkOn = false; ink.EnableInClassList("ink--blink", false); }
         }
@@ -356,6 +464,7 @@ namespace SpellSimulator.UI
                 mainItem = main;
                 mainInfo = main != null ? main.GetComponent<IHudInfo>() : null;
                 mainWidths = main != null ? main.GetComponent<IWidthSelectable>() : null;
+                mainInk = main != null ? main.GetComponent<IInkUser>() : null;
                 BuildWidths();
                 lastInk = int.MinValue;
             }
@@ -613,11 +722,29 @@ namespace SpellSimulator.UI
             Hud.Notify("disc", lastDiscovered, 4f);
         }
 
-        private static string[] BuildPercents()
+        private static string[] BuildPercents(string prefix)
         {
             var p = new string[101];
-            for (int i = 0; i <= 100; i++) p[i] = "Tinta " + i + " %";
+            for (int i = 0; i <= 100; i++) p[i] = prefix + i + " %";
             return p;
+        }
+
+        private static string[] BuildCounts(int max)
+        {
+            var c = new string[max + 1];
+            for (int i = 0; i <= max; i++) c[i] = "x" + i;
+            return c;
+        }
+
+        /// <summary>Nombre corto de la clase de tinta junto al porcentaje (vacio para la normal).</summary>
+        private static string ShortInkName(InkKind kind)
+        {
+            switch (kind)
+            {
+                case InkKind.Powerful: return "Poderosa";
+                case InkKind.Resistant: return "Resistente";
+                default: return "";
+            }
         }
     }
 }

@@ -19,6 +19,7 @@
                                 <ui:VisualElement class="ink-track">
                                     <ui:VisualElement name="ink-fill" class="ink-fill" />
                                 </ui:VisualElement>
+                                <ui:Label name="ink-kind" class="ink-kind" />
                                 <ui:Label name="ink-pct" class="ink-pct" />
                             </ui:VisualElement>
                         </ui:VisualElement>
@@ -44,6 +45,27 @@
                     <ui:VisualElement class="hand-gap" />
                     <ui:VisualElement class="hand hand--main">
                         <ui:VisualElement name="main-slots" class="slot-tray" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="hand-gap hand-gap--narrow" />
+                    <!-- Cartuchos de tinta: frasco del color de la tinta en uso, cantidad y usos (pips) del cartucho actual. -->
+                    <ui:VisualElement class="hand hand--ink">
+                        <ui:VisualElement class="slot-tray slot-tray--single">
+                            <ui:VisualElement name="cartridge" class="slot cartridge">
+                                <ui:VisualElement class="slot-frame">
+                                    <ui:VisualElement class="cart-jar">
+                                        <ui:VisualElement class="cart-cork" />
+                                        <ui:VisualElement class="cart-neck" />
+                                        <ui:VisualElement class="cart-body">
+                                            <ui:VisualElement name="cart-ink" class="cart-ink" />
+                                            <ui:VisualElement class="cart-shine" />
+                                        </ui:VisualElement>
+                                    </ui:VisualElement>
+                                    <ui:Label text="R" class="keycap keycap--small slot-key" />
+                                    <ui:Label name="cart-count" text="x0" class="cart-count" />
+                                </ui:VisualElement>
+                                <ui:VisualElement name="cart-pips" class="cart-pips" />
+                            </ui:VisualElement>
+                        </ui:VisualElement>
                     </ui:VisualElement>
                 </ui:VisualElement>
             </ui:VisualElement>
