@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using SpellSimulator.Core;
 using SpellSimulator.Player;
 
 namespace SpellSimulator.World
@@ -29,9 +30,6 @@ namespace SpellSimulator.World
         private static readonly List<BudgetMath.Entry> entries = new List<BudgetMath.Entry>(48);
         private static readonly List<int> evictions = new List<int>(8);
 
-        private static ObjectMover mover;
-        private static float nextMoverSearch;
-
         /// <summary>Objetos registrados que siguen vivos.</summary>
         public static int Count => items.Count;
 
@@ -41,22 +39,19 @@ namespace SpellSimulator.World
             items.Clear();
             entries.Clear();
             evictions.Clear();
-            mover = null;
-            nextMoverSearch = 0f;
         }
 
         /// <summary>Anota un objeto suministrado (<c>ownerId</c>: jugador que lo pidio, 0 = local) y aplica el tope.</summary>
         public static void Register(GameObject go, string supplyId, int ownerId = 0)
         {
             if (go == null) return;
-            items.Add(new Item { go = go, typeKey = supplyId ?? "", ownerId = ownerId, birthTime = Time.time });
+            items.Add(new Item { go = go, typeKey = supplyId ?? "", ownerId = ownerId, birthTime = GameClock.Time });
             Enforce();
         }
 
         /// <summary>Descarta lo destruido o ya achicandose y saca el exceso. Barato: se llama al registrar y cada tanto.</summary>
         public static void Enforce()
         {
-            Transform cam = Camera.main != null ? Camera.main.transform : null;
             for (int i = items.Count - 1; i >= 0; i--)
             {
                 GameObject go = items[i].go;
@@ -70,10 +65,12 @@ namespace SpellSimulator.World
                 {
                     birthTime = it.birthTime,
                     typeKey = it.typeKey,
-                    isProtected = IsProtected(it.go, cam),
+                    isProtected = IsProtected(it.go),
+                    ownerId = it.ownerId,
                 });
             }
-            BudgetMath.SelectEvictions(entries, MaxTotal, MaxPerType, evictions);
+            // El tope por dueno solo rige con varios jugadores: en solitario no cambia el comportamiento.
+            BudgetMath.SelectEvictions(entries, MaxTotal, MaxPerType, evictions, PlayerRegistry.Count > 1 ? BudgetMath.DefaultMaxPerOwner : 0);
             if (evictions.Count == 0) return;
             for (int i = 0; i < evictions.Count; i++) Evict(items[evictions[i]].go);
             // Se borran de mayor a menor indice para no desfasar los demas.
@@ -89,28 +86,17 @@ namespace SpellSimulator.World
             Debug.Log($"[Suministro] Tope de objetos sueltos: {go.name} se retira.");
         }
 
-        private static bool IsProtected(GameObject go, Transform cam)
+        private static bool IsProtected(GameObject go)
         {
             if (!go.activeInHierarchy) return true; // guardado en el inventario
             if (IsHeld(go)) return true;
-            return cam != null && (go.transform.position - cam.position).sqrMagnitude <= SafeRadius * SafeRadius;
+            return PlayerRegistry.AnyNear(go.transform.position, SafeRadius); // cerca de CUALQUIER jugador
         }
 
         /// <summary>True si el objeto esta agarrado por el jugador o cuelga de su camara (mano, VR).</summary>
         public static bool IsHeld(GameObject go)
         {
-            if (mover == null && Time.unscaledTime >= nextMoverSearch)
-            {
-                mover = Object.FindFirstObjectByType<ObjectMover>();
-                nextMoverSearch = Time.unscaledTime + 5f;
-            }
-            if (mover != null && mover.HeldBody != null)
-            {
-                Transform held = mover.HeldBody.transform;
-                if (go.transform == held || go.transform.IsChildOf(held)) return true;
-            }
-            Camera cam = Camera.main;
-            return cam != null && go.transform.IsChildOf(cam.transform);
+            return PlayerHeld.IsHeld(go.transform);
         }
     }
 }

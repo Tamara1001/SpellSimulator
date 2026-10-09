@@ -1,6 +1,7 @@
 using UnityEngine;
 using SpellSimulator.Canvas;
 using SpellSimulator.Casting;
+using SpellSimulator.Core;
 
 namespace SpellSimulator.World
 {
@@ -57,7 +58,7 @@ namespace SpellSimulator.World
             && caster.GetPhase(canvas) == SealPhase.Armed && (rune == null || !rune.IsExhausted);
 
         /// <summary>Se disparo hace menos de <paramref name="seconds"/> segundos.</summary>
-        public bool FiredRecently(float seconds) => Time.time - lastFireTime < seconds;
+        public bool FiredRecently(float seconds) => GameClock.Time - lastFireTime < seconds;
 
         public void SetPermanent(int uses, float cooldown)
         {
@@ -81,10 +82,10 @@ namespace SpellSimulator.World
         public void RegisterFired()
         {
             uses++;
-            lastFireTime = Time.time;
+            lastFireTime = GameClock.Time;
             if (rune != null) rune.RegisterUse();
             bool exhausted = rune != null && rune.IsExhausted;
-            if (!exhausted && uses < EffectiveMaxUses) rearmAt = Time.time + EffectiveCooldown;
+            if (!exhausted && uses < EffectiveMaxUses) rearmAt = GameClock.Time + EffectiveCooldown;
         }
 
         public void Configure(Mode newMode, SpellCaster spellCaster, float threshold)
@@ -129,12 +130,12 @@ namespace SpellSimulator.World
             // La carga cuenta solo si esta apoyada encima (el contacto empuja la placa hacia abajo).
             if (collision.contactCount == 0) return;
             if (Vector3.Dot(collision.GetContact(0).normal, Vector3.up) < minUpDot && Vector3.Dot(collision.GetContact(0).normal, Vector3.down) < minUpDot) return;
-            lastLoad = Time.time;
+            lastLoad = GameClock.Time;
         }
 
         private void Update()
         {
-            if (rearmAt < 0f || Time.time < rearmAt || caster == null) return;
+            if (rearmAt < 0f || !CooldownMath.IsReady(GameClock.Time, rearmAt) || caster == null) return;
             rearmAt = -1f;
             if (rune != null && rune.IsExhausted) return;
             caster.Rearm(canvas);
@@ -143,8 +144,8 @@ namespace SpellSimulator.World
         private void FixedUpdate()
         {
             if (mode != Mode.Pressure || canvas == null || caster == null) return;
-            bool loaded = Time.time - lastLoad < Time.fixedDeltaTime * 2.5f;
-            held = loaded ? held + Time.fixedDeltaTime : 0f;
+            bool loaded = GameClock.Time - lastLoad < GameClock.FixedDeltaTime * 2.5f;
+            held = loaded ? held + GameClock.FixedDeltaTime : 0f;
             if (held >= pressureSeconds)
             {
                 held = 0f;

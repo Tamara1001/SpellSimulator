@@ -2,6 +2,7 @@ using UnityEngine;
 using SpellSimulator.Canvas;
 using SpellSimulator.Interfaces;
 using SpellSimulator.Player;
+using SpellSimulator.Core;
 
 namespace SpellSimulator.World
 {
@@ -245,7 +246,7 @@ namespace SpellSimulator.World
         private void StartFloating(bool timed = false)
         {
             floatTimed = timed;
-            floatSince = Time.time;
+            floatSince = GameClock.Time;
             Vector3 normal = canvas != null ? canvas.FaceNormal : transform.forward;
             Vector3 face = Mathf.Abs(normal.y) > 0.75f
                 ? (normal.y > 0f ? Vector3.up : Vector3.down)
@@ -282,7 +283,7 @@ namespace SpellSimulator.World
         {
             if (animating)
             {
-                animT += Time.deltaTime / Mathf.Max(0.01f, poseSeconds);
+                animT += Time.deltaTime / Mathf.Max(0.01f, poseSeconds); // visual
                 float s = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(animT));
                 Vector3 p = Vector3.Lerp(animFromPos, animToPos, s);
                 Quaternion q = Quaternion.Slerp(animFromRot, animToRot, s);
@@ -300,10 +301,10 @@ namespace SpellSimulator.World
                 if (floatTimed)
                 {
                     // Enfocado: no cae (se vuelve a contar el minuto).
-                    if (focused) floatSince = Time.time;
-                    else if (Time.time - floatSince >= FloatSeconds) { Fall(); return; }
+                    if (focused) floatSince = GameClock.Time;
+                    else if (PinMath.ShouldRelease(GameClock.Time, floatSince, FloatSeconds)) { Fall(); return; }
                 }
-                float t = Time.time * bobSpeed + bobPhase;
+                float t = Time.time * bobSpeed + bobPhase; // visual
                 // Tres ondas de periodos distintos: se mueve sin repetirse de forma obvia.
                 Vector3 offset = new Vector3(Mathf.Sin(t * 0.61f) * driftMeters, Mathf.Sin(t) * bobHeight, Mathf.Cos(t * 0.47f) * driftMeters);
                 Quaternion sway = Quaternion.Euler(Mathf.Sin(t * 0.83f) * swayDegrees, Mathf.Sin(t * 0.53f + 1.3f) * swayDegrees * 1.4f, Mathf.Sin(t * 0.71f + 2.1f) * swayDegrees);
@@ -352,7 +353,7 @@ namespace SpellSimulator.World
                 // el plano cercano real (0,3 m) se ignoraba y los lienzos chicos quedaban DELANTE de el (invisibles y sin dibujar).
                 var cam = cameraTransform.GetComponent<Camera>();
                 if (cam == null) cam = cameraTransform.GetComponentInChildren<Camera>();
-                if (cam == null) cam = Camera.main;
+                if (cam == null) cam = Camera.main; // presentacion: camara del lienzo en vista completa
                 float vfov = cam != null ? cam.fieldOfView : 60f;
                 float aspect = cam != null ? cam.aspect : 1.78f;
                 Vector2 size = canvas != null ? canvas.WorldSize : Vector2.one * 0.5f;

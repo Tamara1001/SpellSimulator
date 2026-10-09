@@ -116,11 +116,14 @@ namespace SpellSimulator.World
         // El cuerpo del jugador no choca con lo que lleva (si no, se empujaria a si mismo).
         private void IgnorePlayer(bool ignore)
         {
-            var player = FindFirstObjectByType<Player.PlayerMovement>();
-            if (player == null) return;
-            foreach (var theirs in player.GetComponentsInChildren<Collider>())
-                foreach (var mine in colliders)
-                    if (mine != null && theirs != null) Physics.IgnoreCollision(mine, theirs, ignore);
+            var players = Core.PlayerRegistry.Players;
+            for (int p = 0; p < players.Count; p++)
+            {
+                if (players[p] == null || !players[p].IsAlive || players[p].Root == null) continue;
+                foreach (var theirs in players[p].Root.GetComponentsInChildren<Collider>())
+                    foreach (var mine in colliders)
+                        if (mine != null && theirs != null) Physics.IgnoreCollision(mine, theirs, ignore);
+            }
         }
     }
 }

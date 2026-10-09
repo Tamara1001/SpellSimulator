@@ -112,7 +112,7 @@ namespace SpellSimulator.World
         private void Update()
         {
             if (caster == null) return;
-            timer += Time.deltaTime;
+            timer += GameClock.DeltaTime;
             if (timer < checkInterval) return;
             float elapsed = timer;
             timer = 0f;
@@ -125,7 +125,7 @@ namespace SpellSimulator.World
             for (int i = candidates.Count - 1; i >= 0; i--)
                 if (!Qualifies(candidates[i])) candidates.RemoveAt(i);
             for (int i = cooldowns.Count - 1; i >= 0; i--)
-                if (cooldowns[i].canvas == null || Time.time >= cooldowns[i].until) cooldowns.RemoveAt(i);
+                if (cooldowns[i].canvas == null || GameClock.Time >= cooldowns[i].until) cooldowns.RemoveAt(i);
 
             int count = candidates.Count;
             for (int i = 0; i < pairs.Count; i++)
@@ -192,7 +192,7 @@ namespace SpellSimulator.World
         private bool InCooldown(DrawingCanvas canvas)
         {
             for (int i = 0; i < cooldowns.Count; i++)
-                if (cooldowns[i].canvas == canvas) return Time.time < cooldowns[i].until;
+                if (cooldowns[i].canvas == canvas) return GameClock.Time < cooldowns[i].until;
             return false;
         }
 
@@ -229,7 +229,7 @@ namespace SpellSimulator.World
             b.Clear();
             caster.OnSealEdited(a);
             caster.OnSealEdited(b);
-            float until = Time.time + cooldownSeconds;
+            float until = GameClock.Time + cooldownSeconds;
             cooldowns.Add(new Cooldown { canvas = a, until = until });
             cooldowns.Add(new Cooldown { canvas = b, until = until });
             return true;

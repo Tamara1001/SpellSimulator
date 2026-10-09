@@ -9,7 +9,7 @@ namespace SpellSimulator.World
 
         private void LateUpdate()
         {
-            if (cam == null) cam = Camera.main;
+            if (cam == null) cam = Camera.main; // presentacion: la etiqueta mira a la camara que se ve
             if (cam == null) return;
             Vector3 away = transform.position - cam.transform.position;
             if (away.sqrMagnitude > 1e-6f) transform.rotation = Quaternion.LookRotation(away, Vector3.up);

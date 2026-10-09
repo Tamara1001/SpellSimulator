@@ -4,6 +4,7 @@ using SpellSimulator.Canvas;
 using SpellSimulator.Casting;
 using SpellSimulator.Compiler;
 using SpellSimulator.DebugTools;
+using SpellSimulator.Core;
 
 namespace SpellSimulator.World
 {
@@ -58,14 +59,14 @@ namespace SpellSimulator.World
             // Contacto suave: por debajo del umbral de impacto (si no, ya disparo cada una por su cuenta).
             if (collision.relativeVelocity.magnitude >= trigger.ImpactSpeed) return;
             partner = other;
-            lastContactTime = Time.time;
+            lastContactTime = GameClock.Time;
         }
 
         private static bool Exhausted(SealTrigger t) => t.Rune != null && t.Rune.IsExhausted;
 
         private void FixedUpdate()
         {
-            bool contact = partner != null && Time.time - lastContactTime < Time.fixedDeltaTime * 2.5f;
+            bool contact = partner != null && GameClock.Time - lastContactTime < GameClock.FixedDeltaTime * 2.5f;
             if (contact)
             {
                 float fired = RuneJoinMath.RecentFireSeconds;
@@ -76,10 +77,10 @@ namespace SpellSimulator.World
                     trigger.FiredRecently(fired), partner.trigger.FiredRecently(fired),
                     0f, trigger.ImpactSpeed);
             }
-            held = RuneJoinMath.Advance(held, Time.fixedDeltaTime, contact);
+            held = RuneJoinMath.Advance(held, GameClock.FixedDeltaTime, contact);
             if (!contact)
             {
-                if (partner != null && Time.time - lastContactTime > 0.5f) partner = null;
+                if (partner != null && GameClock.Time - lastContactTime > 0.5f) partner = null;
                 return;
             }
             // Solo una de las dos runas dirige la union.

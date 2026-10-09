@@ -517,7 +517,7 @@ Herramientas de prueba:
   **a verificar**).
 - **Servidor headless** (`-batchmode -nographics`, Inference Engine en CPU) para pruebas largas.
 
-### F0 — Preparación, sin red (6–9 días)
+### F0 — Preparación, sin red (6–9 días) — HECHO 2026-10-09 (resto en KI-118)
 
 **Depende de:** nada. **Se puede hacer ya, sin instalar NGO.**
 
@@ -776,3 +776,15 @@ Todas las rutas son relativas a `Assets/_Project/Scripts/`. Entre paréntesis, l
 - `NetSession`, `CanvasNet`, `PlayerInventoryNet`, `WorldStateNet`, `FollowAnchor`, `EconomyStats`;
 - `DuelGameMode`, `DuelRules`, `SealDeck`, `AICaster`;
 - `HarnessNetSmoke`, `HarnessNetGrab`, `HarnessNetCanvasMatrix`, `HarnessNetEconomy`, `HarnessNetDuel`.
+
+## 9. Decisiones tomadas por Ale (2026-10-09)
+
+1. **Movimiento:** cada jugador dueno de su cuerpo; el servidor manda los empujones de los hechizos (2.7 A). Prediccion completa solo si el PvP la pide.
+2. **Objeto agarrado:** propiedad al que agarra en coop; resorte del servidor en Duelo.
+3. **Reconocimiento:** el cliente propone y el servidor valida lo barato siempre; re-lee con el modelo solo en PvP y en hechizos costosos.
+4. **Topologia:** un jugador hace de host por Relay; 4 en coop y 2 (+ IA) en Duelo; 8 como posible. Sin servidor dedicado por ahora.
+5. **WebGL: DENTRO del alcance desde el inicio** (cambia la recomendacion del plan): el transporte debe ser **WebSocket (wss)** para todos los jugadores desde F1; el reconocimiento en WebGL corre en CPU (KI-103). Hay que resolver KI-104 antes de F1 y verificar el soporte de Relay/Sesiones sobre WebSocket en el SDK instalado.
+6. **F0 ya**, antes de instalar Netcode (limpieza de estaticos, ownerId, reloj inyectado, StrokeCodec, partir PlayerInteractor).
+7. **Duelo local** (D1/D2: arena, reglas, IA) despues de F2, en paralelo con F3-F4.
+
+Contratos de F0 ya creados: `Core/IPlayerContext`, `Core/PlayerRegistry`, `Core/IGameClock` (+ `GameClock`).

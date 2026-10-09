@@ -35,6 +35,8 @@ namespace SpellSimulator.Player
         private bool pinRequested;
         private Rigidbody held;
         private IRemoteGrabbable grabbable;
+        // Marca de "quien lo sostiene" (dato, F0): se fija al empezar y se limpia en ClearHeld.
+        private Holdable heldHoldable;
         private float holdDistance;
         private Quaternion relativeRotation;
 
@@ -181,6 +183,9 @@ namespace SpellSimulator.Player
             if (!rb.isKinematic) rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
 
             IgnorePlayerCollisions(true);
+
+            heldHoldable = Holdable.GetOrAdd(rb.gameObject);
+            heldHoldable.SetHeldBy(Holdable.LocalOwnerId);
         }
 
         /// <summary>Suelta el objeto: avisa a IRemoteGrabbable, o restaura los valores originales del generico.</summary>
@@ -219,6 +224,10 @@ namespace SpellSimulator.Player
             pinRequested = false;
             held = null;
             grabbable = null;
+            // Despues de limpiar: quien escuche HeldChanged ve el movedor ya libre.
+            Holdable holdable = heldHoldable;
+            heldHoldable = null;
+            if (holdable != null) holdable.Release();
         }
 
         private void IgnorePlayerCollisions(bool ignore)

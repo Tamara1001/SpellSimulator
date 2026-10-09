@@ -131,7 +131,6 @@ namespace SpellSimulator.Reactions
         private int[] cellFlame;
         private int[] candCell;
         private float[] candDist;
-        private Camera mainCamera;
 
         // Mapa de quemado (RGBAHalf, GridSize x GridSize): r quemado, g calor de brasas, b altura del suelo.
         private Texture2D burnMap;
@@ -609,8 +608,8 @@ namespace SpellSimulator.Reactions
         private void AssignFlames()
         {
             if (fireLook == null || burningCells == 0) return;
-            if (mainCamera == null) mainCamera = Camera.main;
-            Vector3 eye = mainCamera != null ? mainCamera.transform.position : transform.position;
+            var viewer = Core.PlayerRegistry.Local; // jugador local (las llamas son un detalle visual de su vista)
+            Vector3 eye = viewer != null && viewer.Head != null ? viewer.Head.position : transform.position;
 
             // Candidatos: celdas ardiendo sin llama, con su distancia (XZ) a la camara.
             int n = 0;

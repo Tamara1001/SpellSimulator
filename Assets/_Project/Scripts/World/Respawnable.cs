@@ -18,10 +18,6 @@ namespace SpellSimulator.World
         private const float TowerRadius = 7f;
         private const float GroundMargin = 1.5f;
 
-        // Referencias cacheadas para no buscarlas en cada reinicio por objeto.
-        private static Transform cachedCamera;
-        private static Transform cachedPlayer;
-
         private static readonly System.Collections.Generic.List<Interfaces.IResettable> resettables = new System.Collections.Generic.List<Interfaces.IResettable>();
 
         private Rigidbody rb;
@@ -86,12 +82,6 @@ namespace SpellSimulator.World
         /// </summary>
         public static void RespawnAll()
         {
-            if (cachedCamera == null && Camera.main != null) cachedCamera = Camera.main.transform;
-            if (cachedPlayer == null)
-            {
-                var interactor = Object.FindFirstObjectByType<Player.PlayerInteractor>();
-                if (interactor != null) cachedPlayer = interactor.transform;
-            }
             foreach (var r in FindObjectsByType<Respawnable>(FindObjectsSortMode.None))
             {
                 if (r.rb == null || IsHeldByPlayer(r.transform)) continue;
@@ -100,7 +90,6 @@ namespace SpellSimulator.World
         }
 
         /// <summary>Lo que cuelga de la camara o del jugador (manos, herramienta en la mano) no se reinicia.</summary>
-        private static bool IsHeldByPlayer(Transform t) =>
-            (cachedCamera != null && t.IsChildOf(cachedCamera)) || (cachedPlayer != null && t.IsChildOf(cachedPlayer));
+        private static bool IsHeldByPlayer(Transform t) => Player.PlayerHeld.IsAttachedToAnyPlayer(t);
     }
 }

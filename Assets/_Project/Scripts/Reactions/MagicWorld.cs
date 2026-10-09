@@ -214,8 +214,7 @@ namespace SpellSimulator.Reactions
             foreach (var health in Health.All) if (health != null) health.ResetHealth();
             foreach (var dummy in World.TrainingDummy.All) if (dummy != null) dummy.Restore();
             // Lo que el jugador arrastra (G) se suelta antes de reubicar: si no, el reinicio lo deja a medio camino.
-            var mover = Object.FindFirstObjectByType<Player.ObjectMover>();
-            if (mover != null) mover.End(false);
+            Player.PlayerHeld.ReleaseAll();
             World.Respawnable.RespawnAll();
             Debug.Log("[Mundo] Reinicio.");
         }

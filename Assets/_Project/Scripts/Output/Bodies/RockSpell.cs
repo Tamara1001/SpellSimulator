@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Canvas;
 using SpellSimulator.Compiler;
+using SpellSimulator.Core;
 using SpellSimulator.World;
 
 namespace SpellSimulator.Output
@@ -18,9 +19,19 @@ namespace SpellSimulator.Output
 
         private static readonly Mesh[] meshes = new Mesh[Variants];
         private static readonly List<ExpiringBody> rocks = new List<ExpiringBody>();
+        private static readonly List<int> rockOwners = new List<int>(); // paralela a rocks
         private static readonly Color Low = new Color(0.36f, 0.31f, 0.27f), High = new Color(0.68f, 0.62f, 0.54f);
 
         public static void Spawn(SpellIR spell, SealFrame frame, ElementLook look, DrawingCanvas source, GameObject spellGo)
+        {
+            // Dueno: el del lienzo emisor (el de su ultimo trazo) si lo hay; 0 = jugador local.
+            int ownerId = 0;
+            if (source != null && source.Session != null && source.Session.Strokes.Count > 0)
+                ownerId = source.Session.Strokes[source.Session.Strokes.Count - 1].OwnerId;
+            Spawn(spell, frame, look, source, spellGo, ownerId);
+        }
+
+        public static void Spawn(SpellIR spell, SealFrame frame, ElementLook look, DrawingCanvas source, GameObject spellGo, int ownerId)
         {
             float radius = RockMath.Radius(frame.Radius, spell.inkPower);
             float formSeconds = RockMath.FormSeconds(radius);
@@ -58,21 +69,43 @@ namespace SpellSimulator.Output
 
             go.AddComponent<RockForming>().Init(rb, col, radius, formSeconds);
 
-            Register(expiring);
+            Register(expiring, ownerId);
             Debug.Log($"[Roca] radio {radius:F2} m masa {mass:F0} kg formacion {formSeconds:F1} s tinta x{spell.inkPower:F2}");
         }
 
-        private static void Register(ExpiringBody body)
+        private static void Register(ExpiringBody body, int ownerId)
         {
-            rocks.RemoveAll(r => r == null);
+            for (int i = rocks.Count - 1; i >= 0; i--)
+            {
+                if (rocks[i] != null) continue;
+                rocks.RemoveAt(i);
+                rockOwners.RemoveAt(i);
+            }
             rocks.Add(body);
-            int alive = 0;
-            foreach (var r in rocks) if (!r.IsExpiring) alive++;
-            for (int i = 0; i < rocks.Count && alive > RockMath.MaxRocks; i++)
+            rockOwners.Add(ownerId);
+
+            // Limites: 10 totales y, con varios jugadores, 4 por duenio.
+            bool limitPerOwner = PlayerRegistry.Count > 1;
+            int aliveTotal = 0, aliveOwner = 0;
+            for (int i = 0; i < rocks.Count; i++)
+            {
+                if (rocks[i].IsExpiring) continue;
+                aliveTotal++;
+                if (rockOwners[i] == ownerId) aliveOwner++;
+            }
+            // Primero el tope por duenio (solo rocas suyas) y despues el total (la mas vieja de cualquiera).
+            for (int i = 0; i < rocks.Count && limitPerOwner && aliveOwner > RockMath.MaxRocksPerOwner; i++)
+            {
+                if (rocks[i].IsExpiring || rockOwners[i] != ownerId) continue;
+                rocks[i].BeginExpire();
+                aliveOwner--;
+                aliveTotal--;
+            }
+            for (int i = 0; i < rocks.Count && RockMath.OverLimit(aliveTotal, aliveOwner, limitPerOwner); i++)
             {
                 if (rocks[i].IsExpiring) continue;
                 rocks[i].BeginExpire();
-                alive--;
+                aliveTotal--;
             }
         }
 

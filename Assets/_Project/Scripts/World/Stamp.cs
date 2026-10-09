@@ -52,6 +52,11 @@ namespace SpellSimulator.World
 
         public string Glyph => glyph;
 
+        /// <summary>Jugador que la lleva (0 = jugador local).</summary>
+        public int OwnerId { get; private set; }
+
+        public void SetOwner(int ownerId) => OwnerId = ownerId;
+
         /// <summary>
         /// Factor del dibujo que deja el sello respecto del diametro del modelo (no cambia el modelo 3D): el patron se
         /// ve ~1,8x mas grande sobre la superficie. Se limita a <see cref="MaxCanvasFill"/> del lienzo mas chico.

@@ -104,7 +104,7 @@ namespace SpellSimulator.Casting
                     SealChargeEnded?.Invoke(charge.canvas, false);
                     continue;
                 }
-                if (Time.time - charge.startTime < charge.seconds) continue;
+                if (GameClock.Time - charge.startTime < charge.seconds) continue;
 
                 charges.RemoveAt(i);
                 SpellIR spell = Cast(charge.canvas);
@@ -154,7 +154,7 @@ namespace SpellSimulator.Casting
                     nested.Layout.Outer.Radius * Mathf.Max(canvas.WorldSize.x, canvas.WorldSize.y));
             }
 
-            SealReading reading = SealReader.Read(Clean(canvas, out float boost, out Vector2 pivot), classifier, dictionary.Dictionary, Time.time);
+            SealReading reading = SealReader.Read(Clean(canvas, out float boost, out Vector2 pivot), classifier, dictionary.Dictionary, GameClock.Time);
             if (!reading.Spell.valid || !reading.Spell.active) return false;
 
             Vector2 iso = canvas.UvToIsotropic;
@@ -168,7 +168,7 @@ namespace SpellSimulator.Casting
 
         private bool StartCharge(DrawingCanvas canvas, float seconds, ElementType element, string sigilId, Vector2 ringCenterUV, float radiusWorld)
         {
-            charges.Add(new ActiveCharge { canvas = canvas, startTime = Time.time, seconds = seconds });
+            charges.Add(new ActiveCharge { canvas = canvas, startTime = GameClock.Time, seconds = seconds });
             SetPhase(canvas, SealPhase.Charging);
             SealCharging?.Invoke(new SealChargeInfo
             {
@@ -424,7 +424,7 @@ namespace SpellSimulator.Casting
                 reading = PortalReading.FromNested(nested);
                 return true;
             }
-            reading = PortalReading.FromAst(SealReader.Read(Clean(canvas), classifier, dictionary.Dictionary, Time.time).Ast);
+            reading = PortalReading.FromAst(SealReader.Read(Clean(canvas), classifier, dictionary.Dictionary, GameClock.Time).Ast);
             return true;
         }
 
@@ -440,7 +440,7 @@ namespace SpellSimulator.Casting
 
             Vector2 iso = canvas.UvToIsotropic;
             if (!NestedSealReader.TryRead(canvas.Session.Scaled(iso), simplificationTolerance, splineResolution,
-                    classifier, dictionary.Dictionary, Time.time, out nested))
+                    classifier, dictionary.Dictionary, GameClock.Time, out nested))
                 return false;
 
             Vector2 worldSize = canvas.WorldSize;
@@ -508,7 +508,7 @@ namespace SpellSimulator.Casting
 
         private SpellIR Analyze(DrawingCanvas canvas, out GlyphAST ast, out GlyphPrediction[] predictions, out Vector2 iso, out Vector2 ringCenterUV)
         {
-            SealReading reading = SealReader.Read(Clean(canvas, out float boost, out Vector2 pivot), classifier, dictionary.Dictionary, Time.time);
+            SealReading reading = SealReader.Read(Clean(canvas, out float boost, out Vector2 pivot), classifier, dictionary.Dictionary, GameClock.Time);
             ast = reading.Ast;
             SpellIR spell = reading.Spell;
 

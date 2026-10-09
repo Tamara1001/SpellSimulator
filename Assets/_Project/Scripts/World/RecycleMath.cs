@@ -35,5 +35,15 @@ namespace SpellSimulator.World
         public static float ReadyAt(float now) => now + RecycleSeconds;
 
         public static bool IsReady(float now, float readyAt) => now >= readyAt;
+
+        /// <summary>Maximo de entregas pendientes en la estacion (total) y por duenio.</summary>
+        public const int MaxPending = 16, MaxPendingPerOwner = 4;
+
+        /// <summary>
+        /// True si todavia cabe una entrega mas, dados los pendientes totales y los del duenio. El tope por duenio solo rige con
+        /// varios jugadores (<paramref name="limitPerOwner"/>): en solitario el unico limite es el total.
+        /// </summary>
+        public static bool CanQueue(int pendingTotal, int pendingOfOwner, bool limitPerOwner) =>
+            pendingTotal < MaxPending && (!limitPerOwner || pendingOfOwner < MaxPendingPerOwner);
     }
 }

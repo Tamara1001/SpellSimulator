@@ -354,7 +354,7 @@ namespace SpellSimulator.World
             }
             else
             {
-                if (cachedCamera == null) cachedCamera = Camera.main;
+                if (cachedCamera == null) cachedCamera = Camera.main; // presentacion: rayo de dibujo de la vista local
                 if (cachedCamera == null) return false;
                 ray = FocusMode.GetRay(cachedCamera);
                 distance = pcMaxDrawDistance;

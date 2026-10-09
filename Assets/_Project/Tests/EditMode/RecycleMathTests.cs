@@ -57,5 +57,21 @@ namespace SpellSimulator.Tests
             Assert.IsFalse(RecycleMath.IsReady(17.9f, ready));
             Assert.IsTrue(RecycleMath.IsReady(18f, ready));
         }
+
+        [Test]
+        public void CanQueue_TotalLimitAlwaysApplies()
+        {
+            Assert.IsTrue(RecycleMath.CanQueue(RecycleMath.MaxPending - 1, 0, false));
+            Assert.IsFalse(RecycleMath.CanQueue(RecycleMath.MaxPending, 0, false));
+            Assert.IsFalse(RecycleMath.CanQueue(RecycleMath.MaxPending, 0, true));
+        }
+
+        [Test]
+        public void CanQueue_PerOwnerLimitOnlyWithSeveralPlayers()
+        {
+            Assert.IsFalse(RecycleMath.CanQueue(5, RecycleMath.MaxPendingPerOwner, true));
+            Assert.IsTrue(RecycleMath.CanQueue(5, RecycleMath.MaxPendingPerOwner - 1, true));
+            Assert.IsTrue(RecycleMath.CanQueue(5, RecycleMath.MaxPendingPerOwner + 3, false)); // en solitario no rige
+        }
     }
 }

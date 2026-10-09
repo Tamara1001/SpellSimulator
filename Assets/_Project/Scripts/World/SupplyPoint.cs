@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Reactions;
+using SpellSimulator.Core;
 
 namespace SpellSimulator.World
 {
@@ -118,14 +119,14 @@ namespace SpellSimulator.World
                 FillUp();
                 return;
             }
-            pruneTimer += Time.deltaTime;
+            pruneTimer += GameClock.DeltaTime;
             if (pruneTimer >= PrunePeriod) { pruneTimer = 0f; Prune(); }
 
             if (live.Count >= maxLive) secondsSinceFree = 0f;
-            else secondsSinceFree += Time.deltaTime;
+            else secondsSinceFree += GameClock.DeltaTime;
             if (SupplyMath.ShouldSpawn(live.Count, maxLive, secondsSinceFree, cooldownSeconds)) Spawn(0);
 
-            budgetTimer += Time.deltaTime;
+            budgetTimer += GameClock.DeltaTime;
             if (budgetTimer >= BudgetPeriod) { budgetTimer = 0f; WorldObjectBudget.Enforce(); }
         }
 

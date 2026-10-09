@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Canvas;
+using SpellSimulator.Core;
 using SpellSimulator.Player;
 using SpellSimulator.Reactions;
 
@@ -17,7 +18,7 @@ namespace SpellSimulator.World
         private const float ScanPeriod = 0.25f;
         private const float RiseSpeed = 0.6f;
         private const float NoticeCooldown = 3f;
-        private const int MaxPending = 16;
+        private const int MaxPending = RecycleMath.MaxPending;
         private const int PaperSlot = -1;
         private const string SupplyKey = "reciclaje";
 
@@ -29,10 +30,12 @@ namespace SpellSimulator.World
         // Cola de entregas pendientes: sin listas dinamicas en el Update.
         private readonly int[] pendingKind = new int[MaxPending];
         private readonly float[] pendingReady = new float[MaxPending];
+        private readonly int[] pendingOwner = new int[MaxPending]; // quien dejo el objeto (0 = jugador local)
         private int pendingCount;
 
         private readonly Collider[] hits = new Collider[48];
         private readonly List<GameObject> scanned = new List<GameObject>(16);
+        private readonly Dictionary<GameObject, int> ownerOf = new Dictionary<GameObject, int>(16);
         private readonly List<GameObject> papers = new List<GameObject>(8);
         private readonly List<GameObject>[] exhaustedByKind = new List<GameObject>[8];
         private readonly List<GameObject>[] freshByKind = new List<GameObject>[8];
@@ -95,6 +98,7 @@ namespace SpellSimulator.World
             int n = Physics.OverlapBoxNonAlloc(center, half, hits, rot, ~0, QueryTriggerInteraction.Ignore);
 
             scanned.Clear();
+            ownerOf.Clear();
             papers.Clear();
             for (int k = 0; k < exhaustedByKind.Length; k++) { exhaustedByKind[k].Clear(); freshByKind[k].Clear(); }
 
@@ -113,24 +117,28 @@ namespace SpellSimulator.World
                     if (go.GetComponent<RuneJoin>() == null) continue;
                     int slot = (int)rune.Kind;
                     if (slot < 0 || slot >= exhaustedByKind.Length) continue;
+                    ownerOf[go] = rune.OwnerId;
                     (rune.IsExhausted ? exhaustedByKind[slot] : freshByKind[slot]).Add(go);
                 }
                 else if (go.TryGetComponent(out DrawingCanvas dc) && !dc.Session.IsEmpty)
                 {
+                    // Dueno del papel: el de su ultimo trazo, si se conoce.
+                    var strokes = dc.Session.Strokes;
+                    ownerOf[go] = strokes.Count > 0 ? strokes[strokes.Count - 1].OwnerId : 0;
                     papers.Add(go);
                 }
             }
 
-            int free = MaxPending - pendingCount;
             bool rejectedSingle = false, full = false;
-            float now = Time.time;
+            float now = GameClock.Time;
+            bool limitPerOwner = PlayerRegistry.Count > 1;
 
             for (int i = 0; i < papers.Count; i++)
             {
-                if (free <= 0) { full = true; break; }
+                int owner = OwnerOf(papers[i]);
+                if (!RecycleMath.CanQueue(pendingCount, PendingOf(owner), limitPerOwner)) { full = true; continue; }
                 Consume(papers[i]);
-                Enqueue(PaperSlot, now);
-                free--;
+                Enqueue(PaperSlot, now, owner);
             }
 
             for (int k = 0; k < exhaustedByKind.Length; k++)
@@ -139,10 +147,10 @@ namespace SpellSimulator.World
                 List<GameObject> spent = exhaustedByKind[k];
                 for (int i = 0; i < spent.Count; i++)
                 {
-                    if (free <= 0) { full = true; break; }
+                    int owner = OwnerOf(spent[i]);
+                    if (!RecycleMath.CanQueue(pendingCount, PendingOf(owner), limitPerOwner)) { full = true; continue; }
                     Consume(spent[i]);
-                    Enqueue(k, now);
-                    free--;
+                    Enqueue(k, now, owner);
                 }
 
                 List<GameObject> fresh = freshByKind[k];
@@ -150,10 +158,10 @@ namespace SpellSimulator.World
                 int cost = RecycleMath.Cost(kind, false);
                 for (int i = 0; i + cost <= toConsume; i += cost)
                 {
-                    if (free <= 0) { full = true; break; }
+                    int owner = OwnerOf(fresh[i]);
+                    if (!RecycleMath.CanQueue(pendingCount, PendingOf(owner), limitPerOwner)) { full = true; break; }
                     for (int c = 0; c < cost; c++) Consume(fresh[i + c]);
-                    Enqueue(k, now);
-                    free--;
+                    Enqueue(k, now, owner);
                 }
                 if (fresh.Count > toConsume) rejectedSingle = true;
             }
@@ -207,8 +215,18 @@ namespace SpellSimulator.World
             rising.Add(go.transform);
         }
 
-        private void Enqueue(int slot, float now)
+        private int OwnerOf(GameObject go) => ownerOf.TryGetValue(go, out int owner) ? owner : 0;
+
+        private int PendingOf(int owner)
         {
+            int n = 0;
+            for (int i = 0; i < pendingCount; i++) if (pendingOwner[i] == owner) n++;
+            return n;
+        }
+
+        private void Enqueue(int slot, float now, int owner)
+        {
+            pendingOwner[pendingCount] = owner;
             pendingKind[pendingCount] = slot;
             pendingReady[pendingCount] = RecycleMath.ReadyAt(now);
             pendingCount++;
@@ -219,19 +237,20 @@ namespace SpellSimulator.World
         private void DeliverReady()
         {
             if (pendingCount == 0) return;
-            float now = Time.time;
+            float now = GameClock.Time;
             int delivered = 0;
             for (int i = 0; i < pendingCount;)
             {
                 if (!RecycleMath.IsReady(now, pendingReady[i])) { i++; continue; }
-                Deliver(pendingKind[i], delivered++);
+                Deliver(pendingKind[i], pendingOwner[i], delivered++);
                 pendingCount--;
                 pendingKind[i] = pendingKind[pendingCount];
                 pendingReady[i] = pendingReady[pendingCount];
+                pendingOwner[i] = pendingOwner[pendingCount];
             }
         }
 
-        private void Deliver(int slot, int stackIndex)
+        private void Deliver(int slot, int owner, int stackIndex)
         {
             GameObject template = slot == PaperSlot ? paperTemplate
                 : (runeTemplates != null && slot >= 0 && slot < runeTemplates.Length ? runeTemplates[slot] : null);
@@ -245,6 +264,7 @@ namespace SpellSimulator.World
             item.name = template.name;
             item.transform.localScale = template.transform.lossyScale;
             item.SetActive(true);
+            if (item.TryGetComponent(out Rune newRune)) newRune.SetOwner(owner);
             WorldObjectBudget.Register(item, SupplyKey);
             Debug.Log($"[Reciclaje] {name} entrega {item.name}.", this);
         }

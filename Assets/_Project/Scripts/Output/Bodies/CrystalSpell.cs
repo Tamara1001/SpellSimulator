@@ -34,8 +34,6 @@ namespace SpellSimulator.Output
             // Cuerpos y aguas dentro de la esfera (incluye triggers para encontrar el agua).
             int count = Physics.OverlapSphereNonAlloc(center, radius, hits, ~0, QueryTriggerInteraction.Collide);
             Rigidbody sourceBody = source != null ? source.GetComponentInParent<Rigidbody>() : null;
-            var interactor = Object.FindFirstObjectByType<Player.PlayerInteractor>();
-            Transform cam = Camera.main != null ? Camera.main.transform : null;
 
             int before = Crystallized.ActiveCount;
             int bodies = 0, waters = 0;
@@ -52,8 +50,7 @@ namespace SpellSimulator.Output
                 if (rb == null || rb == sourceBody) continue;
                 if (spellGo != null && rb.transform.IsChildOf(spellGo.transform)) continue;
                 if (rb.isKinematic && rb.GetComponent<Crystallized>() == null) continue; // estatico, en mano o animado
-                if (interactor != null && rb.transform.IsChildOf(interactor.transform)) continue;
-                if (cam != null && rb.transform.IsChildOf(cam)) continue;
+                if (Player.PlayerHeld.IsAttachedToAnyPlayer(rb.transform)) continue; // jugadores y lo que llevan
                 if (rb.GetComponentInParent<CharacterController>() != null) continue;
                 Crystallized.Apply(rb, seconds, look);
             }

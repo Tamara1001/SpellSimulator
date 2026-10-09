@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Canvas;
 using SpellSimulator.Casting;
+using SpellSimulator.Core;
 using SpellSimulator.Interfaces;
 using SpellSimulator.Player;
 
@@ -46,7 +47,6 @@ namespace SpellSimulator.World
 
         private static readonly List<Portal> all = new List<Portal>(8);
         private static PortalRecipes sharedRecipes;
-        private static float travelerReadyAt; // un solo viajero local; en red seria por jugador
 
         /// <summary>Si es mayor que 0, reemplaza el tiempo abierto de todos los portales (pruebas del harness).</summary>
         public static float OpenSecondsOverride;
@@ -82,7 +82,7 @@ namespace SpellSimulator.World
         private float EffectiveOpenSeconds => OpenSecondsOverride > 0f ? OpenSecondsOverride : openSeconds;
 
         /// <summary>Segundos que le quedan abierto (0 si no esta Open).</summary>
-        public float OpenSecondsLeft => State == PortalState.Open ? Mathf.Max(0f, EffectiveOpenSeconds - (Time.time - stateStart)) : 0f;
+        public float OpenSecondsLeft => State == PortalState.Open ? Mathf.Max(0f, EffectiveOpenSeconds - (GameClock.Time - stateStart)) : 0f;
 
         /// <summary>
         /// Avance del estado actual para la animacion: Charging 0 a 1; Open 1 a 0 (tiempo restante); Cooldown 0 a 1; Dormant 0.
@@ -91,7 +91,7 @@ namespace SpellSimulator.World
         {
             get
             {
-                float elapsed = Time.time - stateStart;
+                float elapsed = GameClock.Time - stateStart;
                 switch (State)
                 {
                     case PortalState.Charging: return Mathf.Clamp01(elapsed / Mathf.Max(chargeSeconds, 1e-3f));
@@ -141,7 +141,7 @@ namespace SpellSimulator.World
             StateChanged = null;
             RouteOpened = null;
             OpenSecondsOverride = 0f;
-            travelerReadyAt = 0f;
+            PortalTravelerCooldowns.Clear();
         }
 
         private static PortalRecipes EnsureRecipes(TextAsset asset)
@@ -219,7 +219,7 @@ namespace SpellSimulator.World
         private void Update()
         {
             if (caster == null && plate != null) Hook();
-            float elapsed = Time.time - stateStart;
+            float elapsed = GameClock.Time - stateStart;
             switch (State)
             {
                 case PortalState.Dormant:
@@ -326,7 +326,7 @@ namespace SpellSimulator.World
         private void Enter(PortalState next)
         {
             State = next;
-            stateStart = Time.time;
+            stateStart = GameClock.Time;
             Debug.Log($"[Portal] {id}: {next}", this);
 
             if (next == PortalState.Dormant && plate != null && caster != null && caster.GetPhase(plate) == SealPhase.Armed)
@@ -338,16 +338,18 @@ namespace SpellSimulator.World
         internal void OnCross(Collider other)
         {
             if (State != PortalState.Open || Destination == null || Destination.arrival == null) return;
-            if (Time.time < travelerReadyAt) return;
 
+            // El viajero se identifica por su contexto de jugador (PlayerRegistry); el enfriamiento es por jugador.
             PlayerMovement mover = other.GetComponentInParent<PlayerMovement>();
             if (mover == null) return;
+            int ownerId = mover.TryGetComponent(out IPlayerContext traveler) ? traveler.OwnerId : 0;
+            if (!PortalTravelerCooldowns.Ready(ownerId, GameClock.Time)) return;
             player = mover;
             playerBody = mover.GetComponent<Rigidbody>();
 
             Portal dest = Destination;
             Teleport(dest.arrival);
-            travelerReadyAt = Time.time + travelerCooldown;
+            PortalTravelerCooldowns.Mark(ownerId, GameClock.Time, travelerCooldown);
             Debug.Log($"[Portal] {id} -> {dest.id}: cruce del jugador", this);
             Traveled?.Invoke(this, dest);
         }

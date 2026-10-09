@@ -12,6 +12,15 @@ namespace SpellSimulator.Output
         public const float LifeSeconds = 120f;
         public const float ShrinkSeconds = 1.5f;
         public const int MaxRocks = 10;
+        /// <summary>Maximo de rocas vivas por duenio (anti-agotamiento en multijugador).</summary>
+        public const int MaxRocksPerOwner = 4;
+
+        /// <summary>
+        /// True si, con esos conteos de rocas vivas, hay que achicar la mas vieja. El tope por duenio solo rige con varios
+        /// jugadores (<paramref name="limitPerOwner"/>); en solitario solo cuenta el total.
+        /// </summary>
+        public static bool OverLimit(int aliveTotal, int aliveOfOwner, bool limitPerOwner) =>
+            aliveTotal > MaxRocks || (limitPerOwner && aliveOfOwner > MaxRocksPerOwner);
 
         /// <summary>Radio de la roca: 0.9 x anillo, mas grande con tinta poderosa (raiz cubica: crece el volumen, no el diametro).</summary>
         public static float Radius(float ringRadius, float inkPower)

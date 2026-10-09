@@ -180,6 +180,7 @@ graphify god-nodes                          # hubs arquitectónicos
 - **Tests EditMode:** `HarnessTestRunner.RunEditMode()`; si `Logs/harness-editmode.txt` queda en RUNNING (la recarga lo cortó) relanzar.
 - **Test de humo de Play:** `HarnessPlaySmoke.Run()` y leer `Logs/harness-playsmoke.txt` (PASS/FAIL, ~20 s). Cubre inventario de dos manos,
   cuaderno, dibujo, reinicio del mundo, fuego, grimorio, HUD y errores de consola. **Agregar un chequeo por cada sistema nuevo.**
+- **Entrada real:** `SpellSimulator/Harness/Run Real Input Probe` (`HarnessRealInput`): teclado y mouse virtuales del Input System agarran con E, Tab, dibujan con el mouse y sueltan en 6 lienzos; resultado en `Logs/harness-realinput.txt`. Util para bugs de la cadena completa (interactor + vista completa + puntero + lapiz). No lanzar dos pruebas a la vez.
 - **Matriz de lienzos:** `SpellSimulator/Harness/Run Canvas Matrix` y leer `Logs/harness-canvasmatrix.txt` (~7 min). Casos en `TESTING.md`.
 - **Capturas:** `HarnessCapture.Capture(ruta, pos, mira, w, h, fov)` (no ve `Graphics.DrawMeshInstanced` ni UI Toolkit); para ver el juego real
   `ScreenCapture.CaptureScreenshot(ruta)` en Play y leer el PNG 1-2 s después.

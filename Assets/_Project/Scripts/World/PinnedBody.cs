@@ -1,4 +1,5 @@
 using UnityEngine;
+using SpellSimulator.Core;
 
 namespace SpellSimulator.World
 {
@@ -33,7 +34,7 @@ namespace SpellSimulator.World
             pin.anchor = body.position;
             pin.baseRotation = body.rotation;
             pin.phase = Random.value * 6.28f;
-            pin.pinnedAt = Time.time;
+            pin.pinnedAt = GameClock.Time;
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.zero;
             body.useGravity = false;
@@ -62,8 +63,8 @@ namespace SpellSimulator.World
         private void Update()
         {
             if (rb == null || !rb.isKinematic) return;
-            if (Time.time - pinnedAt >= FloatSeconds) { Release(); return; }
-            float t = Time.time * BobSpeed + phase;
+            if (PinMath.ShouldRelease(GameClock.Time, pinnedAt, FloatSeconds)) { Release(); return; }
+            float t = Time.time * BobSpeed + phase; // visual
             // Tres ondas de periodos distintos: no se repite de forma obvia.
             Vector3 offset = new Vector3(Mathf.Sin(t * 0.61f) * DriftMeters, Mathf.Sin(t) * BobHeight, Mathf.Cos(t * 0.47f) * DriftMeters);
             Quaternion sway = Quaternion.Euler(Mathf.Sin(t * 0.83f) * SwayDegrees, Mathf.Sin(t * 0.53f + 1.3f) * SwayDegrees, Mathf.Sin(t * 0.71f + 2.1f) * SwayDegrees);

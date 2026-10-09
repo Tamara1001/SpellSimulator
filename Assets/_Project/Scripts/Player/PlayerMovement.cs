@@ -52,6 +52,8 @@ namespace SpellSimulator.Player
 
         private void Awake()
         {
+            // Contexto de jugador para PlayerRegistry (F0 de MULTIPLAYER_PLAN).
+            if (!TryGetComponent<LocalPlayerContext>(out _)) gameObject.AddComponent<LocalPlayerContext>();
             rb = GetComponent<Rigidbody>();
             inputReader = GetComponent<PlayerInputReader>();
 

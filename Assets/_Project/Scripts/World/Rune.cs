@@ -17,6 +17,7 @@ namespace SpellSimulator.World
         [SerializeField, Min(0), Tooltip("Usos gastados de por vida.")] private int wear;
 
         private RuneProfile profile;
+        private int ownerId;
         private bool profileReady;
 
         private RuneProfile Profile
@@ -37,6 +38,11 @@ namespace SpellSimulator.World
         public bool FireProof => Profile.FireProof;
         public float GlowIntensity => Profile.Glow;
         public float CooldownSeconds => Profile.CooldownSeconds;
+
+        /// <summary>Jugador que la uso por ultima vez o la creo (0 = jugador local). El desgaste sigue siendo de la runa.</summary>
+        public int OwnerId => ownerId;
+
+        public void SetOwner(int newOwnerId) => ownerId = newOwnerId;
 
         /// <summary>Una runa agotada no se arma ni dispara (SpellCaster la consulta por ISealGate).</summary>
         bool ISealGate.SealBlocked => IsExhausted;

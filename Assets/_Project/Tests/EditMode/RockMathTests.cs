@@ -50,5 +50,14 @@ namespace SpellSimulator.Tests
             Assert.Greater(RockMath.Mass(0.5f), RockMath.Mass(0.3f));
             Assert.AreEqual(600f, RockMath.Mass(0.5f), 1e-3f);
         }
+
+        [Test]
+        public void OverLimit_TotalAndPerOwner()
+        {
+            Assert.IsFalse(RockMath.OverLimit(RockMath.MaxRocks, RockMath.MaxRocksPerOwner, true));
+            Assert.IsTrue(RockMath.OverLimit(RockMath.MaxRocks + 1, 1, true));
+            Assert.IsTrue(RockMath.OverLimit(6, RockMath.MaxRocksPerOwner + 1, true));
+            Assert.IsFalse(RockMath.OverLimit(6, RockMath.MaxRocksPerOwner + 1, false)); // en solitario no rige el tope por duenio
+        }
     }
 }

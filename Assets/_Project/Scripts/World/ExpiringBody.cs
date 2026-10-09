@@ -48,8 +48,7 @@ namespace SpellSimulator.World
         private void ReleaseIfHeld()
         {
             if (rb == null) return;
-            var mover = FindFirstObjectByType<ObjectMover>();
-            if (mover != null && mover.HeldBody == rb) mover.End(false);
+            PlayerHeld.ReleaseBody(rb);
             if (TryGetComponent(out Movable movable)) movable.OnDrop();
             PinnedBody.Unpin(rb);
         }

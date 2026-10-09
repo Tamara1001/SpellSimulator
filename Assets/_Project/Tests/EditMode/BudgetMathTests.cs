@@ -9,6 +9,9 @@ namespace SpellSimulator.Tests
         private static BudgetMath.Entry E(float birth, string type, bool prot = false)
             => new BudgetMath.Entry { birthTime = birth, typeKey = type, isProtected = prot };
 
+        private static BudgetMath.Entry Own(float birth, string type, int owner, bool prot = false)
+            => new BudgetMath.Entry { birthTime = birth, typeKey = type, isProtected = prot, ownerId = owner };
+
         [Test]
         public void UnderLimits_EvictsNothing()
         {
@@ -66,6 +69,47 @@ namespace SpellSimulator.Tests
             var result = new List<int>();
             BudgetMath.SelectEvictions(entries, 2, 12, result);
             CollectionAssert.AreEqual(new[] { 1 }, result);
+        }
+
+        [Test]
+        public void PerOwnerOverflow_TrimsOnlyThatOwner_OldestFirst()
+        {
+            // Dueno 1 tiene 3 (tope 2) en tipos distintos; dueno 2 tiene 1.
+            var entries = new List<BudgetMath.Entry> { Own(3, "a", 1), Own(1, "b", 1), Own(2, "c", 1), Own(0, "d", 2) };
+            var result = new List<int>();
+            BudgetMath.SelectEvictions(entries, 40, 12, result, 2);
+            CollectionAssert.AreEqual(new[] { 1 }, result);
+        }
+
+        [Test]
+        public void PerOwnerOverflow_SkipsProtected()
+        {
+            var entries = new List<BudgetMath.Entry> { Own(1, "a", 1, true), Own(2, "b", 1), Own(3, "c", 1) };
+            var result = new List<int>();
+            BudgetMath.SelectEvictions(entries, 40, 12, result, 1);
+            CollectionAssert.AreEquivalent(new[] { 1, 2 }, result);
+        }
+
+        [Test]
+        public void PerOwner_ZeroMeansNoLimit()
+        {
+            var entries = new List<BudgetMath.Entry>();
+            for (int i = 0; i < 20; i++) entries.Add(Own(i, "t" + i, 0));
+            var result = new List<int>();
+            BudgetMath.SelectEvictions(entries, 40, 12, result, 0);
+            Assert.IsEmpty(result);
+            BudgetMath.SelectEvictions(entries, 40, 12, result); // por defecto: 12 por dueno
+            Assert.AreEqual(8, result.Count);
+        }
+
+        [Test]
+        public void PerOwnerEvictions_CountTowardsTotal()
+        {
+            // 4 del dueno 1 (tope 2) + 1 del dueno 2: salen 2 por dueno y el total (3) ya cumple el maximo de 3.
+            var entries = new List<BudgetMath.Entry> { Own(1, "a", 1), Own(2, "b", 1), Own(3, "c", 1), Own(4, "d", 1), Own(5, "e", 2) };
+            var result = new List<int>();
+            BudgetMath.SelectEvictions(entries, 3, 12, result, 2);
+            CollectionAssert.AreEquivalent(new[] { 0, 1 }, result);
         }
     }
 }

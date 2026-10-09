@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Canvas;
 using SpellSimulator.Compiler;
+using SpellSimulator.Core;
 
 namespace SpellSimulator.Output
 {
@@ -27,10 +28,13 @@ namespace SpellSimulator.Output
         private int maxActive = 6;
 
         private readonly List<SpellManifestation> active = new List<SpellManifestation>();
-        private Camera cachedCamera;
 
         /// <param name="ringCenterUV">Centro del anillo en UV del lienzo.</param>
         public SpellManifestation SpawnSpellEffect(SpellIR spell, DrawingCanvas canvas, Vector2 ringCenterUV)
+            => SpawnSpellEffect(spell, canvas, ringCenterUV, null);
+
+        /// <param name="caster">Quien lanza: su cabeza decide por que cara del papel sale el hechizo. Null = el jugador local.</param>
+        public SpellManifestation SpawnSpellEffect(SpellIR spell, DrawingCanvas canvas, Vector2 ringCenterUV, IPlayerContext caster)
         {
             if (!spell.valid || !spell.active) return null;
 
@@ -41,8 +45,9 @@ namespace SpellSimulator.Output
                 return null;
             }
 
-            if (cachedCamera == null) cachedCamera = Camera.main;
-            Vector3 viewer = cachedCamera != null ? cachedCamera.transform.position : canvas.transform.position - canvas.transform.forward;
+            if (caster == null) caster = PlayerRegistry.Local;
+            Transform head = caster != null ? caster.Head : null;
+            Vector3 viewer = head != null ? head.position : canvas.transform.position - canvas.transform.forward;
             Vector3 normal = canvas.EmissionNormal(viewer);
             Transform t = canvas.transform;
             // El borde derecho del dibujo es el mismo de ambos lados del papel: X e Y no se espejan al emitir por atras.

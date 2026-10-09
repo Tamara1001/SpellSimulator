@@ -163,8 +163,7 @@ namespace SpellSimulator.World
 
         private static bool IsHeld(Transform t)
         {
-            var cam = Camera.main;
-            return cam != null && t.IsChildOf(cam.transform);
+            return Player.PlayerHeld.IsOnAnyHead(t);
         }
     }
 }

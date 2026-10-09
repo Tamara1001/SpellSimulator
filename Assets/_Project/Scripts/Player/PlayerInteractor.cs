@@ -14,12 +14,16 @@ namespace SpellSimulator.Player
     ///   (ObjectMover): rueda = distancia (o pagina si es un cuaderno), clic derecho + mouse = rotar, F = dar vuelta,
     ///   V = pantalla para dibujar, clic de la rueda = dejar flotando, E = soltar.
     /// En PC el rayo sale de la camara; en VR del controlador derecho (y lo secundario se lleva en la mano izquierda).
+    /// Partes (F0 de MULTIPLAYER_PLAN): este archivo = ENTRADA (teclas, clics, rueda); <c>PlayerInteractor.Hints.cs</c> = mirar
+    /// (rayo, pistas de la HUD, vista completa); <c>PlayerInteractor.Grab.cs</c> = pedidos de agarre/soltar/arrojar y efectos de
+    /// escena de las manos. El ESTADO del inventario vive en <see cref="PlayerInventory"/>.
     /// </summary>
     [RequireComponent(typeof(PlayerInputReader))]
-    public class PlayerInteractor : MonoBehaviour
+    public partial class PlayerInteractor : MonoBehaviour
     {
         [Header("References")]
         [SerializeField] private Transform cameraTransform;
+        // Ojo: LocalPlayerContext lee rightHoldPoint/leftHoldPoint por reflexion; no renombrar.
         [SerializeField, Tooltip("Punto de agarre de la mano derecha.")]
         private Transform rightHoldPoint;
         [SerializeField, Tooltip("Punto de agarre de la mano izquierda.")]
@@ -47,158 +51,47 @@ namespace SpellSimulator.Player
         public const int BaseHotbarSlots = HotbarSlots;
         public const int MaxHotbarSlots = HotbarSlots;
 
-        private static readonly RaycastHit[] hoverHits = new RaycastHit[24];
-
         private PlayerInputReader inputReader;
         private InkSupply inkSupply;
         private Rigidbody body;
         private ObjectMover mover;
 
-        private IInteractable currentHovered;
-        private IPressable hoveredPressable;
-        private IFlippable hoveredFlippable;
-        private IInkSource hoveredInkSource;
-        private float hoverDistance;
         private bool wasClicking;
         private bool wasUsingTool;
         private LineRenderer vrPointerLine;
 
-        // Mano principal.
-        private readonly GameObject[] hotbar = new GameObject[MaxHotbarSlots];
-        private readonly bool[] slotFree = new bool[MaxHotbarSlots];
-        private int activeSlot;
-        private GameObject heldMain;
+        // Estado del inventario (barra, manos, cinturon). Lo de la mano principal que se USA se cachea aca (componente de escena).
+        private readonly PlayerInventory inventory = new PlayerInventory();
         private IUsable mainUsable;
-        private bool lastMainRight = true;
-
-        // Mano secundaria en VR (en PC lo arrastra ObjectMover).
-        private GameObject handSecondary;
-        private GameObject lastSecondary;
 
         /// <summary>Cambio en la barra de objetos o en lo agarrado: la HUD vuelve a dibujar.</summary>
         public event Action InventoryChanged;
 
-        /// <summary>Texto de lo que se mira (compatibilidad; la HUD nueva solo muestra la tecla).</summary>
-        public string HoverPrompt { get; private set; } = "";
-        /// <summary>True si lo que se mira se aprieta con clic (botones del grimorio) y no con E.</summary>
-        public bool HoverUsesClick => hoveredPressable != null && hoveredPressable.PressWithClick;
-        /// <summary>True si lo que se mira se puede agarrar o apretar con E (la HUD muestra el simbolo [E]).</summary>
-        public bool HoverInteractable => (hoveredPressable != null && !hoveredPressable.PressWithClick) || (hoveredPressable == null && currentHovered != null);
-        /// <summary>Lo que se esta mirando y se puede agarrar o apretar (null si nada).</summary>
-        public GameObject HoveredObject => currentHovered is MonoBehaviour mb ? mb.gameObject : hoveredPressable is MonoBehaviour pb ? pb.gameObject : null;
-
-        /// <summary>Pistas junto a la mira ("E: Agarrar | V: Vista completa | R: Recargar tinta"), vacio si no hay nada que hacer.</summary>
-        public string HoverHints { get; private set; } = "";
-
-        // Superficie mirada que admite vista completa (V): un lienzo, o una parte de una superficie del ambiente.
-        private DrawingCanvas viewCanvas;
-        private bool viewSurface;
-        private Vector3 viewPoint, viewNormal;
-
-        private static readonly string[] HoverHintTable = BuildHoverHintTable();
-        private IPressable hintPressable;
-        private string hintPressableText = "";
-        private string hintPressablePrompt;
-
-        private static string[] BuildHoverHintTable()
-        {
-            // Mascara: 1 = agarrar, 2 = vista completa, 4 = recargar tinta.
-            var table = new string[8];
-            for (int mask = 0; mask < 8; mask++)
-            {
-                string text = "";
-                if ((mask & 1) != 0) text += "E: Agarrar";
-                if ((mask & 2) != 0) text += (text.Length > 0 ? " | " : "") + "Tab: Vista completa";
-                if ((mask & 4) != 0) text += (text.Length > 0 ? " | " : "") + "R: Recargar tinta";
-                table[mask] = text;
-            }
-            return table;
-        }
-
-        private string ComputeHoverHints()
-        {
-            if (hoveredPressable != null)
-            {
-                if (hoveredPressable.PressWithClick) return "";
-                // Se rearma si cambia lo mirado o su texto (puerta: Abrir/Cerrar). Los textos son constantes cacheadas:
-                // comparar referencias no aloca.
-                string p = hoveredPressable.GetPressPrompt();
-                if (!ReferenceEquals(hintPressable, hoveredPressable) || !ReferenceEquals(hintPressablePrompt, p))
-                {
-                    hintPressable = hoveredPressable;
-                    hintPressablePrompt = p;
-                    hintPressableText = string.IsNullOrEmpty(p) ? "E" : "E: " + p;
-                }
-                return hintPressableText;
-            }
-            hintPressable = null;
-            int mask = 0;
-            if (currentHovered != null) mask |= 1;
-            if (viewCanvas != null || viewSurface) mask |= 2;
-            if (hoveredInkSource != null && !(hoveredInkSource is InkSupply)) mask |= 4;
-            if ((mask & 4) != 0 && hoveredInkSource is World.Inkwell well) return InkwellHint(mask, well);
-            return HoverHintTable[mask];
-        }
-
-        // Pistas del tintero apuntado. Fijo: "Tintero fijo | R: Recargar tinta". Portatil: "<clase> | E: Guardar tintero".
-        // Un string por (clase, fijo/portatil), armado la primera vez y reutilizado: sin allocations por frame.
-        private readonly string[,] inkwellHints = new string[3, 2];
-
-        private string InkwellHint(int mask, World.Inkwell well)
-        {
-            int k = (int)well.Kind;
-            int f = well.Portable ? 1 : 0;
-            string text = inkwellHints[k, f];
-            if (text != null) return text;
-            text = well.Portable
-                ? SpellSimulator.Core.InkKindInfo.DisplayName(well.Kind) + " | E: Guardar tintero"
-                : "Tintero fijo (" + SpellSimulator.Core.InkKindInfo.DisplayName(well.Kind) + ") | R: Recargar tinta"
-                    + (World.PhysicalTool.InkCycleAvailable ? " | V: cambiar tinta" : "");
-            inkwellHints[k, f] = text;
-            return text;
-        }
-
-        /// <summary>Decide si lo mirado admite vista completa: lienzos (no del grimorio) y superficies dibujables del ambiente (no el suelo).</summary>
-        private void FindViewTarget(RaycastHit hit)
-        {
-            if (PlatformDetector.IsVR) return;
-            Collider c = hit.collider;
-            DrawingCanvas canvas = c.GetComponentInParent<DrawingCanvas>();
-            if (canvas != null)
-            {
-                if (canvas.GetComponentInParent<Learning.Grimoire>() != null) return;
-                viewCanvas = canvas;
-                return;
-            }
-            if (c is TerrainCollider || hit.normal.y > 0.7f) return;
-            if (c.GetComponentInParent<World.Inscribable>() == null) return;
-            viewSurface = true;
-            viewPoint = hit.point;
-            viewNormal = hit.normal;
-        }
+        /// <summary>Estado del inventario (sin escena). Para leerlo; los cambios pasan por el interactor.</summary>
+        public PlayerInventory Inventory => inventory;
 
         /// <summary>Objeto de un slot de la barra (null si esta vacio).</summary>
-        public GameObject HotbarItem(int index) => index >= 0 && index < MaxHotbarSlots ? hotbar[index] : null;
+        public GameObject HotbarItem(int index) => inventory.HotbarItem(index);
         /// <summary>True con el cinturon equipado (una clase de tinta por slot de cartuchos).</summary>
-        public bool HasBelt { get; private set; }
+        public bool HasBelt => inventory.HasBelt;
         /// <summary>Slots de la barra: siempre 3.</summary>
-        public int SlotCount => HotbarMath.SlotCount(HasBelt);
+        public int SlotCount => inventory.SlotCount;
 
         /// <summary>Equipa o quita el cinturon (permite llevar cartuchos de varias clases de tinta; no cambia la barra).</summary>
         public void SetBelt(bool equipped)
         {
-            if (HasBelt == equipped) return;
-            HasBelt = equipped;
+            if (inventory.HasBelt == equipped) return;
+            inventory.SetBelt(equipped);
             if (inkSupply != null) inkSupply.Cartridges.SetBelt(equipped);
-            Changed();
         }
-        public int ActiveHotbar => activeSlot;
+        public int ActiveHotbar => inventory.ActiveSlot;
         /// <summary>Lo que esta en la mano principal (null si ninguno).</summary>
-        public GameObject MainItem => heldMain;
+        public GameObject MainItem => inventory.HeldMain;
         /// <summary>Lo que se agarro con E (mano secundaria), arrastrado o en la mano en VR. Null si nada.</summary>
-        public GameObject SecondaryItem => mover != null && mover.HeldBody != null ? mover.HeldBody.gameObject : handSecondary;
+        public GameObject SecondaryItem => inventory.Secondary;
 
         private Transform MainHold => PlayerSettings.MainHandRight ? rightHoldPoint : leftHoldPoint;
+        private bool IsDragging => mover != null && mover.IsHolding;
 
         private void Awake()
         {
@@ -208,6 +101,8 @@ namespace SpellSimulator.Player
             RefreshInkCycleHints();
             body = GetComponent<Rigidbody>();
             mover = GetComponent<ObjectMover>();
+            inventory.DraggedQuery = DraggedObject;
+            inventory.Changed += Changed;
         }
 
         private void Start()
@@ -235,16 +130,15 @@ namespace SpellSimulator.Player
         private void Update()
         {
             // Lo de la mano que ya no esta (destruido, desactivado) se suelta solo.
-            if (heldMain != null && !heldMain.activeInHierarchy) DropMain(false);
-            if (handSecondary != null && !handSecondary.activeInHierarchy) { handSecondary = null; Changed(); }
-            FollowMainHandSetting();
-
-            GameObject secondary = SecondaryItem;
-            if (!ReferenceEquals(secondary, lastSecondary))
+            if (inventory.HeldMain != null && !inventory.HeldMain.activeInHierarchy) DropMain(false, Vector3.zero);
+            GameObject hand = inventory.HandSecondary;
+            if (hand != null && !hand.activeInHierarchy)
             {
-                lastSecondary = secondary;
-                Changed();
+                World.Holdable.Mark(hand, World.Holdable.NoOwner);
+                inventory.ClearHandSecondary();
             }
+            FollowMainHandSetting();
+            inventory.PollSecondary();
 
             // Con el lector de libros abierto el juego no recibe clics, rueda ni teclas de mano.
             if (UI.BookReaderUI.IsOpen) return;
@@ -259,11 +153,7 @@ namespace SpellSimulator.Player
             // Vista completa de algo que no se agarro: solo se dibuja, se cambia de herramienta o se sale.
             if (SurfaceFocus.IsActive)
             {
-                currentHovered = null;
-                hoveredPressable = null;
-                hoveredFlippable = null;
-                hoveredInkSource = null;
-                HoverHints = "";
+                ClearHover();
                 HandleHotbarKeys();
                 HandleWheel();
                 HandleUsage();
@@ -293,94 +183,18 @@ namespace SpellSimulator.Player
         private void OnDestroy()
         {
             if (inkSupply != null) inkSupply.Cartridges.Changed -= RefreshInkCycleHints;
+            inventory.Changed -= Changed;
         }
 
-        /// <summary>Cambio el stock de cartuchos: rehace las pistas de "V: cambiar tinta" (se cachean; no se arman por frame).</summary>
-        private void RefreshInkCycleHints()
-        {
-            World.PhysicalTool.InkCycleAvailable = inkSupply != null && inkSupply.Cartridges.CanCycle;
-            System.Array.Clear(inkwellHints, 0, inkwellHints.Length);
-        }
-
-        // ---------------------------------------------------------------- mirar
-
-        private void HandleHover()
-        {
-            bool vrRay = PlatformDetector.IsVR && vrRightController != null;
-            Transform origin = vrRay ? vrRightController : cameraTransform;
-            if (origin == null) return;
-
-            Vector3 direction = vrRay ? Quaternion.AngleAxis(vrRayPitchOffset, origin.right) * origin.forward : origin.forward;
-            Vector3 end = origin.position + direction * interactRange;
-
-            currentHovered = null;
-            hoveredPressable = null;
-            hoveredInkSource = null;
-            hoveredFlippable = null;
-            viewCanvas = null;
-            viewSurface = false;
-            if (PickHit(origin.position, direction, out RaycastHit hit))
-            {
-                end = hit.point;
-                hoverDistance = hit.distance;
-                hoveredInkSource = hit.collider.GetComponentInParent<IInkSource>();
-                hoveredPressable = hit.collider.GetComponentInParent<IPressable>();
-                hoveredFlippable = hit.collider.GetComponentInParent<IFlippable>();
-                var interactable = hit.collider.GetComponentInParent<IInteractable>();
-                if (interactable != null) currentHovered = interactable;
-                FindViewTarget(hit);
-            }
-            HoverPrompt = hoveredPressable != null ? (hoveredPressable.PressWithClick ? "" : hoveredPressable.GetPressPrompt())
-                : currentHovered != null ? currentHovered.GetInteractionPrompt() : "";
-            HoverHints = ComputeHoverHints();
-
-            if (vrPointerLine != null)
-            {
-                vrPointerLine.SetPosition(0, origin.position);
-                vrPointerLine.SetPosition(1, end);
-            }
-        }
-
-        /// <summary>
-        /// Primer golpe util del rayo: ignora el propio cuerpo, lo que se lleva en la mano (salvo botones) y los volumenes
-        /// disparadores que no se pueden usar (agua, campos magicos).
-        /// </summary>
-        private bool PickHit(Vector3 origin, Vector3 direction, out RaycastHit best)
-        {
-            int count = Physics.RaycastNonAlloc(origin, direction, hoverHits, interactRange, interactLayer, QueryTriggerInteraction.Collide);
-            best = default;
-            float bestDistance = float.MaxValue;
-            for (int i = 0; i < count; i++)
-            {
-                RaycastHit hit = hoverHits[i];
-                if (hit.distance >= bestDistance) continue;
-                Collider c = hit.collider;
-                if (c.transform.IsChildOf(transform)) continue;
-                bool pressable = c.GetComponentInParent<IPressable>() != null;
-                bool held = IsHeld(c.transform);
-                if (held && !pressable) continue;
-                if (c.isTrigger && !pressable && c.GetComponentInParent<IInteractable>() == null &&
-                    c.GetComponentInParent<IInkSource>() == null && c.GetComponentInParent<IFlippable>() == null) continue;
-                best = hit;
-                bestDistance = hit.distance;
-            }
-            return bestDistance < float.MaxValue;
-        }
-
-        private bool IsHeld(Transform t)
-        {
-            return (heldMain != null && t.IsChildOf(heldMain.transform)) || (handSecondary != null && t.IsChildOf(handSecondary.transform));
-        }
-
-        // ---------------------------------------------------------------- E
+        // ---------------------------------------------------------------- entrada: E
 
         private void HandleInteraction()
         {
             if (!inputReader.IsInteracting) return;
 
             // Otra E deja en el aire lo que se arrastra (para soltarlo en el piso: Q lo arroja).
-            if (mover != null && mover.IsHolding) { mover.End(true); return; }
-            if (handSecondary != null) { DropHandSecondary(); return; }
+            if (IsDragging) { Release(LocalOwnerId, true); return; }
+            if (inventory.HandSecondary != null) { Release(LocalOwnerId, false); return; }
 
             if (hoveredPressable != null) { if (!hoveredPressable.PressWithClick) hoveredPressable.Press(); return; }
             if (currentHovered == null) return;
@@ -410,60 +224,10 @@ namespace SpellSimulator.Player
                 return;
             }
 
-            if (currentHovered is World.PhysicalTool || currentHovered is World.Stamp) PickUpToHotbar(currentHovered);
-            else GrabSecondary(currentHovered);
+            if (currentHovered is MonoBehaviour target) TryGrab(new GrabRequest(LocalOwnerId, target.gameObject, hoverDistance));
         }
 
-        /// <summary>Herramientas y estampas: al primer slot libre de la barra (o reemplazan a la equipada) y quedan en la mano.</summary>
-        private void PickUpToHotbar(IInteractable interactable)
-        {
-            if (!(interactable is MonoBehaviour mb)) return;
-            for (int i = 0; i < MaxHotbarSlots; i++) slotFree[i] = hotbar[i] == null;
-            int slot = HotbarMath.FirstFreeSlot(slotFree, SlotCount);
-            if (slot < 0)
-            {
-                slot = activeSlot;
-                if (hotbar[slot] != null) { SelectSlotInternal(slot); DropMain(false); }
-            }
-
-            StowMain();
-            hotbar[slot] = mb.gameObject;
-            activeSlot = slot;
-            heldMain = mb.gameObject;
-            mb.TryGetComponent(out mainUsable);
-            interactable.OnInteract(MainHold);
-            currentHovered = null;
-            Changed();
-        }
-
-        /// <summary>Todo lo demas (lienzos, cajas, pesas, el grimorio): se arrastra con fisica en la mano secundaria.</summary>
-        private void GrabSecondary(IInteractable interactable)
-        {
-            if (!(interactable is MonoBehaviour mb)) return;
-            if (interactable is World.Movable movable && !movable.CanLift) return;
-
-            if (PlatformDetector.IsVR || mover == null)
-            {
-                // VR: se lleva en la mano izquierda.
-                handSecondary = mb.gameObject;
-                interactable.OnInteract(PlatformDetector.IsVR && vrLeftController != null ? vrLeftController : leftHoldPoint);
-                currentHovered = null;
-                Changed();
-                return;
-            }
-            var rb = mb.GetComponentInParent<Rigidbody>();
-            if (rb == null) return;
-            mover.TryBegin(rb, Mathf.Max(hoverDistance, 0.9f));
-        }
-
-        private void DropHandSecondary()
-        {
-            if (handSecondary != null && handSecondary.TryGetComponent(out IInteractable interactable)) interactable.OnDrop();
-            handSecondary = null;
-            Changed();
-        }
-
-        // ---------------------------------------------------------------- barra de objetos (mano principal)
+        // ---------------------------------------------------------------- entrada: barra de objetos (mano principal)
 
         private void HandleHotbarKeys()
         {
@@ -473,67 +237,7 @@ namespace SpellSimulator.Player
             SelectSlotInternal(key);
         }
 
-        private void SelectSlotInternal(int index)
-        {
-            if (index == activeSlot && (heldMain != null || hotbar[index] == null)) return;
-            StowMain();
-            activeSlot = index;
-            GameObject next = hotbar[index];
-            if (next != null)
-            {
-                next.SetActive(true);
-                heldMain = next;
-                next.TryGetComponent(out mainUsable);
-            }
-            Changed();
-        }
-
-        /// <summary>Esconde lo que hay en la mano principal (sigue en su slot).</summary>
-        private void StowMain()
-        {
-            if (heldMain == null) return;
-            if (mainUsable != null && wasUsingTool) mainUsable.OnUseEnd();
-            heldMain.SetActive(false);
-            heldMain = null;
-            mainUsable = null;
-            wasUsingTool = false;
-        }
-
-        /// <summary>Suelta lo de la mano principal y libera su slot. Con arrojar = true sale con velocidad.</summary>
-        private void DropMain(bool throwIt)
-        {
-            if (heldMain == null) return;
-            GameObject obj = heldMain;
-            if (mainUsable != null && wasUsingTool) mainUsable.OnUseEnd();
-            if (obj.TryGetComponent(out IInteractable interactable)) interactable.OnDrop();
-            if (throwIt)
-            {
-                Transform view = PlatformDetector.IsVR && vrRightController != null ? vrRightController : cameraTransform;
-                Vector3 velocity = view.forward * throwSpeed + Vector3.up * 1.2f + (body != null ? body.linearVelocity : Vector3.zero);
-                if (obj.TryGetComponent(out IThrowable throwable)) throwable.Throw(velocity);
-                else if (obj.TryGetComponent(out Rigidbody rb) && !rb.isKinematic) rb.linearVelocity = velocity;
-            }
-            if (hotbar[activeSlot] == obj) hotbar[activeSlot] = null;
-            heldMain = null;
-            mainUsable = null;
-            wasUsingTool = false;
-            Changed();
-        }
-
-        /// <summary>Si cambia la mano principal en las opciones, lo equipado pasa a la otra mano.</summary>
-        private void FollowMainHandSetting()
-        {
-            bool right = PlayerSettings.MainHandRight;
-            if (right == lastMainRight) return;
-            lastMainRight = right;
-            if (heldMain != null)
-            {
-                heldMain.transform.SetParent(MainHold, false);
-                heldMain.transform.localPosition = Vector3.zero;
-            }
-        }
-
-        // ---------------------------------------------------------------- otras acciones
+        // ---------------------------------------------------------------- entrada: otras acciones
 
         private void HandleClickPress()
         {
@@ -544,34 +248,25 @@ namespace SpellSimulator.Player
             hoveredPressable.Press();
         }
 
+        /// <summary>Q: arroja lo arrastrado, lo de la mano secundaria (VR) o lo de la mano principal.</summary>
         private void HandleThrow()
         {
             if (!inputReader.IsThrowing) return;
-            if (mover != null && mover.IsHolding)
-            {
-                Rigidbody thrown = mover.HeldBody;
-                mover.End(false);
-                if (thrown != null && !thrown.isKinematic) thrown.linearVelocity = cameraTransform.forward * throwSpeed + Vector3.up * 1.2f;
-                return;
-            }
-            if (handSecondary != null)
-            {
-                GameObject obj = handSecondary;
-                DropHandSecondary();
-                if (obj.TryGetComponent(out IThrowable t)) t.Throw(cameraTransform.forward * throwSpeed + Vector3.up * 1.2f);
-                return;
-            }
-            DropMain(true);
+            Vector3 velocity = IsDragging || inventory.HandSecondary != null
+                ? cameraTransform.forward * throwSpeed + Vector3.up * 1.2f
+                : MainThrowVelocity();
+            Throw(LocalOwnerId, velocity);
         }
 
         private void HandleFlip()
         {
             if (!inputReader.IsFlipping) return;
             // F saca la hoja de la vista completa y la da vuelta.
-            if (mover != null && mover.IsHolding && mover.HeldBody != null && mover.HeldBody.TryGetComponent(out IFocusable focused) && focused.Focused)
+            if (IsDragging && mover.HeldBody != null && mover.HeldBody.TryGetComponent(out IFocusable focused) && focused.Focused)
                 focused.SetFocus(cameraTransform, false);
-            if (mover != null && mover.IsHolding) { mover.Flip(); return; }
-            if (handSecondary != null && handSecondary.TryGetComponent(out IFlippable held)) { held.Flip(); return; }
+            if (IsDragging) { mover.Flip(); return; }
+            GameObject hand = inventory.HandSecondary;
+            if (hand != null && hand.TryGetComponent(out IFlippable held)) { held.Flip(); return; }
             hoveredFlippable?.Flip();
         }
 
@@ -579,12 +274,9 @@ namespace SpellSimulator.Player
         private void HandlePin()
         {
             if (!inputReader.IsPinning) return;
-            if (mover != null && mover.IsHolding) { mover.End(true); return; }
-            if (handSecondary != null && handSecondary.TryGetComponent(out IPinnable pinnable))
-            {
-                DropHandSecondary();
-                pinnable.Pin();
-            }
+            if (IsDragging) { Release(LocalOwnerId, true); return; }
+            GameObject hand = inventory.HandSecondary;
+            if (hand != null && hand.TryGetComponent(out IPinnable _)) Release(LocalOwnerId, true);
         }
 
         /// <summary>
@@ -601,8 +293,9 @@ namespace SpellSimulator.Player
 
             // Arrastrando cualquier cosa (tambien un cuaderno) la rueda es del movedor (distancia), salvo en vista completa,
             // donde la distancia no tiene sentido y la rueda vuelve a ser el grosor de la herramienta.
-            if (mover != null && mover.IsHolding && !inputReader.IsRunning && !FocusMode.CanvasView) return;
-            if (heldMain != null && heldMain.TryGetComponent(out IWidthSelectable widths)) widths.CycleWidth(step);
+            if (IsDragging && !inputReader.IsRunning && !FocusMode.CanvasView) return;
+            GameObject main = inventory.HeldMain;
+            if (main != null && main.TryGetComponent(out IWidthSelectable widths)) widths.CycleWidth(step);
         }
 
         /// <summary>Z (anterior) / X (siguiente): pasa la pagina del cuaderno agarrado o arrastrado (con el grimorio cerrado).</summary>
@@ -613,8 +306,9 @@ namespace SpellSimulator.Player
             var book = Learning.Grimoire.Instance;
             if (book != null && book.IsOpen) return;
             IPageable pages = null;
-            if (mover != null && mover.IsHolding) mover.HeldBody.TryGetComponent(out pages);
-            if (pages == null && handSecondary != null) pages = handSecondary.GetComponentInParent<IPageable>();
+            if (IsDragging) mover.HeldBody.TryGetComponent(out pages);
+            GameObject hand = inventory.HandSecondary;
+            if (pages == null && hand != null) pages = hand.GetComponentInParent<IPageable>();
             pages?.Turn(delta);
         }
 
@@ -716,9 +410,8 @@ namespace SpellSimulator.Player
         /// <summary>Agarra un objeto como si se apuntara y apretara E (la usan el harness y los tests de Play).</summary>
         public void GrabItem(GameObject item)
         {
-            if (item == null || !item.TryGetComponent(out IInteractable interactable)) return;
-            if (interactable is World.PhysicalTool || interactable is World.Stamp) PickUpToHotbar(interactable);
-            else GrabSecondary(interactable);
+            if (item == null) return;
+            TryGrab(new GrabRequest(LocalOwnerId, item, hoverDistance));
         }
 
         /// <summary>Elige un slot como si se apretara su tecla (0 a 2).</summary>
