@@ -123,6 +123,13 @@ namespace SpellSimulator.EditorTools
             if (spot == Vector3.zero) { failures.Add("no se encontro un terreno plano para las pruebas"); yield break; }
             float ground = spot.y;
 
+            if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "RUNE")
+            {
+                var probe = RuneFireProbe(player, mover, cam, spot);
+                while (probe.MoveNext()) yield return probe.Current;
+                yield break;
+            }
+
             // --- Lienzos que se agarran
             foreach (string name in Grabbables)
             {
@@ -259,6 +266,53 @@ namespace SpellSimulator.EditorTools
 
         private static string Info(Rigidbody rb, float ground) =>
             $"[y={rb.position.y:F2} suelo={ground:F2} padre={(rb.transform.parent != null ? rb.transform.parent.name : "-")} cin={rb.isKinematic}]";
+
+        /// <summary>
+        /// Una runa armada (anillo cerrado) lanza su hechizo al golpear (impacto >= 3 m/s). Compara soltarla con la vista completa
+        /// abierta, soltarla tras cerrarla y soltarla sin vista: en los tres debe salir el hechizo. Se activa con Only = "RUNE".
+        /// </summary>
+        private static IEnumerator RuneFireProbe(GameObject player, ObjectMover mover, Transform cam, Vector3 spot)
+        {
+            var go = GameObject.Find("ImpactStone_S");
+            var rb = go.GetComponent<Rigidbody>();
+            var pc = go.GetComponent<PhysicalCanvas>();
+            var canvas = go.GetComponent<DrawingCanvas>();
+            var caster = Object.FindFirstObjectByType<Casting.SpellCaster>();
+            int compiled = 0;
+            void OnCompiled(Compiler.SpellIR spell, DrawingCanvas c) { if (c == canvas) compiled++; }
+            caster.SpellCompiled += OnCompiled;
+
+            string[] scenarios = { "sin vista (E directo)", "V, E", "V, V, E" };
+            for (int sc = 0; sc < scenarios.Length; sc++)
+            {
+                // El jugador parado en el claro, mirando al frente, como en la prueba a mano.
+                var cc = player.GetComponent<CharacterController>();
+                if (cc != null) cc.enabled = false;
+                player.transform.SetPositionAndRotation(spot + new Vector3(0f, 0.1f, -3f), Quaternion.identity);
+                if (cc != null) cc.enabled = true;
+                Physics.SyncTransforms();
+                yield return 0.5f;
+
+                Place(pc, rb, spot + Vector3.up * 1.2f);
+                canvas.Clear();
+                caster.OnSealEdited(canvas);
+                HarnessSeals.Draw(canvas, "fire");
+                compiled = 0;
+                mover.TryBegin(rb, 2f);
+                yield return 0.3f;
+                if (sc >= 1) { pc.SetFocus(cam, true); yield return 0.3f; }
+                if (sc == 2) { pc.SetFocus(cam, false); yield return 0.5f; }
+                // Dibujar el circulo en vista completa termina el trazo: el sello queda armado.
+                caster.OnStrokeFinished(canvas);
+                var phase = caster.GetPhase(canvas);
+                Vector3 releasePos = rb.position;
+                mover.End(false);
+                float minY = releasePos.y;
+                for (float t = 0f; t < 2.5f; t += 0.1f) { yield return 0.1f; minY = Mathf.Min(minY, rb.position.y); }
+                Check(compiled > 0, $"runa [{scenarios[sc]}]: sale el hechizo (fase al soltar={phase}, fase final={caster.GetPhase(canvas)}, y suelta={releasePos.y - spot.y:F2} sobre el piso, y minima={minY - spot.y:F2}, camara y={cam.position.y - spot.y:F2})");
+            }
+            caster.SpellCompiled -= OnCompiled;
+        }
 
         private static void AddBody(List<Rigidbody> list, GameObject go)
         {

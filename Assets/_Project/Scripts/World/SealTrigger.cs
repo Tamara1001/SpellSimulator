@@ -49,7 +49,9 @@ namespace SpellSimulator.World
 
         private void Fire()
         {
-            if (!caster.Trigger(canvas)) return;
+            bool launched = caster.Trigger(canvas);
+            Debug.Log($"[SealTrigger] {name} dispara: {(launched ? "hechizo lanzado" : "no se lanzo (fase " + caster.GetPhase(canvas) + ")")}", this);
+            if (!launched) return;
             uses++;
             if (uses < maxUses) rearmAt = Time.time + cooldownSeconds;
         }
@@ -74,7 +76,11 @@ namespace SpellSimulator.World
         private void OnCollisionEnter(Collision collision)
         {
             if (mode != Mode.Impact || canvas == null || caster == null) return;
-            if (collision.relativeVelocity.magnitude < impactSpeed) return;
+            float speed = collision.relativeVelocity.magnitude;
+            // Diagnostico (prueba a mano): cada golpe relevante con lo que lo decidio.
+            if (speed >= 1f)
+                Debug.Log($"[SealTrigger] {name} golpea {collision.collider.name} a {speed:F1} m/s (umbral {impactSpeed:F1}), fase={caster.GetPhase(canvas)}, usos {uses}/{maxUses}", this);
+            if (speed < impactSpeed) return;
             Fire();
         }
 

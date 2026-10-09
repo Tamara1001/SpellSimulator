@@ -5,6 +5,10 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Runa: diagnostico de "no sale el hechizo" sin cerrar la vista completa
+- En Play, soltar la runa armada sin vista, con V abierta y tras cerrar V dispara el hechizo en los tres casos (`HarnessCanvasMatrix` con `Only=RUNE`, 3 chequeos PASS). Hipotesis mas probable: tras lanzar, la runa queda `Spent` y un circulo nuevo encima no la rearma (regla de `SealActivation`: hay que borrar el sello).
+- `SealTrigger` ahora loguea cada golpe >= 1 m/s (velocidad, umbral, fase, usos) y el resultado del disparo, para diagnosticar a mano desde la consola. Docs tocadas: CHANGELOG.
+
 ## 2026-10-08 — Matriz de pruebas de lienzos (`HarnessCanvasMatrix`)
 - Nuevo harness `SpellSimulator/Harness/Run Canvas Matrix` (Play, ~7 min, `Logs/harness-canvasmatrix.txt`): soltar, V + dibujar + soltar, fijar y desfijar, arrojar fuerte contra el piso, para 11 lienzos agarrables/runas, vista completa de 8 fijos, y caida fuerte/fijado de herramientas, sellos y movibles. Estado actual: PASS (413 chequeos). Filtro opcional: `SessionState "HarnessCanvasMatrix.Only"`.
 - Docs nuevas: `Docs/TESTING.md` (tipos de lienzo, casos automaticos y checklist manual PC/VR). Docs tocadas: TESTING.
