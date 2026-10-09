@@ -91,6 +91,11 @@ namespace SpellSimulator.Compiler
         /// <summary>Radio del anillo en metros (lo completa SpellCaster). El caudal escala con su area (ley extensiva).</summary>
         public float sealRadius;
 
+        /// <summary>Multiplicador de potencia por la clase de tinta dominante (1 = normal; 2.5 = poderosa). SpellCaster lo completa.</summary>
+        public float inkPower;
+        /// <summary>True si el hechizo funciona en el agua (tinta resistente). El efecto lo implementa el modulo de salida.</summary>
+        public bool waterproof;
+
         /// <summary>
         /// Los sellos chicos se agrandan alrededor de su centro antes de leerse (la limpieza de trazos y el detector de
         /// anillos tienen umbrales absolutos). 1 = sin cambio. Las anotaciones deshacen este escalado.
@@ -110,6 +115,7 @@ namespace SpellSimulator.Compiler
                 element = ElementType.None,
                 sigilId = null,
                 effectScale = 1f,
+                inkPower = 1f,
                 primaryManifestation = Manifestations.None,
                 manifestations = new ManifestationStrength[0],
                 gravity = 1f,

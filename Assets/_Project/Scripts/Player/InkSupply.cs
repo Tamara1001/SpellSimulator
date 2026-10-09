@@ -4,16 +4,18 @@ using SpellSimulator.Interfaces;
 
 namespace SpellSimulator.Player
 {
-    /// <summary>Tinta que el jugador lleva encima. Es la fuente de recarga cuando no hay un tintero a mano.</summary>
+    /// <summary>Cartuchos de tinta que el jugador lleva encima. Es la fuente de recarga cuando no hay un tintero a mano.</summary>
     public class InkSupply : MonoBehaviour, IInkSource
     {
-        [SerializeField] private InkReservoir reserve = new InkReservoir(300f, 300f);
+        public InkCartridgeStock Cartridges = new InkCartridgeStock();
 
-        public InkReservoir Reserve => reserve;
-
-        public float Refill(InkReservoir target) => target.FillFrom(reserve);
-
-        /// <summary>Guarda tinta de un tintero en la reserva personal.</summary>
-        public float Stock(IInkSource source) => source.Refill(reserve);
+        /// <summary>Gasta UN uso de cartucho y llena el deposito por completo. Devuelve la tinta transferida (0 si no hay cartuchos).</summary>
+        public float Refill(InkReservoir target)
+        {
+            if (target.Missing <= 0f || !Cartridges.TryUse(out _)) return 0f;
+            float missing = target.Missing;
+            target.FillFrom(new InkReservoir(missing, missing));
+            return missing;
+        }
     }
 }

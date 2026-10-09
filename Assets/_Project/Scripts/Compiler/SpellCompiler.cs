@@ -102,6 +102,7 @@ namespace SpellSimulator.Compiler
                 sizeRatio = sizeRatio,
                 strength = strength,
                 effectScale = effectScale,
+                inkPower = 1f,
                 primaryManifestation = manifestations[0].Id,
                 manifestations = manifestations,
                 force = force,

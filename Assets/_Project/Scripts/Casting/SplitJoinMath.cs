@@ -32,7 +32,7 @@ namespace SpellSimulator.Casting
             if (source == null) return;
             foreach (var stroke in source.Strokes)
             {
-                var copy = new Stroke { Width = stroke.Width };
+                var copy = new Stroke { Width = stroke.Width, Ink = stroke.Ink };
                 foreach (var p in stroke.Points) copy.AddPoint(new Vector2(offsetX + p.x * scaleX, p.y));
                 target.AddStroke(copy);
             }

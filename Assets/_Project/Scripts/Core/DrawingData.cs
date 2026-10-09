@@ -13,6 +13,8 @@ namespace SpellSimulator.Core
         public List<Vector2> Points = new List<Vector2>();
         /// <summary>Ancho de la tinta en metros (0 = el del lienzo). Solo visual: el reconocimiento usa los puntos.</summary>
         public float Width;
+        /// <summary>Clase de tinta con que se dibujo (decide potencia y resistencia al agua del hechizo).</summary>
+        public InkKind Ink;
 
         public Stroke() { }
 
@@ -75,7 +77,7 @@ namespace SpellSimulator.Core
             {
                 var points = new List<Vector2>(stroke.Points.Count);
                 foreach (var p in stroke.Points) points.Add(Vector2.Scale(p, scale));
-                copy.AddStroke(new Stroke(points) { Width = stroke.Width });
+                copy.AddStroke(new Stroke(points) { Width = stroke.Width, Ink = stroke.Ink });
             }
             return copy;
         }

@@ -5,23 +5,25 @@ using SpellSimulator.Interfaces;
 namespace SpellSimulator.World
 {
     /// <summary>
-    /// Tintero: objeto fisico con tinta de conjuro. Se agarra con cualquier mano y se mueve o se tira.
-    /// Recarga: en PC mirando el tintero (o teniendolo en la mano) y apretando R; en VR mojando la punta adentro.
+    /// Tintero con tinta de conjuro de una clase. FIJO (zonas del mundo): no se levanta, inagotable, recarga la pluma al
+    /// apuntarlo y apretar R (PC) o al mojar la punta (VR). PORTATIL: con E pasa al inventario como un cartucho de 5 usos
+    /// de su clase de tinta y el objeto se destruye.
     /// </summary>
     [RequireComponent(typeof(Rigidbody))]
     [RequireComponent(typeof(Collider))]
     public class Inkwell : MonoBehaviour, IInteractable, IInkSource
     {
-        [SerializeField] private InkReservoir ink = new InkReservoir(500f, 500f);
-        [SerializeField, Tooltip("Si es true, nunca se vacia (tinteros de la torre en modo Libre).")]
-        private bool infinite = true;
+        [SerializeField, Tooltip("Clase de tinta del tintero.")] private InkKind kind = InkKind.Normal;
+        [SerializeField, Tooltip("Portatil: se guarda con E como cartucho. Fijo: no se levanta y es inagotable.")]
+        private bool portable;
 
         private Rigidbody rb;
         private Collider col;
 
-        public InkReservoir Ink => ink;
-        /// <summary>Tintero inagotable (los de la torre en modo Libre): la HUD muestra "inagotable" en vez de un porcentaje.</summary>
-        public bool Infinite => infinite;
+        public InkKind Kind => kind;
+        public bool Portable => portable;
+        /// <summary>Los fijos son inagotables; los portatiles no tienen deposito propio (son un cartucho).</summary>
+        public bool Infinite => !portable;
         public HandType PreferredHand => HandType.Both;
 
         private void Awake()
@@ -30,7 +32,18 @@ namespace SpellSimulator.World
             col = GetComponent<Collider>();
         }
 
-        public string GetInteractionPrompt() => "Agarrar tintero";
+        private string promptCache;
+
+        public string GetInteractionPrompt()
+            => promptCache ??= portable ? "Guardar tintero (" + InkKindInfo.DisplayName(kind) + ")" : "Tintero (fijo)";
+
+        /// <summary>Portatil: lo guarda como cartucho en el stock del jugador y se destruye. False si el stock esta lleno o es fijo.</summary>
+        public bool TryPocket(SpellSimulator.Player.InkSupply supply)
+        {
+            if (!portable || supply == null || !supply.Cartridges.TryAdd(kind)) return false;
+            Destroy(gameObject);
+            return true;
+        }
 
         public void OnInteract(Transform holdPoint)
         {
@@ -48,16 +61,13 @@ namespace SpellSimulator.World
             col.enabled = true;
         }
 
-        /// <summary>Llena el deposito de una herramienta. Devuelve la tinta transferida.</summary>
+        /// <summary>Fijo: llena el deposito de una herramienta (inagotable). Portatil: 0 (se guarda con E). Devuelve la tinta transferida.</summary>
         public float Refill(InkReservoir target)
         {
-            if (infinite)
-            {
-                float missing = target.Missing;
-                target.FillFrom(new InkReservoir(missing, missing));
-                return missing;
-            }
-            return target.FillFrom(ink);
+            if (portable) return 0f;
+            float missing = target.Missing;
+            target.FillFrom(new InkReservoir(missing, missing));
+            return missing;
         }
     }
 }

@@ -42,6 +42,10 @@ namespace SpellSimulator.Interfaces
         SpellSimulator.Core.InkReservoir Ink { get; }
         /// <summary>Recarga desde una fuente y devuelve cuanta tinta paso.</summary>
         float RefillFrom(IInkSource source);
+        /// <summary>Clase de tinta que lleva cargada.</summary>
+        SpellSimulator.Core.InkKind LoadedInk { get; }
+        /// <summary>Llena la herramienta por completo con tinta de esa clase (cartucho).</summary>
+        void LoadInk(SpellSimulator.Core.InkKind kind);
     }
 
     /// <summary>Algo de donde se puede recargar tinta (tintero, reserva personal).</summary>

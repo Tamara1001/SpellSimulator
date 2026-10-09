@@ -135,18 +135,20 @@ namespace SpellSimulator.Player
             return HoverHintTable[mask];
         }
 
-        // Estado del tintero junto a las pistas ("Tintero 72 % | E: Agarrar | R: Recargar tinta"). Un string por (mascara,
-        // porcentaje entero), armado la primera vez y reutilizado: sin allocations por frame. Indice 101 = inagotable.
-        private readonly string[,] inkwellHints = new string[8, 102];
+        // Pistas del tintero apuntado. Fijo: "Tintero fijo | R: Recargar tinta". Portatil: "<clase> | E: Guardar tintero".
+        // Un string por (clase, fijo/portatil), armado la primera vez y reutilizado: sin allocations por frame.
+        private readonly string[,] inkwellHints = new string[3, 2];
 
         private string InkwellHint(int mask, World.Inkwell well)
         {
-            int q = well.Infinite ? 101 : Mathf.Clamp(Mathf.RoundToInt(well.Ink.Fraction * 100f), 0, 100);
-            string text = inkwellHints[mask, q];
+            int k = (int)well.Kind;
+            int f = well.Portable ? 1 : 0;
+            string text = inkwellHints[k, f];
             if (text != null) return text;
-            string state = q == 101 ? "Tintero inagotable" : "Tintero " + q + " %";
-            text = state + " | " + HoverHintTable[mask];
-            inkwellHints[mask, q] = text;
+            text = well.Portable
+                ? SpellSimulator.Core.InkKindInfo.DisplayName(well.Kind) + " | E: Guardar tintero"
+                : "Tintero fijo (" + SpellSimulator.Core.InkKindInfo.DisplayName(well.Kind) + ") | R: Recargar tinta";
+            inkwellHints[k, f] = text;
             return text;
         }
 
@@ -346,6 +348,15 @@ namespace SpellSimulator.Player
 
             if (hoveredPressable != null) { if (!hoveredPressable.PressWithClick) hoveredPressable.Press(); return; }
             if (currentHovered == null) return;
+
+            // Tinteros: los portatiles se guardan como cartucho, los fijos no se levantan.
+            if (currentHovered is World.Inkwell inkwell)
+            {
+                if (!inkwell.Portable) Hud.Notify("inkinfo", "Tintero fijo: apuntalo y apreta R para recargar", 2f);
+                else if (!inkwell.TryPocket(inkSupply)) Hud.Notify("inkinfo", "Sin lugar para mas cartuchos", 2f);
+                else { currentHovered = null; Hud.Notify("inkinfo", "Tintero guardado como cartucho", 2f); }
+                return;
+            }
 
             if (currentHovered is World.PhysicalTool || currentHovered is World.Stamp) PickUpToHotbar(currentHovered);
             else GrabSecondary(currentHovered);
@@ -566,24 +577,42 @@ namespace SpellSimulator.Player
             wasUsingTool = using_ && mainUsable != null;
         }
 
-        /// <summary>Recargar tinta de la herramienta equipada. Fuente: el tintero que se mira, o la reserva personal.</summary>
-        private void Reload()
+        /// <summary>
+        /// Recargar tinta de la herramienta equipada. Si se apunta un tintero fijo, la pluma toma su clase de tinta; si no,
+        /// se gasta UN uso de cartucho: la pluma se llena y queda cargada con la clase del cartucho.
+        /// </summary>
+        public void Reload()
         {
             if (!(mainUsable is IInkUser user) || !user.UsesInk)
             {
                 if (hoveredInkSource != null && !(hoveredInkSource is InkSupply)) Hud.Notify("inkinfo", "Equipá una herramienta con tinta para recargar", 2f);
                 return;
             }
-            if (user.Ink.Missing <= 0f) return;
 
-            IInkSource source = hoveredInkSource ?? inkSupply;
-            if (source == null) return;
+            if (hoveredInkSource != null && !(hoveredInkSource is InkSupply))
+            {
+                // Tintero apuntado: fijo = recarga (clase del tintero); portatil = hay que guardarlo con E.
+                if (hoveredInkSource is World.Inkwell well && well.Portable)
+                {
+                    Hud.Notify("inkinfo", "Guardalo con E para tener sus cartuchos", 2f);
+                    return;
+                }
+                if (user.Ink.Missing <= 0f && (!(hoveredInkSource is World.Inkwell same) || user.LoadedInk == same.Kind)) return;
+                if (user.RefillFrom(hoveredInkSource) > 0f) Haptics.Pulse(HandType.Right, 0.3f, 0.08f);
+                Hud.Notify("inkinfo", $"{SpellSimulator.Core.InkKindInfo.DisplayName(user.LoadedInk)} {user.Ink.Fraction:P0}", 2.5f);
+                return;
+            }
 
-            float amount = user.RefillFrom(source);
-            if (inkSupply != null && !ReferenceEquals(source, inkSupply)) amount += inkSupply.Stock(source);
-            if (amount > 0f) Haptics.Pulse(HandType.Right, 0.3f, 0.08f);
-            Hud.Notify("inkinfo", $"Tinta {user.Ink.Fraction:P0}" + (inkSupply != null ? $" | reserva {inkSupply.Reserve.Level:F0}" : ""), 2.5f);
-            if (user.Ink.Fraction > 0.05f) Hud.Clear("ink");
+            if (inkSupply == null) return;
+            var stock = inkSupply.Cartridges;
+            if (!stock.TryUse(out SpellSimulator.Core.InkKind kind))
+            {
+                Hud.Notify("inkinfo", "Sin cartuchos de tinta", 2.5f);
+                return;
+            }
+            user.LoadInk(kind);
+            Haptics.Pulse(HandType.Right, 0.3f, 0.08f);
+            Hud.Notify("inkinfo", $"{SpellSimulator.Core.InkKindInfo.DisplayName(kind)} | cartuchos {stock.CartridgeCount} ({stock.TotalUses} usos)", 2.5f);
         }
 
         /// <summary>V: fija el lienzo agarrado delante de la camara para dibujar sin sostener la mira.</summary>

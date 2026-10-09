@@ -113,6 +113,8 @@ namespace SpellSimulator.World
         public float WidthSample(int index) => widthPresets[Mathf.Clamp(index, 0, widthPresets.Length - 1)] / widthPresets[widthPresets.Length - 1];
         public string WidthLabel(int index) => index >= 0 && index < widthNames.Length ? widthNames[index] : (index + 1).ToString();
         public InkReservoir Ink => ink;
+        /// <summary>Clase de tinta cargada en la pluma (la fijan el cartucho o el tintero de donde se recargo).</summary>
+        public InkKind LoadedInk { get; private set; }
 
         private void Awake()
         {
@@ -145,6 +147,7 @@ namespace SpellSimulator.World
                 if (well == null) continue;
                 if (well.Refill(ink) > 0f)
                 {
+                    LoadedInk = well.Kind;
                     RefreshInkVisual();
                     Refilled?.Invoke(this);
                     Haptics.Pulse(HandType.Right, 0.3f, 0.08f);
@@ -224,6 +227,8 @@ namespace SpellSimulator.World
             lastUv = uv;
             if (kind == ToolKind.Pen && lastRayOrigin != Vector3.zero) canvas.NoteInkViewer(lastRayOrigin);
             tool.OnPointerDown(uv, canvas);
+            // El trazo nuevo lleva la clase de tinta cargada (la pluma crea el Stroke y queda de ultimo en la sesion).
+            if (kind == ToolKind.Pen && canvas.Session.Strokes.Count > 0) canvas.Session.Strokes[canvas.Session.Strokes.Count - 1].Ink = LoadedInk;
             UseChanged?.Invoke(this, true);
         }
 
@@ -288,15 +293,28 @@ namespace SpellSimulator.World
         {
             if (!UsesInk) return 0f;
             float amount = source.Refill(ink);
+            if (amount > 0f && source is Inkwell well) LoadedInk = well.Kind; // la recarga desde un tintero fija su clase
             RefreshInkVisual();
             if (amount > 0f) { Refilled?.Invoke(this); if (ink.Fraction > 0.05f) Hud.Clear("ink"); }
             return amount;
         }
 
+        /// <summary>Cartucho: llena la pluma por completo y la deja cargada con esa clase de tinta.</summary>
+        public void LoadInk(InkKind inkKind)
+        {
+            if (!UsesInk) return;
+            float missing = ink.Missing;
+            ink.FillFrom(new InkReservoir(missing, missing));
+            LoadedInk = inkKind;
+            RefreshInkVisual();
+            Refilled?.Invoke(this);
+            Hud.Clear("ink");
+        }
+
         private bool SpendInk(Vector2 uv, DrawingCanvas canvas)
         {
             float meters = Vector2.Scale(uv - lastUv, canvas.WorldSize).magnitude;
-            bool ok = ink.TryConsume(meters * inkPerMeter);
+            bool ok = ink.TryConsume(InkMath.StrokeCost(meters, canvas.WorldSize, inkPerMeter, LoadedInk));
             RefreshInkVisual();
             return ok;
         }
@@ -311,7 +329,8 @@ namespace SpellSimulator.World
         {
             if (!UsesInk || bodyRenderer == null) return;
             bodyRenderer.GetPropertyBlock(block);
-            block.SetColor(BaseColorId, Color.Lerp(emptyInkColor, fullInkColor, ink.Fraction));
+            Color full = LoadedInk == InkKind.Normal ? fullInkColor : Color.Lerp(fullInkColor, InkKindInfo.Color(LoadedInk), 0.7f);
+            block.SetColor(BaseColorId, Color.Lerp(emptyInkColor, full, ink.Fraction));
             bodyRenderer.SetPropertyBlock(block);
         }
 

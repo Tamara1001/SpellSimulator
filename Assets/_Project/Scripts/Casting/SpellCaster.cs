@@ -178,6 +178,10 @@ namespace SpellSimulator.Casting
             Vector2 ringCenterUV = new Vector2(ringCenter.x / Mathf.Max(iso.x, 1e-6f), ringCenter.y / Mathf.Max(iso.y, 1e-6f));
             GlyphPrediction[] predictions = reading.Predictions;
 
+            InkKind inkKind = InkMath.Dominant(canvas.Session.Strokes);
+            spell.inkPower = InkKindInfo.PowerMultiplier(inkKind);
+            spell.waterproof = InkKindInfo.IsWaterproof(inkKind);
+
             LastSpell = spell;
             string summary = PublishDiagnostics(ast, spell, predictions, dictionary.Dictionary);
             if (recordSeals) Record(canvas, iso, summary);
