@@ -10,6 +10,7 @@ grimorio nuevo, contornos). Falta M7: build de Quest, medicion de rendimiento, t
 **Tests:** 161 EditMode (`HarnessTestRunner`) + test de humo de Play (`HarnessPlaySmoke`, ~20 chequeos). Para empezar: [ONBOARDING](ONBOARDING.md).
 **Escenas:** `Pradera.unity` (mapa, indice 0) y `Escena.unity` (laboratorio, sin HUD nueva ni UI Toolkit).
 
+**Plan vigente:** [PLAN_OCTAVA_TANDA](PLAN_OCTAVA_TANDA.md) (bloque 1 de controles hecho). Pruebas de lienzos: [TESTING](TESTING.md).
 **Siguiente:** el backlog priorizado está al final de [ROADMAP](ROADMAP.md). Lo hecho en las últimas tandas: [PLAN_SEXTA_TANDA](PLAN_SEXTA_TANDA.md). Falta **probar a mano** (nada de lo reciente se verificó con teclado/mouse reales ni en VR/Quest).
 
 ## Mapa mental rapido

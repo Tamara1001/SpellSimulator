@@ -17,6 +17,8 @@ Vault de Obsidian del proyecto. Abrí la carpeta `Docs/` como vault.
 - [[ROADMAP]] — hitos jugables: modo Libre (M2–M7) y luego Duelo (D1–D3).
 - [[CODESTYLE]] — convenciones de código C#/Unity.
 - [[STATUS]] — estado actual en una página (leer primero).
+- [[PLAN_OCTAVA_TANDA]] — **plan vigente**: controles, tinta, hechizos, runas, cinturón, mundo/portales, multijugador.
+- [[TESTING]] — matriz de pruebas de lienzos (automáticas y checklist manual).
 - [[HARNESS]] — cómo verificar cambios (Unity MCP, trucos, tests, test de humo de Play).
 - [[KNOWN_ISSUES]] — bugs y deuda técnica.
 - [[DECISIONS]] — registro de decisiones (ADR).

@@ -315,6 +315,8 @@ namespace SpellSimulator.World
             bodyRenderer.SetPropertyBlock(block);
         }
 
+        private static readonly RaycastHit[] focusHits = new RaycastHit[16];
+
         private bool TryShootLaser(out Vector2 uv, out DrawingCanvas canvas, bool allowInscribe = false)
         {
             uv = Vector2.zero;
@@ -335,7 +337,37 @@ namespace SpellSimulator.World
                 distance = pcMaxDrawDistance;
             }
 
+            return TryShootRay(ray, distance, out uv, out canvas, allowInscribe);
+        }
+
+        /// <summary>Lienzo (y UV) que ve un rayo dado, con las mismas reglas que al dibujar (vista completa incluida). Publico para las pruebas.</summary>
+        public bool TryShootRay(Ray ray, float distance, out Vector2 uv, out DrawingCanvas canvas, bool allowInscribe = false)
+        {
+            uv = Vector2.zero;
+            canvas = null;
             lastRayOrigin = ray.origin;
+            // En vista completa de un lienzo el puntero solo ve ese lienzo: otro objeto delante (un papel, un mueble) no debe taparlo.
+            DrawingCanvas focused = PlatformDetector.IsVR ? null : FocusMode.FocusedCanvas;
+            if (focused != null && FocusMode.CanvasView)
+            {
+                int n = Physics.RaycastNonAlloc(ray, focusHits, distance, canvasLayer, QueryTriggerInteraction.Collide);
+                float best = float.MaxValue;
+                RaycastHit bestHit = default;
+                for (int i = 0; i < n; i++)
+                    if (focusHits[i].distance < best && focusHits[i].collider.TryGetComponent(out DrawingCanvas c) && c == focused)
+                    {
+                        best = focusHits[i].distance;
+                        bestHit = focusHits[i];
+                    }
+                if (best < float.MaxValue)
+                {
+                    canvas = focused;
+                    uv = canvas.GetUVFromRay(ray, bestHit.point);
+                    return true;
+                }
+                return false;
+            }
+
             // Los lienzos sostenidos son triggers: hay que pedir que el rayo los detecte.
             if (Physics.Raycast(ray, out RaycastHit hit, distance, canvasLayer, QueryTriggerInteraction.Collide) &&
                 hit.collider.TryGetComponent(out canvas))

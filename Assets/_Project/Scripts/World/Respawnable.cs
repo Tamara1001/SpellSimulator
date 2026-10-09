@@ -42,13 +42,13 @@ namespace SpellSimulator.World
         {
             if (rb.position.y < killHeight)
             {
-                Respawn();
+                Respawn("cayo por debajo de la altura minima");
                 return;
             }
             checkTimer += Time.fixedDeltaTime;
             if (checkTimer < CheckPeriod) return;
             checkTimer = 0f;
-            if (IsLost(rb.position)) Respawn();
+            if (IsLost(rb.position)) Respawn("se considera perdido (lejos del origen o bajo el terreno)");
         }
 
         /// <summary>
@@ -64,8 +64,9 @@ namespace SpellSimulator.World
             return p.y < ValleyShape.Height(p.x, p.z) - GroundMargin;
         }
 
-        public void Respawn()
+        public void Respawn(string reason = "reinicio del mundo")
         {
+            Debug.Log($"[Respawnable] {name} vuelve a su lugar: {reason} (pos {rb.position})", this);
             if (!rb.isKinematic)
             {
                 rb.linearVelocity = Vector3.zero;

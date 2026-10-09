@@ -123,6 +123,12 @@ namespace SpellSimulator.EditorTools
             if (spot == Vector3.zero) { failures.Add("no se encontro un terreno plano para las pruebas"); yield break; }
             float ground = spot.y;
 
+            if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "FOCUSRAY")
+            {
+                var probe = FocusRayProbe(player, mover, cam);
+                while (probe.MoveNext()) yield return probe.Current;
+                yield break;
+            }
             if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "RUNE")
             {
                 var probe = RuneFireProbe(player, mover, cam, spot);
@@ -266,6 +272,59 @@ namespace SpellSimulator.EditorTools
 
         private static string Info(Rigidbody rb, float ground) =>
             $"[y={rb.position.y:F2} suelo={ground:F2} padre={(rb.transform.parent != null ? rb.transform.parent.name : "-")} cin={rb.isKinematic}]";
+
+        /// <summary>
+        /// Lienzos agarrables en su lugar ORIGINAL (torre, mesas...): se agarran desde 4 lados, se abre la vista completa y se tira el rayo
+        /// del puntero (centro de pantalla) igual que PhysicalTool: lo primero que golpea debe ser el lienzo, no un mueble o pared.
+        /// Se activa con Only = "FOCUSRAY".
+        /// </summary>
+        private static IEnumerator FocusRayProbe(GameObject player, ObjectMover mover, Transform cam)
+        {
+            var camera = cam.GetComponent<Camera>();
+            Vector3[] dirs = { Vector3.forward, Vector3.back, Vector3.left, Vector3.right };
+            foreach (string name in Grabbables)
+            {
+                var go = GameObject.Find(name);
+                // El papel gigante es enorme y Respawnable lo reaparece al acercarse (artefacto de la prueba).
+                if (go == null || name == "GiantPaper_Field") continue;
+                var rb = go.GetComponent<Rigidbody>();
+                var pc = go.GetComponent<PhysicalCanvas>();
+                var canvas = go.GetComponent<DrawingCanvas>();
+                if (rb == null || pc == null || canvas == null) continue;
+                pc.ResetToInitial();
+                Vector3 origin = go.transform.position;
+                foreach (var dir in dirs)
+                {
+                    var cc = player.GetComponent<CharacterController>();
+                    if (cc != null) cc.enabled = false;
+                    Vector3 p = origin + dir * 1.3f;
+                    // Los pies sobre el piso real de ese lugar (si no, el jugador cae y Respawnable lo reaparece con el lienzo).
+                    p.y = Physics.Raycast(p + Vector3.up * 1.5f, Vector3.down, out RaycastHit floor, 4f, ~0, QueryTriggerInteraction.Ignore) ? floor.point.y + 0.05f : origin.y;
+                    player.transform.SetPositionAndRotation(p, Quaternion.LookRotation(-dir));
+                    if (cc != null) cc.enabled = true;
+                    Physics.SyncTransforms();
+                    yield return 0.3f;
+                    if (!mover.TryBegin(rb, 1.3f)) continue;
+                    yield return 0.6f;
+                    pc.SetFocus(cam, true);
+                    yield return 0.2f;
+                    var ray = camera.ScreenPointToRay(new Vector3(Screen.width * 0.5f, Screen.height * 0.5f, 0f));
+                    string what = "nada";
+                    bool ok = false;
+                    var pen = GameObject.Find("Pen")?.GetComponent<PhysicalTool>();
+                    if (pen != null && pen.TryShootRay(ray, 5f, out _, out var hitCanvas))
+                    {
+                        ok = hitCanvas == canvas;
+                        what = hitCanvas.name;
+                    }
+                    else if (Physics.Raycast(ray, out RaycastHit hit, 5f, ~0, QueryTriggerInteraction.Collide)) what = hit.collider.name + " a " + hit.distance.ToString("F2") + " m";
+                    Check(ok, $"{name} desde {dir}: el puntero en vista completa dibuja en el lienzo (ve: {what}; enfocado={pc.Focused}, vista={FocusMode.CanvasView}, canvasEnfocado={(FocusMode.FocusedCanvas != null ? FocusMode.FocusedCanvas.name : "-")}, sosteniendo={mover.IsHolding})");
+                    mover.End(false);
+                    yield return 0.3f;
+                    pc.ResetToInitial();
+                }
+            }
+        }
 
         /// <summary>
         /// Una runa armada (anillo cerrado) lanza su hechizo al golpear (impacto >= 3 m/s). Compara soltarla con la vista completa

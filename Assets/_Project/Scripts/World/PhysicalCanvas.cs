@@ -347,6 +347,7 @@ namespace SpellSimulator.World
                 Vector3 centerOffset = canvas != null ? world * canvas.CenterOffsetLocalScaled : Vector3.zero;
                 transform.SetPositionAndRotation(cameraTransform.position + cameraTransform.forward * distance - centerOffset, world);
                 FocusMode.EnterCanvasView();
+                FocusMode.FocusedCanvas = canvas;
             }
             else
             {

@@ -129,11 +129,13 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 ---
 
 ## Siguiente (backlog priorizado para quien continúe)
+> Plan vigente de la octava tanda (controles, tinta, hechizos, runas, cinturón, mundo y portales, multijugador): [PLAN_OCTAVA_TANDA](PLAN_OCTAVA_TANDA.md).
 1. **Probar a mano** lo hecho (ver M7) y corregir lo que aparezca. Es lo que más valor da ahora.
 2. **WebGL/itch.io** (KI-104): con la consola del navegador de quien lo reporta, ubicar por qué no se ve la tinta/lienzos.
 3. **Reconocimiento agua vs viento** (KI-105): juntar sellos mal leídos como fixtures (`Tests/Fixtures`, ver su README) y, con ~20 casos,
    afinar un desempate por estructura (cantidad de trazos rectos cortos) o reentrenar el modelo en la referencia.
-4. **Guardar hechizos** (M6b H1 y H5, ADR-034): `SpellLibrary` en `persistentDataPath`, guardar lo dibujado, renombrar, borrar.
+4. **Más hechizos prearmados + descubrirlos todos** y **crear/guardar hechizos propios** (ver `PLAN_OCTAVA_TANDA.md`, «Pendientes agregados»).
+4b. **Guardar hechizos** (M6b H1 y H5, ADR-034): `SpellLibrary` en `persistentDataPath`, guardar lo dibujado, renombrar, borrar.
 5. **Quest** (M7): build, perfilado, UI en world-space (KI-095, KI-085, KI-049, KI-102).
 6. Pendientes menores: estación de viento sin medir en Play (`HarnessWindProbe` necesita un harness que dibuje en lienzos no cuadrados),
    fuente serif con licencia (KI-093), efectos de 6 glifos sin entrada, configuración de teclas y multijugador (próximamente en el menú).

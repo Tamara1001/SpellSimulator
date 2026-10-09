@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
+using SpellSimulator.Canvas;
 
 namespace SpellSimulator.Player
 {
@@ -11,6 +12,9 @@ namespace SpellSimulator.Player
     public static class FocusMode
     {
         public static bool Active { get; private set; }
+
+        /// <summary>Lienzo en vista completa (null si la vista es de una zona del ambiente o no hay vista). Las herramientas solo apuntan a este.</summary>
+        public static DrawingCanvas FocusedCanvas { get; set; }
 
         public static void Enter()
         {
@@ -37,12 +41,14 @@ namespace SpellSimulator.Player
         {
             if (CanvasView) CanvasViewExitFrame = Time.frameCount;
             CanvasView = false;
+            FocusedCanvas = null;
             Exit();
         }
 
         public static void Exit()
         {
             CanvasView = false;
+            FocusedCanvas = null;
             if (!Active) return;
             Active = false;
             if (PlatformDetector.IsVR) return;

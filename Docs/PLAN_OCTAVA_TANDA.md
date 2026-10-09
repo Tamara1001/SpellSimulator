@@ -3,7 +3,7 @@ tags: [doc, plan]
 ---
 # Plan de la octava tanda (decisiones de Ale, 2026-10-08)
 
-Orden acordado: **1 Controles → 2 Tinta/tinteros/HUD → 3 Hechizos → 4 Runas → 5 Cinturón/grimorio → 6 Mundo y portales → 7 Multijugador.**
+Orden acordado (bloque 1 hecho, resto pendiente): **1 Controles → 2 Tinta/tinteros/HUD → 3 Hechizos → 4 Runas → 5 Cinturón/grimorio → 6 Mundo y portales → 7 Multijugador.**
 Cada bloque: plan corto, implementación, harness (tests + `HarnessPlaySmoke` + matriz de lienzos), commit y push. Los números son
 valores iniciales en datos/SO, ajustables tras probar a mano.
 
@@ -54,6 +54,11 @@ Fuente de verdad: `GAME_DESIGN.md#controles`; repetir en `Learning/GrimoireTexts
 - **Netcode for GameObjects + Relay.** Servidor autoritativo para hechizos y física; los clientes predicen movimiento y trazos.
 - Antes de codear: separar estado autoritativo de presentación (ya previsto en D3), definir qué se replica (trazos, eventos de cast, objetos físicos agarrados, tinta) y presupuesto de ancho de banda. Empezar con **cooperativo sandbox** para validar la red y después PvP/Duelo.
 - Todo lo de bloques 2–6 se escribe pensando en esto: reglas de dominio puras, eventos en vez de referencias cruzadas, límites por jugador y datos en SO.
+
+## Pendientes agregados (a futuro)
+- **Más hechizos prearmados** (hoy 7 en `Data/Spells`) y **una forma de descubrirlos todos** (libros, estructuras del mapa, experimentación); revisar que cada uno tenga su camino de descubrimiento.
+- **Crear y guardar hechizos propios** desde lo dibujado (ADR-034: `SpellLibrary`, guardar, renombrar, borrar; M6b H1 y H5), con entrada de nombre en PC primero y VR después.
+- **Menú de pausa dentro del grimorio** (Esc abre el grimorio a pantalla completa, sin las opciones de pausa todavía).
 
 ## Preguntas abiertas
 - Cantidades exactas (cooldowns, duraciones, radios): se fijan al implementar cada bloque y se afinan probando a mano.

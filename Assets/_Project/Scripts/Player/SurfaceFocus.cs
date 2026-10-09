@@ -85,6 +85,7 @@ namespace SpellSimulator.Player
             savedLocalRotation = cam.localRotation;
             active = true;
             FocusMode.EnterCanvasView();
+            FocusMode.FocusedCanvas = canvas;
             Apply();
         }
 

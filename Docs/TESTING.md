@@ -29,6 +29,9 @@ Para cada **fijo**: V abre, dibujar deja trazos, salir devuelve la cámara a su 
 
 Para **herramientas, sellos y movibles**: caída a 45 m/s no atraviesa el piso; los genéricos (movibles) se pueden fijar y desfijar.
 
+### Pruebas dirigidas (Only = ...)
+`SessionState "HarnessCanvasMatrix.Only"`: `RUNE` (la runa armada dispara en 3 variantes), `FOCUSRAY` (lienzos en su lugar original, agarrados desde 4 lados: el puntero en vista completa debe dibujar en ese lienzo), o nombres separados por coma para repetir solo algunos casos.
+
 ## Checklist manual (teclado y mouse reales)
 Marcá cada ítem con `[x]` y la fecha/versión cuando lo pruebes.
 

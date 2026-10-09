@@ -5,6 +5,10 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Cuaderno agarrado + vista completa a veces no dejaba dibujar
+- Causa medida (`HarnessCanvasMatrix` con `Only=FOCUSRAY`, 40 chequeos): el rayo del lapiz tomaba el PRIMER collider; si otro objeto (otro papel, un mueble) quedaba entre la camara y el lienzo enfocado, no se dibujaba. Ahora `FocusMode.FocusedCanvas` (lo fijan `PhysicalCanvas.SetFocus` y `SurfaceFocus`) hace que, en vista completa, `PhysicalTool.TryShootRay` solo vea el lienzo enfocado (sin allocations: `RaycastNonAlloc`).
+- Diagnostico nuevo: `Respawnable` loguea por que reaparece un objeto (cualquier objeto que reaparece pierde su vista completa). Docs tocadas: PLAN_OCTAVA_TANDA (pendientes: mas hechizos prearmados + descubrirlos, crear/guardar hechizos, menu de pausa), ROADMAP, STATUS, Home.
+
 ## 2026-10-08 — Bloque 1 del plan: controles nuevos (PLAN_OCTAVA_TANDA)
 - E agarra y, con algo agarrado, lo deja en el aire (PinnedBody/flotar); Q arroja (se elimina «soltar»); T abre el grimorio; Esc lo abre a pantalla completa / lo cierra y reemplaza a B; Tab = vista completa del lienzo (antes V); F da vuelta la hoja y la saca de la vista completa; clic de la rueda sigue fijando; rotar con clic derecho es ~2,4x mas sensible (`RotateDegreesPerUnit` 0.6).
 - Textos actualizados (HUD, grimorio, libros, sellos) y tabla de controles de GAME_DESIGN. Nuevo `PLAN_OCTAVA_TANDA.md` con todas las decisiones del plan (bloques 1-7). Pendiente: menu de pausa dentro del grimorio; confirmar a mano rotar mientras se camina.
