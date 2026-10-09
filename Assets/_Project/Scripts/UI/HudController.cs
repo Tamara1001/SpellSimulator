@@ -578,7 +578,7 @@ namespace SpellSimulator.UI
             if (main != null)
             {
                 mainName.text = mainInfo != null ? mainInfo.HudName : HudText.PrettyName(main.name);
-                SetHints(mainHints, mainInfo != null ? mainInfo.HudHints : null, ref mainHintsSource);
+                SetHints(mainHints, mainInfo != null ? (secondary != null ? HudText.DropHeldConflicts(mainInfo.HudHints) : mainInfo.HudHints) : null, ref mainHintsSource);
             }
 
             ctxSec.style.display = secondary != null ? DisplayStyle.Flex : DisplayStyle.None;

@@ -282,6 +282,7 @@ namespace SpellSimulator.Player
                 HandleHotbarKeys();
                 HandleWheel();
                 HandleUsage();
+                if (inputReader.IsReloading) Reload();
                 if (inputReader.IsTogglingFocus || inputReader.IsFlipping) SurfaceFocus.Close();
                 return;
             }
@@ -597,8 +598,9 @@ namespace SpellSimulator.Player
             if (book != null && book.IsOpen) return;
             int step = scroll > 0f ? 1 : -1;
 
-            // Arrastrando algo que no es un cuaderno la rueda es del movedor (distancia).
-            if (mover != null && mover.IsHolding && !inputReader.IsRunning && !mover.HeldBody.TryGetComponent(out IPageable _)) return;
+            // Arrastrando cualquier cosa (tambien un cuaderno) la rueda es del movedor (distancia), salvo en vista completa,
+            // donde la distancia no tiene sentido y la rueda vuelve a ser el grosor de la herramienta.
+            if (mover != null && mover.IsHolding && !inputReader.IsRunning && !FocusMode.CanvasView) return;
             if (heldMain != null && heldMain.TryGetComponent(out IWidthSelectable widths)) widths.CycleWidth(step);
         }
 

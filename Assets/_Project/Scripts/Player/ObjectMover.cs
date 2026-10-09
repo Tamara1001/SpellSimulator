@@ -82,7 +82,7 @@ namespace SpellSimulator.Player
                 float step = Mathf.Sign(scroll);
                 if (inputReader.IsRunning)
                     relativeRotation = Quaternion.AngleAxis(step * RollStep, Vector3.forward) * relativeRotation;
-                else if (held.GetComponentInParent<IPageable>() == null || inputReader.IsRunning)
+                else if (!FocusMode.CanvasView)
                     holdDistance = Mathf.Clamp(holdDistance + step * DistanceStep, MinDistance, MaxDistance);
             }
 

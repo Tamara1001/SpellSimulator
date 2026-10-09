@@ -5,6 +5,11 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-09 — Correcciones de la prueba a mano (rueda, recarga en vista completa, pistas)
+- **Rueda estandarizada:** con cualquier cosa agarrada (tambien un cuaderno) la rueda acerca/aleja; en vista completa vuelve a ser el grosor de la herramienta (`PlayerInteractor.HandleWheel`, `ObjectMover`).
+- **Recargar tinta (R) en vista completa** de lo que se mira sin agarrar (`SurfaceFocus`): ahora funciona.
+- **Pistas de la HUD:** con algo en la mano secundaria se quitan de la principal «Q: arrojar» y «Rueda: grosor» (`HudText.DropHeldConflicts`), asi no se repiten ni saltan de linea; la secundaria muestra siempre «Rueda: distancia».
+
 ## 2026-10-09 — Bloques 4 y 5 del plan: runas por material, fusion, cinturon y grimorio
 - **Runas:** todas con la misma logica (`Rune` + `SealTrigger` + `DrawingCanvas`); tipos Piedra (2 usos de por vida), Metal (5, resiste agua y fuego) y Oro (10, enfriamiento corto, brillo y luz propios). Se **agrietan** al gastarse (`RuneVisuals`) y una agotada ya no sirve («hay que reciclarla», bloque 6). Se eliminan las «mitades» (`SplitSealHalf`). Colocadas: 2 piedras de campo + 2 para probar la union + 1 metal (campo) + 1 oro (pedestal del estudio) + la placa de presion.
 - **Fusion:** dos runas armadas que se tocan (`RuneJoin`, `SpellFusion`) lanzan UN hechizo: la mas grande manda tamano/origen/direccion y se unen las primitivas del plan; ademas se emite el efecto de la chica en el mismo origen (combos fuego+viento, agua+cristal). Cada una gasta un uso. `SpellCaster` gana `Compile`/`Emit`.

@@ -46,6 +46,14 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
+        public void DropHeldConflicts_RemovesQAndWheel_KeepsTheRest()
+        {
+            string result = HudText.DropHeldConflicts("Clic: dibujar | Clic der.: deshacer | Rueda: grosor | R: tinta | Q: arrojar");
+            Assert.AreEqual("Clic: dibujar | Clic der.: deshacer | R: tinta", result);
+            Assert.IsNull(HudText.DropHeldConflicts(null));
+        }
+
+        [Test]
         public void CleanDiagnostic_StripsRichText_AndRejectsSpellReport()
         {
             Assert.AreEqual("[Libro] Tratado · Aprendiste: Fuego.", HudText.CleanDiagnostic("<b>[Libro] Tratado</b>\nAprendiste: Fuego."));

@@ -48,6 +48,25 @@ namespace SpellSimulator.UI
             return into;
         }
 
+        /// <summary>
+        /// Con algo en la mano secundaria, Q arroja eso y la rueda lo acerca o aleja: se quitan esas pistas de la mano principal
+        /// para no repetirlas ni contradecirse ("Q: arrojar" y "Rueda: grosor" solo valen sin nada agarrado).
+        /// </summary>
+        public static string DropHeldConflicts(string hints)
+        {
+            if (string.IsNullOrWhiteSpace(hints)) return hints;
+            var kept = new List<string>();
+            foreach (string raw in hints.Split('|'))
+            {
+                string part = raw.Trim();
+                int colon = part.IndexOf(':');
+                string key = colon > 0 ? part.Substring(0, colon).Trim() : "";
+                if (key == "Q" || key == "Rueda" || key == "5-0" || key == "1-0") continue;
+                if (part.Length > 0) kept.Add(part);
+            }
+            return string.Join(" | ", kept);
+        }
+
         /// <summary>Primera letra en mayuscula ("dibujar" -> "Dibujar"). Solo se llama al armar la HUD, nunca por frame.</summary>
         public static string Capitalize(string text)
         {
@@ -65,7 +84,7 @@ namespace SpellSimulator.UI
             if (secondaryCache.TryGetValue(mask, out string cached)) return cached;
             var parts = new List<string>(8);
             if (pageable) parts.Add("Z/X: página");
-            else parts.Add("Rueda: distancia");
+            parts.Add("Rueda: distancia");
             parts.Add("Clic der.+mouse: girar");
             if (flippable) parts.Add("F: dar vuelta");
             if (focusable) parts.Add("Tab: a pantalla");
