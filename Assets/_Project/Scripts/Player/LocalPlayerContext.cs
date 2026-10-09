@@ -18,7 +18,7 @@ namespace SpellSimulator.Player
         private Camera headCamera;
         private PlayerInteractor interactor;
 
-        public int OwnerId => 0;
+        public int OwnerId => PlayerRegistry.LocalOwnerId;
         public bool IsLocal => true;
         public Transform Root => transform;
         public bool IsAlive => this != null;

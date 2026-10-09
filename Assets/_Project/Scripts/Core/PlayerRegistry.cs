@@ -17,6 +17,9 @@ namespace SpellSimulator.Core
         /// <summary>Se emite al registrar o quitar un jugador.</summary>
         public static event Action Changed;
 
+        /// <summary>Id del jugador local en la partida (0 en solitario; en red lo fija NetPlayer con el id de cliente de Netcode).</summary>
+        public static int LocalOwnerId { get; set; }
+
         /// <summary>El jugador local (el primero marcado local; si no hay, el primero). Null si no hay ninguno.</summary>
         public static IPlayerContext Local
         {
@@ -85,6 +88,6 @@ namespace SpellSimulator.Core
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetOnDomainReload() => players.Clear();
+        private static void ResetOnDomainReload() { players.Clear(); LocalOwnerId = 0; }
     }
 }

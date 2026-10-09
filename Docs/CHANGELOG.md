@@ -6,6 +6,14 @@ tags: [doc, changelog]
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
 
+## 2026-10-09 — F1 del multijugador: sesión y avatar de red (primera mitad)
+
+- `Scripts/Net/`: `NetSession` (crea o se une a una sala por código de Relay con WebSocket `wss`, o por IP directa para pruebas; arma el `NetworkManager` en tiempo de ejecución, sin tocar la escena), `NetPlayer` (avatar de red: raíz con `ClientNetworkTransform` de autoridad del dueño, cabeza, manos y nombre sincronizados por `NetworkVariable`; los remotos se registran en `PlayerRegistry`) y `ClientNetworkTransform`.
+- `PlayerRegistry.LocalOwnerId`: el jugador local usa el id de cliente de Netcode (antes era 0 fijo).
+- Editor: menú `SpellSimulator/Net/Crear avatar de red` (genera `Resources/Net/NetPlayer.prefab`) y `HarnessNetSmoke` (`Run Net Smoke (local)`: anfitrión y cliente virtuales por loopback, 15 chequeos; `Run Net Relay Probe`: sala real en Relay por WebSocket, 7 chequeos). Resultado en `Logs/harness-netsmoke.txt`.
+- Verificado: Relay y Authentication activos en el proyecto de Unity Cloud; Relay exige `UseWebSockets = true` en el transporte. Pendiente de comprobar en el build WebGL real que la conexión sea `wss` (el transporte informa `UseEncryption=false` en el editor).
+- Falta de F1: menú Hospedar/Unirse en `MainMenu`, cuerpo de avatar más fino, reconexión y entrada tardía, prueba PC↔Quest.
+
 ## 2026-10-09 — F1 del multijugador: paquetes
 
 - Instalados Netcode for GameObjects 2.13.3 y Multiplayer Services 2.4.0 (trae Unity Transport 2.7.4, con WebSocket y `wss` para Relay: WebGL entra en el alcance). KI-104 (WebGL en equipos ajenos) marcado como resuelto. 409 tests EditMode en verde.
