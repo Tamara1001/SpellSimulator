@@ -31,7 +31,7 @@ Para cada **fijo**: Tab abre, dibujar deja trazos, salir devuelve la cámara a s
 Para **herramientas, sellos y movibles**: caída a 45 m/s no atraviesa el piso; los genéricos (movibles) se pueden fijar y desfijar.
 
 ### Pruebas dirigidas (Only = ...)
-`SessionState "HarnessCanvasMatrix.Only"`: `RUNE` (la runa armada dispara en 3 variantes), `NESTED` (circulos anidados), `HALVES` (mitades de cualquier lienzo: lado a lado, arriba/abajo y separadas), `RUNEJOIN` (dos runas armadas se fusionan y se gastan), `SPELLS` (lanza tierra, cristal, agua y viento y revisa sus cuerpos fisicos), `CHARGE` (retardo de lanzamiento: carga, lanzamiento y cancelacion), `FOCUSRAY` (lienzos en su lugar original, agarrados desde 4 lados: el puntero en vista completa debe dibujar en ese lienzo), o nombres separados por coma para repetir solo algunos casos.
+`SessionState "HarnessCanvasMatrix.Only"`: `RUNE` (la runa armada dispara en 3 variantes), `PORTAL` (receta de portal, viaje al par), `NESTED` (circulos anidados), `HALVES` (mitades de cualquier lienzo: lado a lado, arriba/abajo y separadas), `RUNEJOIN` (dos runas armadas se fusionan y se gastan), `SPELLS` (lanza tierra, cristal, agua y viento y revisa sus cuerpos fisicos), `CHARGE` (retardo de lanzamiento: carga, lanzamiento y cancelacion), `FOCUSRAY` (lienzos en su lugar original, agarrados desde 4 lados: el puntero en vista completa debe dibujar en ese lienzo), o nombres separados por coma para repetir solo algunos casos.
 
 ## Checklist manual (teclado y mouse reales)
 Marcá cada ítem con `[x]` y la fecha/versión cuando lo pruebes.
@@ -46,6 +46,9 @@ Marcá cada ítem con `[x]` y la fecha/versión cuando lo pruebes.
 - [ ] Sello: cargar un glifo (Tab → «Cargar en el sello»), estampar sobre una hoja, sobre una runa y sobre un lienzo fijo.
 - [ ] Mitades: dibujar medio anillo en dos hojas (o cuaderno, runa, pizarra) y pegarlas borde con borde: se lanza una sola vez; probar arriba/abajo.
 - [ ] Circulos anidados: dibujar un arco grande abierto, dos circulos chicos cerrados adentro con su glifo cada uno (fuego y viento) y cerrar el grande al final: salen los dos hechizos a la vez, mas potentes que por separado.
+- [ ] Portales: ir al estudio de la torre y dibujar la receta de `tower-study` en su placa (ver `Data/Portals/portals.json`): se abre y lleva a la torre de vigia; probar el resto de los pares.
+- [ ] Estacion de reciclaje (santuario): dejar una runa agotada y recibir una nueva a los 8 s; los puntos de suministro (cabanas, puesto, cueva) reponen solos.
+- [ ] Torre de vigia: subir por la rampa (30 grados), cobertura de los afloramientos, cabanas con su libro.
 - [ ] Cinturon: equiparlo, guardar tinteros de tres clases (un slot cada una), V cambia la tinta activa y R recarga con ella.
 - [ ] Banco/mesa/caja: fijar en el aire (flota con vaivén), volver a agarrar, tirar al piso fuerte (no desaparece).
 - [ ] Lápiz / goma lanzados muy fuerte contra el piso, el terreno y la torre: no los atraviesan.

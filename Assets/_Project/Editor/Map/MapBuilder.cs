@@ -64,6 +64,7 @@ namespace SpellSimulator.EditorTools.Map
             TowerProps.Build(map, lit, TowerOrigin());
             MapBelt.Build(map, lit, MapBelt.AlchemyTableSpot());   // cinturon sobre la mesa de alquimia (2do piso)
             CanvasDesigns.Build(map, lit, TowerOrigin(), stampTable);
+            MapStructures.Build(map, lit);   // torre de vigia, cabanas, cueva, peñascos, circulo, santuario, puesto y portales
             MovablesSetup.Apply(map, lit);
             InteractionSetup.Apply();
             FlammableSetup.Apply();

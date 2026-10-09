@@ -1,0 +1,49 @@
+{
+  "version": 1,
+  "portals": [
+    {
+      "id": "tower-study",
+      "pair": "watchtower",
+      "displayName": "Portal del estudio",
+      "recipe": {
+        "sigil": "light",
+        "signs": ["levitation", "convergence", "repetition"],
+        "nested": false
+      }
+    },
+    {
+      "id": "watchtower",
+      "pair": "tower-study",
+      "displayName": "Portal de la atalaya",
+      "recipe": {
+        "sigil": "aeroform",
+        "signs": ["float", "billowing", "region", "weave"],
+        "nested": false
+      }
+    },
+    {
+      "id": "field-circle",
+      "pair": "cave",
+      "displayName": "Circulo de la pradera",
+      "recipe": {
+        "sigil": "",
+        "signs": [],
+        "nested": true,
+        "inner": [
+          { "sigil": "wind-underfoot", "signs": ["levitation", "billowing"] },
+          { "sigil": "crystal", "signs": ["collection", "convergence", "weave"] }
+        ]
+      }
+    },
+    {
+      "id": "cave",
+      "pair": "field-circle",
+      "displayName": "Portal de la cueva",
+      "recipe": {
+        "sigil": "earth",
+        "signs": ["crush", "pull", "collection", "region"],
+        "nested": false
+      }
+    }
+  ]
+}

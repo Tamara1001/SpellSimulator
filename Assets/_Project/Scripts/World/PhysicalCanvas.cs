@@ -51,7 +51,8 @@ namespace SpellSimulator.World
         private Collider col;
         private DrawingCanvas canvas;
         private Transform holdParent;
-        private string prompt;
+        private string prompt, promptExhausted, hudNameExhausted;
+        private Rune rune;
 
         // Estado de reposo.
         private bool floating;
@@ -83,7 +84,11 @@ namespace SpellSimulator.World
         {
             get
             {
-                if (notebook == null) return objectName;
+                if (notebook == null)
+                {
+                    if (rune != null && rune.IsExhausted) return hudNameExhausted ??= objectName + " (agotada)";
+                    return objectName;
+                }
                 if (notebook.Page != hudPage || hudName == null)
                 {
                     hudPage = notebook.Page;
@@ -104,6 +109,7 @@ namespace SpellSimulator.World
             col = GetComponent<Collider>();
             canvas = GetComponent<DrawingCanvas>();
             TryGetComponent(out notebook);
+            TryGetComponent(out rune);
             bobPhase = Random.value * 6.28f;
             initialKinematic = rb.isKinematic;
             initialGravity = rb.useGravity;
@@ -166,7 +172,11 @@ namespace SpellSimulator.World
         }
 
         // Se arma una vez: el interactor lo pide en cada frame (sin GC).
-        public string GetInteractionPrompt() => prompt ??= $"Agarrar {objectName}";
+        public string GetInteractionPrompt()
+        {
+            if (rune != null && rune.IsExhausted) return promptExhausted ??= $"Agarrar {objectName} (agotada)";
+            return prompt ??= $"Agarrar {objectName}";
+        }
 
         // ---------------------------------------------------------------- agarrar / soltar
 

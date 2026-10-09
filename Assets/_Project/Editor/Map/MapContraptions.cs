@@ -67,7 +67,22 @@ namespace SpellSimulator.EditorTools.Map
             Slab(template, material, caster, stoneProfile, RuneKind.Gold, "ImpactGold_S", pedestalAt + Vector3.up * (pedestalTop + 0.09f), 0.18f, 0.06f, false, SealTrigger.Mode.Impact, 3f);
         }
 
-        private static void Slab(GameObject template, Material material, SpellCaster caster, MaterialProfile profile, RuneKind kind, string name,
+        /// <summary>
+        /// Runa suelta de impacto con el mismo armado que las del campo (tamano y espesor por material), para reutilizar fuera de
+        /// aca (plantillas de reaparicion y de reciclaje en MapStructures). Queda en la raiz de la escena: el llamador la reubica.
+        /// </summary>
+        public static GameObject CreateRune(RuneKind kind, string name, Vector3 position, Material material)
+        {
+            var template = GameObject.Find("PaperCanvas");
+            if (template == null) return null;
+            var caster = Object.FindFirstObjectByType<SpellCaster>();
+            var stoneProfile = AssetDatabase.LoadAssetAtPath<MaterialProfile>("Assets/_Project/Data/Materials/Piedra.asset");
+            float size = kind == RuneKind.Metal ? 0.3f : kind == RuneKind.Gold ? 0.18f : 0.26f;
+            float thickness = kind == RuneKind.Metal ? 0.085f : 0.06f;
+            return Slab(template, material, caster, stoneProfile, kind, name, position, size, thickness, false, SealTrigger.Mode.Impact, 3f);
+        }
+
+        private static GameObject Slab(GameObject template, Material material, SpellCaster caster, MaterialProfile profile, RuneKind kind, string name,
             Vector3 position, float size, float thickness, bool isFixed, SealTrigger.Mode mode, float threshold)
         {
             var old = GameObject.Find(name);
@@ -119,6 +134,7 @@ namespace SpellSimulator.EditorTools.Map
             BuildLook(go, template, material, kind, name, size, depth, thickness);
             if (go.GetComponent<Respawnable>() == null) go.AddComponent<Respawnable>();
             Undo.RegisterCreatedObjectUndo(go, name);
+            return go;
         }
 
         // ---------------------------------------------------------------- aspecto

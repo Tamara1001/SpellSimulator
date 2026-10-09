@@ -251,6 +251,13 @@ namespace SpellSimulator.EditorTools
                     "el HUD muestra el slot de cartuchos y su contador cambia al sumar uno");
             }
             else failures.Add("falta el slot de cartuchos del HUD (o el InkSupply del jugador)");
+
+            // --- Estructuras del mapa (MapStructures): los 4 portales, puntos de reaparicion y la estacion de reciclaje.
+            bool portals = Portal.Find("tower-study") != null && Portal.Find("watchtower") != null
+                && Portal.Find("field-circle") != null && Portal.Find("cave") != null;
+            int supplyPoints = Object.FindObjectsByType<SupplyPoint>(FindObjectsSortMode.None).Length;
+            bool recycling = Object.FindFirstObjectByType<RecyclingStation>() != null;
+            Check(portals && supplyPoints >= 3 && recycling, "estructuras: 4 portales, 3+ puntos de reaparicion y estacion de reciclaje");
         }
     }
 }

@@ -207,6 +207,7 @@ namespace SpellSimulator.EditorTools.Map
             if (ValleyShape.LakeFactor(x, z) < 1.2f || ValleyShape.RiverDistance(x, z) < ValleyShape.RiverHalfWidth + 2.5f) return false;
             if (ValleyShape.PathDistance(x, z) < ValleyShape.PathWidth) return false;
             if (Vector2.Distance(new Vector2(x, z), ValleyShape.TowerCenter) < 6.5f) return false;
+            if (MapStructures.Covers(x, z)) return false;   // pisos de cabanas y cueva: el pasto no los atraviesa
             const float e = 0.8f;
             float dx = ValleyShape.Height(x + e, z) - ValleyShape.Height(x - e, z);
             float dz = ValleyShape.Height(x, z + e) - ValleyShape.Height(x, z - e);

@@ -51,7 +51,7 @@ Fuente de verdad: `GAME_DESIGN.md#controles`; repetir en `Learning/GrimoireTexts
 - **Cinturón:** objeto que agrega **2 slots chicos laterales** a la barra (5 en total); valores en un SO.
 - **Grimorio:** si el jugador se aleja **más de 12 m** desaparece y vuelve al inventario.
 
-## 6. Mundo, reposición y portales
+## 6. Mundo, reposición y portales (HECHO 2026-10-09, falta la prueba a mano y el aprendizaje de recetas)
 - **Reposición de lienzos y runas (anti-agotamiento en PvP):** puntos de reaparición fijos (mesas/cofres) con enfriamiento y límite por jugador; **estaciones de reciclaje** (llevar runas gastadas/lienzos y recibir otros: economía cerrada); **tope global** de objetos sueltos (los más viejos se borran); en **Duelo** cada jugador empieza con un mazo fijo.
 - **Portales:** ya colocados en el mapa; se activan **dibujando un sello complejo fijo** (receta de glifos) en su placa y viajan al portal par. Cada uno pide una combinación distinta, que se aprende en libros.
 - **Estructuras** (cuevas, cabañas, montañas, torre de vigilancia, otras pequeñas): puntos de reaparición y tinteros fijos, coberturas y alturas para PvP, lugares de aprendizaje (libros y glifos), terminales de portales. Se generan desde `MapBuilder` (respetando `MapLayout`).

@@ -380,6 +380,23 @@ namespace SpellSimulator.Casting
         }
 
         /// <summary>
+        /// Lee el sello del lienzo (compuesto o de un solo circulo) y lo reduce a ids y confianzas, sin lanzar nada ni publicar
+        /// eventos. Es la misma lectura que usa <see cref="Cast"/>; la usan los portales para comparar con su receta.
+        /// </summary>
+        public bool ReadSeal(DrawingCanvas canvas, out PortalReading reading)
+        {
+            reading = null;
+            if (canvas == null || canvas.Session.IsEmpty || classifier == null || dictionary == null) return false;
+            if (TryAnalyzeNested(canvas, out NestedReading nested))
+            {
+                reading = PortalReading.FromNested(nested);
+                return true;
+            }
+            reading = PortalReading.FromAst(SealReader.Read(Clean(canvas), classifier, dictionary.Dictionary, Time.time).Ast);
+            return true;
+        }
+
+        /// <summary>
         /// Lee el lienzo como sello compuesto (ver NestedSealReader). True si lo es; cada sub-lectura queda con su hechizo
         /// final: radio en metros, centro en UV, tinta de sus propios trazos y la amplificacion del exterior aplicada.
         /// Si devuelve false, el lienzo se lee por el camino de siempre (un solo circulo).

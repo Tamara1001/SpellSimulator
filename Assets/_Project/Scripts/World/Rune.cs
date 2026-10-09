@@ -58,6 +58,7 @@ namespace SpellSimulator.World
             Debug.Log(IsExhausted
                 ? $"[Runa] {name} ({kind}) se agoto: {wear}/{Durability} usos. Hay que reciclarla."
                 : $"[Runa] {name} ({kind}) gasto un uso: {wear}/{Durability}.", this);
+            if (IsExhausted) Player.Hud.Notify("rune", "Runa agotada: llevala a una estacion de reciclaje", 4f);
             WearChanged?.Invoke(this);
         }
 

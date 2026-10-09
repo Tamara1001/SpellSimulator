@@ -141,6 +141,12 @@ namespace SpellSimulator.EditorTools
                 while (probe.MoveNext()) yield return probe.Current;
                 yield break;
             }
+            if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "PORTAL")
+            {
+                var probe = PortalProbe(spot);
+                while (probe.MoveNext()) yield return probe.Current;
+                yield break;
+            }
             if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "SPELLS")
             {
                 var probe = SpellsProbe(spot);
@@ -406,6 +412,122 @@ namespace SpellSimulator.EditorTools
             caster.SpellCompiled -= OnCompiled;
             rba.isKinematic = false; rbb.isKinematic = false;
             pca.ResetToInitial(); pcb.ResetToInitial();
+        }
+
+        /// <summary>
+        /// Portales: dos portales de prueba apareados (placa A = Paper_S). Una receta incorrecta (signo de mas, o la de otro portal) no
+        /// abre y la placa lanza su hechizo normal; la receta de tower-study abre (Charging y luego Open), borra la placa sin lanzar
+        /// un hechizo, y el jugador a 1 m del ancla A aparece cerca de la llegada de B. Se activa con Only = "PORTAL".
+        /// </summary>
+        private static IEnumerator PortalProbe(Vector3 spot)
+        {
+            var go = GameObject.Find("Paper_S");
+            var player = GameObject.Find("Player");
+            if (go == null || player == null) { failures.Add("faltan Paper_S/Player"); yield break; }
+            var rb = go.GetComponent<Rigidbody>();
+            var pc = go.GetComponent<PhysicalCanvas>();
+            var canvas = go.GetComponent<DrawingCanvas>();
+            var playerBody = player.GetComponent<Rigidbody>();
+            var caster = Object.FindFirstObjectByType<Casting.SpellCaster>();
+            Place(pc, rb, spot + new Vector3(0f, 1.2f, 0f));
+            rb.isKinematic = true;
+            go.transform.SetPositionAndRotation(spot + new Vector3(0f, 1.2f, 0f), Quaternion.identity);
+
+            string path = Path.GetFullPath(Path.Combine(Application.dataPath, "..", Casting.PortalRecipes.AssetPath));
+            var recipes = Casting.PortalRecipes.Load(File.ReadAllText(path));
+            Portal.SetRecipes(recipes);
+            var tower = recipes.Find("tower-study");
+            var watch = recipes.Find("watchtower");
+            Check(tower != null && watch != null && tower.PairId == "watchtower", "portals.json tiene tower-study <-> watchtower");
+            if (tower == null || watch == null) yield break;
+
+            // Los portales reales del mapa comparten id con los de prueba: se apagan durante la prueba y se reactivan al final.
+            var realTower = Portal.Find("tower-study");
+            var realWatch = Portal.Find("watchtower");
+            if (realTower != null) realTower.gameObject.SetActive(false);
+            if (realWatch != null) realWatch.gameObject.SetActive(false);
+
+            Transform Point(string name, Vector3 at)
+            {
+                var t = new GameObject(name).transform;
+                t.position = at;
+                return t;
+            }
+            var anchorA = Point("PortalProbe_AnchorA", spot + new Vector3(0f, 0f, 4f));
+            var arrivalA = Point("PortalProbe_ArrivalA", spot + new Vector3(0f, 0.3f, 3f));
+            var anchorB = Point("PortalProbe_AnchorB", spot + new Vector3(30f, 0f, 0f));
+            var arrivalB = Point("PortalProbe_ArrivalB", spot + new Vector3(30f, 0.6f, -4f));
+            var portalA = new GameObject("PortalProbe_A").AddComponent<Portal>();
+            var portalB = new GameObject("PortalProbe_B").AddComponent<Portal>();
+            portalA.Configure("tower-study", canvas, arrivalA, anchorA);
+            portalB.Configure("watchtower", null, arrivalB, anchorB);
+            Check(Portal.Find("tower-study") == portalA && portalA.PairId == "watchtower" && portalA.State == PortalState.Dormant && !portalA.IsOpen,
+                "portal A registrado, con su par y dormido");
+
+            int traveled = 0, compiledOnPlate = 0;
+            void OnTraveled(Portal from, Portal to) { if (from == portalA && to == portalB) traveled++; }
+            void OnCompiled(Compiler.SpellIR spell, DrawingCanvas c) { if (c == canvas) compiledOnPlate++; }
+            Portal.Traveled += OnTraveled;
+            caster.SpellCompiled += OnCompiled;
+            Vector3 playerStart = player.transform.position;
+
+            void DrawRecipe(Casting.PortalRecipe recipe, string extraSign)
+            {
+                var ids = new List<string>(recipe.Signs);
+                if (extraSign != null) ids.Add(extraSign);
+                var signs = new (string, float)[ids.Count];
+                for (int i = 0; i < ids.Count; i++) signs[i] = (ids[i], 90f + i * 360f / ids.Count);
+                canvas.Clear(); caster.OnSealEdited(canvas);
+                HarnessSeals.Draw(canvas, recipe.Sigil, signs);
+                caster.OnStrokeFinished(canvas);
+            }
+
+            // 1) un signo de mas: no abre (la placa se comporta como un lienzo cualquiera)
+            DrawRecipe(tower.Recipe, "weave");
+            yield return 0.4f;
+            Check(portalA.State == PortalState.Dormant, $"portal: un signo de mas no abre (estado={portalA.State})");
+            Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
+
+            // 2) la receta de otro portal: tampoco
+            DrawRecipe(watch.Recipe, null);
+            yield return 0.4f;
+            Check(portalA.State == PortalState.Dormant, $"portal: la receta de otro portal no abre (estado={portalA.State})");
+            Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
+
+            // 3) la receta correcta: Charging y despues Open; la placa queda limpia y no lanza un hechizo normal
+            compiledOnPlate = 0;
+            DrawRecipe(tower.Recipe, null);
+            yield return 0.4f;
+            Check(portalA.State == PortalState.Charging && portalA.Progress01 > 0f, $"portal: la receta correcta carga (estado={portalA.State})");
+            yield return 2.2f;
+            Check(portalA.IsOpen && canvas.Session.IsEmpty && compiledOnPlate == 0,
+                $"portal: se abre, la placa queda vacia y no lanza hechizo (estado={portalA.State}, trazos={canvas.Session.Strokes.Count}, hechizos={compiledOnPlate})");
+
+            // 4) el jugador a 1 m del ancla viaja a la llegada del par
+            Vector3 near = anchorA.position + new Vector3(1f, 1f, 0f);
+            playerBody.linearVelocity = Vector3.zero;
+            playerBody.position = near;
+            player.transform.position = near;
+            Physics.SyncTransforms();
+            yield return 0.5f;
+            float distance = Vector3.Distance(player.transform.position, arrivalB.position);
+            Check(distance < 2f && traveled == 1, $"portal: el jugador viaja al par (distancia a la llegada={distance:F2} m, viajes={traveled})");
+
+            Portal.Traveled -= OnTraveled;
+            caster.SpellCompiled -= OnCompiled;
+            playerBody.linearVelocity = Vector3.zero;
+            playerBody.position = playerStart;
+            player.transform.position = playerStart;
+            Object.Destroy(portalA.gameObject); Object.Destroy(portalB.gameObject);
+            Object.Destroy(anchorA.gameObject); Object.Destroy(arrivalA.gameObject);
+            Object.Destroy(anchorB.gameObject); Object.Destroy(arrivalB.gameObject);
+            Portal.SetRecipes(null);
+            if (realTower != null) realTower.gameObject.SetActive(true);
+            if (realWatch != null) realWatch.gameObject.SetActive(true);
+            Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
+            canvas.Clear(); caster.OnSealEdited(canvas);
+            pc.ResetToInitial();
+            rb.isKinematic = false;
         }
 
         /// <summary>Apoya el lienzo con el CENTRO de su superficie (no el pivote) en center.</summary>

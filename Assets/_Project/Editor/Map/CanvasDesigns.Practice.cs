@@ -191,8 +191,8 @@ namespace SpellSimulator.EditorTools.Map
             return GameObject.Find(name);
         }
 
-        /// <summary>Cartel de madera sobre un poste, legible desde donde se para quien dibuja (viewer).</summary>
-        private static void Sign(Transform root, Material material, string name, Vector3 at, Vector3 viewer, string title, string hint)
+        /// <summary>Cartel de madera sobre un poste, legible desde donde se para quien dibuja (viewer). Lo usa tambien MapStructures.</summary>
+        internal static void Sign(Transform root, Material material, string name, Vector3 at, Vector3 viewer, string title, string hint)
         {
             var old = GameObject.Find(name);
             if (old != null) Object.DestroyImmediate(old);
