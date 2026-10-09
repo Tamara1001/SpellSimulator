@@ -152,7 +152,8 @@ namespace SpellSimulator.Player
             if (text != null) return text;
             text = well.Portable
                 ? SpellSimulator.Core.InkKindInfo.DisplayName(well.Kind) + " | E: Guardar tintero"
-                : "Tintero fijo (" + SpellSimulator.Core.InkKindInfo.DisplayName(well.Kind) + ") | R: Recargar tinta";
+                : "Tintero fijo (" + SpellSimulator.Core.InkKindInfo.DisplayName(well.Kind) + ") | R: Recargar tinta"
+                    + (World.PhysicalTool.InkCycleAvailable ? " | V: cambiar tinta" : "");
             inkwellHints[k, f] = text;
             return text;
         }
@@ -203,6 +204,8 @@ namespace SpellSimulator.Player
         {
             inputReader = GetComponent<PlayerInputReader>();
             inkSupply = GetComponent<InkSupply>();
+            if (inkSupply != null) inkSupply.Cartridges.Changed += RefreshInkCycleHints;
+            RefreshInkCycleHints();
             body = GetComponent<Rigidbody>();
             mover = GetComponent<ObjectMover>();
         }
@@ -286,6 +289,18 @@ namespace SpellSimulator.Player
         }
 
         private void Changed() => InventoryChanged?.Invoke();
+
+        private void OnDestroy()
+        {
+            if (inkSupply != null) inkSupply.Cartridges.Changed -= RefreshInkCycleHints;
+        }
+
+        /// <summary>Cambio el stock de cartuchos: rehace las pistas de "V: cambiar tinta" (se cachean; no se arman por frame).</summary>
+        private void RefreshInkCycleHints()
+        {
+            World.PhysicalTool.InkCycleAvailable = inkSupply != null && inkSupply.Cartridges.CanCycle;
+            System.Array.Clear(inkwellHints, 0, inkwellHints.Length);
+        }
 
         // ---------------------------------------------------------------- mirar
 

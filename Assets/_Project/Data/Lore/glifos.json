@@ -30,7 +30,10 @@
     { "id": "motion", "title": "Signos del movimiento", "color": [0.25, 0.48, 0.3], "glyphs": [ "dispersion", "pull", "float", "levitation" ] },
     { "id": "shape", "title": "Dar forma a la magia", "color": [0.62, 0.5, 0.2], "glyphs": [ "column", "convergence", "region", "crush" ] },
     { "id": "rare", "title": "Signos raros", "color": [0.42, 0.24, 0.52], "glyphs": [ "collection", "billowing", "repetition", "weave" ] },
-    { "id": "spells-wind-water", "title": "Hechizos de viento y agua", "color": [0.2, 0.5, 0.62], "glyphs": [], "spells": [ "wind_fan", "light_rain", "whirl" ] },
-    { "id": "spells-fire-earth", "title": "Hechizos de fuego y tierra", "color": [0.6, 0.3, 0.14], "glyphs": [], "spells": [ "small_flame", "earth_spike" ] }
+    { "id": "spells-wind-water", "title": "Hechizos de viento y agua", "color": [0.2, 0.5, 0.62], "glyphs": [], "spells": [ "wind_fan", "light_rain", "whirl", "updraft", "wind_breath" ] },
+    { "id": "spells-fire-earth", "title": "Hechizos de fuego y tierra", "color": [0.6, 0.3, 0.14], "glyphs": [], "spells": [ "small_flame", "earth_spike", "blaze", "stone_wall" ] },
+    { "id": "spells-water-deep", "title": "Aguas y mareas", "color": [0.14, 0.38, 0.7], "glyphs": [], "spells": [ "downpour", "wave", "water_lance", "water_draw" ] },
+    { "id": "spells-crystal", "title": "Cristal y centelleo", "color": [0.5, 0.72, 0.8], "glyphs": [], "spells": [ "crystal_shard", "crystal_dome" ] },
+    { "id": "spells-siege", "title": "Arte de asedio", "color": [0.55, 0.2, 0.2], "glyphs": [], "spells": [ "thrown_rock", "fire_wall" ] }
   ]
 }

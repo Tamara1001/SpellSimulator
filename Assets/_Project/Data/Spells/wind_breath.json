@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "wind_breath",
+  "name": "Aliento de viento",
+  "description": "Un soplo suave y ancho que refresca y aparta lo más liviano.",
+  "hint": "Se dice que el viento con una sola dispersión no golpea: respira.",
+  "element": "wind",
+  "origin": "Book",
+  "difficulty": 1,
+  "book": "spells-wind-water",
+  "howTo": "Dibujá el sigilo del viento y un signo de dispersión abajo, mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "wind-directs-air",
+  "signs": [
+    {
+      "id": "dispersion",
+      "angle": 270,
+      "turn": 0
+    }
+  ]
+}

@@ -12,11 +12,20 @@ namespace SpellSimulator.Learning
     {
         private readonly HashSet<string> glyphs = new HashSet<string>();
         private readonly HashSet<string> books = new HashSet<string>();
+        private readonly HashSet<string> spells = new HashSet<string>();
 
         public int GlyphCount => glyphs.Count;
         public bool Knows(string glyph) => glyphs.Contains(glyph);
         public bool HasRead(string book) => books.Contains(book);
         public IEnumerable<string> Glyphs => glyphs;
+
+        // ---- Hechizos descubiertos por experimentacion (el resto se desbloquea por libro o es inicial).
+        public int SpellCount => spells.Count;
+        public bool KnowsSpell(string spellId) => spells.Contains(spellId);
+        public IEnumerable<string> Spells => spells;
+
+        /// <summary>Devuelve true si era nuevo.</summary>
+        public bool DiscoverSpell(string spellId) => !string.IsNullOrEmpty(spellId) && spells.Add(spellId);
 
         /// <summary>Devuelve true si era nuevo.</summary>
         public bool Discover(string glyph) => !string.IsNullOrEmpty(glyph) && glyphs.Add(glyph);
@@ -34,9 +43,10 @@ namespace SpellSimulator.Learning
         {
             var root = new JObject
             {
-                ["version"] = 1,
+                ["version"] = 2,
                 ["glyphs"] = new JArray(glyphs.OrderBy(g => g)),
-                ["books"] = new JArray(books.OrderBy(b => b))
+                ["books"] = new JArray(books.OrderBy(b => b)),
+                ["spells"] = new JArray(spells.OrderBy(b => b))
             };
             return root.ToString();
         }
@@ -47,6 +57,8 @@ namespace SpellSimulator.Learning
             var root = JObject.Parse(json);
             if (root["glyphs"] is JArray g) foreach (var id in g) state.Discover((string)id);
             if (root["books"] is JArray b) foreach (var id in b) state.MarkRead((string)id);
+            // Version 1 (partidas anteriores) no trae "spells": queda vacio.
+            if (root["spells"] is JArray sp) foreach (var id in sp) state.DiscoverSpell((string)id);
             return state;
         }
     }

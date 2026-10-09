@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "fire_wall",
+  "name": "Pared de fuego",
+  "description": "Una cortina de llamas que se abre a los lados y protege una zona.",
+  "hint": "Se dice que el fuego abierto por dos dispersiones cierra el paso como una muralla.",
+  "element": "fire",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-siege",
+  "howTo": "Dibujá el sigilo del fuego y un signo de dispersión a cada lado, mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "fire",
+  "signs": [
+    {
+      "id": "dispersion",
+      "angle": 0,
+      "turn": 0
+    },
+    {
+      "id": "dispersion",
+      "angle": 180,
+      "turn": 0
+    }
+  ]
+}

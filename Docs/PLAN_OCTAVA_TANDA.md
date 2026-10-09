@@ -59,9 +59,11 @@ Fuente de verdad: `GAME_DESIGN.md#controles`; repetir en `Learning/GrimoireTexts
 ## 7. Multijugador y PvP (planificación)
 - **Netcode for GameObjects + Relay.** Servidor autoritativo para hechizos y física; los clientes predicen movimiento y trazos.
 - Antes de codear: separar estado autoritativo de presentación (ya previsto en D3), definir qué se replica (trazos, eventos de cast, objetos físicos agarrados, tinta) y presupuesto de ancho de banda. Empezar con **cooperativo sandbox** para validar la red y después PvP/Duelo.
+- **Plan detallado (auditoría, autoridad, presupuesto, fases F0–F6 y decisiones pendientes): [[MULTIPLAYER_PLAN]].**
 - Todo lo de bloques 2–6 se escribe pensando en esto: reglas de dominio puras, eventos en vez de referencias cruzadas, límites por jugador y datos en SO.
 
 ## Pendientes agregados (a futuro)
+> Hecho el 2026-10-09: 19 hechizos prearmados y descubrimiento por experimentacion/libros/pistas (falta UI de pistas y colocar 3 libros), menu de pausa dentro del grimorio y pistas «V». Sigue: crear y guardar hechizos propios, aprendizaje de identidades de portal por libros y el plan de [[MULTIPLAYER_PLAN]] (F0 primero).
 - **Más hechizos prearmados** (hoy 7 en `Data/Spells`) y **una forma de descubrirlos todos** (libros, estructuras del mapa, experimentación); revisar que cada uno tenga su camino de descubrimiento.
 - **Crear y guardar hechizos propios** desde lo dibujado (ADR-034: `SpellLibrary`, guardar, renombrar, borrar; M6b H1 y H5), con entrada de nombre en PC primero y VR después.
 - **Menú de pausa dentro del grimorio** (Esc abre el grimorio a pantalla completa, sin las opciones de pausa todavía).

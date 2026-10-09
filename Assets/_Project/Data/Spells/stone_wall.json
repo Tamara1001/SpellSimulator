@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "stone_wall",
+  "name": "Muro de piedra",
+  "description": "Dos paredes de roca se levantan a los lados y cierran el paso. Frena todo lo que viene de frente.",
+  "hint": "Se dice que la tierra, flanqueada por dos columnas, se alza como un muro entre vos y el peligro.",
+  "element": "earth",
+  "origin": "Book",
+  "difficulty": 2,
+  "book": "spells-fire-earth",
+  "howTo": "Dibujá el sigilo de la tierra al centro y una columna a cada lado, con la punta hacia el sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "earth",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 0,
+      "turn": 0
+    },
+    {
+      "id": "column",
+      "angle": 180,
+      "turn": 0
+    }
+  ]
+}

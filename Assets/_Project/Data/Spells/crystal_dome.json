@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "crystal_dome",
+  "name": "Cúpula de cristal",
+  "description": "Una nube de esquirlas finas que se abre en abanico y centellea alrededor del sello.",
+  "hint": "Se dice que el cristal rodeado de dispersión se abre como una cúpula de brillo.",
+  "element": "earth",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-crystal",
+  "howTo": "Dibujá el sigilo del cristal y un signo de dispersión a cada lado, mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "crystal",
+  "signs": [
+    {
+      "id": "dispersion",
+      "angle": 0,
+      "turn": 0
+    },
+    {
+      "id": "dispersion",
+      "angle": 180,
+      "turn": 0
+    }
+  ]
+}

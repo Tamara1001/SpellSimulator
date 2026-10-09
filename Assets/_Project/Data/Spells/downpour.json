@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "downpour",
+  "name": "Aguacero",
+  "description": "Una lluvia fuerte y ancha que empapa toda la zona. Apaga fuegos grandes.",
+  "hint": "Se dice que tres dispersiones alrededor del agua hacen caer el cielo entero sobre un lugar.",
+  "element": "water",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-water-deep",
+  "howTo": "Dibujá el sigilo del agua y tres signos de dispersión repartidos en el anillo, mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "water",
+  "signs": [
+    {
+      "id": "dispersion",
+      "angle": 30,
+      "turn": 0
+    },
+    {
+      "id": "dispersion",
+      "angle": 150,
+      "turn": 0
+    },
+    {
+      "id": "dispersion",
+      "angle": 270,
+      "turn": 0
+    }
+  ]
+}

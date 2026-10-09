@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "wave",
+  "name": "Ola",
+  "description": "Una ola que empuja y se abre al avanzar: moja y arrastra a su paso.",
+  "hint": "Se dice que el agua que empuja de un lado y se derrama del otro imita al mar.",
+  "element": "water",
+  "origin": "Book",
+  "difficulty": 2,
+  "book": "spells-water-deep",
+  "howTo": "Dibujá el sigilo del agua, una columna a la izquierda y un signo de dispersión a la derecha, ambos mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "water",
+  "signs": [
+    {
+      "id": "dispersion",
+      "angle": 0,
+      "turn": 0
+    },
+    {
+      "id": "column",
+      "angle": 180,
+      "turn": 0
+    }
+  ]
+}

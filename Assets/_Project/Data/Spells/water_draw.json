@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "water_draw",
+  "name": "Sorbo de agua",
+  "description": "Llama al agua de alrededor hacia el sello en vez de lanzarla.",
+  "hint": "Se dice que el agua con un signo de succión no sale: atrae el agua que ya existe.",
+  "element": "water",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-water-deep",
+  "howTo": "Dibujá el sigilo del agua y un signo de succión abajo, mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "water",
+  "signs": [
+    {
+      "id": "pull",
+      "angle": 270,
+      "turn": 0
+    }
+  ]
+}

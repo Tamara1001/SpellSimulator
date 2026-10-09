@@ -37,6 +37,8 @@ namespace SpellSimulator.Learning
         public string Name;
         public string Description;
         public string HowTo;
+        /// <summary>Pista para encontrarlo sin conocerlo («Se dice que...»). El grimorio la muestra junto a la silueta.</summary>
+        public string Hint;
         /// <summary>fire | water | wind | earth | light.</summary>
         public string Element;
         /// <summary>Preset | Book | Player.</summary>
@@ -86,6 +88,7 @@ namespace SpellSimulator.Learning
                 Name = (string)root["name"],
                 Description = (string)root["description"] ?? "",
                 HowTo = (string)root["howTo"] ?? "",
+                Hint = (string)root["hint"] ?? "",
                 Element = (string)root["element"],
                 Origin = (string)root["origin"] ?? "Preset",
                 Difficulty = (int?)root["difficulty"] ?? 1,

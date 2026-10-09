@@ -105,7 +105,11 @@ namespace SpellSimulator.World
         // ---- Interfaz (HUD de abajo)
         public string HudName => toolName;
         public Color HudColor => kind == ToolKind.Pen ? fullInkColor : kind == ToolKind.Eraser ? new Color(0.93f, 0.62f, 0.66f) : new Color(0.92f, 0.87f, 0.74f);
-        public string HudHints => kind == ToolKind.Pen ? "Clic: dibujar | Clic der.: deshacer | Rueda: grosor | R: tinta | Q: arrojar"
+        private const string PenHints = "Clic: dibujar | Clic der.: deshacer | Rueda: grosor | R: tinta | Q: arrojar";
+        private const string PenHintsCycle = "Clic: dibujar | Clic der.: deshacer | Rueda: grosor | R: tinta | V: cambiar tinta | Q: arrojar";
+        /// <summary>True si V puede cambiar la tinta (cinturon y cartuchos de 2+ clases). Lo mantiene PlayerInteractor al cambiar el stock.</summary>
+        public static bool InkCycleAvailable { get; set; }
+        public string HudHints => kind == ToolKind.Pen ? (InkCycleAvailable ? PenHintsCycle : PenHints)
             : kind == ToolKind.Eraser ? "Clic: borrar | Clic der.: deshacer | Rueda: tamaño | Q: arrojar" : "Clic: limpiar el lienzo | Q: arrojar";
         public float HudGauge => kind == ToolKind.Pen ? ink.Fraction : -1f;
         public int WidthIndex => widthIndex;

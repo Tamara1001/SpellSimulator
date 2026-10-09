@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "updraft",
+  "name": "Viento ascendente",
+  "description": "Una corriente de aire que sube y sostiene lo liviano en lo alto.",
+  "hint": "Se dice que el viento con un signo de levitación debajo no empuja: eleva.",
+  "element": "wind",
+  "origin": "Book",
+  "difficulty": 2,
+  "book": "spells-wind-water",
+  "howTo": "Dibujá el sigilo del viento y un signo de levitación abajo, mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "wind-directs-air",
+  "signs": [
+    {
+      "id": "levitation",
+      "angle": 270,
+      "turn": 0
+    }
+  ]
+}

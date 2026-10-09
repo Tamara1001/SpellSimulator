@@ -127,7 +127,7 @@ namespace SpellSimulator.Learning
                 Row("Clic der.", "deshace") +
                 Row("Rueda", "grosor de la pluma o la goma") +
                 Row("R", "recarga tinta") +
-                Row("V", "cambia la tinta activa (con cinturón)") +
+                Row("V", "cambia la tinta activa (cinturón y 2+ clases)") +
                 Row("Q", "arroja")),
             new GrimoireSpread(
                 "Mano secundaria",

@@ -92,6 +92,20 @@ namespace SpellSimulator.Core
             Changed?.Invoke();
         }
 
+        /// <summary>Clases de tinta con al menos un cartucho.</summary>
+        public int KindsWithCartridges
+        {
+            get
+            {
+                int n = 0;
+                for (int i = 0; i < slots.Length; i++) if (slots[i].uses.Count > 0) n++;
+                return n;
+            }
+        }
+
+        /// <summary>True si V tiene algo que cambiar: cinturon equipado y cartuchos de mas de una clase.</summary>
+        public bool CanCycle => hasBelt && KindsWithCartridges >= 2;
+
         /// <summary>Con cinturon siempre; sin el, solo si el stock esta vacio o ya lleva esa clase.</summary>
         public bool CanCarry(InkKind kind) => hasBelt || TotalCartridges == 0 || CartridgeCount(kind) > 0;
 

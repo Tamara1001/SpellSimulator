@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using SpellSimulator.Canvas;
 using SpellSimulator.Casting;
 using SpellSimulator.Compiler;
+using SpellSimulator.Player;
 
 namespace SpellSimulator.Learning
 {
@@ -18,6 +20,9 @@ namespace SpellSimulator.Learning
         /// <summary>(glifo, fuente) al descubrir uno nuevo. Fuente: titulo del libro o "experimentando".</summary>
         public static event Action<string, string> Discovered;
 
+        /// <summary>Un hechizo se descubrio lanzandolo (experimentacion).</summary>
+        public static event Action<SpellDef> SpellDiscovered;
+
         [SerializeField] private TextAsset loreJson;
         [SerializeField] private SpellCaster caster;
         [SerializeField, Tooltip("Confianza minima para descubrir un glifo dibujandolo.")]
@@ -31,6 +36,7 @@ namespace SpellSimulator.Learning
         private void Awake()
         {
             Instance = this;
+            SpellCatalog.DiscoveredCheck = IsSpellDiscovered;
             Lore = loreJson != null ? GlyphLore.FromJson(loreJson.text) : new GlyphLore();
             State = Load();
         }
@@ -47,7 +53,11 @@ namespace SpellSimulator.Learning
 
         private void OnDestroy()
         {
-            if (Instance == this) Instance = null;
+            if (Instance == this)
+            {
+                Instance = null;
+                SpellCatalog.DiscoveredCheck = null;
+            }
         }
 
         /// <summary>Lee un libro: descubre sus glifos. Devuelve cuantos eran nuevos.</summary>
@@ -69,6 +79,34 @@ namespace SpellSimulator.Learning
             Discovered?.Invoke(glyph, source);
             Save();
             return true;
+        }
+
+        private bool IsSpellDiscovered(string spellId) => State != null && State.KnowsSpell(spellId);
+
+        /// <summary>
+        /// Logica pura del descubrimiento por experimentacion: si lo lanzado coincide con un hechizo del catalogo que el
+        /// jugador aun no conoce (ni inicial, ni de un libro leido, ni descubierto), lo marca en state y lo devuelve; si no, null.
+        /// twistsDeg (opcional) desempata hechizos con la misma composicion.
+        /// </summary>
+        public static SpellDef OnCast(DiscoveryState state, SpellCatalog catalog, string sigilId, IList<string> signIds, IList<float> twistsDeg = null)
+        {
+            if (state == null || catalog == null) return null;
+            SpellDef def = catalog.MatchCast(sigilId, signIds, twistsDeg);
+            if (def == null || SpellCatalog.IsUnlocked(def, state.HasRead, state.KnowsSpell)) return null;
+            state.DiscoverSpell(def.Id);
+            return def;
+        }
+
+        /// <summary>Registra un cast real: si descubre un hechizo, avisa en la HUD, guarda y emite <see cref="SpellDiscovered"/>.</summary>
+        public SpellDef OnCast(string sigilId, IList<string> signIds, IList<float> twistsDeg = null)
+        {
+            SpellDef def = OnCast(State, SpellCatalog.Shared, sigilId, signIds, twistsDeg);
+            if (def == null) return null;
+            Debug.Log($"[Aprendizaje] Hechizo descubierto '{def.Id}' (experimentando).");
+            Hud.Notify("discovery", $"Descubriste: {def.Name}", 4f);
+            Save();
+            SpellDiscovered?.Invoke(def);
+            return def;
         }
 
         /// <summary>Vuelve al estado inicial (opcion del grimorio).</summary>

@@ -18,6 +18,7 @@ Vault de Obsidian del proyecto. Abrí la carpeta `Docs/` como vault.
 - [[CODESTYLE]] — convenciones de código C#/Unity.
 - [[STATUS]] — estado actual en una página (leer primero).
 - [[PLAN_OCTAVA_TANDA]] — **plan vigente**: controles, tinta, hechizos, runas, cinturón, mundo/portales, multijugador.
+- [[MULTIPLAYER_PLAN]] — plan de multijugador (NGO + Relay): auditoría del código, autoridad, presupuesto y fases F0–F6.
 - [[TESTING]] — matriz de pruebas de lienzos (automáticas y checklist manual).
 - [[HARNESS]] — cómo verificar cambios (Unity MCP, trucos, tests, test de humo de Play).
 - [[KNOWN_ISSUES]] — bugs y deuda técnica.

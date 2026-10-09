@@ -13,7 +13,7 @@ namespace SpellSimulator.Learning
     /// <summary>
     /// Pantallas del grimorio. La portada (Menu) es un indice: desde ahi se llega a cada seccion en cualquier orden.
     /// </summary>
-    public enum GrimoireScreen { Menu, Magic, GlyphIndex, GlyphDetail, Seals, Controls, Options, Spells, SpellDetail }
+    public enum GrimoireScreen { Menu, Magic, GlyphIndex, GlyphDetail, Seals, Controls, Options, Spells, SpellDetail, Pause }
 
     /// <summary>
     /// Libro-menu diegetico (SYSTEMS_DESIGN 9). Tab / Y / menu izquierdo lo abre flotando frente al jugador, un poco
@@ -118,6 +118,9 @@ namespace SpellSimulator.Learning
         private Transform[] ornaments;
         private int buttonsUsed, labelsUsed, ornamentsUsed;
         private GrimoireButton hoveredButton;
+        // Confirmacion del reinicio del mundo (PauseMenuMath): segundo clic dentro de ConfirmSeconds.
+        private float resetArmedAt = PauseMenuMath.Disarmed;
+        private bool resetArmed;
 
         // Modo fijo (B): el libro se parenta a la camara y se guarda la pose para volver.
         private bool focused;
@@ -195,7 +198,7 @@ namespace SpellSimulator.Learning
             else if (escape)
             {
                 // Esc: cerrado -> se abre a pantalla completa; en la mano -> pasa a pantalla completa; a pantalla -> se cierra.
-                if (!IsOpen) { Open(); EnterFocus(); }
+                if (!IsOpen) { Open(); Show(GrimoireScreen.Pause); EnterFocus(); }
                 else if (!focused) EnterFocus();
                 else Close();
             }
@@ -211,6 +214,14 @@ namespace SpellSimulator.Learning
             // Teclado: Z / X, flechas o cruceta (la rueda ya no pasa paginas).
             int delta = input.PageDelta;
             if (delta != 0) Step(delta);
+
+            // La confirmacion del reinicio vence sola: el boton vuelve a su rotulo normal.
+            if (resetArmed && !PauseMenuMath.IsArmed(resetArmedAt, Time.unscaledTime))
+            {
+                resetArmed = false;
+                resetArmedAt = PauseMenuMath.Disarmed;
+                if (screen == GrimoireScreen.Pause || screen == GrimoireScreen.Options) Refresh();
+            }
 
             UpdateHover();
             AnimateStroke();
@@ -489,6 +500,7 @@ namespace SpellSimulator.Learning
         {
             screen = s;
             glyph = id;
+            if (s != GrimoireScreen.Pause && s != GrimoireScreen.Options) { resetArmed = false; resetArmedAt = PauseMenuMath.Disarmed; }
             leftCanvas.Clear();
             strokeQueue.Clear();
             strokeIndex = 0;
@@ -510,6 +522,7 @@ namespace SpellSimulator.Learning
                 case GrimoireScreen.GlyphIndex: ShowIndex(); break;
                 case GrimoireScreen.GlyphDetail: ShowDetail(id); break;
                 case GrimoireScreen.Options: ShowOptions(); break;
+                case GrimoireScreen.Pause: ShowPause(); break;
                 case GrimoireScreen.Spells: ShowSpells(); break;
                 case GrimoireScreen.SpellDetail: ShowSpellDetail(); break;
             }
@@ -537,13 +550,14 @@ namespace SpellSimulator.Learning
             float w = ContentWidth * 0.86f, h = 0.034f;
             string n = $"<color={GrimoireTexts.Gold}>";
             RefreshSpells();
-            h = 0.032f;
-            Place(Right, 0f, 0.092f, w, h, $"{n}I</color>   Magia", ButtonSize, () => Go(GrimoireScreen.Magic));
-            Place(Right, 0f, 0.052f, w, h, $"{n}II</color>   Glifos   <size=75%>({glyphs.Count} de {total})</size>", ButtonSize, () => Go(GrimoireScreen.GlyphIndex));
-            Place(Right, 0f, 0.012f, w, h, $"{n}III</color>   Sellos", ButtonSize, () => Go(GrimoireScreen.Seals));
-            Place(Right, 0f, -0.028f, w, h, $"{n}IV</color>   Hechizos   <size=75%>({spells.Count})</size>", ButtonSize, () => Go(GrimoireScreen.Spells));
-            Place(Right, 0f, -0.068f, w, h, $"{n}V</color>   Controles", ButtonSize, () => Go(GrimoireScreen.Controls));
-            Place(Right, 0f, -0.108f, w, h, $"{n}VI</color>   Opciones", ButtonSize, () => Go(GrimoireScreen.Options));
+            h = 0.028f;
+            Place(Right, 0f, 0.098f, w, h, $"{n}I</color>   Magia", ButtonSize, () => Go(GrimoireScreen.Magic));
+            Place(Right, 0f, 0.064f, w, h, $"{n}II</color>   Glifos   <size=75%>({glyphs.Count} de {total})</size>", ButtonSize, () => Go(GrimoireScreen.GlyphIndex));
+            Place(Right, 0f, 0.030f, w, h, $"{n}III</color>   Sellos", ButtonSize, () => Go(GrimoireScreen.Seals));
+            Place(Right, 0f, -0.004f, w, h, $"{n}IV</color>   Hechizos   <size=75%>({spells.Count})</size>", ButtonSize, () => Go(GrimoireScreen.Spells));
+            Place(Right, 0f, -0.038f, w, h, $"{n}V</color>   Controles", ButtonSize, () => Go(GrimoireScreen.Controls));
+            Place(Right, 0f, -0.072f, w, h, $"{n}VI</color>   Opciones", ButtonSize, () => Go(GrimoireScreen.Options));
+            Place(Right, 0f, -0.106f, w, h, $"{n}VII</color>   Pausa", ButtonSize, () => Go(GrimoireScreen.Pause));
             PlaceOrnament(Right, 0f, -0.145f, 0.1f);
         }
 
@@ -750,11 +764,7 @@ namespace SpellSimulator.Learning
             SetTitle(Left, "Opciones");
             float w = ContentWidth * 0.86f;
             Label(Left, 0f, 0.098f, ContentWidth, 0.02f, GrimoireTexts.Heading("Mundo"), SmallSize * 1.1f, TextAlignmentOptions.Center);
-            Place(Left, 0f, 0.068f, w, 0.031f, "Reiniciar el mundo", ButtonSize, () =>
-            {
-                ResetWorldRequested?.Invoke();
-                Close();
-            });
+            Place(Left, 0f, 0.068f, w, 0.031f, PauseMenuMath.ResetLabel(resetArmed), ButtonSize, PressResetWorld);
             Note(Left, 0.04f, "Todo vuelve a su lugar.");
             Place(Left, 0f, 0.005f, w, 0.031f, "Olvidar lo aprendido", ButtonSize, () =>
             {
@@ -804,6 +814,73 @@ namespace SpellSimulator.Learning
                     Close();
                     MainMenuRequested?.Invoke();
                 });
+        }
+
+        /// <summary>Primer clic arma la confirmacion (3 s); el segundo, dentro de ese plazo, reinicia el mundo y cierra el libro.</summary>
+        private void PressResetWorld()
+        {
+            if (PauseMenuMath.IsArmed(resetArmedAt, Time.unscaledTime))
+            {
+                resetArmed = false;
+                resetArmedAt = PauseMenuMath.Disarmed;
+                ResetWorldRequested?.Invoke();
+                Close();
+                return;
+            }
+            resetArmed = true;
+            resetArmedAt = Time.unscaledTime;
+            Refresh();
+        }
+
+        /// <summary>Salir: al menu principal si hay oyente (MainMenu); si no, cierra la aplicacion (o detiene el Play en el Editor).</summary>
+        private void PressExit()
+        {
+            Close();
+            if (MainMenuRequested != null) { MainMenuRequested.Invoke(); return; }
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#else
+            Application.Quit();
+#endif
+        }
+
+        /// <summary>
+        /// Pausa (Esc abre el libro aca): Reanudar, Reiniciar, Controles, Opciones completas y Salir, mas los ajustes
+        /// rapidos de control a la derecha. El juego no se congela (Time.timeScale intacto).
+        /// </summary>
+        private void ShowPause()
+        {
+            SetTitle(Left, "Pausa");
+            float w = ContentWidth * 0.86f;
+            Place(Left, 0f, 0.09f, w, 0.031f, "Reanudar", ButtonSize, Close);
+            Place(Left, 0f, 0.05f, w, 0.031f, PauseMenuMath.ResetLabel(resetArmed), ButtonSize, PressResetWorld);
+            Place(Left, 0f, 0.01f, w, 0.031f, "Controles", ButtonSize, () => Go(GrimoireScreen.Controls));
+            Place(Left, 0f, -0.03f, w, 0.031f, "Opciones y sonido", ButtonSize, () => Go(GrimoireScreen.Options));
+            Place(Left, 0f, -0.07f, w, 0.031f, MainMenuRequested != null ? "Salir al menú principal" : "Salir del juego", ButtonSize, PressExit);
+            Note(Left, -0.108f, "El mundo sigue mientras leés.");
+
+            SetTitle(Right, "Ajustes rápidos");
+            Label(Right, 0f, 0.098f, ContentWidth, 0.02f, GrimoireTexts.Heading("Control"), SmallSize * 1.1f, TextAlignmentOptions.Center);
+            Stepper(0.074f, "Sensibilidad", GrimoireOptions.Multiplier(PlayerSettings.LookSensitivity), dir =>
+                PlayerSettings.LookSensitivity = GrimoireOptions.StepSensitivity(PlayerSettings.LookSensitivity, dir));
+            RowLabel(0.042f, "Invertir eje Y");
+            Place(Right, 0.058f, 0.042f, 0.09f, 0.028f, PlayerSettings.InvertY ? "Sí" : "No", ButtonSize, () =>
+            {
+                PlayerSettings.InvertY = !PlayerSettings.InvertY;
+                Refresh();
+            });
+            RowLabel(0.010f, "Calidad");
+            Place(Right, 0.058f, 0.010f, 0.09f, 0.028f, GraphicsQuality.Label(GraphicsQuality.Current), ButtonSize, () =>
+            {
+                GraphicsQuality.Current = GraphicsQuality.Next(GraphicsQuality.Current);
+                Refresh();
+            });
+            RowLabel(-0.022f, "Mano principal");
+            Place(Right, 0.058f, -0.022f, 0.09f, 0.028f, PlayerSettings.MainHandRight ? "Derecha" : "Izquierda", ButtonSize * 0.9f, () =>
+            {
+                PlayerSettings.MainHandRight = !PlayerSettings.MainHandRight;
+                Refresh();
+            });
         }
 
         /// <summary>Fila de opcion en la pagina derecha: nombre, boton -, valor, boton +.</summary>

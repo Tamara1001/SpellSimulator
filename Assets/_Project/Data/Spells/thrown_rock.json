@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "thrown_rock",
+  "name": "Roca arrojadiza",
+  "description": "Levanta una roca y la lanza hacia adelante.",
+  "hint": "Se dice que la tierra que sube y empuja a la vez se vuelve proyectil.",
+  "element": "earth",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-siege",
+  "howTo": "Dibujá el sigilo de la tierra, una columna abajo y un signo de levitación arriba, ambos mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "earth",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 270,
+      "turn": 0
+    },
+    {
+      "id": "levitation",
+      "angle": 90,
+      "turn": 0
+    }
+  ]
+}

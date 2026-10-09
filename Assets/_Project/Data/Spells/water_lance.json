@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "water_lance",
+  "name": "Lanza de agua",
+  "description": "Un chorro finísimo y potente que atraviesa lo que encuentra.",
+  "hint": "Se dice que tres columnas sobre el agua la afilan hasta volverla una lanza.",
+  "element": "water",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-water-deep",
+  "howTo": "Dibujá el sigilo del agua y tres columnas repartidas en el anillo, mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "water",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 0,
+      "turn": 0
+    },
+    {
+      "id": "column",
+      "angle": 180,
+      "turn": 0
+    },
+    {
+      "id": "column",
+      "angle": 270,
+      "turn": 0
+    }
+  ]
+}

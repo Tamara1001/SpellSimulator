@@ -61,7 +61,7 @@ namespace SpellSimulator.UI
                 string part = raw.Trim();
                 int colon = part.IndexOf(':');
                 string key = colon > 0 ? part.Substring(0, colon).Trim() : "";
-                if (key == "Q" || key == "Rueda" || key == "5-0" || key == "1-0") continue;
+                if (key == "Q" || key == "V" || key == "Rueda" || key == "5-0" || key == "1-0") continue;
                 if (part.Length > 0) kept.Add(part);
             }
             return string.Join(" | ", kept);

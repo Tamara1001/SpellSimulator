@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 1,
+  "id": "crystal_shard",
+  "name": "Esquirla de cristal",
+  "description": "Una astilla de cristal afilada que sale disparada. Es frágil, pero corta.",
+  "hint": "Se dice que el cristal con una columna debajo se desprende en una astilla que vuela recta.",
+  "element": "earth",
+  "origin": "Book",
+  "difficulty": 2,
+  "book": "spells-crystal",
+  "howTo": "Dibujá el sigilo del cristal y una columna abajo, con la punta hacia el sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "crystal",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 270,
+      "turn": 0
+    }
+  ]
+}

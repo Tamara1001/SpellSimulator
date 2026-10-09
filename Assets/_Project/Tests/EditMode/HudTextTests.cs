@@ -51,6 +51,7 @@ namespace SpellSimulator.Tests
             string result = HudText.DropHeldConflicts("Clic: dibujar | Clic der.: deshacer | Rueda: grosor | R: tinta | Q: arrojar");
             Assert.AreEqual("Clic: dibujar | Clic der.: deshacer | R: tinta", result);
             Assert.IsNull(HudText.DropHeldConflicts(null));
+            Assert.AreEqual("R: tinta", HudText.DropHeldConflicts("R: tinta | V: cambiar tinta | Q: arrojar"));
         }
 
         [Test]

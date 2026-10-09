@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "blaze",
+  "name": "Llamarada",
+  "description": "Una lengua de fuego larga que barre delante del sello y prende todo a su paso.",
+  "hint": "Se dice que el fuego con dos columnas deja de ser chispa y se vuelve una pared que avanza.",
+  "element": "fire",
+  "origin": "Book",
+  "difficulty": 2,
+  "book": "spells-fire-earth",
+  "howTo": "Dibujá el sigilo del fuego y una columna a cada lado, con la punta hacia el sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "fire",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 0,
+      "turn": 0
+    },
+    {
+      "id": "column",
+      "angle": 180,
+      "turn": 0
+    }
+  ]
+}
