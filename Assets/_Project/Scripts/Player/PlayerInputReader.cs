@@ -23,6 +23,8 @@ namespace SpellSimulator.Player
 
         // Recargar tinta (R / boton West). En VR se recarga mojando la punta en un tintero.
         public bool IsReloading { get; private set; }
+        /// <summary>Ciclar la clase de tinta activa (V; solo PC). Vale el frame en que se aprieta.</summary>
+        public bool IsCyclingInk { get; private set; }
         /// <summary>Reiniciar el mundo (modo Libre): Backspace, Select del gamepad, boton Y del control izquierdo.</summary>
         public bool IsResettingWorld { get; private set; }
         /// <summary>Abrir/cerrar el grimorio: Tab, Y del gamepad, boton de menu del control izquierdo.</summary>
@@ -100,6 +102,7 @@ namespace SpellSimulator.Player
         private InputAction useToolAction;
         private InputAction secondaryUseToolAction;
         private InputAction reloadAction;
+        private InputAction inkCycleAction;
         private InputAction resetWorldAction;
         private InputAction bookAction;
 
@@ -148,6 +151,8 @@ namespace SpellSimulator.Player
             reloadAction = new InputAction("Reload", InputActionType.Button);
             reloadAction.AddBinding("<Keyboard>/r");
             reloadAction.AddBinding("<Gamepad>/buttonWest");
+            inkCycleAction = new InputAction("InkCycle", InputActionType.Button);
+            inkCycleAction.AddBinding("<Keyboard>/v");
 
             resetWorldAction = new InputAction("ResetWorld", InputActionType.Button);
             resetWorldAction.AddBinding("<Keyboard>/backspace");
@@ -169,7 +174,7 @@ namespace SpellSimulator.Player
             debugAction.AddBinding("<Keyboard>/f3");
             bookFocusAction = new InputAction("BookFocus", InputActionType.Button);
             // B eliminada: el grimorio a pantalla completa ahora es Esc (lo maneja Grimoire).
-            hotbarActions = new InputAction[5];
+            hotbarActions = new InputAction[3];
             for (int i = 0; i < hotbarActions.Length; i++)
             {
                 hotbarActions[i] = new InputAction("Hotbar" + (i + 1), InputActionType.Button);
@@ -230,6 +235,7 @@ namespace SpellSimulator.Player
         private void OnEnable()
         {
             reloadAction.Enable();
+            inkCycleAction.Enable();
             runAction.Enable();
             proneAction.Enable();
             zoomAction.Enable();
@@ -262,6 +268,7 @@ namespace SpellSimulator.Player
         private void OnDisable()
         {
             reloadAction.Disable();
+            inkCycleAction.Disable();
             runAction.Disable();
             proneAction.Disable();
             zoomAction.Disable();
@@ -305,6 +312,7 @@ namespace SpellSimulator.Player
             IsUsingTool = useToolAction.ReadValue<float>() > 0.1f; 
             IsSecondaryUsingTool = secondaryUseToolAction.triggered; // Un solo click (deshacer)
             IsReloading = reloadAction.triggered;
+            IsCyclingInk = inkCycleAction.triggered;
             IsResettingWorld = resetWorldAction.triggered;
             IsTogglingBook = bookAction.triggered;
             IsRunning = runAction.IsPressed();
@@ -354,7 +362,7 @@ namespace SpellSimulator.Player
             bool book = Gate == InputGate.BookOnly;
             MoveValue = Vector2.zero;
             LookValue = Vector2.zero;
-            IsJumping = IsInteracting = IsSecondaryUsingTool = IsReloading = IsResettingWorld = false;
+            IsJumping = IsInteracting = IsSecondaryUsingTool = IsReloading = IsCyclingInk = IsResettingWorld = false;
             IsRunning = IsTogglingProne = IsZooming = IsRemoteGrabbing = IsRotateHeld = IsTogglingDebug = false;
             IsTogglingBookFocus = IsPinning = IsCrouching = IsThrowing = IsFlipping = IsTogglingFocus = false;
             WidthPreset = -1;

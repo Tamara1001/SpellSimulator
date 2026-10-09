@@ -41,12 +41,11 @@ namespace SpellSimulator.Player
         private float throwSpeed = 7f;
         [SerializeField] private LayerMask interactLayer = Physics.DefaultRaycastLayers;
 
-        /// <summary>Slots de la barra sin cinturon (teclas 1-3).</summary>
-        public const int BaseHotbarSlots = HotbarMath.BaseSlots;
-        /// <summary>Slots con el cinturon equipado (teclas 1-5).</summary>
-        public const int MaxHotbarSlots = HotbarMath.MaxSlots;
-        /// <summary>Alias de <see cref="MaxHotbarSlots"/>: para dimensionar arrays (la HUD).</summary>
-        public const int HotbarSlots = MaxHotbarSlots;
+        /// <summary>Slots de la barra (teclas 1-3), con o sin cinturon.</summary>
+        public const int HotbarSlots = HotbarMath.BaseSlots;
+        // Alias obsoletos (valen 3): la HUD los usaba para los slots del cinturon.
+        public const int BaseHotbarSlots = HotbarSlots;
+        public const int MaxHotbarSlots = HotbarSlots;
 
         private static readonly RaycastHit[] hoverHits = new RaycastHit[24];
 
@@ -179,34 +178,17 @@ namespace SpellSimulator.Player
 
         /// <summary>Objeto de un slot de la barra (null si esta vacio).</summary>
         public GameObject HotbarItem(int index) => index >= 0 && index < MaxHotbarSlots ? hotbar[index] : null;
-        /// <summary>True con el cinturon equipado (5 slots).</summary>
+        /// <summary>True con el cinturon equipado (una clase de tinta por slot de cartuchos).</summary>
         public bool HasBelt { get; private set; }
-        /// <summary>Slots disponibles: 3, o 5 con el cinturon.</summary>
+        /// <summary>Slots de la barra: siempre 3.</summary>
         public int SlotCount => HotbarMath.SlotCount(HasBelt);
 
-        /// <summary>Equipa o quita el cinturon. Al quitarlo, lo de los slots 4-5 se suelta delante del jugador.</summary>
+        /// <summary>Equipa o quita el cinturon (permite llevar cartuchos de varias clases de tinta; no cambia la barra).</summary>
         public void SetBelt(bool equipped)
         {
             if (HasBelt == equipped) return;
             HasBelt = equipped;
-            if (!equipped)
-            {
-                for (int i = BaseHotbarSlots; i < MaxHotbarSlots; i++)
-                {
-                    GameObject obj = hotbar[i];
-                    if (obj == null) continue;
-                    if (obj == heldMain) { activeSlot = i; DropMain(false); }
-                    else
-                    {
-                        hotbar[i] = null;
-                        Transform view = cameraTransform != null ? cameraTransform : transform;
-                        obj.transform.position = view.position + view.forward * 0.8f;
-                        obj.SetActive(true);
-                        if (obj.TryGetComponent(out IInteractable it)) it.OnDrop();
-                    }
-                }
-                if (activeSlot >= BaseHotbarSlots) activeSlot = 0;
-            }
+            if (inkSupply != null) inkSupply.Cartridges.SetBelt(equipped);
             Changed();
         }
         public int ActiveHotbar => activeSlot;
@@ -283,6 +265,7 @@ namespace SpellSimulator.Player
                 HandleWheel();
                 HandleUsage();
                 if (inputReader.IsReloading) Reload();
+                HandleInkCycle();
                 if (inputReader.IsTogglingFocus || inputReader.IsFlipping) SurfaceFocus.Close();
                 return;
             }
@@ -298,6 +281,7 @@ namespace SpellSimulator.Player
             HandlePageKeys();
             HandleUsage();
             if (inputReader.IsReloading) Reload();
+            HandleInkCycle();
             if (inputReader.IsTogglingFocus) ToggleFocus();
         }
 
@@ -390,19 +374,21 @@ namespace SpellSimulator.Player
             if (currentHovered is World.Inkwell inkwell)
             {
                 if (!inkwell.Portable) Hud.Notify("inkinfo", "Tintero fijo: apuntalo y apreta R para recargar", 2f);
+                else if (inkSupply != null && !inkSupply.Cartridges.CanCarry(inkwell.Kind))
+                    Hud.Notify("inkinfo", "Necesitas el cinturon para llevar tintas de distintas clases", 3f);
                 else if (!inkwell.TryPocket(inkSupply)) Hud.Notify("inkinfo", "Sin lugar para mas cartuchos", 2f);
                 else { currentHovered = null; Hud.Notify("inkinfo", "Tintero guardado como cartucho", 2f); }
                 return;
             }
 
-            // Cinturon: se equipa y suma 2 slots (teclas 4 y 5).
+            // Cinturon: se equipa y permite llevar cartuchos de las tres clases de tinta.
             if (currentHovered is World.Belt belt)
             {
                 if (HasBelt) Hud.Notify("belt", "Ya llevas un cinturon", 2f);
                 else
                 {
                     SetBelt(true);
-                    Hud.Notify("belt", "Cinturon equipado: 5 slots (teclas 1-5)", 3f);
+                    Hud.Notify("belt", "Cinturon equipado: guarda una clase de tinta por slot (V cambia la activa)", 3f);
                     currentHovered = null;
                     Destroy(belt.gameObject);
                 }
@@ -665,7 +651,21 @@ namespace SpellSimulator.Player
             }
             user.LoadInk(kind);
             Haptics.Pulse(HandType.Right, 0.3f, 0.08f);
-            Hud.Notify("inkinfo", $"{SpellSimulator.Core.InkKindInfo.DisplayName(kind)} | cartuchos {stock.CartridgeCount} ({stock.TotalUses} usos)", 2.5f);
+            Hud.Notify("inkinfo", $"{SpellSimulator.Core.InkKindInfo.DisplayName(kind)} | cartuchos {stock.CartridgeCount(kind)} ({stock.TotalUses(kind)} usos)", 2.5f);
+        }
+
+        /// <summary>V (solo PC): cicla la clase de tinta activa entre las que tienen cartuchos (hace falta el cinturon).</summary>
+        private void HandleInkCycle()
+        {
+            if (!inputReader.IsCyclingInk || inkSupply == null) return;
+            var stock = inkSupply.Cartridges;
+            if (!stock.CycleActive())
+            {
+                Hud.Notify("inkinfo", stock.TotalCartridges == 0 ? "Sin cartuchos de tinta" : "No hay otra clase de tinta para cambiar", 2f);
+                return;
+            }
+            SpellSimulator.Core.InkKind kind = stock.ActiveKind;
+            Hud.Notify("inkinfo", $"Tinta activa: {SpellSimulator.Core.InkKindInfo.DisplayName(kind)} ({stock.CartridgeCount(kind)} cartuchos)", 2f);
         }
 
         /// <summary>V: fija el lienzo agarrado delante de la camara para dibujar sin sostener la mira.</summary>
@@ -706,7 +706,7 @@ namespace SpellSimulator.Player
             else GrabSecondary(interactable);
         }
 
-        /// <summary>Elige un slot como si se apretara su tecla (0 a 4).</summary>
+        /// <summary>Elige un slot como si se apretara su tecla (0 a 2).</summary>
         public void SelectHotbar(int key) => SelectSlotInternal(Mathf.Clamp(key, 0, SlotCount - 1));
     }
 }

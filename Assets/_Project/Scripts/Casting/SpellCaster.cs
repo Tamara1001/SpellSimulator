@@ -53,6 +53,12 @@ namespace SpellSimulator.Casting
         /// <summary>Se emite cuando cambia la fase de un sello (para feedback en el lienzo, hapticos, sonido).</summary>
         public event System.Action<DrawingCanvas, SealPhase> SealPhaseChanged;
 
+        /// <summary>
+        /// Se emite al terminar de reevaluar un lienzo (trazo terminado, borrado o deshacer). Lo escucha
+        /// CanvasJoinSystem para mantener la lista de mitades candidatas.
+        /// </summary>
+        public event System.Action<DrawingCanvas> CanvasEdited;
+
         /// <summary>Un sello sin disparador empezo a cargar su retardo de lanzamiento.</summary>
         public event System.Action<SealChargeInfo> SealCharging;
 
@@ -76,6 +82,7 @@ namespace SpellSimulator.Casting
             // La pose del modelo da la orientacion de cada signo; se calibra con las plantillas del diccionario.
             if (classifier != null && dictionary != null) classifier.CalibratePose(dictionary.Dictionary.TemplateSessions());
             if (GetComponent<SealGlowDirector>() == null) gameObject.AddComponent<SealGlowDirector>();
+            if (GetComponent<World.CanvasJoinSystem>() == null) gameObject.AddComponent<World.CanvasJoinSystem>();
         }
 
         private void Update()
@@ -158,10 +165,31 @@ namespace SpellSimulator.Casting
         }
 
         /// <summary>Llamar al terminar un trazo de tinta: si el anillo quedo cerrado, el hechizo se lanza (canon).</summary>
-        public void OnStrokeFinished(DrawingCanvas canvas) => Reevaluate(canvas, castAllowed: true);
+        public void OnStrokeFinished(DrawingCanvas canvas)
+        {
+            Reevaluate(canvas, castAllowed: true);
+            CanvasEdited?.Invoke(canvas);
+        }
 
         /// <summary>Llamar tras borrar o deshacer: actualiza la fase sin lanzar.</summary>
-        public void OnSealEdited(DrawingCanvas canvas) => Reevaluate(canvas, castAllowed: false);
+        public void OnSealEdited(DrawingCanvas canvas)
+        {
+            Reevaluate(canvas, castAllowed: false);
+            CanvasEdited?.Invoke(canvas);
+        }
+
+        /// <summary>
+        /// True si los trazos (UV [0,1] de un lienzo de worldSize metros) forman un anillo cerrado. Es la misma lectura
+        /// que hace Reevaluate; la usa la union de mitades para saber si vale la pena lanzar.
+        /// </summary>
+        public bool IsRingClosed(DrawingSession session, Vector2 worldSize)
+        {
+            if (session == null || session.IsEmpty) return false;
+            float largest = Mathf.Max(worldSize.x, worldSize.y, 1e-6f);
+            var iso = new Vector2(worldSize.x / largest, worldSize.y / largest);
+            RingInfo ring = RingDetector.Detect(Clean(session, iso, out _, out _));
+            return ring.Found && ring.Complete;
+        }
 
         private void Reevaluate(DrawingCanvas canvas, bool castAllowed)
         {
@@ -246,9 +274,12 @@ namespace SpellSimulator.Casting
         private DrawingSession Clean(DrawingCanvas canvas) => Clean(canvas, out _, out _);
 
         private DrawingSession Clean(DrawingCanvas canvas, out float boost, out Vector2 pivot)
+            => Clean(canvas.Session, canvas.UvToIsotropic, out boost, out pivot);
+
+        private DrawingSession Clean(DrawingSession session, Vector2 isotropic, out float boost, out Vector2 pivot)
         {
             // Los trazos estan en UV; en un lienzo no cuadrado se pasan a un espacio isotropico.
-            var scaled = canvas.Session.Scaled(canvas.UvToIsotropic);
+            var scaled = session.Scaled(isotropic);
             boost = 1f;
             pivot = Vector2.zero;
             if (scaled.GetBounds(out Vector2 min, out Vector2 max))

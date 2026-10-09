@@ -1,12 +1,13 @@
 namespace SpellSimulator.Player
 {
-    /// <summary>Cuentas puras de la barra de objetos (3 slots, 5 con el cinturon).</summary>
+    /// <summary>Cuentas puras de la barra de objetos (3 slots fijos; el cinturon ya no suma slots).</summary>
     public static class HotbarMath
     {
         public const int BaseSlots = 3;
-        public const int MaxSlots = 5;
+        public const int MaxSlots = 3;
 
-        public static int SlotCount(bool belt) => belt ? MaxSlots : BaseSlots;
+        /// <summary>Siempre 3; el parametro se conserva por compatibilidad y se ignora.</summary>
+        public static int SlotCount(bool belt) => BaseSlots;
 
         /// <summary>Primer slot libre dentro de los primeros <paramref name="slotCount"/>; -1 si no hay.</summary>
         public static int FirstFreeSlot(bool[] free, int slotCount)

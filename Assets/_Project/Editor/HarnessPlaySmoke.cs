@@ -226,7 +226,7 @@ namespace SpellSimulator.EditorTools
                 int withBelt = hudCtl.SlotsShown;
                 int count5 = interactor.SlotCount;
                 interactor.SetBelt(false);
-                Check(before == 3 && count5 == 5 && interactor.SlotCount == 3, "el cinturon pasa de 3 a 5 slots y vuelve a 3");
+                Check(before == 3 && count5 == 3 && interactor.SlotCount == 3, "el cinturon ya no cambia los 3 slots de la barra");
                 Check(withBelt >= 3, "la HUD informa los slots visibles");
             }
             else failures.Add("falta HudController para el chequeo del cinturon");
@@ -243,10 +243,11 @@ namespace SpellSimulator.EditorTools
             {
                 var stock = supply.Cartridges;
                 // Si el stock esta lleno se gasta un cartucho entero para hacer lugar.
-                while (stock.CartridgeCount >= stock.MaxCartridges && stock.TryUse(out _)) { }
-                int before = stock.CartridgeCount;
+                stock.SetBelt(true);
+                while (stock.CartridgeCount(SpellSimulator.Core.InkKind.Powerful) >= stock.MaxCartridges && stock.TryUse(out _)) { }
+                int before = stock.TotalCartridges;
                 bool added = stock.TryAdd(SpellSimulator.Core.InkKind.Powerful);
-                Check(added && hud.CartridgeCountShown == before + 1 && hud.CartridgeCountShown == stock.CartridgeCount,
+                Check(added && hud.CartridgeCountShown == before + 1 && hud.CartridgeCountShown == stock.TotalCartridges,
                     "el HUD muestra el slot de cartuchos y su contador cambia al sumar uno");
             }
             else failures.Add("falta el slot de cartuchos del HUD (o el InkSupply del jugador)");

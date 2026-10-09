@@ -129,6 +129,12 @@ namespace SpellSimulator.EditorTools
                 while (probe.MoveNext()) yield return probe.Current;
                 yield break;
             }
+            if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "HALVES")
+            {
+                var probe = HalvesProbe(spot);
+                while (probe.MoveNext()) yield return probe.Current;
+                yield break;
+            }
             if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "SPELLS")
             {
                 var probe = SpellsProbe(spot);
@@ -323,6 +329,110 @@ namespace SpellSimulator.EditorTools
             var wa = a.GetComponent<Rune>(); var wb = b.GetComponent<Rune>();
             Check(wa.Wear == 1 && wb.Wear == 1, $"cada una gasta un uso de desgaste (desgaste {wa.Wear} y {wb.Wear})");
             caster.SpellCompiled -= OnCompiled;
+        }
+
+        /// <summary>
+        /// Sello partido para cualquier lienzo: Paper_S y Paper_M, cada uno con MEDIO anillo (y el sigilo repartido sobre el borde
+        /// comun), planos en el piso del claro. Pegados lado a lado o uno encima del otro se unen y lanzan (ambos quedan vacios);
+        /// separados 0,5 m no pasa nada. Se activa con Only = "HALVES".
+        /// </summary>
+        private static IEnumerator HalvesProbe(Vector3 spot)
+        {
+            var ga = GameObject.Find("Paper_S");
+            var gb = GameObject.Find("Paper_M");
+            if (ga == null || gb == null) { failures.Add("faltan Paper_S/Paper_M"); yield break; }
+            var ca = ga.GetComponent<DrawingCanvas>(); var cb = gb.GetComponent<DrawingCanvas>();
+            var rba = ga.GetComponent<Rigidbody>(); var rbb = gb.GetComponent<Rigidbody>();
+            var pca = ga.GetComponent<PhysicalCanvas>(); var pcb = gb.GetComponent<PhysicalCanvas>();
+            var caster = Object.FindFirstObjectByType<Casting.SpellCaster>();
+            Check(caster.GetComponent<CanvasJoinSystem>() != null, "el SpellCaster tiene su CanvasJoinSystem");
+
+            int compiled = 0;
+            void OnCompiled(Compiler.SpellIR spell, DrawingCanvas c) { if (spell.valid && spell.active) compiled++; }
+            caster.SpellCompiled += OnCompiled;
+
+            string[] names = { "lado a lado", "separadas 0,5 m", "una encima de la otra" };
+            for (int sc = 0; sc < names.Length; sc++)
+            {
+                pca.ResetToInitial(); pcb.ResetToInitial();
+                rba.isKinematic = true; rbb.isKinematic = true;
+                Quaternion flat = Quaternion.Euler(90f, 0f, 0f);
+                Vector2 sa = ca.WorldSize, sb = cb.WorldSize;
+                Vector3 centerA = spot + Vector3.up * 0.3f;
+                PlaceFlat(ca, centerA, flat);
+                Vector3 right = ca.transform.right, up = ca.transform.up;
+
+                bool stacked = sc == 2;
+                float gap = sc == 1 ? 0.5f : 0f;
+                Vector3 edgeDir = stacked ? up : right;
+                float halfA = (stacked ? sa.y : sa.x) * 0.5f, halfB = (stacked ? sb.y : sb.x) * 0.5f;
+                PlaceFlat(cb, centerA + edgeDir * (halfA + halfB + gap), flat);
+                Vector3 edgeMid = centerA + edgeDir * halfA;
+                Physics.SyncTransforms();
+
+                // Un sello entero en un cuadrado unitario, repartido a cada lado del borde comun segun donde caiga cada punto.
+                HarnessSeals.Draw(ca, "fire");
+                var full = new List<Core.Stroke>(ca.Session.Strokes);
+                ca.Clear(); cb.Clear();
+                caster.OnSealEdited(ca); caster.OnSealEdited(cb);
+                float radius = 0.45f * Mathf.Min(Mathf.Min(sa.x, sa.y), Mathf.Min(sb.x, sb.y));
+                SplitSeal(ca, cb, full, edgeMid, edgeDir, edgeDir * gap, right, up, radius / HarnessSeals.RingRadius);
+                ca.Redraw(); cb.Redraw();
+
+                compiled = 0;
+                caster.OnStrokeFinished(ca);
+                caster.OnStrokeFinished(cb);
+                Check(compiled == 0, $"mitades [{names[sc]}]: una mitad sola no lanza nada (lanzados={compiled})");
+                yield return 2.5f;
+
+                if (sc == 1)
+                    Check(compiled == 0 && !ca.Session.IsEmpty && !cb.Session.IsEmpty,
+                        $"mitades [{names[sc]}]: separadas no pasa nada (lanzados={compiled}, trazos A={ca.Session.Strokes.Count} B={cb.Session.Strokes.Count})");
+                else
+                    Check(compiled >= 1 && ca.Session.IsEmpty && cb.Session.IsEmpty,
+                        $"mitades [{names[sc]}]: se unen, lanzan y las dos quedan vacias (lanzados={compiled}, trazos A={ca.Session.Strokes.Count} B={cb.Session.Strokes.Count})");
+
+                ca.Clear(); cb.Clear();
+                caster.OnSealEdited(ca); caster.OnSealEdited(cb);
+                Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
+                yield return 0.3f;
+            }
+            caster.SpellCompiled -= OnCompiled;
+            rba.isKinematic = false; rbb.isKinematic = false;
+            pca.ResetToInitial(); pcb.ResetToInitial();
+        }
+
+        /// <summary>Apoya el lienzo con el CENTRO de su superficie (no el pivote) en center.</summary>
+        private static void PlaceFlat(DrawingCanvas canvas, Vector3 center, Quaternion rotation)
+        {
+            canvas.transform.rotation = rotation;
+            canvas.transform.position += center - canvas.WorldCenter;
+        }
+
+        /// <summary>
+        /// Reparte los trazos de un sello (UV de un cuadrado unitario centrado en edgeMid, de lado scale metros, ejes right/up) entre
+        /// A (lado negativo de edgeDir) y B (lado positivo, corrido shiftB). Un trazo que cruza el borde se corta en trozos.
+        /// </summary>
+        private static void SplitSeal(DrawingCanvas ca, DrawingCanvas cb, List<Core.Stroke> full, Vector3 edgeMid, Vector3 edgeDir,
+            Vector3 shiftB, Vector3 right, Vector3 up, float scale)
+        {
+            foreach (var source in full)
+            {
+                Core.Stroke current = null;
+                bool currentIsA = false;
+                foreach (var p in source.Points)
+                {
+                    Vector3 world = edgeMid + right * ((p.x - 0.5f) * scale) + up * ((p.y - 0.5f) * scale);
+                    bool isA = Vector3.Dot(world - edgeMid, edgeDir) < 0f;
+                    if (current == null || isA != currentIsA)
+                    {
+                        current = new Core.Stroke { Width = source.Width, Ink = source.Ink };
+                        currentIsA = isA;
+                        (isA ? ca : cb).Session.AddStroke(current);
+                    }
+                    current.AddPoint(isA ? ca.GetUVFromWorldPosition(world) : cb.GetUVFromWorldPosition(world + shiftB));
+                }
+            }
         }
 
         /// <summary>

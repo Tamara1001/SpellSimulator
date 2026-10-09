@@ -40,7 +40,7 @@ namespace SpellSimulator.World
         /// <summary>Portatil: lo guarda como cartucho en el stock del jugador y se destruye. False si el stock esta lleno o es fijo.</summary>
         public bool TryPocket(SpellSimulator.Player.InkSupply supply)
         {
-            if (!portable || supply == null || !supply.Cartridges.TryAdd(kind)) return false;
+            if (!portable || supply == null || !supply.Cartridges.CanCarry(kind) || !supply.Cartridges.TryAdd(kind)) return false;
             Destroy(gameObject);
             return true;
         }

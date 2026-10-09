@@ -153,11 +153,11 @@ Esquema (ADR-032/033). Se repasa en el grimorio (Tab → Controles).
 | Moverse | Caminar / mirar | WASD + mouse | Stick izquierdo + cabeza |
 | | Correr / agacharse (mantener) / tumbarse (alterna) | Shift / C o Ctrl / Z | Click del stick izquierdo / — / — |
 | | Saltar / zoom (mantener) | Espacio / X | — |
-| **Mano principal** (barra de 3 slots; 5 con el cinturón) | Elegir slot | 1, 2, 3 (4 y 5 con cinturón) | — |
+| **Mano principal** (barra de 3 slots) | Elegir slot | 1, 2, 3 | — |
 | | Equipar una herramienta o estampa del mundo | E (va al primer slot libre) | Grip |
 | | Usar / deshacer | Clic izquierdo / clic derecho | Gatillo / A |
 | | Cambiar el grosor de la pluma o el tamaño de la goma | Rueda del mouse (sin nada agarrado) | — |
-| | Recargar tinta / arrojar | R / Q | Mojar en un tintero / B |
+| | Recargar tinta / cambiar la tinta activa (cinturón) / arrojar | R / V / Q | Mojar en un tintero / B |
 | **Mano secundaria** (lo agarrado con E se arrastra) | Agarrar / dejar en el aire | E / E otra vez | Grip |
 | | Acercar o alejar (cuaderno: pasar de página) | Rueda | — |
 | | Rotar / inclinar (mas sensible) | Clic derecho + mouse / Shift + rueda | Girar la mano |

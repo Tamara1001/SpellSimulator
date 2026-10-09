@@ -31,7 +31,7 @@ Para cada **fijo**: Tab abre, dibujar deja trazos, salir devuelve la cámara a s
 Para **herramientas, sellos y movibles**: caída a 45 m/s no atraviesa el piso; los genéricos (movibles) se pueden fijar y desfijar.
 
 ### Pruebas dirigidas (Only = ...)
-`SessionState "HarnessCanvasMatrix.Only"`: `RUNE` (la runa armada dispara en 3 variantes), `RUNEJOIN` (dos runas armadas se fusionan y se gastan), `SPELLS` (lanza tierra, cristal, agua y viento y revisa sus cuerpos fisicos), `CHARGE` (retardo de lanzamiento: carga, lanzamiento y cancelacion), `FOCUSRAY` (lienzos en su lugar original, agarrados desde 4 lados: el puntero en vista completa debe dibujar en ese lienzo), o nombres separados por coma para repetir solo algunos casos.
+`SessionState "HarnessCanvasMatrix.Only"`: `RUNE` (la runa armada dispara en 3 variantes), `HALVES` (mitades de cualquier lienzo: lado a lado, arriba/abajo y separadas), `RUNEJOIN` (dos runas armadas se fusionan y se gastan), `SPELLS` (lanza tierra, cristal, agua y viento y revisa sus cuerpos fisicos), `CHARGE` (retardo de lanzamiento: carga, lanzamiento y cancelacion), `FOCUSRAY` (lienzos en su lugar original, agarrados desde 4 lados: el puntero en vista completa debe dibujar en ese lienzo), o nombres separados por coma para repetir solo algunos casos.
 
 ## Checklist manual (teclado y mouse reales)
 Marcá cada ítem con `[x]` y la fecha/versión cuando lo pruebes.
@@ -44,7 +44,8 @@ Marcá cada ítem con `[x]` y la fecha/versión cuando lo pruebes.
 - [ ] Runas: dibujar fuego, golpearla contra la pared y el suelo: el efecto sale sin errores en la consola.
 - [ ] Dar vuelta la hoja (F) y verificar que el hechizo sale por la cara con tinta.
 - [ ] Sello: cargar un glifo (Tab → «Cargar en el sello»), estampar sobre una hoja, sobre una runa y sobre un lienzo fijo.
-- [ ] Mitades SplitJoin: juntarlas lado a lado, el hechizo se lanza una sola vez.
+- [ ] Mitades: dibujar medio anillo en dos hojas (o cuaderno, runa, pizarra) y pegarlas borde con borde: se lanza una sola vez; probar arriba/abajo.
+- [ ] Cinturon: equiparlo, guardar tinteros de tres clases (un slot cada una), V cambia la tinta activa y R recarga con ella.
 - [ ] Banco/mesa/caja: fijar en el aire (flota con vaivén), volver a agarrar, tirar al piso fuerte (no desaparece).
 - [ ] Lápiz / goma lanzados muy fuerte contra el piso, el terreno y la torre: no los atraviesan.
 - [ ] Soltar cualquier lienzo con la vista abierta y mover el mouse: el cursor vuelve a estar oculto y la cámara responde.

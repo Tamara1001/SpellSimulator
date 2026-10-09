@@ -121,12 +121,13 @@ namespace SpellSimulator.Learning
                 Row("F3", "depuración") +
                 Row("Retroceso", "reiniciar el mundo"),
                 "Mano principal",
-                Intro("La barra 1-2-3 (4 y 5 con el cinturón): el objeto equipado.") +
+                Intro("La barra 1-2-3: el objeto equipado.") +
                 Row("E", "agarra herramientas y sellos a la barra") +
                 Row("Clic izq.", "usa") +
                 Row("Clic der.", "deshace") +
                 Row("Rueda", "grosor de la pluma o la goma") +
                 Row("R", "recarga tinta") +
+                Row("V", "cambia la tinta activa (con cinturón)") +
                 Row("Q", "arroja")),
             new GrimoireSpread(
                 "Mano secundaria",

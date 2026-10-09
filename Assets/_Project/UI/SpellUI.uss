@@ -106,16 +106,17 @@
 
 /* ------------------------------------------------------------ zona inferior */
 
+/* Ocupa todo el ancho para que el 96 % del panel de contexto sea del ancho de pantalla. */
 .bottom {
     position: absolute;
-    left: 24px; right: 24px; bottom: 18px;
+    left: 0; right: 0; bottom: 18px;
     align-items: center;
     justify-content: flex-end;
 }
 
 /* Panel de contexto: 1 o 2 lineas, sobre la barra. */
 .context {
-    max-width: 100%;
+    max-width: 96%;
     margin-bottom: 10px;
     padding: 7px 18px 7px 18px;
     background-image: url("Sprites/panel_dark.png");
@@ -179,12 +180,13 @@
 .hint {
     flex-direction: row;
     align-items: center;
-    margin: 2px 5px 2px 5px;
+    flex-shrink: 0;
+    margin: 2px 4px 2px 4px;
 }
 
 .hint-text {
     color: var(--cream);
-    font-size: 14px;
+    font-size: 13px;
     white-space: nowrap;
 }
 
@@ -477,106 +479,6 @@
 
 /* ------------------------------------------------------------ cinturon */
 
-/* Slots 4 y 5 (cinturon): ~70 % de los principales, a los costados de la bandeja, apoyados abajo. */
-.slot--belt {
-    width: 54px;
-    margin: 0 2px 2px 2px;
-    align-self: flex-end;
-    transition-property: opacity, scale;
-    transition-duration: 0.28s, 0.28s;
-    transition-timing-function: ease-out-back, ease-out-back;
-}
-
-.slot--belt .slot-frame {
-    width: 45px;
-    height: 45px;
-}
-
-.slot--belt .slot-glow {
-    left: -11px; top: -11px; right: -11px; bottom: -11px;
-}
-
-.slot--belt .slot-icon {
-    left: 4px; top: 4px; right: 4px; bottom: 4px;
-}
-
-.slot--belt .slot-icon--color {
-    left: 13px; top: 13px; right: 13px; bottom: 13px;
-}
-
-.slot--belt .slot-icon--empty {
-    left: 14px; top: 14px; right: 14px; bottom: 14px;
-}
-
-.slot--belt .slot-ink {
-    left: 5px; right: 5px; bottom: 4px;
-    height: 3px;
-}
-
-.slot--belt .slot-key {
-    left: -7px;
-    top: -8px;
-    scale: 0.85 0.85;
-}
-
-.slot--belt .slot-name {
-    font-size: 10px;
-    max-width: 54px;
-    height: 14px;
-}
-
-/* Aparicion al equipar el cinturon: la clase se quita un instante despues y corre la transicion. */
-.slot--belt-enter {
-    opacity: 0;
-    scale: 0.5 0.5;
-}
-
-/* Tira de cuero detras del marco que asoma hacia la bandeja, con un broche de laton. */
-.belt-strap {
-    position: absolute;
-    top: 17px;
-    height: 11px;
-    background-color: rgb(122, 74, 40);
-    border-top-width: 1px; border-bottom-width: 1px;
-    border-color: rgb(78, 44, 22);
-    border-radius: 2px;
-}
-
-.slot--belt-left .belt-strap {
-    left: 26px;
-    right: -10px;
-}
-
-.slot--belt-right .belt-strap {
-    left: -10px;
-    right: 26px;
-}
-
-.belt-buckle {
-    position: absolute;
-    top: -3px;
-    width: 10px;
-    height: 15px;
-    border-width: 2px;
-    border-color: var(--gold);
-    border-radius: 2px;
-}
-
-.slot--belt-left .belt-buckle {
-    right: 0;
-}
-
-.slot--belt-right .belt-buckle {
-    left: 0;
-}
-
-.belt-prong {
-    position: absolute;
-    left: 0; right: 0; top: 4px;
-    height: 2px;
-    background-color: var(--gold-light);
-}
-
 /* Distintivo del cinturon equipado, a la izquierda del grimorio. */
 .belt-badge {
     display: none;
@@ -734,6 +636,124 @@
 .cartridge--empty .cart-count {
     color: var(--cream-dim);
     border-color: rgba(150, 140, 120, 0.6);
+}
+
+/* Teclas: R (recargar) solo en la clase activa; V (cambiar tinta) arriba a la derecha de la activa, solo con cinturon. */
+.cart-key-r {
+    display: none;
+}
+
+.cartridge--current .cart-key-r {
+    display: flex;
+}
+
+.cart-key-v {
+    position: absolute;
+    right: -7px;
+    top: -8px;
+    display: none;
+}
+
+.cartridge--cycle .cart-key-v {
+    display: flex;
+}
+
+/* Nombre corto de la clase activa (Poderosa / Resistente) bajo el slot; la normal no lleva etiqueta. */
+.cart-kind {
+    position: absolute;
+    left: -14px; right: -14px; bottom: -13px;
+    font-size: 10px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: nowrap;
+    -unity-text-outline-width: 0.2px;
+    -unity-text-outline-color: rgba(0, 0, 0, 0.8);
+    display: none;
+}
+
+.cartridge--labeled .cart-kind {
+    display: flex;
+}
+
+/* Con cinturon: tres slots chicos (Normal | Poderosa | Resistente), ~78 % del grande, legibles. */
+.cartridge {
+    transition-property: opacity, scale;
+    transition-duration: 0.28s, 0.28s;
+    transition-timing-function: ease-out-back, ease-out-back;
+}
+
+.cartridge--mini {
+    width: 58px;
+    margin: 0 2px 0 2px;
+}
+
+.cartridge--mini .slot-frame {
+    width: 50px;
+    height: 50px;
+}
+
+.cartridge--mini .slot-glow {
+    left: -12px; top: -12px; right: -12px; bottom: -12px;
+}
+
+.cartridge--mini .cart-jar {
+    left: 12px; right: 12px; top: 6px; bottom: 7px;
+}
+
+.cartridge--mini .cart-cork {
+    width: 9px;
+    height: 6px;
+}
+
+.cartridge--mini .cart-neck {
+    width: 10px;
+    height: 4px;
+}
+
+.cartridge--mini .cart-body {
+    width: 24px;
+    border-top-left-radius: 6px; border-top-right-radius: 6px;
+    border-bottom-left-radius: 9px; border-bottom-right-radius: 9px;
+}
+
+.cartridge--mini .cart-shine {
+    left: 3px; top: 3px;
+    width: 3px; height: 10px;
+}
+
+.cartridge--mini .cart-count {
+    right: -7px; bottom: -6px;
+    padding: 0 4px 0 4px;
+    font-size: 11px;
+}
+
+.cartridge--mini .slot-key {
+    left: -7px;
+    top: -8px;
+}
+
+.cartridge--mini .cart-pips {
+    height: 14px;
+}
+
+.cartridge--mini .cart-pip {
+    width: 6px;
+    height: 4px;
+}
+
+/* Clase sin cartuchos con cinturon: gris apagado. */
+.cartridge--mini.cartridge--empty {
+    opacity: 0.55;
+}
+
+.cartridge--mini.cartridge--empty .slot-frame {
+    -unity-background-image-tint-color: rgb(150, 150, 150);
+}
+
+/* Aparicion al equipar el cinturon: la clase se quita un instante despues y corre la transicion. */
+.cartridge.cartridge--enter {
+    opacity: 0;
+    scale: 0.5 0.5;
 }
 
 /* Al sumar o gastar un cartucho, el frasco da un saltito (usa la transicion de .slot-frame). */

@@ -75,25 +75,63 @@ namespace SpellSimulator.Tests
 
     public class InkCartridgeStockTests
     {
+        private const InkKind N = InkKind.Normal;
+        private const InkKind P = InkKind.Powerful;
+        private const InkKind R = InkKind.Resistant;
+
         [Test]
         public void DefaultStock_HasTwoNormalCartridges()
         {
             var stock = new InkCartridgeStock();
-            Assert.AreEqual(2, stock.CartridgeCount);
-            Assert.AreEqual(10, stock.TotalUses);
-            Assert.AreEqual(InkKind.Normal, stock.CurrentKind);
+            Assert.AreEqual(2, stock.CartridgeCount(N));
+            Assert.AreEqual(2, stock.TotalCartridges);
+            Assert.AreEqual(10, stock.TotalUses(N));
+            Assert.AreEqual(N, stock.ActiveKind);
+            Assert.IsFalse(stock.HasBelt);
         }
 
         [Test]
-        public void TryAdd_StopsAtMax()
+        public void WithoutBelt_OnlyOneKindAtATime()
         {
             var stock = new InkCartridgeStock();
+            Assert.IsTrue(stock.CanCarry(N));
+            Assert.IsFalse(stock.CanCarry(P));
+            Assert.IsFalse(stock.TryAdd(P));
+            Assert.IsTrue(stock.TryAdd(N));
+        }
+
+        [Test]
+        public void WithoutBelt_EmptyStockAcceptsAnyKind()
+        {
+            var stock = new InkCartridgeStock();
+            while (stock.TryUse(out _)) { }
+            Assert.IsTrue(stock.CanCarry(P));
+            Assert.IsTrue(stock.TryAdd(P));
+            Assert.AreEqual(P, stock.ActiveKind);
+            Assert.IsFalse(stock.TryAdd(R));
+        }
+
+        [Test]
+        public void WithBelt_ThreeKinds()
+        {
+            var stock = new InkCartridgeStock();
+            stock.SetBelt(true);
+            Assert.IsTrue(stock.TryAdd(P));
+            Assert.IsTrue(stock.TryAdd(R));
+            Assert.AreEqual(4, stock.TotalCartridges);
+            Assert.AreEqual(1, stock.CartridgeCount(R));
+        }
+
+        [Test]
+        public void MaxPerKind()
+        {
+            var stock = new InkCartridgeStock();
+            stock.SetBelt(true);
             Assert.AreEqual(InkCartridgeStock.DefaultMaxCartridges, stock.MaxCartridges);
-            Assert.IsTrue(stock.TryAdd(InkKind.Powerful));
-            Assert.IsTrue(stock.TryAdd(InkKind.Resistant));
-            Assert.IsFalse(stock.TryAdd(InkKind.Normal), "Con 4 cartuchos ya esta lleno.");
-            stock.SetMax(5);
-            Assert.IsTrue(stock.TryAdd(InkKind.Normal));
+            Assert.IsTrue(stock.TryAdd(N));
+            Assert.IsTrue(stock.TryAdd(N));
+            Assert.IsFalse(stock.TryAdd(N), "4 cartuchos por clase.");
+            Assert.IsTrue(stock.TryAdd(P), "Otra clase tiene su propio slot.");
         }
 
         [Test]
@@ -101,35 +139,75 @@ namespace SpellSimulator.Tests
         {
             var stock = new InkCartridgeStock();
             for (int i = 0; i < InkCartridgeStock.UsesPerCartridge; i++) Assert.IsTrue(stock.TryUse(out _));
-            Assert.AreEqual(1, stock.CartridgeCount);
+            Assert.AreEqual(1, stock.CartridgeCount(N));
         }
 
         [Test]
-        public void Use_IsFifoAndCurrentKindFollows()
+        public void Use_IsFifoWithinKind()
         {
             var stock = new InkCartridgeStock();
-            stock.TryAdd(InkKind.Powerful);
+            stock.TryAdd(N, 3);
+            stock.TryUse(out _);
+            Assert.AreEqual(4, stock.UsesLeft(N));
+            for (int i = 0; i < 4; i++) stock.TryUse(out _);
+            Assert.AreEqual(2, stock.CartridgeCount(N), "El primero se agoto.");
+            Assert.AreEqual(5, stock.UsesLeft(N));
+            Assert.AreEqual(8, stock.TotalUses(N));
+        }
+
+        [Test]
+        public void TryUse_SwitchesKindWhenActiveRunsOut()
+        {
+            var stock = new InkCartridgeStock();
+            stock.SetBelt(true);
+            stock.TryAdd(P);
             for (int i = 0; i < 10; i++)
             {
                 Assert.IsTrue(stock.TryUse(out InkKind k));
-                Assert.AreEqual(InkKind.Normal, k);
+                Assert.AreEqual(N, k);
             }
-            Assert.AreEqual(InkKind.Powerful, stock.CurrentKind);
-            Assert.AreEqual(5, stock.CurrentUses);
+            Assert.AreEqual(P, stock.ActiveKind);
             Assert.IsTrue(stock.TryUse(out InkKind last));
-            Assert.AreEqual(InkKind.Powerful, last);
-            Assert.AreEqual(4, stock.CurrentUses);
+            Assert.AreEqual(P, last);
+            Assert.AreEqual(4, stock.UsesLeft(P));
         }
 
         [Test]
-        public void Changed_FiresOnAddAndUse()
+        public void CycleActive_SkipsEmptyKinds()
+        {
+            var stock = new InkCartridgeStock();
+            stock.SetBelt(true);
+            Assert.IsFalse(stock.CycleActive(), "Solo hay una clase.");
+            stock.TryAdd(R);
+            Assert.IsTrue(stock.CycleActive());
+            Assert.AreEqual(R, stock.ActiveKind, "Salta la poderosa, que esta vacia.");
+            Assert.IsTrue(stock.CycleActive());
+            Assert.AreEqual(N, stock.ActiveKind);
+        }
+
+        [Test]
+        public void CycleActive_WithoutBelt_DoesNothing()
+        {
+            var stock = new InkCartridgeStock();
+            stock.SetBelt(true);
+            stock.TryAdd(P);
+            stock.SetBelt(false);
+            Assert.IsFalse(stock.CycleActive());
+            Assert.AreEqual(N, stock.ActiveKind);
+        }
+
+        [Test]
+        public void Changed_FiresOnAddUseCycleAndBelt()
         {
             var stock = new InkCartridgeStock();
             int calls = 0;
             stock.Changed += () => calls++;
             stock.TryUse(out _);
-            stock.TryAdd(InkKind.Normal);
-            Assert.AreEqual(2, calls);
+            stock.TryAdd(N);
+            stock.SetBelt(true);
+            stock.TryAdd(P);
+            stock.CycleActive();
+            Assert.AreEqual(5, calls);
         }
 
         [Test]
@@ -137,10 +215,9 @@ namespace SpellSimulator.Tests
         {
             var stock = new InkCartridgeStock();
             while (stock.TryUse(out _)) { }
-            Assert.AreEqual(0, stock.CartridgeCount);
+            Assert.AreEqual(0, stock.TotalCartridges);
             Assert.IsFalse(stock.TryUse(out InkKind kind));
-            Assert.AreEqual(InkKind.Normal, kind);
-            Assert.AreEqual(InkKind.Normal, stock.CurrentKind);
+            Assert.AreEqual(N, kind);
         }
     }
 }

@@ -10,12 +10,12 @@ using SpellSimulator.Player;
 namespace SpellSimulator.UI
 {
     /// <summary>
-    /// HUD de juego en UI Toolkit (reemplaza la HUD uGUI): barra de la mano principal (3 slots, teclas 1-3; con cinturon,
-    /// 2 slots chicos mas a los costados, teclas 4 y 5, y un distintivo junto al grimorio) y slot de la
+    /// HUD de juego en UI Toolkit (reemplaza la HUD uGUI): barra de la mano principal (3 slots, teclas 1-3) y slot de la
     /// mano secundaria con miniaturas 3D (<see cref="ItemIcons"/>), panel de contexto con keycaps, selector de grosor,
-    /// tinta (con su clase) y pagina, el slot de cartuchos de tinta (frasco, cantidad y usos; se refresca solo por
-    /// <see cref="InkCartridgeStock.Changed"/>), la tecla [E] junto a la mira y los avisos (<see cref="Hud"/>) arriba a la
-    /// derecha. Nada toma el
+    /// tinta (con su clase) y pagina, los cartuchos de tinta (sin cinturon, un slot grande con la clase que se lleva; con
+    /// cinturon, un slot chico por clase con la activa resaltada y la tecla V; se refrescan solo por
+    /// <see cref="InkCartridgeStock.Changed"/>), un distintivo del cinturon junto al grimorio, la tecla [E] junto a la mira
+    /// y los avisos (<see cref="Hud"/>) arriba a la derecha. Nada toma el
     /// mouse (salvo el slot del grimorio, a la izquierda de la barra, que abre/cierra el libro con clic o TAB). Se oculta
     /// (salvo avisos) con el grimorio a pantalla completa o el lector de libros abiertos.
     /// Rendimiento: el arbol solo se reconstruye ante <see cref="PlayerInteractor.InventoryChanged"/> o
@@ -37,9 +37,11 @@ namespace SpellSimulator.UI
         private static readonly string[] BarePercents = BuildPercents("");
         private static readonly string[] Counts = BuildCounts(16);
         private const int CartridgeBumpMilliseconds = 170;
-        private static readonly string[] SlotKeys = { "1", "2", "3", "4", "5" };
-        /// <summary>Retardo para quitar la clase de entrada de los slots del cinturon (deja correr la transicion de USS).</summary>
+        private static readonly string[] SlotKeys = { "1", "2", "3" };
+        /// <summary>Retardo para quitar la clase de entrada de los cartuchos y del distintivo (deja correr la transicion de USS).</summary>
         private const int BeltEnterMilliseconds = 30;
+        /// <summary>Clases de tinta (orden de los slots con cinturon: Normal | Poderosa | Resistente).</summary>
+        private const int InkKindCount = 3;
 
         private sealed class Slot
         {
@@ -51,6 +53,18 @@ namespace SpellSimulator.UI
             public VisualElement InkBar, InkFill;
             public IHudInfo Info;
             public int LastInk = int.MinValue;
+        }
+
+        /// <summary>Slot de cartuchos de UNA clase de tinta: frasco de su color, contador, 5 rayitas de usos y etiqueta.</summary>
+        private sealed class CartSlot
+        {
+            public InkKind Kind;
+            public VisualElement Root, Ink;
+            public Label Count;
+            public readonly VisualElement[] Pips = new VisualElement[InkCartridgeStock.UsesPerCartridge];
+            public Color PipColor;
+            public int LastCount = -1;
+            public IVisualElementScheduledItem BumpEnd;
         }
 
         private sealed class NoticeCard
@@ -77,21 +91,19 @@ namespace SpellSimulator.UI
 
         // Cartuchos de tinta del jugador (se refresca solo por InkCartridgeStock.Changed).
         private InkSupply inkSupply;
-        private VisualElement cartridge, cartInk;
-        private Label cartCount, inkKindLabel;
-        private readonly VisualElement[] cartPips = new VisualElement[InkCartridgeStock.UsesPerCartridge];
-        private IVisualElementScheduledItem cartBumpEnd;
-        private int lastCartCount = -1;
-        /// <summary>Cantidad de cartuchos que muestra el contador del HUD (-1 antes de armarse). Lo usa el test de humo.</summary>
+        private Label inkKindLabel;
+        private readonly CartSlot[] cartSlots = new CartSlot[InkKindCount];
+        private bool cartLayoutReady, cartBeltLayout;
+        /// <summary>Cartuchos que muestran los contadores del HUD sumando todas las clases (-1 antes de armarse). Lo usa el test de humo.</summary>
         public int CartridgeCountShown { get; private set; } = -1;
 
-        // Cinturon: 2 slots chicos a los costados de la bandeja principal (4 a la izquierda, 5 a la derecha) y un
-        // distintivo junto al grimorio. Se muestran solo con PlayerInteractor.HasBelt (se compara un bool por frame).
+        // Cinturon: distintivo junto al grimorio y un slot de cartuchos por clase. Se sigue PlayerInteractor.HasBelt con
+        // un bool por frame (sin GC); la disposicion de los cartuchos sigue a InkCartridgeStock.HasBelt (evento Changed).
         private VisualElement beltBadge, beltBadgeIcon;
         private IVisualElementScheduledItem beltEnterEnd;
         private bool beltShown;
-        /// <summary>Cantidad de slots de la mano principal visibles en la barra (3, o 5 con cinturon). Lo usa el test de humo.</summary>
-        public int SlotsShown { get; private set; }
+        /// <summary>Slots de la mano principal visibles en la barra (siempre 3; el cinturon ya no suma). Lo usa el test de humo.</summary>
+        public int SlotsShown => PlayerInteractor.HotbarSlots;
 
         private bool bound;
         private bool inventoryDirty = true;
@@ -149,49 +161,70 @@ namespace SpellSimulator.UI
             if (bound) RefreshCartridges(true);
         }
 
+        /// <summary>
+        /// Sin cinturon se ve solo el slot grande de la clase activa; con cinturon, los tres chicos (Normal | Poderosa |
+        /// Resistente) con la activa resaltada (marco dorado y tecla V). Solo corre por eventos, nunca por frame.
+        /// </summary>
         private void RefreshCartridges(bool animate)
         {
-            if (cartridge == null || cartCount == null) return;
+            if (cartSlots[0] == null) return;
             InkCartridgeStock stock = inkSupply != null ? inkSupply.Cartridges : null;
-            int count = stock != null ? stock.CartridgeCount : 0;
-            int uses = stock != null ? stock.CurrentUses : 0;
-            bool empty = count == 0;
-            Color color = InkKindInfo.Color(stock != null ? stock.CurrentKind : InkKind.Normal);
-            // Las rayitas, un poco mas claras que la tinta para que el azul oscuro de la normal se lea sobre el marco.
-            Color pipColor = Color.Lerp(color, Color.white, 0.3f);
+            bool belt = stock != null ? stock.HasBelt : beltShown;
+            InkKind active = stock != null ? stock.ActiveKind : InkKind.Normal;
+            // Aparicion (opacity + scale) solo al pasar de un slot a tres, no al armar la HUD.
+            bool enter = animate && cartLayoutReady && belt && !cartBeltLayout;
+            cartLayoutReady = true;
+            cartBeltLayout = belt;
 
-            cartCount.text = count < Counts.Length ? Counts[count] : "x" + count;
-            CartridgeCountShown = count;
-            cartridge.EnableInClassList("cartridge--empty", empty);
-            if (cartInk != null)
+            int total = 0;
+            for (int k = 0; k < cartSlots.Length; k++)
             {
-                cartInk.style.backgroundColor = color;
-                // La panza se vacia con los usos del cartucho actual (lleno = 85 %).
-                cartInk.style.height = empty ? Length.Percent(0f) : Length.Percent(25f + 60f * uses / InkCartridgeStock.UsesPerCartridge);
-            }
-            for (int i = 0; i < cartPips.Length; i++)
-            {
-                VisualElement pip = cartPips[i];
-                if (pip == null) continue;
-                bool on = i < uses;
-                pip.EnableInClassList("cart-pip--on", on);
-                if (on) pip.style.backgroundColor = pipColor;
-                else pip.style.backgroundColor = StyleKeyword.Null;
-            }
+                CartSlot s = cartSlots[k];
+                bool current = s.Kind == active;
+                bool visible = belt || current;
+                int count = stock != null ? stock.CartridgeCount(s.Kind) : 0;
+                int uses = stock != null ? stock.UsesLeft(s.Kind) : 0;
+                bool empty = count == 0;
+                total += count;
 
-            if (animate && count != lastCartCount && lastCartCount >= 0) Bump();
-            lastCartCount = count;
+                s.Root.style.display = visible ? DisplayStyle.Flex : DisplayStyle.None;
+                s.Root.EnableInClassList("cartridge--mini", belt);
+                s.Root.EnableInClassList("slot--active", belt && current);
+                s.Root.EnableInClassList("cartridge--current", current);
+                s.Root.EnableInClassList("cartridge--cycle", belt && current);
+                s.Root.EnableInClassList("cartridge--labeled", current && s.Kind != InkKind.Normal);
+                s.Root.EnableInClassList("cartridge--empty", empty);
+                // La clase de entrada solo se agrega aca; la quita EndBeltEnter (otro refresco en el mismo frame no la corta).
+                if (enter) s.Root.AddToClassList("cartridge--enter");
+                s.Count.text = count < Counts.Length ? Counts[count] : "x" + count;
+                // La panza se vacia con los usos del cartucho en uso de esa clase (lleno = 85 %).
+                s.Ink.style.height = empty ? Length.Percent(0f) : Length.Percent(25f + 60f * uses / InkCartridgeStock.UsesPerCartridge);
+                for (int i = 0; i < s.Pips.Length; i++)
+                {
+                    bool on = i < uses;
+                    s.Pips[i].EnableInClassList("cart-pip--on", on);
+                    if (on) s.Pips[i].style.backgroundColor = s.PipColor;
+                    else s.Pips[i].style.backgroundColor = StyleKeyword.Null;
+                }
+
+                if (animate && visible && s.LastCount >= 0 && count != s.LastCount) Bump(s);
+                s.LastCount = count;
+            }
+            CartridgeCountShown = total;
+            if (enter) ScheduleEnterEnd();
         }
 
         /// <summary>Saltito del frasco al sumar o gastar un cartucho (evento, no por frame).</summary>
-        private void Bump()
+        private static void Bump(CartSlot s)
         {
-            cartridge.AddToClassList("cartridge--bump");
-            if (cartBumpEnd == null) cartBumpEnd = cartridge.schedule.Execute(EndBump);
-            cartBumpEnd.ExecuteLater(CartridgeBumpMilliseconds);
+            s.Root.AddToClassList("cartridge--bump");
+            if (s.BumpEnd == null)
+            {
+                VisualElement root = s.Root;
+                s.BumpEnd = root.schedule.Execute(() => root.RemoveFromClassList("cartridge--bump"));
+            }
+            s.BumpEnd.ExecuteLater(CartridgeBumpMilliseconds);
         }
-
-        private void EndBump() => cartridge?.RemoveFromClassList("cartridge--bump");
 
         private void MarkNotices() => noticesDirty = true;
 
@@ -225,11 +258,7 @@ namespace SpellSimulator.UI
 
             VisualElement mainTray = root.Q("main-slots");
             mainTray.Clear();
-            for (int i = 0; i < mainSlots.Length; i++)
-            {
-                mainSlots[i] = MakeSlot(mainTray, SlotKeys[i]);
-                if (i >= PlayerInteractor.BaseHotbarSlots) MakeBeltSlot(mainSlots[i], i == PlayerInteractor.BaseHotbarSlots);
-            }
+            for (int i = 0; i < mainSlots.Length; i++) mainSlots[i] = MakeSlot(mainTray, SlotKeys[i]);
             beltBadge = root.Q("belt-badge");
             beltBadgeIcon = root.Q("belt-badge-icon");
             beltEnterEnd = null;
@@ -261,63 +290,33 @@ namespace SpellSimulator.UI
         }
 
         /// <summary>
-        /// Convierte un slot de la mano principal en slot de cinturon: mas chico (clase slot--belt), con una tira de cuero
-        /// y un broche de laton del lado que da a la bandeja. El 4 va primero (a la izquierda) y el 5 queda ultimo.
+        /// Muestra u oculta el distintivo del cinturon y rearma los cartuchos (uno o tres slots). Solo corre cuando cambia
+        /// HasBelt (o al armar).
         /// </summary>
-        private static void MakeBeltSlot(Slot slot, bool left)
-        {
-            slot.Root.AddToClassList("slot--belt");
-            slot.Root.AddToClassList(left ? "slot--belt-left" : "slot--belt-right");
-            var strap = new VisualElement { pickingMode = PickingMode.Ignore };
-            strap.AddToClassList("belt-strap");
-            var buckle = new VisualElement { pickingMode = PickingMode.Ignore };
-            buckle.AddToClassList("belt-buckle");
-            var prong = new VisualElement { pickingMode = PickingMode.Ignore };
-            prong.AddToClassList("belt-prong");
-            buckle.Add(prong);
-            strap.Add(buckle);
-            // Primer hijo del slot: se dibuja detras del marco y asoma por el costado que da a la bandeja.
-            slot.Root.Insert(0, strap);
-            slot.Root.style.display = DisplayStyle.None;
-            if (left) slot.Root.SendToBack();
-        }
-
-        /// <summary>Muestra u oculta los slots del cinturon y su distintivo. Solo corre cuando cambia HasBelt (o al armar).</summary>
         private void ApplyBelt(bool on, bool animate)
         {
             beltShown = on;
-            int shown = 0;
-            for (int i = 0; i < mainSlots.Length; i++)
-            {
-                Slot slot = mainSlots[i];
-                if (slot == null) continue;
-                bool visible = i < PlayerInteractor.BaseHotbarSlots || on;
-                if (visible) shown++;
-                if (i < PlayerInteractor.BaseHotbarSlots) continue;
-                slot.Root.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
-                slot.Root.EnableInClassList("slot--belt-enter", on && animate);
-            }
-            SlotsShown = shown;
-
             if (beltBadge != null)
             {
                 beltBadge.style.display = on ? DisplayStyle.Flex : DisplayStyle.None;
                 beltBadge.EnableInClassList("belt-badge--enter", on && animate);
                 if (on) SetBeltBadgeIcon();
             }
-            if (on && animate && hud != null)
-            {
-                // Un instante despues se quita la clase de entrada y corre la transicion (aparecen con un saltito).
-                if (beltEnterEnd == null) beltEnterEnd = hud.schedule.Execute(EndBeltEnter);
-                beltEnterEnd.ExecuteLater(BeltEnterMilliseconds);
-            }
-            inventoryDirty = true;
+            if (on && animate) ScheduleEnterEnd();
+            RefreshCartridges(animate);
+        }
+
+        /// <summary>Un instante despues se quita la clase de entrada y corre la transicion (aparecen con un saltito).</summary>
+        private void ScheduleEnterEnd()
+        {
+            if (hud == null) return;
+            if (beltEnterEnd == null) beltEnterEnd = hud.schedule.Execute(EndBeltEnter);
+            beltEnterEnd.ExecuteLater(BeltEnterMilliseconds);
         }
 
         private void EndBeltEnter()
         {
-            for (int i = PlayerInteractor.BaseHotbarSlots; i < mainSlots.Length; i++)
-                mainSlots[i]?.Root.RemoveFromClassList("slot--belt-enter");
+            for (int i = 0; i < cartSlots.Length; i++) cartSlots[i]?.Root.RemoveFromClassList("cartridge--enter");
             beltBadge?.RemoveFromClassList("belt-badge--enter");
         }
 
@@ -336,25 +335,61 @@ namespace SpellSimulator.UI
             else beltBadgeIcon.style.backgroundImage = StyleKeyword.Null;
         }
 
-        /// <summary>Slot de cartuchos: crea las 5 rayitas de usos (el frasco y el contador vienen del UXML).</summary>
+        /// <summary>Bandeja de cartuchos (name "cartridge" en el UXML): crea un slot por clase de tinta, en orden.</summary>
         private void BindCartridge(VisualElement root)
         {
-            cartridge = root.Q("cartridge");
-            cartInk = root.Q("cart-ink");
-            cartCount = root.Q<Label>("cart-count");
-            VisualElement pips = root.Q("cart-pips");
-            cartBumpEnd = null;
-            lastCartCount = -1;
+            VisualElement tray = root.Q("cartridge");
+            cartLayoutReady = false;
             CartridgeCountShown = -1;
-            if (pips == null) return;
-            pips.Clear();
-            for (int i = 0; i < cartPips.Length; i++)
-            {
-                var pip = new VisualElement { pickingMode = PickingMode.Ignore };
-                pip.AddToClassList("cart-pip");
-                pips.Add(pip);
-                cartPips[i] = pip;
-            }
+            for (int k = 0; k < cartSlots.Length; k++) cartSlots[k] = null;
+            if (tray == null) return;
+            tray.Clear();
+            for (int k = 0; k < cartSlots.Length; k++) cartSlots[k] = MakeCartSlot(tray, (InkKind)k);
+        }
+
+        /// <summary>Frasco dibujado con cajas (corcho, cuello, panza con la tinta de la clase), teclas R y V, contador,
+        /// rayitas de usos y la etiqueta con el nombre corto de la clase (visible solo en la activa no normal).</summary>
+        private static CartSlot MakeCartSlot(VisualElement parent, InkKind kind)
+        {
+            Color color = InkKindInfo.Color(kind);
+            // Las rayitas, un poco mas claras que la tinta para que el azul oscuro de la normal se lea sobre el marco.
+            var s = new CartSlot { Kind = kind, PipColor = Color.Lerp(color, Color.white, 0.3f) };
+            s.Root = NewBox(null, "slot");
+            s.Root.AddToClassList("cartridge");
+            VisualElement frame = NewBox(s.Root, "slot-frame");
+            NewBox(frame, "slot-glow");
+            VisualElement jar = NewBox(frame, "cart-jar");
+            NewBox(jar, "cart-cork");
+            NewBox(jar, "cart-neck");
+            VisualElement body = NewBox(jar, "cart-body");
+            s.Ink = NewBox(body, "cart-ink");
+            s.Ink.style.backgroundColor = color;
+            NewBox(body, "cart-shine");
+            NewLabel(frame, "R", "keycap", "keycap--small", "slot-key", "cart-key-r");
+            NewLabel(frame, "V", "keycap", "keycap--small", "cart-key-v");
+            s.Count = NewLabel(frame, "x0", "cart-count");
+            VisualElement pips = NewBox(s.Root, "cart-pips");
+            for (int i = 0; i < s.Pips.Length; i++) s.Pips[i] = NewBox(pips, "cart-pip");
+            Label tag = NewLabel(s.Root, ShortInkName(kind), "cart-kind");
+            tag.style.color = Color.Lerp(color, Color.white, 0.45f);
+            parent.Add(s.Root);
+            return s;
+        }
+
+        private static VisualElement NewBox(VisualElement parent, string cls)
+        {
+            var e = new VisualElement { pickingMode = PickingMode.Ignore };
+            e.AddToClassList(cls);
+            parent?.Add(e);
+            return e;
+        }
+
+        private static Label NewLabel(VisualElement parent, string text, params string[] classes)
+        {
+            var l = new Label(text) { pickingMode = PickingMode.Ignore };
+            for (int i = 0; i < classes.Length; i++) l.AddToClassList(classes[i]);
+            parent.Add(l);
+            return l;
         }
 
         private static Slot MakeSlot(VisualElement parent, string key)

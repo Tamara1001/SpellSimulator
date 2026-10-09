@@ -5,6 +5,11 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-09 — Tintas por tipo con cinturon y mitades para cualquier lienzo
+- **Cinturon = tintas:** la barra vuelve a 3 slots. Sin cinturon se lleva UNA clase de tinta; con cinturon un slot de cartuchos por clase (normal, poderosa, resistente; 4 cartuchos de 5 usos cada una). **V** cambia la tinta activa, **R** recarga con ella (tambien en vista completa). `InkCartridgeStock` reescrito; HUD con slot de cartuchos grande o tres slots chicos con la activa resaltada; las pistas del panel de contexto no saltan de linea.
+- **Mitades (canon Sylph Shoes):** cualquier lienzo con el anillo ABIERTO que queda pegado borde con borde (cualquier borde, mismo plano y cara) 0,4 s a otro se funde con el en un solo lienzo y el sello se completa y lanza; ambos se borran (`CanvasJoinMath`, `CanvasJoinSystem`, evento `SpellCaster.CanvasEdited`). Conviven con la fusion de runas armadas.
+- Pruebas: 272 EditMode, smoke de Play y `HarnessCanvasMatrix Only=HALVES` (lado a lado, arriba/abajo y separados 0,5 m: PASS). Hecho por subagentes. Docs: PLAN_OCTAVA_TANDA (4b), GAME_DESIGN. Pendiente: circulos anidados (propuesta aprobada en el plan), pistas «V: cambiar tinta» en la pluma y el tintero.
+
 ## 2026-10-09 — Correcciones de la prueba a mano (rueda, recarga en vista completa, pistas)
 - **Rueda estandarizada:** con cualquier cosa agarrada (tambien un cuaderno) la rueda acerca/aleja; en vista completa vuelve a ser el grosor de la herramienta (`PlayerInteractor.HandleWheel`, `ObjectMover`).
 - **Recargar tinta (R) en vista completa** de lo que se mira sin agarrar (`SurfaceFocus`): ahora funciona.
