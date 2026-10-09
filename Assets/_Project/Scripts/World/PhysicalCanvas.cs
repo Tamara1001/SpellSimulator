@@ -133,6 +133,8 @@ namespace SpellSimulator.World
         {
             remoteHeld = false;
             if (focused) SetFocus(null, false);
+            // La vista completa (V) lo habia hecho hijo de la camara: sin esto, soltarlo con E/Q/rueda lo dejaba pegado al centro de la pantalla.
+            transform.SetParent(null);
             if (pin) StartFloating();
             else Fall();
         }
