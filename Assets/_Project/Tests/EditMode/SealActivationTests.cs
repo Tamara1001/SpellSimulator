@@ -86,6 +86,46 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
+        public void Charging_StaysCharging_AndNeverCastsAgain()
+        {
+            var phase = SealActivation.Evaluate(Ring(true, true), SealPhase.Charging, true, out bool cast);
+            Assert.AreEqual(SealPhase.Charging, phase);
+            Assert.IsFalse(cast, "Un lanzamiento en carga no se duplica con otro trazo.");
+        }
+
+        [Test]
+        public void Charging_OpenOrMissingRing_Cancels()
+        {
+            Assert.AreEqual(SealPhase.Prepared, SealActivation.Evaluate(Ring(true, false), SealPhase.Charging, true, out bool c1));
+            Assert.IsFalse(c1);
+            Assert.AreEqual(SealPhase.Drawing, SealActivation.Evaluate(Ring(false, false), SealPhase.Charging, false, out bool c2));
+            Assert.IsFalse(c2);
+        }
+
+        [Test]
+        public void Charging_Phase_CannotFireTrigger_AndRearmKeepsIt()
+        {
+            Assert.IsFalse(SealActivation.ShouldFire(SealPhase.Charging));
+            Assert.AreEqual(SealPhase.Charging, SealActivation.Rearm(SealPhase.Charging));
+        }
+
+        [Test]
+        public void CancelledCharge_NewStroke_RestartsCast_ErasingDoesNot()
+        {
+            // El caster cancela la carga (fase Prepared) y reevalua con la edicion.
+            SealActivation.Evaluate(Ring(true, true), SealPhase.Prepared, true, out bool restart);
+            Assert.IsTrue(restart);
+            SealActivation.Evaluate(Ring(true, true), SealPhase.Prepared, false, out bool erased);
+            Assert.IsFalse(erased);
+        }
+
+        [Test]
+        public void Charging_WithTrigger_Arms()
+        {
+            Assert.AreEqual(SealPhase.Armed, SealActivation.Evaluate(Ring(true, true), SealPhase.Charging, true, true, out _));
+        }
+
+        [Test]
         public void Rearm_OnlyTurnsASpentSealBackToArmed()
         {
             Assert.AreEqual(SealPhase.Armed, SealActivation.Rearm(SealPhase.Spent));

@@ -30,6 +30,10 @@ namespace SpellSimulator.Casting
         [SerializeField, Range(1, 10), Tooltip("Resolucion del Catmull-Rom. Mayor = curvas mas suaves.")]
         private int splineResolution = StrokeCleaner.DefaultSplineResolution;
 
+        [Header("Retardo de lanzamiento")]
+        [SerializeField, Tooltip("Los sellos sin disparador cargan 0,5-2 s (segun el tamano del anillo) antes de lanzarse.")]
+        private bool castDelayEnabled = true;
+
         [Header("Pruebas")]
         [SerializeField, Tooltip("Guarda cada sello lanzado en persistentDataPath/Sellos para reproducirlo como fixture.")]
         private bool recordSeals = true;
@@ -49,12 +53,103 @@ namespace SpellSimulator.Casting
         /// <summary>Se emite cuando cambia la fase de un sello (para feedback en el lienzo, hapticos, sonido).</summary>
         public event System.Action<DrawingCanvas, SealPhase> SealPhaseChanged;
 
+        /// <summary>Un sello sin disparador empezo a cargar su retardo de lanzamiento.</summary>
+        public event System.Action<SealChargeInfo> SealCharging;
+
+        /// <summary>Termino la carga de un sello: fired = true si se lanzo, false si se cancelo.</summary>
+        public event System.Action<DrawingCanvas, bool> SealChargeEnded;
+
+        private struct ActiveCharge
+        {
+            public DrawingCanvas canvas;
+            public float startTime;
+            public float seconds;
+        }
+
+        private const int MaxCharges = 8;
+        private readonly List<ActiveCharge> charges = new List<ActiveCharge>(MaxCharges);
+
         private readonly Dictionary<DrawingCanvas, SealPhase> phases = new Dictionary<DrawingCanvas, SealPhase>();
 
         private void Start()
         {
             // La pose del modelo da la orientacion de cada signo; se calibra con las plantillas del diccionario.
             if (classifier != null && dictionary != null) classifier.CalibratePose(dictionary.Dictionary.TemplateSessions());
+            if (GetComponent<SealGlowDirector>() == null) gameObject.AddComponent<SealGlowDirector>();
+        }
+
+        private void Update()
+        {
+            for (int i = charges.Count - 1; i >= 0; i--)
+            {
+                ActiveCharge charge = charges[i];
+                if (charge.canvas == null || !charge.canvas.isActiveAndEnabled)
+                {
+                    charges.RemoveAt(i);
+                    if (charge.canvas != null) SetPhase(charge.canvas, SealPhase.Prepared);
+                    else phases.Remove(charge.canvas);
+                    SealChargeEnded?.Invoke(charge.canvas, false);
+                    continue;
+                }
+                if (Time.time - charge.startTime < charge.seconds) continue;
+
+                charges.RemoveAt(i);
+                SpellIR spell = Cast(charge.canvas);
+                SetPhase(charge.canvas, SealActivation.AfterCast(spell.valid && spell.active));
+                SealChargeEnded?.Invoke(charge.canvas, true);
+            }
+        }
+
+        public bool IsCharging(DrawingCanvas canvas) => IndexOfCharge(canvas) >= 0;
+
+        private int IndexOfCharge(DrawingCanvas canvas)
+        {
+            for (int i = 0; i < charges.Count; i++)
+                if (charges[i].canvas == canvas) return i;
+            return -1;
+        }
+
+        /// <summary>Cancela la carga de un lienzo (si la hay) y devuelve su fase a Prepared.</summary>
+        private void CancelCharge(DrawingCanvas canvas)
+        {
+            int index = IndexOfCharge(canvas);
+            if (index < 0) return;
+            charges.RemoveAt(index);
+            SetPhase(canvas, SealPhase.Prepared);
+            SealChargeEnded?.Invoke(canvas, false);
+        }
+
+        /// <summary>
+        /// Compila la lectura del sello; si es valida y activa y hay lugar, empieza la carga y devuelve true.
+        /// Si no, devuelve false y el llamador lanza (o falla) de inmediato como siempre.
+        /// </summary>
+        private bool TryStartCharge(DrawingCanvas canvas)
+        {
+            if (!castDelayEnabled || charges.Count >= MaxCharges || classifier == null || dictionary == null) return false;
+
+            SealReading reading = SealReader.Read(Clean(canvas, out float boost, out Vector2 pivot), classifier, dictionary.Dictionary, Time.time);
+            if (!reading.Spell.valid || !reading.Spell.active) return false;
+
+            Vector2 iso = canvas.UvToIsotropic;
+            Vector2 worldSize = canvas.WorldSize;
+            RingInfo readRing = reading.Ast.Ring;
+            float radiusWorld = readRing.Radius * Mathf.Max(worldSize.x, worldSize.y) / boost;
+            Vector2 ringCenter = boost > 1f ? pivot + (readRing.Center - pivot) / boost : readRing.Center;
+            float seconds = SealCharge.Duration(radiusWorld);
+
+            charges.Add(new ActiveCharge { canvas = canvas, startTime = Time.time, seconds = seconds });
+            SetPhase(canvas, SealPhase.Charging);
+            SealCharging?.Invoke(new SealChargeInfo
+            {
+                canvas = canvas,
+                element = reading.Spell.element,
+                sigilId = reading.Ast.PrimarySigil?.Id,
+                seconds = seconds,
+                ringCenterUV = new Vector2(ringCenter.x / Mathf.Max(iso.x, 1e-6f), ringCenter.y / Mathf.Max(iso.y, 1e-6f)),
+                ringRadiusWorld = radiusWorld,
+                ink = InkMath.Dominant(canvas.Session.Strokes)
+            });
+            return true;
         }
 
         public SealPhase GetPhase(DrawingCanvas canvas)
@@ -72,6 +167,9 @@ namespace SpellSimulator.Casting
         {
             if (canvas == null) return;
 
+            // Cualquier edicion durante la carga la cancela; despues se reevalua normalmente (un trazo nuevo la reinicia).
+            CancelCharge(canvas);
+
             RingInfo ring = canvas.Session.IsEmpty
                 ? RingInfo.NotFound()
                 : RingDetector.Detect(Clean(canvas));
@@ -81,6 +179,7 @@ namespace SpellSimulator.Casting
 
             if (shouldCast)
             {
+                if (TryStartCharge(canvas)) return;
                 SpellIR spell = Cast(canvas);
                 next = SealActivation.AfterCast(spell.valid && spell.active);
             }

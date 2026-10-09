@@ -123,6 +123,12 @@ namespace SpellSimulator.EditorTools
             if (spot == Vector3.zero) { failures.Add("no se encontro un terreno plano para las pruebas"); yield break; }
             float ground = spot.y;
 
+            if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "CHARGE")
+            {
+                var probe = ChargeProbe();
+                while (probe.MoveNext()) yield return probe.Current;
+                yield break;
+            }
             if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "FOCUSRAY")
             {
                 var probe = FocusRayProbe(player, mover, cam);
@@ -272,6 +278,45 @@ namespace SpellSimulator.EditorTools
 
         private static string Info(Rigidbody rb, float ground) =>
             $"[y={rb.position.y:F2} suelo={ground:F2} padre={(rb.transform.parent != null ? rb.transform.parent.name : "-")} cin={rb.isKinematic}]";
+
+        /// <summary>
+        /// Retardo de lanzamiento: un sello cerrado en una hoja carga (brilla) y despues lanza; si se borra durante la carga, se cancela;
+        /// un trazo nuevo reinicia la carga. Se activa con Only = "CHARGE".
+        /// </summary>
+        private static IEnumerator ChargeProbe()
+        {
+            var go = GameObject.Find("Paper_S");
+            var canvas = go.GetComponent<DrawingCanvas>();
+            var caster = Object.FindFirstObjectByType<Casting.SpellCaster>();
+            Check(caster.GetComponent<Output.SealGlowDirector>() != null, "el SpellCaster tiene su SealGlowDirector");
+            int compiled = 0, charging = 0, endedFired = 0, endedCancelled = 0;
+            void OnCompiled(Compiler.SpellIR spell, DrawingCanvas c) { if (c == canvas) compiled++; }
+            void OnCharging(Casting.SealChargeInfo info) { if (info.canvas == canvas) charging++; }
+            void OnEnded(DrawingCanvas c, bool fired) { if (c == canvas) { if (fired) endedFired++; else endedCancelled++; } }
+            caster.SpellCompiled += OnCompiled; caster.SealCharging += OnCharging; caster.SealChargeEnded += OnEnded;
+
+            // 1) cerrar el anillo: carga y luego lanza
+            canvas.Clear(); caster.OnSealEdited(canvas);
+            HarnessSeals.Draw(canvas, "fire");
+            caster.OnStrokeFinished(canvas);
+            Check(caster.IsCharging(canvas) && charging == 1, "cerrar el anillo empieza la carga (evento SealCharging)");
+            Check(compiled == 0, "durante la carga todavia no se lanzo");
+            yield return 2.6f;
+            Check(!caster.IsCharging(canvas) && endedFired == 1 && compiled >= 1, $"al terminar la carga se lanza el hechizo (lanzados={compiled}, fin con disparo={endedFired})");
+
+            // 2) borrar durante la carga cancela
+            compiled = 0; charging = 0; endedFired = 0; endedCancelled = 0;
+            canvas.Clear(); caster.OnSealEdited(canvas);
+            HarnessSeals.Draw(canvas, "fire");
+            caster.OnStrokeFinished(canvas);
+            yield return 0.2f;
+            canvas.Clear(); caster.OnSealEdited(canvas);
+            yield return 2.6f;
+            Check(compiled == 0 && endedCancelled >= 1 && !caster.IsCharging(canvas), $"borrar durante la carga la cancela (lanzados={compiled}, cancelaciones={endedCancelled})");
+
+            caster.SpellCompiled -= OnCompiled; caster.SealCharging -= OnCharging; caster.SealChargeEnded -= OnEnded;
+            canvas.Clear(); caster.OnSealEdited(canvas);
+        }
 
         /// <summary>
         /// Lienzos agarrables en su lugar ORIGINAL (torre, mesas...): se agarran desde 4 lados, se abre la vista completa y se tira el rayo

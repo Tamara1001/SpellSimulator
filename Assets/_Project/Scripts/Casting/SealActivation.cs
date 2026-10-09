@@ -12,7 +12,9 @@ namespace SpellSimulator.Casting
         /// <summary>Anillo cerrado en un sello con disparador (impacto, presion): espera a que algo lo active.</summary>
         Armed,
         /// <summary>El hechizo ya se lanzo. No vuelve a lanzarse hasta que el anillo se abra o se borre.</summary>
-        Spent
+        Spent,
+        /// <summary>Anillo cerrado en un sello sin disparador: carga el retardo de lanzamiento antes de lanzarse.</summary>
+        Charging
     }
 
     /// <summary>
@@ -35,6 +37,10 @@ namespace SpellSimulator.Casting
             if (!ring.Found) return SealPhase.Drawing;
             if (!ring.Complete) return SealPhase.Prepared;
             if (deferred) return current == SealPhase.Spent ? SealPhase.Spent : SealPhase.Armed;
+
+            // Cargando: el lanzamiento ya esta en curso; nunca se pierde ni se duplica (el caster cancela la carga
+            // antes de reevaluar cuando llega una edicion).
+            if (current == SealPhase.Charging) return SealPhase.Charging;
 
             // Anillo cerrado. Un sello gastado no se relanza con trazos nuevos.
             if (current == SealPhase.Spent) return SealPhase.Spent;

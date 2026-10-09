@@ -5,6 +5,11 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-09 — Retardo de lanzamiento con brillo del anillo
+- Cerrar el anillo de un sello (sin disparador) ya no lanza al instante: pasa a la fase `Charging` entre 0,5 y 2 s segun el tamano del anillo (`SealCharge.Duration`). Se puede mover el lienzo y apuntar; si se borra o edita durante la carga se cancela, y un trazo nuevo la reinicia. Runas, placas, estampas y `Cast` directo siguen instantaneos. `SpellCaster.castDelayEnabled` lo apaga.
+- Brillo (`Output/SealGlowDirector` + `Resources/SealGlow.shader`): el anillo brilla del color del elemento (fuego rojo, agua celeste...), pulsa mas rapido y hace un destello al lanzar. Se crea solo junto al `SpellCaster`.
+- Pruebas: `SealChargeTests`, `SealActivationTests` (+5), `SealGlowCurveTests`; harness `Only=CHARGE` (carga, lanzamiento y cancelacion, 5 chequeos). Hecho por subagentes (Sonnet: logica; Opus: brillo). Falta ver el brillo a mano (Bloom, Quest y WebGL: ver el shader en `Resources`).
+
 ## 2026-10-09 — Bloque 2 del plan: tinta, cartuchos y tinteros fijos/portatiles
 - **Logica** (`Core/InkKind`, `InkMath`, `InkCartridgeStock`; +14 tests, 175 en total): el gasto por metro se normaliza al tamano del lienzo (referencia 0,5 m, tope x8); tintas Normal/Poderosa/Resistente (las especiales gastan x2; poderosa x2,5 de potencia; resistente = `waterproof`). Cada `Stroke` lleva su `Ink` y `SpellCaster` fija `SpellIR.inkPower/waterproof` con la tinta dominante (el efecto real va en el bloque 3).
 - **Cartuchos:** `InkSupply.Cartridges` (5 usos cada uno, 2 al empezar, maximo 4). R gasta un uso, llena la pluma y la deja con la clase del cartucho; apuntando a un tintero fijo recarga desde el.
