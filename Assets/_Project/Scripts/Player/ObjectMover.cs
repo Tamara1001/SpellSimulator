@@ -18,7 +18,7 @@ namespace SpellSimulator.Player
         private const float MaxDistance = 14f;
         private const float DistanceStep = 0.35f;
         private const float RollStep = 15f;
-        private const float RotateDegreesPerUnit = 0.25f;
+        private const float RotateDegreesPerUnit = 0.6f;
         private const float FollowGain = 18f;
         private const float MaxLinearSpeed = 25f;
         private const float RotationGain = 12f;

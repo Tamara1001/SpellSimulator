@@ -72,7 +72,7 @@ namespace SpellSimulator.World
         // ---- Interfaz (HUD de abajo)
         public string HudName => string.IsNullOrEmpty(glyph) ? $"Sello {sizeName}" : $"Sello {sizeName}: {DisplayName} ({charges})";
         public Color HudColor => new Color(0.65f, 0.4f, 0.85f);
-        public string HudHints => string.IsNullOrEmpty(glyph) ? "Vacia: abri un glifo en el grimorio (Tab) y 'Cargar en el sello' | Q: arrojar" : "Clic: estampar | Q: arrojar";
+        public string HudHints => string.IsNullOrEmpty(glyph) ? "Vacia: abri un glifo en el grimorio (T) y 'Cargar en el sello' | Q: arrojar" : "Clic: estampar | Q: arrojar";
         public float HudGauge => -1f;
 
         // En la mano una estampa enorme taparia la camara: se ve a un tamaño comodo (estampa igual al tamaño real).
@@ -195,7 +195,7 @@ namespace SpellSimulator.World
         public void OnSecondaryUseStart()
         {
             var book = Grimoire.Instance;
-            if (book == null || !book.IsOpen) { Say("Abri el grimorio (Tab) en un glifo y apreta el boton Cargar en el sello."); return; }
+            if (book == null || !book.IsOpen) { Say("Abri el grimorio (T) en un glifo y apreta el boton Cargar en el sello."); return; }
             if (!Aim(out RaycastHit hit, ~0) || !book.Owns(hit.collider)) { Say("Apunta al grimorio para cargar el sello."); return; }
             string g = book.CurrentGlyph;
             if (g == null) { Say("Abri un glifo en el grimorio y apreta el boton Cargar en el sello."); return; }

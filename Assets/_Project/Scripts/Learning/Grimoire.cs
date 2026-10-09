@@ -182,18 +182,19 @@ namespace SpellSimulator.Learning
             // con esa misma pulsacion (el lector se encarga de ESC primero).
             bool escape = input.IsPressingEscape && !SpellSimulator.UI.BookReaderUI.IsOpen
                 && Time.frameCount != SpellSimulator.UI.BookReaderUI.ClosedFrame;
-            if (input.IsTogglingBook || escape)
+            if (input.IsTogglingBook)
             {
                 if (IsOpen) Close();
                 else Open();
             }
-            if (!IsOpen) return;
-
-            if (input.IsTogglingBookFocus)
+            else if (escape)
             {
-                if (focused) ExitFocus();
-                else EnterFocus();
+                // Esc: cerrado -> se abre a pantalla completa; en la mano -> pasa a pantalla completa; a pantalla -> se cierra.
+                if (!IsOpen) { Open(); EnterFocus(); }
+                else if (!focused) EnterFocus();
+                else Close();
             }
+            if (!IsOpen) return;
 
             // Flanco de subida del clic: en modo fijo presiona el boton bajo el puntero.
             bool usingTool = input.IsUsingTool;
@@ -500,7 +501,7 @@ namespace SpellSimulator.Learning
             string emblem = FirstSigil();
             if (emblem != null) QueueTemplate(dictionary.Dictionary.Get(emblem).TemplateStrokes, center, 0.1f);
             PlaceOrnament(Left, 0f, -0.123f, 0.13f);
-            Label(Left, 0f, BarY, ContentWidth, 0.024f, $"<color={GrimoireTexts.Faded}><i>Tab</i> cierra   ·   <i>B</i> lo acerca</color>", SmallSize, TextAlignmentOptions.Center);
+            Label(Left, 0f, BarY, ContentWidth, 0.024f, $"<color={GrimoireTexts.Faded}><i>T</i> cierra   ·   <i>Esc</i> lo acerca</color>", SmallSize, TextAlignmentOptions.Center);
 
             // Derecha: indice de secciones.
             SetTitle(Right, "Índice");

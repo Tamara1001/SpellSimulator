@@ -103,7 +103,7 @@ namespace SpellSimulator.Player
             {
                 string text = "";
                 if ((mask & 1) != 0) text += "E: Agarrar";
-                if ((mask & 2) != 0) text += (text.Length > 0 ? " | " : "") + "V: Vista completa";
+                if ((mask & 2) != 0) text += (text.Length > 0 ? " | " : "") + "Tab: Vista completa";
                 if ((mask & 4) != 0) text += (text.Length > 0 ? " | " : "") + "R: Recargar tinta";
                 table[mask] = text;
             }
@@ -244,7 +244,7 @@ namespace SpellSimulator.Player
                 HandleHotbarKeys();
                 HandleWheel();
                 HandleUsage();
-                if (inputReader.IsTogglingFocus) ToggleFocus();
+                if (inputReader.IsTogglingFocus || inputReader.IsFlipping) SurfaceFocus.Close();
                 return;
             }
 
@@ -340,8 +340,8 @@ namespace SpellSimulator.Player
         {
             if (!inputReader.IsInteracting) return;
 
-            // Otra E suelta lo que se arrastra.
-            if (mover != null && mover.IsHolding) { mover.End(false); return; }
+            // Otra E deja en el aire lo que se arrastra (para soltarlo en el piso: Q lo arroja).
+            if (mover != null && mover.IsHolding) { mover.End(true); return; }
             if (handSecondary != null) { DropHandSecondary(); return; }
 
             if (hoveredPressable != null) { if (!hoveredPressable.PressWithClick) hoveredPressable.Press(); return; }
@@ -503,12 +503,15 @@ namespace SpellSimulator.Player
         private void HandleFlip()
         {
             if (!inputReader.IsFlipping) return;
+            // F saca la hoja de la vista completa y la da vuelta.
+            if (mover != null && mover.IsHolding && mover.HeldBody != null && mover.HeldBody.TryGetComponent(out IFocusable focused) && focused.Focused)
+                focused.SetFocus(cameraTransform, false);
             if (mover != null && mover.IsHolding) { mover.Flip(); return; }
             if (handSecondary != null && handSecondary.TryGetComponent(out IFlippable held)) { held.Flip(); return; }
             hoveredFlippable?.Flip();
         }
 
-        /// <summary>Clic de la rueda (o T): deja flotando lo que se arrastra.</summary>
+        /// <summary>Clic de la rueda: deja flotando (E tambien, ver HandleInteraction) lo que se arrastra.</summary>
         private void HandlePin()
         {
             if (!inputReader.IsPinning) return;

@@ -89,10 +89,10 @@ namespace SpellSimulator.World
             }
         }
         public Color HudColor => new Color(0.93f, 0.85f, 0.6f);
-        public string HudHints => notebook != null ? NotebookHints : "Clic: dibujar con una herramienta | F: dar vuelta | V: a pantalla | T: dejar flotando | Q: arrojar";
+        public string HudHints => notebook != null ? NotebookHints : "Clic: dibujar con una herramienta | F: dar vuelta | Tab: a pantalla | E: dejar flotando | Q: arrojar";
         public float HudGauge => -1f;
 
-        private const string NotebookHints = "Z/X: pasar página | F: dar vuelta | V: a pantalla | Clic der.+mouse: girar | E: soltar";
+        private const string NotebookHints = "Z/X: pasar página | F: dar vuelta | Tab: a pantalla | Clic der.+mouse: girar | E: dejar flotando";
 
         private void Awake()
         {

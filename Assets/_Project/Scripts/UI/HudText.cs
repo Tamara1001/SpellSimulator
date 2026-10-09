@@ -68,9 +68,8 @@ namespace SpellSimulator.UI
             else parts.Add("Rueda: distancia");
             parts.Add("Clic der.+mouse: girar");
             if (flippable) parts.Add("F: dar vuelta");
-            if (focusable) parts.Add("V: a pantalla");
-            if (pinnable) parts.Add("Clic rueda: flotar");
-            parts.Add("E: soltar");
+            if (focusable) parts.Add("Tab: a pantalla");
+            parts.Add("E: dejar flotando");
             parts.Add("Q: arrojar");
             string text = string.Join(" | ", parts);
             secondaryCache[mask] = text;

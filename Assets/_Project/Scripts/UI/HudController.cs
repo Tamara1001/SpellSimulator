@@ -145,7 +145,7 @@ namespace SpellSimulator.UI
             secondarySlot = MakeSlot(secTray, "E");
             VisualElement bookTray = root.Q("book-slots");
             bookTray.Clear();
-            bookSlot = MakeSlot(bookTray, "TAB");
+            bookSlot = MakeSlot(bookTray, "T");
             bookSlot.Icon.AddToClassList("slot-icon--book");
             bookSlot.Name.text = "Grimorio";
             bookSlot.Root.EnableInClassList("slot--empty", false);

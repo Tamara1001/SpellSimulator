@@ -158,12 +158,12 @@ Esquema (ADR-032/033). Se repasa en el grimorio (Tab → Controles).
 | | Usar / deshacer | Clic izquierdo / clic derecho | Gatillo / A |
 | | Cambiar el grosor de la pluma o el tamaño de la goma | Rueda del mouse (sin nada agarrado) | — |
 | | Recargar tinta / arrojar | R / Q | Mojar en un tintero / B |
-| **Mano secundaria** (lo agarrado con E se arrastra) | Agarrar / soltar | E | Grip |
+| **Mano secundaria** (lo agarrado con E se arrastra) | Agarrar / dejar en el aire | E / E otra vez | Grip |
 | | Acercar o alejar (cuaderno: pasar de página) | Rueda | — |
-| | Rotar / inclinar | Clic derecho + mouse / Shift + rueda | Girar la mano |
-| | Dar vuelta la hoja / lienzo a pantalla | F / V | Click del stick derecho / — |
-| | Dejar flotando / arrojar | Clic de la rueda (o T) / Q | — / B |
-| Menú | Grimorio / a pantalla | Tab / B | Botón de menú izquierdo |
+| | Rotar / inclinar (mas sensible) | Clic derecho + mouse / Shift + rueda | Girar la mano |
+| | Dar vuelta la hoja (sale de la vista completa) / lienzo a pantalla | F / Tab | Click del stick derecho / — |
+| | Arrojar (ya no hay «soltar») | Q | B |
+| Menú | Grimorio en la mano / a pantalla y menú | T / Esc | Botón de menú izquierdo |
 | | Botones del grimorio | Apuntar + clic izquierdo | Apuntar + gatillo |
 | | Panel de depuración / reiniciar el mundo | F3 / Retroceso | — / Y |
 

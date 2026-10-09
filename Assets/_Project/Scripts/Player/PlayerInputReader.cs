@@ -157,8 +157,7 @@ namespace SpellSimulator.Player
             proneAction = new InputAction("Prone", InputActionType.Button);
             proneAction.AddBinding("<Gamepad>/dpad/down");
             pinAction = new InputAction("Pin", InputActionType.Button);
-            pinAction.AddBinding("<Keyboard>/t");
-            pinAction.AddBinding("<Mouse>/middleButton"); // clic de la rueda: dejar lo que se sostiene donde esta
+                pinAction.AddBinding("<Mouse>/middleButton"); // clic de la rueda: dejar lo que se sostiene donde esta
 
             zoomAction = new InputAction("Zoom", InputActionType.Button);
             zoomAction.AddBinding("<Keyboard>/leftAlt");
@@ -169,7 +168,7 @@ namespace SpellSimulator.Player
             debugAction = new InputAction("Debug", InputActionType.Button);
             debugAction.AddBinding("<Keyboard>/f3");
             bookFocusAction = new InputAction("BookFocus", InputActionType.Button);
-            bookFocusAction.AddBinding("<Keyboard>/b");
+            // B eliminada: el grimorio a pantalla completa ahora es Esc (lo maneja Grimoire).
             hotbarActions = new InputAction[3];
             for (int i = 0; i < hotbarActions.Length; i++)
             {
@@ -208,7 +207,7 @@ namespace SpellSimulator.Player
             flipAction.AddBinding("<XRController>{RightHand}/thumbstickClicked"); // VR: click del stick derecho
 
             focusAction = new InputAction("Focus", InputActionType.Button);
-            focusAction.AddBinding("<Keyboard>/v");
+            focusAction.AddBinding("<Keyboard>/tab");
 
             pagePrevAction = new InputAction("PagePrev", InputActionType.Button);
             pagePrevAction.AddBinding("<Keyboard>/z");
@@ -223,7 +222,7 @@ namespace SpellSimulator.Player
             scrollAction.AddBinding("<Mouse>/scroll/y");
 
             bookAction = new InputAction("Book", InputActionType.Button);
-            bookAction.AddBinding("<Keyboard>/tab");
+            bookAction.AddBinding("<Keyboard>/t");
             bookAction.AddBinding("<Gamepad>/buttonNorth");
             bookAction.AddBinding("<XRController>{LeftHand}/menuButton");
         }

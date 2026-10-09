@@ -33,14 +33,15 @@ namespace SpellSimulator.Tests
         {
             string box = HudText.SecondaryHints(false, false, false, true);
             StringAssert.DoesNotContain("F:", box);
-            StringAssert.DoesNotContain("V:", box);
+            StringAssert.DoesNotContain("Tab:", box);
             StringAssert.Contains("Rueda: distancia", box);
-            StringAssert.Contains("E: soltar", box);
+            StringAssert.Contains("E: dejar flotando", box);
+            StringAssert.Contains("Q: arrojar", box);
 
             string notebook = HudText.SecondaryHints(true, true, true, true);
             StringAssert.Contains("Z/X: página", notebook);
             StringAssert.Contains("F: dar vuelta", notebook);
-            StringAssert.Contains("V: a pantalla", notebook);
+            StringAssert.Contains("Tab: a pantalla", notebook);
             Assert.AreSame(notebook, HudText.SecondaryHints(true, true, true, true));
         }
 

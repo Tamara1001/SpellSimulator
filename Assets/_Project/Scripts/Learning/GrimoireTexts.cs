@@ -77,8 +77,8 @@ namespace SpellSimulator.Learning
                 "El hechizo sale por la <b>cara con tinta</b> de la hoja: dala vuelta (<b>F</b>) para apuntarlo.\n\n" +
                 "Cuanto más grande el anillo, más fuerte el hechizo.",
                 "Este libro",
-                "<b>Tab</b> lo abre y lo cierra (<b>ESC</b> si está a pantalla completa). Apuntá a un botón y hacé <b>clic</b>; <b>Z</b> y <b>X</b> pasan las páginas.\n\n" +
-                "<b>E</b> sobre el libro lo agarra para moverlo y otra <b>E</b> lo suelta: queda flotando. <b>B</b> lo trae a pantalla completa.\n\n" +
+                "<b>T</b> lo abre y lo cierra (<b>Esc</b> lo abre a pantalla completa y lo cierra). Apuntá a un botón y hacé <b>clic</b>; <b>Z</b> y <b>X</b> pasan las páginas.\n\n" +
+                "<b>E</b> sobre el libro lo agarra para moverlo y otra <b>E</b> lo deja flotando. <b>Esc</b> lo trae a pantalla completa.\n\n" +
                 "Cada glifo que descubrís queda escrito en <b>Glifos</b>."),
         };
 
@@ -115,9 +115,9 @@ namespace SpellSimulator.Learning
                 Row("Espacio", "saltar") +
                 Row("Alt izq.", "zoom (mantenido)") +
                 "\n" + Heading("Menú") + "\n" +
-                Row("Tab", "abre o cierra el grimorio") +
+                Row("T", "abre o cierra el grimorio") +
                 Row("Z / X", "página anterior / siguiente") +
-                Row("B", "grimorio a pantalla") +
+                Row("Esc", "grimorio a pantalla / menú") +
                 Row("F3", "depuración") +
                 Row("Retroceso", "reiniciar el mundo"),
                 "Mano principal",
@@ -134,10 +134,10 @@ namespace SpellSimulator.Learning
                 Row("Rueda", "acerca o aleja lo agarrado", 44) +
                 Row("Clic der.", "gira con el mouse", 44) +
                 Row("Shift + rueda", "inclina", 44) +
-                Row("F", "da vuelta la hoja", 44) +
-                Row("V", "la fija a pantalla para dibujar", 44) +
-                Row("Clic rueda", "lo deja flotando", 44) +
-                Row("E", "suelta", 44),
+                Row("F", "da vuelta la hoja (sale de la vista completa)", 44) +
+                Row("Tab", "vista completa del lienzo", 44) +
+                Row("E / Clic rueda", "lo deja flotando", 44) +
+                Row("Q", "arroja", 44),
                 "Realidad virtual",
                 Row("Gatillo", "dibuja", 44) +
                 Row("Agarre", "agarra", 44) +

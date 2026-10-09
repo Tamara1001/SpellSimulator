@@ -5,6 +5,10 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-08 — Bloque 1 del plan: controles nuevos (PLAN_OCTAVA_TANDA)
+- E agarra y, con algo agarrado, lo deja en el aire (PinnedBody/flotar); Q arroja (se elimina «soltar»); T abre el grimorio; Esc lo abre a pantalla completa / lo cierra y reemplaza a B; Tab = vista completa del lienzo (antes V); F da vuelta la hoja y la saca de la vista completa; clic de la rueda sigue fijando; rotar con clic derecho es ~2,4x mas sensible (`RotateDegreesPerUnit` 0.6).
+- Textos actualizados (HUD, grimorio, libros, sellos) y tabla de controles de GAME_DESIGN. Nuevo `PLAN_OCTAVA_TANDA.md` con todas las decisiones del plan (bloques 1-7). Pendiente: menu de pausa dentro del grimorio; confirmar a mano rotar mientras se camina.
+
 ## 2026-10-08 — Runa: diagnostico de "no sale el hechizo" sin cerrar la vista completa
 - En Play, soltar la runa armada sin vista, con V abierta y tras cerrar V dispara el hechizo en los tres casos (`HarnessCanvasMatrix` con `Only=RUNE`, 3 chequeos PASS). Hipotesis mas probable: tras lanzar, la runa queda `Spent` y un circulo nuevo encima no la rearma (regla de `SealActivation`: hay que borrar el sello).
 - `SealTrigger` ahora loguea cada golpe >= 1 m/s (velocidad, umbral, fase, usos) y el resultado del disparo, para diagnosticar a mano desde la consola. Docs tocadas: CHANGELOG.

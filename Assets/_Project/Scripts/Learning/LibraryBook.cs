@@ -185,8 +185,8 @@ namespace SpellSimulator.Learning
                     Kicker = "Para aprender",
                     Heading = state.HasRead(bookId) ? "Nada nuevo en estas páginas" : "Copia los hechizos en tu grimorio",
                     Body = state.HasRead(bookId)
-                        ? "Ya conocías los hechizos de este libro. Podés repasarlos en la sección Hechizos de tu grimorio (Tab)."
-                        : "Al aprender este conocimiento, los hechizos pasan a la sección Hechizos de tu grimorio (Tab), con el dibujo del sello y cómo hacerlo.",
+                        ? "Ya conocías los hechizos de este libro. Podés repasarlos en la sección Hechizos de tu grimorio (T)."
+                        : "Al aprender este conocimiento, los hechizos pasan a la sección Hechizos de tu grimorio (T), con el dibujo del sello y cómo hacerlo.",
                 });
                 return pages;
             }
@@ -199,8 +199,8 @@ namespace SpellSimulator.Learning
                 Kicker = "Para aprender",
                 Heading = unknown > 0 ? "Copia los glifos en tu grimorio" : "Nada nuevo en estas páginas",
                 Body = unknown > 0
-                    ? $"Al aprender este conocimiento, {(unknown == 1 ? "el glifo nuevo pasa" : $"los {unknown} glifos nuevos pasan")} a tu grimorio (Tab). Desde ahí podés repasarlos y cargarlos en un sello."
-                    : "Ya conocías todos los glifos de este libro. Podés repasarlos en tu grimorio (Tab).",
+                    ? $"Al aprender este conocimiento, {(unknown == 1 ? "el glifo nuevo pasa" : $"los {unknown} glifos nuevos pasan")} a tu grimorio (T). Desde ahí podés repasarlos y cargarlos en un sello."
+                    : "Ya conocías todos los glifos de este libro. Podés repasarlos en tu grimorio (T).",
             });
             return pages;
         }
@@ -218,7 +218,7 @@ namespace SpellSimulator.Learning
             var names = info.Spells.Count > 0
                 ? string.Join(", ", info.Spells.ConvertAll(SpellName))
                 : string.Join(", ", info.Glyphs.ConvertAll(g => Discovery.Instance.Lore.Name(g)));
-            string where = info.Spells.Count > 0 ? "la seccion Hechizos del grimorio (Tab)" : "el grimorio (Tab)";
+            string where = info.Spells.Count > 0 ? "la seccion Hechizos del grimorio (T)" : "el grimorio (T)";
             DiagnosticBus.OnDiagnosticsUpdated?.Invoke(learned > 0
                 ? $"<b>[Libro] {info.Title}</b>\nAprendiste: {names}. Abri {where} para verlos."
                 : $"<b>[Libro] {info.Title}</b>\nYa conocias: {names}.");
