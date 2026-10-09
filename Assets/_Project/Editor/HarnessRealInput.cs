@@ -86,19 +86,16 @@ namespace SpellSimulator.EditorTools
         private static void Press(Key key)
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState(key));
-            InputSystem.Update();
         }
         private static void ReleaseKeys()
         {
             InputSystem.QueueStateEvent(keyboard, new KeyboardState());
-            InputSystem.Update();
         }
         private static void MouseAt(Vector2 position, bool left)
         {
             var state = new MouseState { position = position };
             if (left) state = state.WithButton(MouseButton.Left);
             InputSystem.QueueStateEvent(mouse, state);
-            InputSystem.Update();
         }
 
         private static IEnumerator Probe()
@@ -153,7 +150,7 @@ namespace SpellSimulator.EditorTools
                 Check(mover.IsHolding && mover.HeldBody == rb, $"{name}: E lo agarra con el movedor");
 
                 // Tab: vista completa (tecla real)
-                Press(Key.Tab); yield return 0.05f; ReleaseKeys();
+                Press(Key.Tab); yield return 0.15f; ReleaseKeys();
                 yield return 0.5f;
                 Check(pc.Focused && FocusMode.CanvasView, $"{name}: Tab abre la vista completa (enfocado={pc.Focused}, vista={FocusMode.CanvasView}, canvasEnfocado={(FocusMode.FocusedCanvas != null ? FocusMode.FocusedCanvas.name : "-")})");
 
@@ -165,7 +162,10 @@ namespace SpellSimulator.EditorTools
                 bool sees = penTool != null && penTool.TryShootRay(ray, 5f, out _, out var seen) && seen == canvas;
                 string hits = "";
                 foreach (var h in Physics.RaycastAll(ray, 5f, ~0, QueryTriggerInteraction.Collide)) hits += h.collider.name + "(" + h.distance.ToString("F2") + ") ";
-                Check(sees, $"{name}: el puntero del lapiz ve el lienzo en el centro (golpes: {hits})");
+                var rootCol = go.GetComponent<Collider>();
+                Vector3 local = cam.InverseTransformPoint(canvas.WorldCenter);
+                string diag = $"centro del lienzo en la camara={local.ToString("F2")}, tamano={canvas.WorldSize.ToString("F2")}, collider raiz={(rootCol != null ? rootCol.GetType().Name + " enabled=" + rootCol.enabled + " trigger=" + rootCol.isTrigger + " centro en camara=" + cam.InverseTransformPoint(rootCol.bounds.center).ToString("F2") + " tam=" + rootCol.bounds.size.ToString("F2") : "ninguno")}, cinematico={rb.isKinematic}, padre={(go.transform.parent != null ? go.transform.parent.name : "-")}, near={Camera.main.nearClipPlane:F2}";
+                Check(sees, $"{name}: el puntero del lapiz ve el lienzo en el centro (golpes: {hits}) [{diag}]");
 
                 // dibujar con el mouse real: clic izquierdo y un circulo
                 MouseAt(center, true);
@@ -182,7 +182,7 @@ namespace SpellSimulator.EditorTools
                 Check(strokes > 0, $"{name}: se puede dibujar en vista completa con el mouse (trazos={strokes})");
 
                 // salir: Tab otra vez y soltar
-                Press(Key.Tab); yield return 0.05f; ReleaseKeys();
+                Press(Key.Tab); yield return 0.15f; ReleaseKeys();
                 yield return 0.3f;
                 Check(!pc.Focused && !FocusMode.CanvasView, $"{name}: Tab otra vez cierra la vista completa");
                 mover.End(false);

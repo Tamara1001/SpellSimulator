@@ -231,14 +231,19 @@ namespace SpellSimulator.Casting
             // Anillo en crudo (sin limpiar): sirve para medir el aporte de cada mitad y para saber donde esta la costura.
             DrawingSession scaled = merged.Scaled(iso);
             RingInfo ring = RingDetector.Detect(scaled);
-            if (!ring.Found) return false;
-            if (halfACount >= 0 && !CanvasJoinMath.EachHalfContributes(scaled, halfACount, ring)) return false;
+            if (!ring.Found) { Debug.Log($"[Mitades] no se unen: no hay anillo en el conjunto (envolvente {worldSize.x:F2} x {worldSize.y:F2} m)."); return false; }
+            if (halfACount >= 0 && !CanvasJoinMath.EachHalfContributes(scaled, halfACount, ring))
+            {
+                Debug.Log($"[Mitades] no se unen: una mitad aporta menos del 25 % del anillo (cobertura {ring.Completeness:P0}).");
+                return false;
+            }
             if (IsRingClosed(merged, worldSize)) return true;
 
             int before = merged.Strokes.Count;
-            if (CanvasJoinMath.HealSeam(merged, ring, iso) == 0) return false;
+            if (CanvasJoinMath.HealSeam(merged, ring, iso) == 0) { Debug.Log($"[Mitades] no se unen: la costura no se pudo cerrar (cobertura {ring.Completeness:P0}, completo={ring.Complete})."); return false; }
             if (IsRingClosed(merged, worldSize)) return true;
             merged.Strokes.RemoveRange(before, merged.Strokes.Count - before); // no cerro: se deshace el puente
+            Debug.Log($"[Mitades] no se unen: el puente no cerro el anillo (cobertura {ring.Completeness:P0}).");
             return false;
         }
 

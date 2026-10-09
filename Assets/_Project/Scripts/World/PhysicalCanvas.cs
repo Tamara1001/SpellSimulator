@@ -348,7 +348,11 @@ namespace SpellSimulator.World
             if (on)
             {
                 if (cameraTransform == null || (holdParent == null && !remoteHeld)) return;
+                // El transform recibido puede ser la raiz de la camara (CameraRootPC), no el objeto con el componente Camera: sin esto
+                // el plano cercano real (0,3 m) se ignoraba y los lienzos chicos quedaban DELANTE de el (invisibles y sin dibujar).
                 var cam = cameraTransform.GetComponent<Camera>();
+                if (cam == null) cam = cameraTransform.GetComponentInChildren<Camera>();
+                if (cam == null) cam = Camera.main;
                 float vfov = cam != null ? cam.fieldOfView : 60f;
                 float aspect = cam != null ? cam.aspect : 1.78f;
                 Vector2 size = canvas != null ? canvas.WorldSize : Vector2.one * 0.5f;

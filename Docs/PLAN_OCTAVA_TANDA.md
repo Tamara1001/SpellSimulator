@@ -53,7 +53,7 @@ Fuente de verdad: `GAME_DESIGN.md#controles`; repetir en `Learning/GrimoireTexts
 
 ## 6. Mundo, reposición y portales (HECHO 2026-10-09, falta la prueba a mano y el aprendizaje de recetas)
 - **Reposición de lienzos y runas (anti-agotamiento en PvP):** puntos de reaparición fijos (mesas/cofres) con enfriamiento y límite por jugador; **estaciones de reciclaje** (llevar runas gastadas/lienzos y recibir otros: economía cerrada); **tope global** de objetos sueltos (los más viejos se borran); en **Duelo** cada jugador empieza con un mazo fijo.
-- **Portales:** ya colocados en el mapa; se activan **dibujando un sello complejo fijo** (receta de glifos) en su placa y viajan al portal par. Cada uno pide una combinación distinta, que se aprende en libros.
+- **Portales (v2, 2026-10-09):** cada portal tiene una **identidad de 3 runas** grabada; se escriben en la placa de un portal las runas del **destino** (cualquiera lleva a cualquiera si se saben); la ruta se abre 30 s en ambos sentidos, se cancela si otro abre al mismo destino y se **cruza caminando**. Falta que las identidades se aprendan en libros.
 - **Estructuras** (cuevas, cabañas, montañas, torre de vigilancia, otras pequeñas): puntos de reaparición y tinteros fijos, coberturas y alturas para PvP, lugares de aprendizaje (libros y glifos), terminales de portales. Se generan desde `MapBuilder` (respetando `MapLayout`).
 
 ## 7. Multijugador y PvP (planificación)

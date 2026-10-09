@@ -369,7 +369,7 @@ namespace SpellSimulator.EditorTools
             {
                 ("lado a lado, separadas 0,05 m, 45 % + 55 %", false, 0.05f, 0.45f, 0.55f, true),
                 ("separadas 0,5 m", false, 0.5f, 0.45f, 0.55f, false),
-                ("una encima de la otra, solape 0,04 m, 45 % + 55 %", true, -0.04f, 0.45f, 0.55f, true),
+                ("una encima de la otra, pegadas, 45 % + 55 %", true, 0f, 0.45f, 0.55f, true),
                 ("40 % + 40 % (80 %)", false, 0f, 0.40f, 0.40f, false),
                 ("40 % + 50 % (90 %)", false, 0f, 0.40f, 0.50f, true),
             };
@@ -563,6 +563,7 @@ namespace SpellSimulator.EditorTools
             Check(distA < 2f && traveled == 2 && lastFrom == pB && lastTo == pA, $"portal: cruzar B vuelve a la llegada de A (distancia={distA:F2} m, viajes={traveled})");
 
             // 6) abrir C -> B cancela la ruta A -> B (A se cierra) y B queda abierto de vuelta hacia C
+            Portal.OpenSecondsOverride = 3f; // la duracion se fija al abrir: se acorta antes de abrir C -> B para ver el vencimiento
             DrawIdentity(canvasC, defB.Identity, null);
             yield return 0.4f;
             Check(!pA.IsOpen && pA.State != PortalState.Charging && pA.Destination == null && pC.DestinationId == "watchtower" && pB.DestinationId == "field-circle",
@@ -571,8 +572,7 @@ namespace SpellSimulator.EditorTools
             Check(pC.IsOpen && pB.IsOpen && pB.DestinationId == "field-circle", $"portal: C y B abiertos entre si (C={pC.State}, B={pB.State})");
 
             // 7) al vencer el tiempo (acelerado) se cierran los dos y vuelven a Dormant tras el enfriamiento corto
-            Portal.OpenSecondsOverride = 1f;
-            yield return 0.4f;
+            yield return 3.2f;
             Check(!pC.IsOpen && !pB.IsOpen && pC.Destination == null && pB.Destination == null, $"portal: al vencer el tiempo se cierran (C={pC.State}, B={pB.State})");
             yield return 3.3f;
             Check(pC.State == PortalState.Dormant && pB.State == PortalState.Dormant, $"portal: vuelven a Dormant (C={pC.State}, B={pB.State})");
