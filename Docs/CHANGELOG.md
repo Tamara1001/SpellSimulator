@@ -5,6 +5,9 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-09 — Cierre de la octava tanda
+- Ale probo a mano toda la checklist de PC de `TESTING.md`: en orden. Se marcan como resueltos KI-111, 112, 113, 115 y 116; quedan como **diferidos** (mejoras o contenido futuro, no bugs) KI-106..109, 114, 117 y 118. `STATUS.md` reescrito con el estado real (409 tests, plan 1-6 completo, F0 hecho, siguiente F1). Documentacion al dia para retomar el multijugador.
+
 ## 2026-10-09 — F0 del multijugador (preparacion, sin red ni cambios visibles)
 - **Contexto de jugador:** `Core/IPlayerContext` + `PlayerRegistry` + `Player/LocalPlayerContext` (lo agrega `PlayerMovement`); la logica de mundo (`WorldObjectBudget`, `Crystallized`, `ExpiringBody`, `MagicWorld`, `CrystalSpell`, `Movable`, `Respawnable`, `Portal`, `GrassFire`, `SpellOutputController` con el lanzador como punto de vista) consulta el registro en vez de `Camera.main`/`FindFirstObjectByType`. Enfriamiento de portales POR jugador; presupuesto de objetos con `ownerId` y tope por dueno (solo con mas de un jugador).
 - **Reloj inyectable:** `Core/IGameClock` + `GameClock`: 29 temporizadores de reglas migrados (carga de sellos, enfriamientos, flotado, uniones, suministros, reciclaje, portales); lo visual sigue con `Time`. Contrato `IGameRandom` (aun sin usos: no hay azar de reglas). `FakeGameClock` para pruebas.

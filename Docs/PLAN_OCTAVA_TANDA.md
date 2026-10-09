@@ -3,7 +3,7 @@ tags: [doc, plan]
 ---
 # Plan de la octava tanda (decisiones de Ale, 2026-10-08)
 
-Orden acordado (bloque 1 hecho, resto pendiente): **1 Controles → 2 Tinta/tinteros/HUD → 3 Hechizos → 4 Runas → 5 Cinturón/grimorio → 6 Mundo y portales → 7 Multijugador.**
+Orden acordado (**bloques 1-6 HECHOS y probados a mano por Ale el 2026-10-09; el 7, multijugador, sigue en [[MULTIPLAYER_PLAN]], con F0 hecho**): **1 Controles → 2 Tinta/tinteros/HUD → 3 Hechizos → 4 Runas → 5 Cinturón/grimorio → 6 Mundo y portales → 7 Multijugador.**
 Cada bloque: plan corto, implementación, harness (tests + `HarnessPlaySmoke` + matriz de lienzos), commit y push. Los números son
 valores iniciales en datos/SO, ajustables tras probar a mano.
 
