@@ -18,7 +18,7 @@ namespace SpellSimulator.UI
     /// Navegacion: mouse, flechas / W S / cruceta y Enter / Espacio. Sin GC por frame (motas y camara solo con structs).
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
-    public class MainMenu : MonoBehaviour
+    public partial class MainMenu : MonoBehaviour
     {
         [SerializeField, Tooltip("Entrada del jugador (se cierra mientras el menu esta en pantalla).")]
         private PlayerInputReader input;
@@ -48,7 +48,7 @@ namespace SpellSimulator.UI
         private const float FadeSeconds = 0.45f;
         private const float BlendSeconds = 1.6f;
 
-        private enum State { Playing, Menu, Credits, Info }
+        private enum State { Playing, Menu, Credits, Info, Net }
 
         public static MainMenu Instance { get; private set; }
 
@@ -61,7 +61,7 @@ namespace SpellSimulator.UI
         private UIDocument document;
         private VisualElement menu, motesBox, creditsPanel, crestGlow;
         private Button sandbox, duel, info, credits, quit, creditsBack;
-        private readonly List<Button> order = new List<Button>(5);
+        private readonly List<Button> order = new List<Button>(6);
         private bool bound;
 
         private State state = State.Playing;
@@ -135,16 +135,18 @@ namespace SpellSimulator.UI
             credits.clicked += OpenCredits;
             quit.clicked += Quit;
             creditsBack.clicked += CloseCredits;
+            BindNet();
             menu.Q("credits-backdrop").RegisterCallback<ClickEvent>(_ => CloseCredits());
             duel.SetEnabled(false);
 
             order.Clear();
             order.Add(sandbox);
+            order.Add(multiplayer);
             order.Add(info);
             order.Add(credits);
             order.Add(quit);
             // Entrada escalonada de los botones.
-            Button[] all = { sandbox, duel, info, credits, quit };
+            Button[] all = { sandbox, multiplayer, duel, info, credits, quit };
             for (int i = 0; i < all.Length; i++)
             {
                 Button b = all[i];
@@ -205,6 +207,7 @@ namespace SpellSimulator.UI
             menu.AddToClassList("mm--enter");
             revealAt = Time.unscaledTime + 0.05f;
             HideCreditsNow();
+            RefreshNetView();
             if (wasPlaying) ActiveChanged?.Invoke(true);
         }
 
@@ -284,6 +287,7 @@ namespace SpellSimulator.UI
             creditsRevealAt = creditsHideAt = -1f;
             creditsPanel.AddToClassList("mm-credits--hidden");
             creditsPanel.RemoveFromClassList("mm-credits--fading");
+            HideNetNow();
         }
 
         private void SetCanvases(bool on)
@@ -373,13 +377,14 @@ namespace SpellSimulator.UI
                     menu.RemoveFromClassList("mm--fading");
                 }
             }
+            TickNet(now);
             if (creditsRevealAt > 0f && now >= creditsRevealAt) { creditsRevealAt = -1f; creditsPanel.RemoveFromClassList("mm-credits--fading"); }
             if (creditsHideAt > 0f && now >= creditsHideAt) { creditsHideAt = -1f; if (state != State.Credits) HideCreditsNow(); }
 
             if (state == State.Playing) return;
             // Otro sistema pudo soltar el cursor (p. ej. el grimorio al salir de su modo fijo): el menu lo quiere libre.
             if (state != State.Info && !FocusMode.Active) FocusMode.Enter();
-            if (state == State.Menu || state == State.Credits)
+            if (state == State.Menu || state == State.Credits || state == State.Net)
             {
                 HandleKeys();
                 AnimateMotes(now);
@@ -410,6 +415,11 @@ namespace SpellSimulator.UI
                 if (back || submit) CloseCredits();
                 return;
             }
+            if (state == State.Net)
+            {
+                if (back) CloseNet();
+                return;
+            }
             if (revealAt > 0f) return;
             Button focused = Focused();
             if (move != 0)
@@ -421,6 +431,7 @@ namespace SpellSimulator.UI
             else if (submit)
             {
                 if (focused == sandbox) EnterSandbox();
+                else if (focused == multiplayer) OpenNet();
                 else if (focused == info) OpenInfo();
                 else if (focused == credits) OpenCredits();
                 else if (focused == quit) Quit();

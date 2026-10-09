@@ -6,6 +6,12 @@ tags: [doc, changelog]
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
 
+## 2026-10-09 — F1 del multijugador: menú Multijugador
+
+- `MainMenu` (ahora `partial`, con `MainMenu.Net.cs`): botón **Multijugador** y hoja con nombre, **Crear sala** (muestra el código), **Unirse** con código y **Salir de la sala**. Al conectar entra directo al juego. Reemplaza el cartel «Multijugador: próximamente».
+- `NetHud`: cartel «Sala CÓDIGO · N jugadores» arriba a la derecha mientras hay conexión (IMGUI, solo PC/WebGL; la versión VR queda con KI-095).
+- Harness: `Run Net Menu Probe` (abre la hoja, comprueba botones y campos, captura `Logs/menu_net.png`; 6 chequeos).
+
 ## 2026-10-09 — F1 del multijugador: sesión y avatar de red (primera mitad)
 
 - `Scripts/Net/`: `NetSession` (crea o se une a una sala por código de Relay con WebSocket `wss`, o por IP directa para pruebas; arma el `NetworkManager` en tiempo de ejecución, sin tocar la escena), `NetPlayer` (avatar de red: raíz con `ClientNetworkTransform` de autoridad del dueño, cabeza, manos y nombre sincronizados por `NetworkVariable`; los remotos se registran en `PlayerRegistry`) y `ClientNetworkTransform`.

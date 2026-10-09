@@ -463,3 +463,62 @@
     flex-direction: row;
     align-items: center;
 }
+
+/* ------------------------------------------------------------ multijugador */
+
+.mm-sheet--net {
+    height: 700px;
+}
+
+.mm-net-label {
+    color: var(--bronze);
+    font-size: 13px;
+    letter-spacing: 3px;
+    -unity-font-style: bold;
+    margin-top: 10px;
+    -unity-text-align: middle-center;
+}
+
+.mm-net-or {
+    color: var(--ink-soft);
+    font-size: 15px;
+    -unity-font-style: italic;
+    margin-top: 18px;
+    -unity-text-align: middle-center;
+}
+
+.mm-net-field {
+    align-self: stretch;
+    margin: 6px 40px 0 40px;
+    height: 44px;
+}
+
+.mm-net-field > .unity-base-text-field__input {
+    background-color: rgba(255, 250, 235, 0.55);
+    border-color: var(--bronze);
+    border-width: 2px;
+    border-radius: 8px;
+    color: var(--ink);
+    font-size: 22px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    padding: 0 10px 2px 10px;
+}
+
+.mm-net-field--code > .unity-base-text-field__input {
+    letter-spacing: 6px;
+}
+
+.mm-net-action {
+    margin-top: 12px;
+}
+
+.mm-net-status {
+    color: var(--violet);
+    font-size: 16px;
+    -unity-font-style: bold;
+    -unity-text-align: middle-center;
+    white-space: normal;
+    margin: 12px 30px 0 30px;
+    min-height: 40px;
+}

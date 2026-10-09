@@ -30,6 +30,13 @@
                         <ui:Label text="El simulador libre: la torre y la pradera" class="mm-sub" picking-mode="Ignore" />
                     </ui:VisualElement>
                 </ui:Button>
+                <ui:Button name="multiplayer" class="mm-button">
+                    <ui:VisualElement class="mm-gem" picking-mode="Ignore" />
+                    <ui:VisualElement class="mm-button-text" picking-mode="Ignore">
+                        <ui:Label text="Multijugador" class="mm-label" picking-mode="Ignore" />
+                        <ui:Label name="multiplayer-sub" text="Crear una sala o unirse con un código" class="mm-sub" picking-mode="Ignore" />
+                    </ui:VisualElement>
+                </ui:Button>
                 <ui:Button name="duel" class="mm-button">
                     <ui:VisualElement class="mm-gem" picking-mode="Ignore" />
                     <ui:VisualElement class="mm-button-text" picking-mode="Ignore">
@@ -62,7 +69,6 @@
 
             <ui:VisualElement class="mm-foot" picking-mode="Ignore">
                 <ui:Label text="Configuración de teclas: próximamente" class="mm-hint" />
-                <ui:Label text="Multijugador: próximamente" class="mm-hint" />
                 <ui:VisualElement class="mm-help">
                     <ui:Label text="↑ ↓" class="keycap keycap--small" />
                     <ui:Label text="elegir" class="mm-help-text" />
@@ -118,6 +124,28 @@
             <ui:VisualElement class="mm-credits-help" picking-mode="Ignore">
                 <ui:Label text="Esc" class="keycap keycap--dark" />
                 <ui:Label text="volver" class="reader-help-text" />
+            </ui:VisualElement>
+        </ui:VisualElement>
+
+        <!-- Multijugador: hoja de pergamino para crear una sala o unirse con un codigo. -->
+        <ui:VisualElement name="net-panel" class="mm-credits mm-credits--hidden">
+            <ui:VisualElement name="net-backdrop" class="mm-credits-backdrop" />
+            <ui:VisualElement class="mm-sheet mm-sheet--net">
+                <ui:VisualElement class="mm-sheet-cover" picking-mode="Ignore" />
+                <ui:VisualElement class="mm-sheet-page">
+                    <ui:Label text="MULTIJUGADOR" class="kicker" />
+                    <ui:Label text="Jugar con amigos" class="mm-sheet-title" />
+                    <ui:VisualElement class="divider divider--wide" />
+                    <ui:Label text="Tu nombre" class="mm-net-label" />
+                    <ui:TextField name="net-name" max-length="16" class="mm-net-field" />
+                    <ui:Button name="net-host" class="mm-back mm-net-action" text="Crear sala" />
+                    <ui:Label text="o unite a una sala con su código" class="mm-net-or" />
+                    <ui:TextField name="net-code" max-length="8" class="mm-net-field mm-net-field--code" />
+                    <ui:Button name="net-join" class="mm-back mm-net-action" text="Unirse" />
+                    <ui:Label name="net-status" text="" class="mm-net-status" />
+                    <ui:Button name="net-leave" class="mm-back mm-net-action" text="Salir de la sala" />
+                    <ui:Button name="net-back" class="mm-back" text="Volver" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

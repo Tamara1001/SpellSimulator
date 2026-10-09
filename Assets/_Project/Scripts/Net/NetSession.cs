@@ -193,7 +193,12 @@ namespace SpellSimulator.Net
             SetState(NetState.Failed);
         }
 
-        private void SetState(NetState s) { State = s; Changed?.Invoke(); }
+        private void SetState(NetState s)
+        {
+            State = s;
+            if ((s == NetState.Hosting || s == NetState.Joined) && GetComponent<NetHud>() == null) gameObject.AddComponent<NetHud>();
+            Changed?.Invoke();
+        }
 
         private void Update()
         {

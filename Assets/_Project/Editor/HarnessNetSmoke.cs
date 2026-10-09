@@ -6,6 +6,7 @@ using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UIElements;
 using SpellSimulator.Core;
 using SpellSimulator.Net;
 
@@ -39,6 +40,9 @@ namespace SpellSimulator.EditorTools
         [MenuItem("SpellSimulator/Harness/Run Net Relay Probe")]
         public static void RunRelay() => Start("relay");
 
+        [MenuItem("SpellSimulator/Harness/Run Net Menu Probe")]
+        public static void RunMenu() => Start("menu");
+
         private static void Start(string mode)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(ResultPath));
@@ -63,7 +67,7 @@ namespace SpellSimulator.EditorTools
                 return;
             }
             if (Time.frameCount - start < WarmupFrames) return;
-            if (routine == null) routine = mode == "relay" ? ProbeRelay() : ProbeLocal();
+            if (routine == null) routine = mode == "relay" ? ProbeRelay() : mode == "menu" ? ProbeMenu() : ProbeLocal();
             if (Time.realtimeSinceStartup < waitUntil) return;
             bool more;
             try
@@ -87,13 +91,13 @@ namespace SpellSimulator.EditorTools
 
         private static void Cleanup()
         {
-            if (client != null) { if (client.IsListening) client.Shutdown(); Object.Destroy(client.gameObject); client = null; }
-            if (host != null) { if (host.IsListening) host.Shutdown(); Object.Destroy(host.gameObject); host = null; }
+            if (client != null) { if (client.IsListening) client.Shutdown(); UnityEngine.Object.Destroy(client.gameObject); client = null; }
+            if (host != null) { if (host.IsListening) host.Shutdown(); UnityEngine.Object.Destroy(host.gameObject); host = null; }
         }
 
         private static NetPlayer PlayerOf(NetworkManager nm, ulong ownerId)
         {
-            foreach (var p in Object.FindObjectsByType<NetPlayer>(FindObjectsSortMode.None))
+            foreach (var p in UnityEngine.Object.FindObjectsByType<NetPlayer>(FindObjectsSortMode.None))
                 if (p.NetworkManager == nm && p.OwnerClientId == ownerId) return p;
             return null;
         }
@@ -151,8 +155,32 @@ namespace SpellSimulator.EditorTools
             // el cliente se va: su avatar desaparece del anfitrion
             client.Shutdown();
             yield return 1.5f;
-            Check(PlayerOf(host, 1UL) == null && Object.FindObjectsByType<NetPlayer>(FindObjectsSortMode.None).Count(p => p.NetworkManager == host) == 1, "al irse el cliente su avatar desaparece del anfitrion");
-            Object.Destroy(hostDriver.gameObject); Object.Destroy(clientDriver.gameObject);
+            Check(PlayerOf(host, 1UL) == null && UnityEngine.Object.FindObjectsByType<NetPlayer>(FindObjectsSortMode.None).Count(p => p.NetworkManager == host) == 1, "al irse el cliente su avatar desaparece del anfitrion");
+            UnityEngine.Object.Destroy(hostDriver.gameObject); UnityEngine.Object.Destroy(clientDriver.gameObject);
+        }
+
+        private static IEnumerator ProbeMenu()
+        {
+            var menu = UI.MainMenu.Instance;
+            if (menu == null) { failures.Add("no hay MainMenu en la escena"); yield break; }
+            yield return 1.5f;
+            var doc = menu.GetComponent<UIDocument>();
+            var root = doc != null ? doc.rootVisualElement : null;
+            Check(root != null, "el menu tiene UIDocument");
+            if (root == null) yield break;
+            Check(root.Q<Button>("multiplayer") != null, "el boton Multijugador existe");
+            menu.OpenNet();
+            yield return 1f;
+            var panel = root.Q("net-panel");
+            Check(panel != null && panel.resolvedStyle.display != DisplayStyle.None, "el panel de multijugador se muestra");
+            Check(root.Q<Button>("net-host") != null && root.Q<Button>("net-join") != null, "estan Crear sala y Unirse");
+            var code = root.Q<TextField>("net-code");
+            Check(code != null, "esta el campo del codigo");
+            ScreenCapture.CaptureScreenshot(Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "menu_net.png")));
+            yield return 1f;
+            menu.CloseNet();
+            yield return 0.6f;
+            Check(root.Q("net-panel").resolvedStyle.display == DisplayStyle.None, "Volver cierra el panel");
         }
 
         private static IEnumerator ProbeRelay()
