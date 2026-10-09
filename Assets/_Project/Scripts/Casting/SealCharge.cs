@@ -17,5 +17,20 @@ namespace SpellSimulator.Casting
             float t = Mathf.InverseLerp(SmallRadius, LargeRadius, ringRadiusWorld);
             return Mathf.Lerp(MinSeconds, MaxSeconds, t);
         }
+
+        /// <summary>Tope del retardo de un sello compuesto (circulos dentro de un gran circulo).</summary>
+        public const float MaxNestedSeconds = 4f;
+
+        /// <summary>
+        /// Retardo de un sello compuesto: la SUMA de los retardos de cada circulo interior, acotada a
+        /// <see cref="MaxNestedSeconds"/>. Sin interiores, el minimo.
+        /// </summary>
+        public static float NestedDuration(float[] seconds)
+        {
+            if (seconds == null || seconds.Length == 0) return MinSeconds;
+            float total = 0f;
+            for (int i = 0; i < seconds.Length; i++) total += Mathf.Max(0f, seconds[i]);
+            return Mathf.Clamp(total, MinSeconds, MaxNestedSeconds);
+        }
     }
 }

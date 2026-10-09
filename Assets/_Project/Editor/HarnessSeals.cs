@@ -44,6 +44,60 @@ namespace SpellSimulator.EditorTools
             canvas.Redraw();
         }
 
+        /// <summary>
+        /// Dibuja un sello compuesto (circulos dentro de un gran circulo): cada interior con su sigilo, sus signos y su anillo,
+        /// y el anillo EXTERIOR al final (canon: el anillo se cierra al final). Las medidas son en el cuadrado central del
+        /// lienzo (lado = lado menor, 1 = todo el cuadrado; centro en (0,5; 0,5)), asi los circulos son circulos en lienzos no
+        /// cuadrados. Cada interior: (sigilo, signos (id, angulo), desplazamiento desde el centro, radio).
+        /// </summary>
+        public static void DrawNested(DrawingCanvas canvas, float outerRadius,
+            params (string sigil, (string id, float angleDeg)[] signs, Vector2 offset, float radius)[] inners)
+            => DrawNested(canvas, outerRadius, 1f, inners);
+
+        /// <param name="innerCoverage">Fraccion de vuelta de cada anillo interior (menos de 1 = interiores abiertos).</param>
+        public static void DrawNested(DrawingCanvas canvas, float outerRadius, float innerCoverage,
+            params (string sigil, (string id, float angleDeg)[] signs, Vector2 offset, float radius)[] inners)
+        {
+            var dictionary = Dictionary();
+            var square = new DrawingSession();
+            var center = new Vector2(0.5f, 0.5f);
+            foreach (var inner in inners)
+            {
+                Vector2 c = center + inner.offset;
+                float k = inner.radius / RingRadius;
+                AddTemplate(square, dictionary, inner.sigil, c, 0.24f * k, 0f);
+                foreach (var (id, angle) in inner.signs ?? new (string, float)[0])
+                    AddTemplate(square, dictionary, id, c + GeometryUtils.VectorFromAngleDeg(angle) * SignRadius * k, 0.12f * k, angle - 270f);
+                square.AddStroke(Circle(c, inner.radius, innerCoverage));
+            }
+            square.AddStroke(Circle(center, outerRadius, 1f));
+
+            // Cuadrado central -> UV del lienzo.
+            Vector2 iso = canvas.UvToIsotropic;
+            float side = Mathf.Min(iso.x, iso.y);
+            canvas.Clear();
+            foreach (var stroke in square.Strokes)
+            {
+                var uv = new Stroke();
+                foreach (var p in stroke.Points)
+                {
+                    Vector2 q = iso * 0.5f + (p - center) * side;
+                    uv.AddPoint(new Vector2(q.x / iso.x, q.y / iso.y));
+                }
+                canvas.Session.AddStroke(uv);
+            }
+            canvas.Redraw();
+        }
+
+        private static Stroke Circle(Vector2 center, float radius, float coverage)
+        {
+            var ring = new Stroke();
+            int steps = Mathf.Max(8, Mathf.RoundToInt(64 * Mathf.Clamp01(coverage)));
+            float sweep = 360f * Mathf.Clamp01(coverage);
+            for (int i = 0; i <= steps; i++) ring.AddPoint(center + GeometryUtils.VectorFromAngleDeg(i / (float)steps * sweep) * radius);
+            return ring;
+        }
+
         private static GlyphDictionary Dictionary() =>
             AssetDatabase.FindAssets("t:GlyphDictionaryAsset")
                 .Select(g => AssetDatabase.LoadAssetAtPath<GlyphDictionaryAsset>(AssetDatabase.GUIDToAssetPath(g)))

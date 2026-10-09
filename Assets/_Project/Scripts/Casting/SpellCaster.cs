@@ -65,6 +65,12 @@ namespace SpellSimulator.Casting
         /// <summary>Termino la carga de un sello: fired = true si se lanzo, false si se cancelo.</summary>
         public event System.Action<DrawingCanvas, bool> SealChargeEnded;
 
+        /// <summary>
+        /// Se lanzo un sello compuesto (circulos dentro de un gran circulo): cuantos sub-hechizos salieron. Cada uno ademas
+        /// publica su propio SpellCompiled.
+        /// </summary>
+        public event System.Action<DrawingCanvas, int> NestedCompiled;
+
         private struct ActiveCharge
         {
             public DrawingCanvas canvas;
@@ -134,6 +140,20 @@ namespace SpellSimulator.Casting
         {
             if (!castDelayEnabled || charges.Count >= MaxCharges || classifier == null || dictionary == null) return false;
 
+            // Sello compuesto: el retardo es la suma de los interiores (tope 4 s); el brillo usa el anillo EXTERIOR y el
+            // elemento del interior mas grande.
+            if (TryAnalyzeNested(canvas, out NestedReading nested))
+            {
+                var perInner = new float[nested.Subs.Count];
+                for (int i = 0; i < perInner.Length; i++) perInner[i] = SealCharge.Duration(nested.Subs[i].Spell.sealRadius);
+                NestedSubReading largest = nested.Subs[nested.LargestIndex()];
+                Vector2 isoN = canvas.UvToIsotropic;
+                Vector2 outerCenter = nested.Layout.Outer.Center;
+                return StartCharge(canvas, SealCharge.NestedDuration(perInner), largest.Spell.element, largest.Reading.Ast.PrimarySigil?.Id,
+                    new Vector2(outerCenter.x / Mathf.Max(isoN.x, 1e-6f), outerCenter.y / Mathf.Max(isoN.y, 1e-6f)),
+                    nested.Layout.Outer.Radius * Mathf.Max(canvas.WorldSize.x, canvas.WorldSize.y));
+            }
+
             SealReading reading = SealReader.Read(Clean(canvas, out float boost, out Vector2 pivot), classifier, dictionary.Dictionary, Time.time);
             if (!reading.Spell.valid || !reading.Spell.active) return false;
 
@@ -142,17 +162,21 @@ namespace SpellSimulator.Casting
             RingInfo readRing = reading.Ast.Ring;
             float radiusWorld = readRing.Radius * Mathf.Max(worldSize.x, worldSize.y) / boost;
             Vector2 ringCenter = boost > 1f ? pivot + (readRing.Center - pivot) / boost : readRing.Center;
-            float seconds = SealCharge.Duration(radiusWorld);
+            return StartCharge(canvas, SealCharge.Duration(radiusWorld), reading.Spell.element, reading.Ast.PrimarySigil?.Id,
+                new Vector2(ringCenter.x / Mathf.Max(iso.x, 1e-6f), ringCenter.y / Mathf.Max(iso.y, 1e-6f)), radiusWorld);
+        }
 
+        private bool StartCharge(DrawingCanvas canvas, float seconds, ElementType element, string sigilId, Vector2 ringCenterUV, float radiusWorld)
+        {
             charges.Add(new ActiveCharge { canvas = canvas, startTime = Time.time, seconds = seconds });
             SetPhase(canvas, SealPhase.Charging);
             SealCharging?.Invoke(new SealChargeInfo
             {
                 canvas = canvas,
-                element = reading.Spell.element,
-                sigilId = reading.Ast.PrimarySigil?.Id,
+                element = element,
+                sigilId = sigilId,
                 seconds = seconds,
-                ringCenterUV = new Vector2(ringCenter.x / Mathf.Max(iso.x, 1e-6f), ringCenter.y / Mathf.Max(iso.y, 1e-6f)),
+                ringCenterUV = ringCenterUV,
                 ringRadiusWorld = radiusWorld,
                 ink = InkMath.Dominant(canvas.Session.Strokes)
             });
@@ -198,6 +222,8 @@ namespace SpellSimulator.Casting
             // Cualquier edicion durante la carga la cancela; despues se reevalua normalmente (un trazo nuevo la reinicia).
             CancelCharge(canvas);
 
+            // En un sello compuesto el anillo detectado es el EXTERIOR (el mas grande): la fase la decide su cierre, como
+            // en el canon; la lectura por circulos la hacen TryStartCharge/Cast.
             RingInfo ring = canvas.Session.IsEmpty
                 ? RingInfo.NotFound()
                 : RingDetector.Detect(Clean(canvas));
@@ -311,6 +337,10 @@ namespace SpellSimulator.Casting
                 return SpellIR.Invalid("Sin reconocedor", null);
             }
 
+            // Sello compuesto (circulos dentro de un gran circulo): cada interior sale a la vez desde su centro. Por aca
+            // pasan tambien Trigger (runas), la carga y la union de mitades (CanvasJoinSystem), que llaman a Cast.
+            if (TryAnalyzeNested(canvas, out NestedReading nested)) return CastNested(canvas, nested);
+
             SpellIR spell = Analyze(canvas, out GlyphAST ast, out GlyphPrediction[] predictions, out Vector2 iso, out Vector2 ringCenterUV);
 
             LastSpell = spell;
@@ -336,8 +366,86 @@ namespace SpellSimulator.Casting
                 spell = SpellIR.Invalid("Sin lectura", null);
                 return false;
             }
+            // Sello compuesto: devuelve el interior mas grande que se lanza, ya amplificado (v1: la fusion de runas usa
+            // un solo hechizo por runa).
+            if (TryAnalyzeNested(canvas, out NestedReading nested))
+            {
+                NestedSubReading largest = nested.Subs[nested.LargestIndex()];
+                spell = largest.Spell;
+                ringCenterUV = largest.CenterUV;
+                return spell.valid && spell.active;
+            }
             spell = Analyze(canvas, out _, out _, out _, out ringCenterUV);
             return spell.valid && spell.active;
+        }
+
+        /// <summary>
+        /// Lee el lienzo como sello compuesto (ver NestedSealReader). True si lo es; cada sub-lectura queda con su hechizo
+        /// final: radio en metros, centro en UV, tinta de sus propios trazos y la amplificacion del exterior aplicada.
+        /// Si devuelve false, el lienzo se lee por el camino de siempre (un solo circulo).
+        /// </summary>
+        private bool TryAnalyzeNested(DrawingCanvas canvas, out NestedReading nested)
+        {
+            nested = null;
+            if (canvas == null || canvas.Session.IsEmpty || classifier == null || dictionary == null) return false;
+
+            Vector2 iso = canvas.UvToIsotropic;
+            if (!NestedSealReader.TryRead(canvas.Session.Scaled(iso), simplificationTolerance, splineResolution,
+                    classifier, dictionary.Dictionary, Time.time, out nested))
+                return false;
+
+            Vector2 worldSize = canvas.WorldSize;
+            float worldScale = Mathf.Max(worldSize.x, worldSize.y);
+            float amplification = nested.Amplification;
+            var own = new List<Core.Stroke>();
+            foreach (var sub in nested.Subs)
+            {
+                SpellIR spell = sub.Reading.Spell;
+                spell.analysisBoost = sub.Boost;
+                spell.analysisPivot = sub.Pivot;
+                spell.sealRadius = sub.RadiusIso * worldScale;
+                sub.CenterUV = new Vector2(sub.CenterIso.x / Mathf.Max(iso.x, 1e-6f), sub.CenterIso.y / Mathf.Max(iso.y, 1e-6f));
+
+                own.Clear();
+                foreach (int index in sub.Inner.StrokeIndices) own.Add(canvas.Session.Strokes[index]);
+                InkKind inkKind = InkMath.Dominant(own);
+                spell.inkPower = InkKindInfo.PowerMultiplier(inkKind) * amplification;
+                spell.waterproof = InkKindInfo.IsWaterproof(inkKind);
+                spell.strength *= amplification;
+                spell.effectScale *= NestedMath.EffectScaleFactor(amplification);
+                sub.Spell = spell;
+            }
+            return true;
+        }
+
+        /// <summary>
+        /// Publica y lanza todos los interiores de un sello compuesto en el mismo instante, cada uno desde su centro con el
+        /// mismo marco del lienzo. Devuelve el hechizo del interior mas grande que se lanzo (para la fase del sello).
+        /// </summary>
+        private SpellIR CastNested(DrawingCanvas canvas, NestedReading nested)
+        {
+            var summary = new StringBuilder();
+            summary.AppendLine($"[Sello compuesto] {nested.Subs.Count} circulos, amplificacion x{nested.Amplification:F2}");
+            int launched = 0;
+            for (int i = 0; i < nested.Subs.Count; i++)
+            {
+                NestedSubReading sub = nested.Subs[i];
+                summary.Append(PublishDiagnostics(sub.Reading.Ast, sub.Spell, sub.Reading.Predictions, dictionary.Dictionary));
+                SealAnalyzed?.Invoke(sub.Reading.Ast, sub.Spell, canvas);
+                // Solo los interiores que salen publican SpellCompiled: un interior fallido no debe marcar el sello como fallado.
+                if (!sub.Launches) continue;
+                launched++;
+                SpellCompiled?.Invoke(sub.Spell, canvas);
+                if (output != null) output.SpawnSpellEffect(sub.Spell, canvas, sub.CenterUV);
+            }
+
+            SpellIR primary = nested.Subs[nested.LargestIndex()].Spell;
+            LastSpell = primary;
+            string text = summary.ToString();
+            DiagnosticBus.OnDiagnosticsUpdated?.Invoke($"<b>[Sello compuesto]</b> {launched} de {nested.Subs.Count} circulos lanzados (x{nested.Amplification:F2})");
+            if (recordSeals) Record(canvas, canvas.UvToIsotropic, text);
+            NestedCompiled?.Invoke(canvas, launched);
+            return primary;
         }
 
         /// <summary>Publica un hechizo ya compilado (eventos) y lo instancia en el mundo desde el lienzo dado.</summary>

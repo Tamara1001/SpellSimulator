@@ -5,6 +5,11 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-10-09 — Circulos magicos anidados
+- Un anillo EXTERIOR cerrado que contiene 2 a 4 anillos INTERIORES cerrados (radio <= 60 % del exterior, dentro con margen del 8 %, sin solaparse), cada uno con su glifo, se lee como un sello compuesto: cada interior es un hechizo completo (elemento y signos propios) y todos salen a la vez desde su posicion; el exterior AMPLIFICA (`1 + 0,5 ln(exterior/mayor interior) + 0,5 ln(n)`, tope 2,5x sobre `inkPower` y `strength`). El retardo de lanzamiento es la suma de los de cada interior (maximo 4 s). Maximo 2 niveles. Si no hay interiores cerrados validos, se lee como siempre (`NestedSealReader.TryRead`, `NestedMath`, `SpellCaster.CastNested`, evento `NestedCompiled`).
+- Para que el sello compuesto se reconozca hay que ABRIR el exterior primero (un arco) y cerrarlo AL FINAL: si se cierra un interior antes de que exista el exterior se lanza como sello normal (canon: el anillo se cierra al final).
+- Pruebas: 287 EditMode; `HarnessCanvasMatrix Only=NESTED` (2 interiores = 2 lanzados, 1 interior = lectura normal, interiores abiertos = sin compuesto, carga y lanzamiento: 5 chequeos) y regresion de CHARGE, SPELLS y smoke en verde. Hecho por un subagente Opus. Pendiente: probar a mano, anotaciones (`SealAnnotations`) con varios `SealAnalyzed`, limite de hechizos activos (`maxActive` 6).
+
 ## 2026-10-09 — Tintas por tipo con cinturon y mitades para cualquier lienzo
 - **Cinturon = tintas:** la barra vuelve a 3 slots. Sin cinturon se lleva UNA clase de tinta; con cinturon un slot de cartuchos por clase (normal, poderosa, resistente; 4 cartuchos de 5 usos cada una). **V** cambia la tinta activa, **R** recarga con ella (tambien en vista completa). `InkCartridgeStock` reescrito; HUD con slot de cartuchos grande o tres slots chicos con la activa resaltada; las pistas del panel de contexto no saltan de linea.
 - **Mitades (canon Sylph Shoes):** cualquier lienzo con el anillo ABIERTO que queda pegado borde con borde (cualquier borde, mismo plano y cara) 0,4 s a otro se funde con el en un solo lienzo y el sello se completa y lanza; ambos se borran (`CanvasJoinMath`, `CanvasJoinSystem`, evento `SpellCaster.CanvasEdited`). Conviven con la fusion de runas armadas.

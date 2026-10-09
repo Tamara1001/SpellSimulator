@@ -135,6 +135,12 @@ namespace SpellSimulator.EditorTools
                 while (probe.MoveNext()) yield return probe.Current;
                 yield break;
             }
+            if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "NESTED")
+            {
+                var probe = NestedProbe(spot);
+                while (probe.MoveNext()) yield return probe.Current;
+                yield break;
+            }
             if (SessionState.GetString("HarnessCanvasMatrix.Only", "") == "SPELLS")
             {
                 var probe = SpellsProbe(spot);
@@ -482,6 +488,76 @@ namespace SpellSimulator.EditorTools
                 Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
                 yield return 0.3f;
             }
+        }
+
+        /// <summary>
+        /// Sellos compuestos (circulos dentro de un gran circulo): exterior con 2 interiores cerrados (fuego y viento) lanza 2
+        /// sub-hechizos a la vez; con UN solo interior se lee como un sello normal; con interiores abiertos no hay compuesto;
+        /// cerrando el exterior con un trazo, el compuesto carga (suma de retardos) y despues lanza. Se activa con Only = "NESTED".
+        /// </summary>
+        private static IEnumerator NestedProbe(Vector3 spot)
+        {
+            var go = GameObject.Find("Paper_S");
+            if (go == null) { failures.Add("falta Paper_S"); yield break; }
+            var rb = go.GetComponent<Rigidbody>();
+            var pc = go.GetComponent<PhysicalCanvas>();
+            var canvas = go.GetComponent<DrawingCanvas>();
+            var caster = Object.FindFirstObjectByType<Casting.SpellCaster>();
+            Place(pc, rb, spot + new Vector3(0f, 1.2f, 0f));
+            rb.isKinematic = true;
+            go.transform.SetPositionAndRotation(spot + new Vector3(0f, 1.2f, 0f), Quaternion.identity);
+
+            int compiled = 0, nestedEvents = 0, nestedLaunched = 0, charging = 0;
+            float chargeSeconds = 0f;
+            void OnCompiled(Compiler.SpellIR spell, DrawingCanvas c) { if (c == canvas) compiled++; }
+            void OnNested(DrawingCanvas c, int launched) { if (c == canvas) { nestedEvents++; nestedLaunched = launched; } }
+            void OnCharging(Casting.SealChargeInfo info) { if (info.canvas == canvas) { charging++; chargeSeconds = info.seconds; } }
+            caster.SpellCompiled += OnCompiled; caster.NestedCompiled += OnNested; caster.SealCharging += OnCharging;
+
+            var fire = ("fire", new (string, float)[0], new Vector2(-0.2f, 0f), 0.17f);
+            var wind = ("wind-directs-air", new[] { ("column", 270f), ("column", 90f) }, new Vector2(0.2f, 0f), 0.17f);
+
+            // 1) dos interiores cerrados: 2 sub-hechizos en el mismo cast
+            canvas.Clear(); caster.OnSealEdited(canvas);
+            HarnessSeals.DrawNested(canvas, 0.46f, fire, wind);
+            var spell = caster.Cast(canvas);
+            Check(nestedEvents == 1 && nestedLaunched == 2 && compiled == 2,
+                $"compuesto: salen 2 sub-hechizos a la vez (eventos compuestos={nestedEvents}, lanzados={nestedLaunched}, SpellCompiled={compiled}, estado={spell.status})");
+            yield return 2.5f;
+            Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
+            yield return 0.3f;
+
+            // 2) un solo interior: se lee como un sello normal
+            compiled = 0; nestedEvents = 0;
+            canvas.Clear(); caster.OnSealEdited(canvas);
+            HarnessSeals.DrawNested(canvas, 0.46f, ("fire", new (string, float)[0], Vector2.zero, 0.2f));
+            caster.Cast(canvas);
+            Check(nestedEvents == 0 && compiled <= 1, $"un solo interior: lectura normal, sin compuesto (eventos compuestos={nestedEvents}, SpellCompiled={compiled})");
+            Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
+            yield return 0.3f;
+
+            // 3) interiores abiertos: no hay compuesto
+            compiled = 0; nestedEvents = 0;
+            canvas.Clear(); caster.OnSealEdited(canvas);
+            HarnessSeals.DrawNested(canvas, 0.46f, 0.7f, fire, wind);
+            caster.Cast(canvas);
+            Check(nestedEvents == 0, $"interiores abiertos: no se lanza un compuesto (eventos compuestos={nestedEvents}, SpellCompiled={compiled})");
+            Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
+            yield return 0.3f;
+
+            // 4) cerrar el exterior con un trazo: carga (suma de los interiores, tope 4 s) y despues lanza el compuesto
+            compiled = 0; nestedEvents = 0; charging = 0;
+            canvas.Clear(); caster.OnSealEdited(canvas);
+            HarnessSeals.DrawNested(canvas, 0.46f, fire, wind);
+            caster.OnStrokeFinished(canvas);
+            Check(charging == 1 && chargeSeconds <= Casting.SealCharge.MaxNestedSeconds + 1e-3f && nestedEvents == 0,
+                $"compuesto: cerrar el exterior empieza la carga (cargas={charging}, segundos={chargeSeconds:F2})");
+            yield return chargeSeconds + 0.5f;
+            Check(nestedEvents == 1 && nestedLaunched == 2, $"compuesto: al terminar la carga salen los 2 (eventos={nestedEvents}, lanzados={nestedLaunched})");
+
+            caster.SpellCompiled -= OnCompiled; caster.NestedCompiled -= OnNested; caster.SealCharging -= OnCharging;
+            Object.FindFirstObjectByType<Reactions.MagicWorld>()?.ResetWorld();
+            canvas.Clear(); caster.OnSealEdited(canvas);
         }
 
         /// <summary>
