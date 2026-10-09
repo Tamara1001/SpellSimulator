@@ -4,6 +4,7 @@ using UnityEditor;
 using UnityEngine;
 using SpellSimulator.Canvas;
 using SpellSimulator.Core;
+using SpellSimulator.Glyphs;
 using SpellSimulator.World;
 using SpellSimulator.World.Map;
 
@@ -17,7 +18,8 @@ namespace SpellSimulator.EditorTools.Map
     /// Los sitios salen solo de <see cref="ValleyShape"/> (deterministas, <see cref="Sites"/>): lejos del lago, el arroyo, la
     /// loma de la torre, el campo, los caminos y las zonas de practica; se limpian los pinos y rocas que caen encima.
     /// Todo cuelga de Map/Structs (se rehace con el mapa). Lo llama MapBuilder.Build despues de CanvasDesigns.
-    /// Presupuesto Quest/WebGL: una malla por estructura con el material compartido, una sola luz tenue (la cueva).
+    /// Presupuesto Quest/WebGL: una malla por estructura con el material compartido, una luz tenue en la cueva y una por
+    /// portal (apagada hasta que se abre). Los portales son anillos de piedra con disco animado (PortalVisuals).
     /// </summary>
     public static class MapStructures
     {
@@ -191,6 +193,8 @@ namespace SpellSimulator.EditorTools.Map
             lit = material;
             map = mapRoot;
             report.Clear();
+            portalRecipes = null;
+            glyphDictionary = null;
             // Idempotente: Map se rehace entero, pero por las dudas se borran restos sueltos con el prefijo.
             foreach (var go in mapRoot.gameObject.scene.GetRootGameObjects())
                 if (go.name.StartsWith(Prefix) || go.name == RootName) Object.DestroyImmediate(go);
@@ -269,11 +273,16 @@ namespace SpellSimulator.EditorTools.Map
                 if (Mathf.Abs(u) >= gap - 0.01f) B(b, new Vector3(u, deck + 0.52f, edge), size, WoodB);
             }
             foreach (float sx in new[] { -1f, 1f }) B(b, new Vector3(sx * gap, deck + 0.6f, edge), new Vector3(0.12f, 1.2f, 0.12f), WoodB);
-            Col(t, new Vector3(0f, deck + 0.55f, -edge), new Vector3(5f, 1.1f, 0.12f));
-            Col(t, new Vector3(-edge, deck + 0.55f, 0f), new Vector3(0.12f, 1.1f, 5f));
-            Col(t, new Vector3(edge, deck + 0.55f, 0f), new Vector3(0.12f, 1.1f, 5f));
+            // Colision de la baranda: mas alta que la madera (1.7 m) para que no se salte (el salto sube ~1.2 m) y mas gruesa
+            // que los listones. El hueco del frente (llegada de la rampa) queda libre.
+            // La cara de adentro queda donde estaba (edge - 0.06): la pizarra fija sigue delante del collider.
+            const float railHeight = 1.7f, railThick = 0.2f;
+            float railAt = edge - 0.06f + railThick * 0.5f;
+            Col(t, new Vector3(0f, deck + railHeight * 0.5f, -railAt), new Vector3(5.1f, railHeight, railThick));
+            Col(t, new Vector3(-railAt, deck + railHeight * 0.5f, 0f), new Vector3(railThick, railHeight, 5.1f));
+            Col(t, new Vector3(railAt, deck + railHeight * 0.5f, 0f), new Vector3(railThick, railHeight, 5.1f));
             foreach (float sx in new[] { -1f, 1f })
-                Col(t, new Vector3(sx * (gap + edge) * 0.5f, deck + 0.55f, edge), new Vector3(edge - gap, 1.1f, 0.12f));
+                Col(t, new Vector3(sx * (gap + edge) * 0.5f, deck + railHeight * 0.5f, railAt), new Vector3(edge - gap, railHeight, railThick));
 
             // Techo a cuatro aguas (cubre del fuego que cae) y remate de laton.
             b.Frustum(Matrix4x4.TRS(new Vector3(0f, deck + 3.45f, 0f), Quaternion.Euler(0f, 45f, 0f), Vector3.one), 4.3f, 0f, 0f, 1.7f, 4, Roof, false, true);
@@ -304,6 +313,9 @@ namespace SpellSimulator.EditorTools.Map
                 foreach (float s in new[] { 0.25f, len * 0.5f, len - 0.25f })
                     B(b, top + dir * s + side + Vector3.up * 0.47f, new Vector3(0.07f, 0.95f, 0.07f), WoodA);
                 Beam(b, top + dir * 0.25f + side + Vector3.up * 0.95f, top + dir * (len - 0.25f) + side + Vector3.up * 0.95f, 0.07f, WoodA);
+                // Colision del pasamanos (un tramo por lado, 1.2 m sobre la rampa): no se cae por el costado ni bloquea el paso.
+                Vector3 railMid = top + dir * (len * 0.5f) + side + r * new Vector3(0f, 0.6f, 0f);
+                RotCol(t, "RampRailCollider", railMid, r, new Vector3(0.1f, 1.2f, len - 0.5f));
                 foreach (float s in new[] { len * 0.35f, len * 0.7f })
                 {
                     Vector3 p = top + dir * s + r * new Vector3(sx * 0.8f, -0.14f, 0f);
@@ -352,20 +364,23 @@ namespace SpellSimulator.EditorTools.Map
             B(b, new Vector3(2.5f, f + 1.45f, 0f), new Vector3(0.24f, 0.9f, 0.06f), WoodB);
             B(b, new Vector3(2.63f, f + 0.97f, 0f), new Vector3(0.14f, 0.06f, 1.15f), WoodB);
             foreach (float sz in new[] { -1f, 1f }) B(b, new Vector3(2.63f, f + 1.45f, sz * 0.8f), new Vector3(0.04f, 0.95f, 0.55f), Shutter);
-            Solid(b, t, new Vector3(-1.55f, wy, 2f), new Vector3(2f, wall, 0.2f), Plaster);
-            Solid(b, t, new Vector3(1.55f, wy, 2f), new Vector3(2f, wall, 0.2f), Plaster);
-            Solid(b, t, new Vector3(0f, f + 2.3f, 2f), new Vector3(1.1f, 0.4f, 0.2f), Plaster);
-            foreach (float sx in new[] { -1f, 1f }) B(b, new Vector3(sx * 0.6f, f + 1.05f, 2f), new Vector3(0.1f, 2.1f, 0.28f), WoodB);
-            B(b, new Vector3(0f, f + 2.15f, 2f), new Vector3(1.3f, 0.1f, 0.28f), WoodB);
-            // Puerta abierta hacia adentro, contra la pared del frente.
-            Solid(b, t, new Vector3(0.47f, f + 1.03f, 1.35f), new Vector3(0.06f, 2f, 1f), WoodA);
-            B(b, new Vector3(0.42f, f + 1f, 0.95f), new Vector3(0.04f, 0.06f, 0.06f), Brass);
-            // Entramado: esquineros y soleras.
+            // Vano de la puerta: x en [-0.65, 0.65] y hasta f + 2.1. El marco va metido en el vano (los montantes entran 6 cm en
+            // la pared y no comparten cara con ella; el cabezal es menos profundo que los montantes): sin caras coplanares.
+            Solid(b, t, new Vector3(-1.6f, wy, 2f), new Vector3(1.9f, wall, 0.2f), Plaster);
+            Solid(b, t, new Vector3(1.6f, wy, 2f), new Vector3(1.9f, wall, 0.2f), Plaster);
+            Solid(b, t, new Vector3(0f, f + 2.3f, 2f), new Vector3(1.3f, 0.4f, 0.2f), Plaster);
+            foreach (float sx in new[] { -1f, 1f }) B(b, new Vector3(sx * 0.6f, f + 1.08f, 2f), new Vector3(0.13f, 2.16f, 0.28f), WoodB);
+            B(b, new Vector3(0f, f + 2.12f, 2f), new Vector3(1.2f, 0.1f, 0.25f), WoodB);
+            // Puerta abierta hacia adentro, contra la pared del frente (bisagra junto al montante derecho).
+            Solid(b, t, new Vector3(0.49f, f + 1.03f, 1.35f), new Vector3(0.06f, 2f, 1f), WoodA);
+            B(b, new Vector3(0.445f, f + 1f, 0.95f), new Vector3(0.04f, 0.06f, 0.06f), Brass);
+            // Entramado: esquineros y soleras (las soleras de los costados son mas chicas que las del frente y el fondo para
+            // no compartir caras en las esquinas).
             foreach (float sx in new[] { -1f, 1f })
                 foreach (float sz in new[] { -1f, 1f })
-                    B(b, new Vector3(sx * 2.55f, wy, sz * 2.05f), new Vector3(0.26f, wall + 0.05f, 0.26f), WoodB);
+                    B(b, new Vector3(sx * 2.55f, wy, sz * 2.05f), new Vector3(0.28f, wall + 0.05f, 0.28f), WoodB);
             foreach (float sz in new[] { -1f, 1f }) B(b, new Vector3(0f, top + 0.06f, sz * 2.05f), new Vector3(5.4f, 0.14f, 0.26f), WoodB);
-            foreach (float sx in new[] { -1f, 1f }) B(b, new Vector3(sx * 2.55f, top + 0.06f, 0f), new Vector3(0.26f, 0.14f, 4.3f), WoodB);
+            foreach (float sx in new[] { -1f, 1f }) B(b, new Vector3(sx * 2.55f, top + 0.055f, 0f), new Vector3(0.22f, 0.12f, 4.3f), WoodB);
 
             // Hastiales (de dos caras) y techo a dos aguas con cumbrera y chimenea.
             foreach (float sx in new[] { -1f, 1f })
@@ -742,18 +757,38 @@ namespace SpellSimulator.EditorTools.Map
 
         private enum PortalBase { Floor, Terrain }
 
+        // Anillo de piedra (m). Con el centro a 1 m del piso, un radio interior >= 1.118 deja un hueco libre de 1.0 x 2.0 m.
+        private const float RingCenterY = 1f;
+        private const float RingInner = 1.15f, RingOuter = 1.47f, RingDepth = 0.45f;
+        private const float RingInnerCompact = 1.12f, RingOuterCompact = 1.38f, RingDepthCompact = 0.4f;
+        /// <summary>El arco termina donde su borde exterior queda apenas bajo el piso (lo tapan los zocalos).</summary>
+        private const float RingSink = 0.07f;
+        private const float GlyphStroke = 0.016f, GlyphRelief = 0.012f, GlyphMinSegment = 0.012f;
+        private const string GlyphMaterialPath = "Assets/_Project/Materials/PortalGlyph.mat";
+        private const string PortalShaderName = "SpellSimulator/PortalSurface";
+        private static readonly Color GlyphGold = new Color(0.62f, 0.48f, 0.22f);
+
+        private static Casting.PortalRecipes portalRecipes;
+        private static GlyphDictionary glyphDictionary;
+
         /// <summary>
-        /// Arco de piedra (dos pilares y siete dovelas) con la superficie apagada (disco oscuro, material emisivo en negro que
-        /// enciende Portal en juego), la placa (lienzo FIJO inclinado sobre un atril, a un costado y adelante), el punto de
-        /// llegada a 1.5 m al frente mirando hacia afuera y el ancla de efectos en el centro del arco. Frente = +Z local.
+        /// Portal circular (como en Witch Hat Atelier): anillo de piedra de dovelas apoyado en dos zocalos, con la identidad
+        /// del portal (sigilo + signos, de portals.json) grabada en oro sobre la banda; el disco al centro (shader
+        /// PortalSurface, sin collider) con un trigger fino para atravesarlo; la placa (lienzo FIJO inclinado sobre un atril
+        /// bajo, al costado y adelante) con su cartelito; el punto de llegada a 1.5 m al frente mirando hacia afuera, el ancla
+        /// de efectos al centro del disco y una sola luz tenue (apagada hasta que se abre). Frente = +Z local.
         /// </summary>
         private static void BuildPortal(Transform parent, string id, Vector3 local, float localYaw, PortalBase style,
-            float plateSide = 1f, float plateLateral = 1.3f, float plateForward = 0.95f, float plateSize = 0.7f, bool compact = false)
+            float plateSide = 1f, float plateLateral = 1.85f, float plateForward = 0.9f, float plateSize = 0.7f, bool compact = false)
         {
             var root = new GameObject("Portal_" + id).transform;
             root.SetParent(parent, false);
             root.localPosition = local;
             root.localRotation = Quaternion.Euler(0f, localYaw, 0f);
+            float ri = compact ? RingInnerCompact : RingInner;
+            float ro = compact ? RingOuterCompact : RingOuter;
+            float depth = compact ? RingDepthCompact : RingDepth;
+            const float cy = RingCenterY;
             var b = new LowPolyMesh();
 
             if (style == PortalBase.Terrain)
@@ -766,27 +801,18 @@ namespace SpellSimulator.EditorTools.Map
                 Solid(b, root, new Vector3(0f, bottom * 0.5f, 0f), new Vector3(2.9f, -bottom, 1.7f), StoneB, StoneA);
             }
 
-            Vector3 plinth = compact ? new Vector3(0.46f, 0.16f, 0.52f) : new Vector3(0.62f, 0.16f, 0.68f);
-            foreach (float sx in new[] { -1f, 1f })
-            {
-                float x = sx * 0.95f;
-                B(b, new Vector3(x, 0.08f, 0f), plinth, StoneB);
-                B(b, new Vector3(x, 0.98f, 0f), new Vector3(0.42f, 1.64f, 0.5f), StoneA);
-                B(b, new Vector3(x, 1.85f, 0f), new Vector3(0.52f, 0.1f, 0.58f), StoneB);
-                for (int k = 0; k < 3; k++) B(b, new Vector3(x, 0.6f + k * 0.45f, 0.256f), new Vector3(0.16f, 0.05f, 0.01f), Inlay);
-                Col(root, new Vector3(x, 0.95f, 0f), new Vector3(0.46f, 1.9f, 0.52f));
-            }
-            for (int i = 0; i <= 6; i++)
-            {
-                float a = i * 30f;
-                var c = new Vector3(Mathf.Cos(a * Mathf.Deg2Rad) * 0.95f, 1.9f + Mathf.Sin(a * Mathf.Deg2Rad) * 0.95f, 0f);
-                bool key = i == 3;
-                b.Box(Matrix4x4.TRS(c, Quaternion.Euler(0f, 0f, a), Vector3.one),
-                    key ? new Vector3(0.5f, 0.56f, 0.58f) : new Vector3(0.42f, 0.5f, 0.5f), key ? Keystone : (i & 1) == 0 ? StoneA : StoneB);
-            }
-            Col(root, new Vector3(0f, 2.86f, 0f), new Vector3(2.3f, 0.42f, 0.5f));
+            // Anillo: arco simetrico que entra en los zocalos.
+            float end = -Mathf.Asin(Mathf.Clamp01((cy + RingSink) / ro)) * Mathf.Rad2Deg;
+            Ring(b, root, ri, ro, cy, depth, end, 180f - end, compact ? 9 : 11);
 
-            // Atril de la placa.
+            // Zocalos: tapan las puntas del arco, fuera del hueco de paso.
+            float e = end * Mathf.Deg2Rad;
+            float footTop = Mathf.Max(0.12f, cy + ri * Mathf.Sin(e) + 0.04f);
+            float fx0 = ri * Mathf.Cos(e) - 0.07f, fx1 = ro * Mathf.Cos(e) + 0.09f;
+            foreach (float sx in new[] { -1f, 1f })
+                Solid(b, root, new Vector3(sx * (fx0 + fx1) * 0.5f, footTop * 0.5f - 0.01f, 0f), new Vector3(fx1 - fx0, footTop + 0.02f, depth + 0.14f), StoneB, StoneA);
+
+            // Atril bajo de la placa: pedestal de piedra, poste y tablero inclinado, con un cartelito debajo de la placa.
             float px = plateSide * plateLateral, pz = plateForward;
             float foot = style == PortalBase.Terrain ? Rel(root, px, pz) : 0f;
             const float lean = 35f * Mathf.Deg2Rad;
@@ -794,38 +820,38 @@ namespace SpellSimulator.EditorTools.Map
             var up = new Vector3(0f, Mathf.Cos(lean), -Mathf.Sin(lean));
             var plateCenter = new Vector3(px, foot + 1.12f, pz);
             float footSize = compact ? 0.3f : 0.42f;
-            B(b, new Vector3(px, foot - 0.07f, pz + 0.04f), new Vector3(footSize, 0.26f, footSize), StoneB);
-            B(b, new Vector3(px, foot + 0.5f, pz + 0.06f), new Vector3(0.1f, 1f, 0.1f), WoodB);
+            b.Frustum(Matrix4x4.Translate(new Vector3(px, foot - 0.12f, pz + 0.04f)), footSize * 0.62f, footSize * 0.5f, 0f, 0.3f, 8, StoneB);
+            B(b, new Vector3(px, foot + 0.6f, pz + 0.06f), new Vector3(0.1f, 0.9f, 0.1f), WoodB);
             b.Box(Matrix4x4.TRS(plateCenter - n * 0.035f, Quaternion.LookRotation(n, up), Vector3.one), new Vector3(plateSize + 0.1f, plateSize + 0.1f, 0.04f), WoodA);
+            Vector3 stripCenter = plateCenter - up * (plateSize * 0.5f + 0.11f) - n * 0.02f;
+            b.Box(Matrix4x4.TRS(stripCenter, Quaternion.LookRotation(n, up), Vector3.one), new Vector3(plateSize + 0.1f, 0.1f, 0.03f), Plank);
             Col(root, new Vector3(px, foot + 0.55f, pz), new Vector3(compact ? 0.3f : 0.5f, 1.1f, 0.5f));
             Finish(root, b, "Struct_Portal_" + id);
+            PlateLabel(root, root.TransformPoint(stripCenter - n * 0.002f), root.rotation * Quaternion.LookRotation(-n, up), plateSize);
 
-            // Superficie: arco de medio punto relleno, de dos caras, sin collider.
-            var s = new LowPolyMesh();
-            var pts = new List<Vector3> { new Vector3(-0.72f, 0.02f, 0f), new Vector3(0.72f, 0.02f, 0f), new Vector3(0.72f, 1.9f, 0f) };
-            for (int k = 1; k <= 7; k++)
-            {
-                float a = k * Mathf.PI / 8f;
-                pts.Add(new Vector3(Mathf.Cos(a) * 0.72f, 1.9f + Mathf.Sin(a) * 0.72f, 0f));
-            }
-            pts.Add(new Vector3(-0.72f, 1.9f, 0f));
-            var middle = new Vector3(0f, 1.2f, 0f);
-            for (int i = 0; i < pts.Count; i++)
-            {
-                Vector3 p0 = pts[i], p1 = pts[(i + 1) % pts.Count];
-                s.Tri(middle, p0, p1, PortalDark);
-                s.Tri(middle, p1, p0, PortalDark);
-            }
+            // Identidad grabada en la banda.
+            var glyphRenderers = EngraveIdentity(root, id, ri, ro, cy, depth * 0.5f);
+
+            // Disco (dos caras por shader, sin collider) recortado al piso.
             var surface = new GameObject("PortalSurface");
             surface.transform.SetParent(root, false);
-            surface.AddComponent<MeshFilter>().sharedMesh = MapBuilder.SaveMesh(s.Build("PortalSurface"));
+            surface.AddComponent<MeshFilter>().sharedMesh = MapBuilder.SaveMesh(DiscMesh("PortalDisc_" + id, ri + 0.02f, cy));
             var sr = surface.AddComponent<MeshRenderer>();
             sr.sharedMaterial = PortalMaterial();
             sr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            sr.receiveShadows = false;
+
+            // Trigger para atravesar el disco (el jugador camina a traves).
+            var crossGo = new GameObject("CrossTrigger");
+            crossGo.transform.SetParent(root, false);
+            crossGo.transform.localPosition = new Vector3(0f, 1.05f, 0f);
+            var cross = crossGo.AddComponent<BoxCollider>();
+            cross.isTrigger = true;
+            cross.size = new Vector3(1.6f, 2.1f, 0.25f);
 
             var anchor = new GameObject("EffectAnchor").transform;
             anchor.SetParent(root, false);
-            anchor.localPosition = new Vector3(0f, 1.35f, 0f);
+            anchor.localPosition = new Vector3(0f, cy, 0f);
             var arrival = new GameObject("Arrival").transform;
             arrival.SetParent(root, false);
             arrival.localPosition = new Vector3(0f, 0.05f, 1.5f);
@@ -836,23 +862,259 @@ namespace SpellSimulator.EditorTools.Map
                 arrival.position = new Vector3(w.x, ValleyShape.Height(w.x, w.z) + 0.05f, w.z);
             }
 
+            // Una sola luz por portal, tenue y apagada hasta que se abre (la maneja PortalVisuals).
+            var lightGo = new GameObject("PortalLight");
+            lightGo.transform.SetParent(root, false);
+            lightGo.transform.localPosition = new Vector3(0f, cy, 0.4f);
+            var light = lightGo.AddComponent<Light>();
+            light.type = LightType.Point;
+            light.color = PortalVisualCurve.TintFor(id);
+            light.range = 3.5f;
+            light.intensity = 0f;
+            light.shadows = LightShadows.None;
+            light.enabled = false;
+
             var plate = FixedCanvas(root, "PortalPlate_" + id, root.TransformPoint(plateCenter + n * 0.005f),
                 root.rotation * Quaternion.LookRotation(-n, up), plateSize, plateSize, EmissionSide.AwayFromViewer);
-            root.gameObject.AddComponent<Portal>().Configure(id, plate, arrival, anchor);
+            root.gameObject.AddComponent<Portal>().Configure(id, plate, arrival, anchor, cross);
+            root.gameObject.AddComponent<PortalVisuals>().Configure(id, sr, glyphRenderers, light);
         }
 
+        /// <summary>
+        /// Anillo de dovelas de seccion rectangular entre los angulos from y to (grados, plano XY local, 0 = +X), con la dovela
+        /// del medio como clave. Surcos de color en las dos caras y un BoxCollider girado por dovela (no invaden el hueco).
+        /// </summary>
+        private static void Ring(LowPolyMesh b, Transform root, float ri, float ro, float cy, float depth, float from, float to, int blocks)
+        {
+            const int sub = 3;
+            float zf = depth * 0.5f, zb = -depth * 0.5f;
+            float per = (to - from) / blocks;
+            Vector3 P(float r, float deg, float z) => new Vector3(Mathf.Cos(deg * Mathf.Deg2Rad) * r, cy + Mathf.Sin(deg * Mathf.Deg2Rad) * r, z);
+            for (int k = 0; k < blocks; k++)
+            {
+                Color c = k == blocks / 2 ? Keystone : LowPolyMesh.Jitter((k & 1) == 0 ? StoneA : StoneB, 0.05f, 900 + k);
+                for (int s = 0; s < sub; s++)
+                {
+                    float a0 = from + per * (k + s / (float)sub), a1 = from + per * (k + (s + 1) / (float)sub);
+                    b.Quad(P(ri, a0, zf), P(ro, a0, zf), P(ro, a1, zf), P(ri, a1, zf), c);           // frente (+Z)
+                    b.Quad(P(ri, a0, zb), P(ri, a1, zb), P(ro, a1, zb), P(ro, a0, zb), c);           // fondo (-Z)
+                    b.Quad(P(ro, a0, zf), P(ro, a0, zb), P(ro, a1, zb), P(ro, a1, zf), c * 0.92f);   // afuera
+                    b.Quad(P(ri, a0, zf), P(ri, a1, zf), P(ri, a1, zb), P(ri, a0, zb), c * 0.85f);   // adentro
+                }
+                float mid = from + per * (k + 0.5f);
+                float half = per * 0.5f * Mathf.Deg2Rad;
+                RotCol(root, "RingCollider", P((ri + ro) * 0.5f, mid, 0f), Quaternion.Euler(0f, 0f, mid - 90f),
+                    new Vector3(2f * ro * Mathf.Tan(half), ro - ri, depth));
+            }
+            b.Quad(P(ri, from, zf), P(ri, from, zb), P(ro, from, zb), P(ro, from, zf), StoneB);       // puntas (dentro de los zocalos)
+            b.Quad(P(ri, to, zf), P(ro, to, zf), P(ro, to, zb), P(ri, to, zb), StoneB);
+
+            // Surcos: dos circulos finos por cara que enmarcan la banda de runas.
+            int steps = blocks * sub;
+            foreach (float r in new[] { ri + 0.03f, ro - 0.03f })
+                foreach (float z in new[] { zf + 0.001f, zb - 0.001f })
+                    for (int i = 0; i < steps; i++)
+                    {
+                        Vector3 p0 = P(r, from + (to - from) * i / steps, z), p1 = P(r, from + (to - from) * (i + 1) / steps, z);
+                        Vector3 d = p1 - p0;
+                        float ang = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
+                        b.Box(Matrix4x4.TRS((p0 + p1) * 0.5f, Quaternion.Euler(0f, 0f, ang), Vector3.one), new Vector3(d.magnitude + 0.012f, 0.012f, 0.006f), Inlay);
+                    }
+        }
+
+        /// <summary>
+        /// Graba la identidad del portal (sigilo arriba, signos repartidos a 120 grados, orientados hacia el centro como en un
+        /// sello) en la cara del frente de la banda: trazos de las plantillas del diccionario como varillas finas en relieve,
+        /// un renderer por glifo (para encenderlos de a uno). Sin identidad o sin diccionario no graba nada (y avisa).
+        /// </summary>
+        private static Renderer[] EngraveIdentity(Transform root, string id, float ri, float ro, float cy, float face)
+        {
+            var signs = new List<string>(4);
+            if (!PortalIdentity(id, out string sigil, signs))
+            {
+                Debug.LogWarning($"[Estructuras] el portal {id} no tiene identidad en portals.json: sin grabados.");
+                return new Renderer[0];
+            }
+            var dictionary = GlyphDictionaryOrNull();
+            if (dictionary == null)
+            {
+                Debug.LogWarning("[Estructuras] no se encontro el GlyphDictionaryAsset: portales sin grabados.");
+                return new Renderer[0];
+            }
+
+            float rm = (ri + ro) * 0.5f, size = (ro - ri) * 0.66f;
+            var renderers = new List<Renderer>(signs.Count + 1);
+            for (int k = 0; k <= signs.Count; k++)
+            {
+                bool isSigil = k == 0;
+                string glyph = isSigil ? sigil : signs[k - 1];
+                float angle = isSigil ? 90f : 90f + 360f * k / (signs.Count + 1);
+                var center = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad)) * rm;
+                var strokes = dictionary.Get(glyph).TemplateStrokes;
+                if (strokes == null || strokes.Count == 0)
+                {
+                    Debug.LogWarning($"[Estructuras] el glifo {glyph} no tiene plantilla: no se graba en {id}.");
+                    continue;
+                }
+                var mesh = GlyphMesh(strokes, center, isSigil ? 0f : angle - 270f, size, cy, face);
+                var go = MapBuilder.Place("Glyph_" + k + "_" + glyph, root, MapBuilder.SaveMesh(mesh.Build($"PortalGlyph_{id}_{k}")), GlyphMaterial(),
+                    root.position, root.rotation);
+                var r = go.GetComponent<MeshRenderer>();
+                r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                renderers.Add(r);
+            }
+            return renderers.ToArray();
+        }
+
+        /// <summary>
+        /// Malla de un glifo en relieve. Plantilla en [0,1] (Y arriba) -> plano de quien mira el frente (+Z local), que tiene
+        /// la derecha en -X local: por eso X se espeja. Los puntos se ralean a GlyphMinSegment para no inflar la malla.
+        /// </summary>
+        private static LowPolyMesh GlyphMesh(List<List<Vector2>> strokes, Vector2 center, float rotationDeg, float size, float cy, float face)
+        {
+            var b = new LowPolyMesh();
+            float rad = rotationDeg * Mathf.Deg2Rad, cos = Mathf.Cos(rad), sin = Mathf.Sin(rad);
+            float z = face + GlyphRelief * 0.5f - 0.002f;
+            foreach (var stroke in strokes)
+            {
+                if (stroke == null || stroke.Count == 0) continue;
+                Vector3 prev = default;
+                for (int i = 0; i < stroke.Count; i++)
+                {
+                    Vector2 q = stroke[i] - new Vector2(0.5f, 0.5f);
+                    q = new Vector2(q.x * cos - q.y * sin, q.x * sin + q.y * cos) * size + center;
+                    var p = new Vector3(-q.x, cy + q.y, z);
+                    if (i == 0) { prev = p; continue; }
+                    Vector3 d = p - prev;
+                    if (d.magnitude < GlyphMinSegment && i < stroke.Count - 1) continue;
+                    float ang = Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg;
+                    b.Box(Matrix4x4.TRS((p + prev) * 0.5f, Quaternion.Euler(0f, 0f, ang), Vector3.one),
+                        new Vector3(d.magnitude + GlyphStroke, GlyphStroke, GlyphRelief), GlyphGold);
+                    prev = p;
+                }
+                // Trazo de un solo punto: un puntito.
+                if (stroke.Count == 1)
+                    b.Box(Matrix4x4.Translate(prev), new Vector3(GlyphStroke * 1.5f, GlyphStroke * 1.5f, GlyphRelief), GlyphGold);
+            }
+            return b;
+        }
+
+        /// <summary>Identidad del portal (sigilo + signos) segun portals.json; false si no hay.</summary>
+        private static bool PortalIdentity(string id, out string sigil, List<string> signs)
+        {
+            sigil = null;
+            signs.Clear();
+            if (portalRecipes == null) portalRecipes = Casting.PortalRecipes.LoadDefault();
+            var def = portalRecipes != null ? portalRecipes.Find(id) : null;
+            if (def == null) return false;
+            var identity = def.Identity;
+            sigil = identity.Sigil;
+            if (identity.Signs != null)
+                foreach (var s in identity.Signs)
+                    if (!string.IsNullOrEmpty(s)) signs.Add(s);
+            return !string.IsNullOrEmpty(sigil);
+        }
+
+        private static GlyphDictionary GlyphDictionaryOrNull()
+        {
+            if (glyphDictionary != null) return glyphDictionary;
+            foreach (string guid in AssetDatabase.FindAssets("t:GlyphDictionaryAsset"))
+            {
+                var asset = AssetDatabase.LoadAssetAtPath<GlyphDictionaryAsset>(AssetDatabase.GUIDToAssetPath(guid));
+                if (asset == null) continue;
+                glyphDictionary = asset.Dictionary;
+                break;
+            }
+            return glyphDictionary;
+        }
+
+        /// <summary>Disco del portal (abanico con UV radial: centro 0.5, borde a 0.5 del centro), recortado en y = 0 (el piso).</summary>
+        private static Mesh DiscMesh(string name, float radius, float cy)
+        {
+            const int sides = 48;
+            var vertices = new List<Vector3>(sides + 2) { new Vector3(0f, cy, 0f) };
+            var uvs = new List<Vector2>(sides + 2) { new Vector2(0.5f, 0.5f) };
+            var normals = new List<Vector3>(sides + 2) { Vector3.forward };
+            var triangles = new List<int>(sides * 3);
+            for (int i = 0; i <= sides; i++)
+            {
+                float a = i * Mathf.PI * 2f / sides;
+                var p = new Vector3(Mathf.Cos(a) * radius, Mathf.Max(0f, cy + Mathf.Sin(a) * radius), 0f);
+                vertices.Add(p);
+                uvs.Add(new Vector2(p.x / (2f * radius) + 0.5f, (p.y - cy) / (2f * radius) + 0.5f));
+                normals.Add(Vector3.forward);
+                if (i > 0)
+                {
+                    triangles.Add(0);
+                    triangles.Add(i + 1);
+                    triangles.Add(i);
+                }
+            }
+            var mesh = new Mesh { name = name };
+            mesh.SetVertices(vertices);
+            mesh.SetUVs(0, uvs);
+            mesh.SetNormals(normals);
+            mesh.SetTriangles(triangles, 0);
+            mesh.RecalculateBounds();
+            return mesh;
+        }
+
+        /// <summary>Cartelito de la placa (TextMeshPro sobre la tablilla de abajo, mira hacia quien dibuja).</summary>
+        private static void PlateLabel(Transform root, Vector3 position, Quaternion rotation, float plateSize)
+        {
+            var go = new GameObject("PlateLabel");
+            go.transform.SetParent(root, false);
+            go.transform.SetPositionAndRotation(position, rotation);
+            var label = go.AddComponent<TMPro.TextMeshPro>();
+            label.rectTransform.sizeDelta = new Vector2(plateSize, 0.085f);
+            label.alignment = TMPro.TextAlignmentOptions.Center;
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 0.05f;
+            label.fontSizeMax = 0.35f;
+            label.color = new Color(0.14f, 0.08f, 0.04f);
+            label.text = "Escribí acá las runas del destino";
+        }
+
+        /// <summary>Material del disco (shader propio en Resources). Si existe con otro shader (version vieja: Lit), se migra.</summary>
         private static Material PortalMaterial()
         {
+            var shader = Shader.Find(PortalShaderName);
             var m = AssetDatabase.LoadAssetAtPath<Material>(PortalMaterialPath);
+            if (shader == null)
+            {
+                Debug.LogError($"[Estructuras] falta el shader {PortalShaderName} (Resources/PortalSurface.shader).");
+                return m;
+            }
+            if (m != null && m.shader == shader) return m;
+            if (m == null)
+            {
+                m = new Material(shader) { name = "PortalSurface" };
+                AssetDatabase.CreateAsset(m, PortalMaterialPath);
+            }
+            else m.shader = shader;
+            m.SetColor("_Tint", new Color(0.6f, 0.5f, 1f));
+            m.SetColor("_Dark", PortalDark);
+            m.SetFloat("_State", 0f);
+            m.SetFloat("_Open", 0f);
+            m.SetFloat("_Rim", PortalVisualCurve.DormantRim);
+            m.renderQueue = (int)UnityEngine.Rendering.RenderQueue.Transparent;
+            EditorUtility.SetDirty(m);
+            return m;
+        }
+
+        /// <summary>Material dorado de los grabados (URP Lit, emision tenue; PortalVisuals la sube con la carga). Se crea una vez.</summary>
+        private static Material GlyphMaterial()
+        {
+            var m = AssetDatabase.LoadAssetAtPath<Material>(GlyphMaterialPath);
             if (m != null) return m;
-            m = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "PortalSurface" };
-            m.SetColor("_BaseColor", PortalDark);
-            m.SetFloat("_Smoothness", 0.2f);
-            // Emision habilitada pero en negro: apagado hasta que el portal se active.
+            m = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = "PortalGlyph" };
+            m.SetColor("_BaseColor", GlyphGold);
+            m.SetFloat("_Smoothness", 0.55f);
+            m.SetFloat("_Metallic", 0.6f);
             m.EnableKeyword("_EMISSION");
-            m.SetColor("_EmissionColor", Color.black);
+            m.SetColor("_EmissionColor", new Color(1f, 0.78f, 0.38f) * (2.2f * PortalVisualCurve.DormantGlyphs));
             m.globalIlluminationFlags = MaterialGlobalIlluminationFlags.None;
-            AssetDatabase.CreateAsset(m, PortalMaterialPath);
+            AssetDatabase.CreateAsset(m, GlyphMaterialPath);
             return m;
         }
 

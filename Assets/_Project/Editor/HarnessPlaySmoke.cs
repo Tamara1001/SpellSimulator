@@ -258,6 +258,17 @@ namespace SpellSimulator.EditorTools
             int supplyPoints = Object.FindObjectsByType<SupplyPoint>(FindObjectsSortMode.None).Length;
             bool recycling = Object.FindFirstObjectByType<RecyclingStation>() != null;
             Check(portals && supplyPoints >= 3 && recycling, "estructuras: 4 portales, 3+ puntos de reaparicion y estacion de reciclaje");
+
+            // Portales circulares: disco atravesable (CrossTrigger es trigger) y animacion (PortalVisuals) en los cuatro.
+            int crossable = 0;
+            foreach (string id in new[] { "tower-study", "watchtower", "field-circle", "cave" })
+            {
+                var portal = Portal.Find(id);
+                var cross = portal != null ? portal.transform.Find("CrossTrigger") : null;
+                var trigger = cross != null ? cross.GetComponent<Collider>() : null;
+                if (trigger != null && trigger.isTrigger && portal.GetComponent<PortalVisuals>() != null) crossable++;
+            }
+            Check(crossable == 4, $"portales: {crossable}/4 con trigger para atravesar el disco y PortalVisuals");
         }
     }
 }

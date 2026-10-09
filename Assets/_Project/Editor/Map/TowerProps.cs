@@ -308,11 +308,7 @@ namespace SpellSimulator.EditorTools.Map
                 b.Quad(P(inner, a1, bottom), P(inner, a1, height), P(inner, a0, height), P(inner, a0, bottom), StoneDark * 0.8f);
             }
             b.Frustum(Matrix4x4.identity, inner, inner, bottom - 0.01f, bottom, 8, StoneDark * 0.7f, true, false);    // fondo
-            // Caño de bronce en el muro, sobre la pila.
-            Vector3 toWall = TowerBuilder.Polar(1f, a, 0f);
-            // El caño entra al muro (cara interior a ~0.99 m del centro de la pila) y la boca cae sobre el agua.
-            b.Box(Matrix4x4.TRS(toWall * 0.73f + Vector3.up * 1.15f, Quaternion.LookRotation(toWall), Vector3.one), new Vector3(0.06f, 0.06f, 0.62f), new Color(0.7f, 0.5f, 0.25f));
-            b.Box(Matrix4x4.TRS(toWall * 0.44f + Vector3.up * 1.1f, Quaternion.LookRotation(toWall), Vector3.one), new Vector3(0.05f, 0.12f, 0.05f), new Color(0.7f, 0.5f, 0.25f));
+            // (Sin caño: Ale pidio quitar la canilla de bronce que salia del muro sobre la pila.)
             var mesh = MapBuilder.SaveMesh(b.Build("WaterBasin"));
             var basin = MapBuilder.Place("WaterBasin", stations, mesh, material, basinAt, Quaternion.identity);
             basin.isStatic = true;
