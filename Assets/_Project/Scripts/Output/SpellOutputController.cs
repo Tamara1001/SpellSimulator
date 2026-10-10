@@ -37,6 +37,8 @@ namespace SpellSimulator.Output
         public SpellManifestation SpawnSpellEffect(SpellIR spell, DrawingCanvas canvas, Vector2 ringCenterUV, IPlayerContext caster)
         {
             if (!spell.valid || !spell.active) return null;
+            // En red: un cliente muestra el efecto y se lo propone al anfitrion (sin cuerpos propios); el anfitrion lo anuncia a los demas.
+            bool visualOnly = Net.NetCast.Intercept(spell, canvas, ringCenterUV, caster);
 
             ElementLook look = LookFor(spell.element, spell.sigilId);
             if (look == null || look.material == null)
@@ -65,7 +67,7 @@ namespace SpellSimulator.Output
             var manifestation = go.AddComponent<SpellManifestation>();
             manifestation.Init(spell, frame, look);
             go.AddComponent<MagicField>().Init(spell, frame, look, canvas.gameObject);
-            SpellBodies.Spawn(spell, frame, look, canvas, go);
+            SpellBodies.Spawn(spell, frame, look, canvas, go, visualOnly);
 
             Track(manifestation);
             Debug.Log($"[VFX Output] {spell.element} ({spell.sigilId}) | {spell.plan?.Primitives} | " +

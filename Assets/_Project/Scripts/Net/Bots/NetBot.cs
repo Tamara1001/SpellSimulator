@@ -6,6 +6,8 @@ using System.Text;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
+using SpellSimulator.Canvas;
+using SpellSimulator.Casting;
 using SpellSimulator.Core;
 using SpellSimulator.Player;
 
@@ -96,6 +98,8 @@ namespace SpellSimulator.Net.Bots
                 if (UI.MainMenu.IsActive) UI.MainMenu.Instance.EnterSandbox();
                 yield return new WaitForSecondsRealtime(0.5f);
                 if (options.Script == BotScript.Grab) yield return GrabScenario();
+                else if (options.Script == BotScript.Draw) yield return DrawScenario();
+                else if (options.Script == BotScript.Cast) yield return CastScenario();
                 else yield return Play(options.Seconds, c == cycles);
                 if (c < cycles)
                 {
@@ -257,6 +261,130 @@ namespace SpellSimulator.Net.Bots
             yield return WaitUntilMs(t0 + 24000);
             DumpBodies(world);
             yield return new WaitForSecondsRealtime(1f);
+        }
+
+        // ---------------------------------------------------------------- guion Cast (F3)
+
+        private int spellsSeen;
+
+        /// <summary>
+        /// +0 Bot1 dibuja un sello de TIERRA (roca) en Paper_M y Bot2 uno de VIENTO en Paper_S: cierran el anillo, esperan la carga y lanzan. El anfitrion
+        /// ejecuta lo que proponen (la roca se crea alla y se replica); cada bot cuenta los hechizos que vio. Bot3 entra tarde y debe ver la roca.
+        /// +25 todos vuelcan los cuerpos (incluye la roca) y los efectos recibidos.
+        /// </summary>
+        private IEnumerator CastScenario()
+        {
+            NetWorld world = NetWorld.Active;
+            SpellCaster spellCaster = FindFirstObjectByType<SpellCaster>();
+            if (world == null || world.Canvases == null || spellCaster == null || spellCaster.Glyphs == null) { failures.Add("sin NetWorld/lienzos/diccionario"); yield break; }
+            long t0 = options.StartAtMs > 0 ? options.StartAtMs : NowMs() + 3000;
+            int idx = BotOptions.IndexOfName(options.Name);
+            spellCaster.SpellCompiled += OnSpellSeen;
+            yield return WaitUntilMs(t0);
+            if (idx == 1 && world.Canvases.TryFindByName("Paper_M", out DrawingCanvas a))
+            {
+                DrawSeal(a, spellCaster.Glyphs, "earth");
+                spellCaster.OnStrokeFinished(a);
+                Note("cierra el sello de tierra en Paper_M");
+            }
+            else if (idx == 2 && world.Canvases.TryFindByName("Paper_S", out DrawingCanvas b))
+            {
+                DrawSeal(b, spellCaster.Glyphs, "wind-directs-air", ("column", 270f), ("column", 90f));
+                spellCaster.OnStrokeFinished(b);
+                Note("cierra el sello de viento en Paper_S");
+            }
+            yield return WaitUntilMs(t0 + 25000);
+            DumpBodies(world);
+            Note("CANVAS " + world.Canvases.Describe());
+            NetCast cast = world.Casts;
+            Note($"CASTSTATS vistos={spellsSeen} aceptadas={(cast != null ? cast.ProposalsAccepted : -1)} efectosRecibidos={(cast != null ? cast.EffectsReceived : -1)}");
+            spellCaster.SpellCompiled -= OnSpellSeen;
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+
+        private void OnSpellSeen(Compiler.SpellIR spell, DrawingCanvas canvas)
+        {
+            if (!spell.valid || !spell.active) return;
+            spellsSeen++;
+            Note($"SPELL {spell.element} {spell.sigilId} en {(canvas != null ? canvas.name : "?")}");
+        }
+
+        /// <summary>Dibuja un sello de plantilla (sigilo + signos + anillo cerrado al final) como lo hace HarnessSeals en el editor.</summary>
+        private static void DrawSeal(DrawingCanvas canvas, Glyphs.GlyphDictionary dictionary, string sigil, params (string id, float angleDeg)[] signs)
+        {
+            var center = new Vector2(0.5f, 0.5f);
+            canvas.Clear();
+            AddTemplate(canvas.Session, dictionary, sigil, center, 0.24f, 0f);
+            foreach (var (id, angle) in signs)
+            {
+                Vector2 at = center + GeometryUtils.VectorFromAngleDeg(angle) * 0.3f;
+                AddTemplate(canvas.Session, dictionary, id, at, 0.12f, angle - 270f);
+            }
+            var ring = new Stroke();
+            for (int i = 0; i <= 64; i++) ring.AddPoint(center + GeometryUtils.VectorFromAngleDeg(i / 64f * 360f) * 0.42f);
+            canvas.Session.AddStroke(ring);
+            canvas.Redraw();
+        }
+
+        private static void AddTemplate(DrawingSession session, Glyphs.GlyphDictionary dictionary, string id, Vector2 center, float size, float rotationDeg)
+        {
+            foreach (var points in dictionary.Get(id).TemplateStrokes)
+            {
+                var stroke = new Stroke();
+                foreach (var p in points)
+                {
+                    Vector2 q = GeometryUtils.RotatePointAroundPivot(p, new Vector2(0.5f, 0.5f), rotationDeg);
+                    stroke.AddPoint((q - new Vector2(0.5f, 0.5f)) * size + center);
+                }
+                session.AddStroke(stroke);
+            }
+        }
+
+        // ---------------------------------------------------------------- guion Draw (F3)
+
+        /// <summary>
+        /// +0 Bot1 y Bot2 dibujan a la vez sobre Paper_M (el anfitrion tambien); Bot3 dibuja dos trazos en Paper_S y deshace el ultimo; Bot4 entra
+        /// tarde y no dibuja. +30 todos vuelcan cuantos trazos y puntos ve cada lienzo con dibujo y el editor compara.
+        /// </summary>
+        private IEnumerator DrawScenario()
+        {
+            NetWorld world = NetWorld.Active;
+            if (world == null || world.Canvases == null) { failures.Add("sin NetWorld/lienzos"); yield break; }
+            long t0 = options.StartAtMs > 0 ? options.StartAtMs : NowMs() + 3000;
+            int idx = BotOptions.IndexOfName(options.Name);
+            Note($"lienzos compartidos: {world.Canvases.CanvasCount}");
+            yield return WaitUntilMs(t0);
+            if (idx == 1 && world.Canvases.TryFindByName("Paper_M", out DrawingCanvas a))
+                yield return DrawPolyline(a, new Vector2(0.15f, 0.2f), new Vector2(0.85f, 0.8f), 40);
+            else if (idx == 2 && world.Canvases.TryFindByName("Paper_M", out DrawingCanvas b))
+                yield return DrawPolyline(b, new Vector2(0.15f, 0.8f), new Vector2(0.85f, 0.2f), 40);
+            else if (idx == 3 && world.Canvases.TryFindByName("Paper_S", out DrawingCanvas c))
+            {
+                yield return DrawPolyline(c, new Vector2(0.1f, 0.5f), new Vector2(0.9f, 0.5f), 30);
+                yield return DrawPolyline(c, new Vector2(0.5f, 0.1f), new Vector2(0.5f, 0.9f), 30);
+                yield return new WaitForSecondsRealtime(1f);
+                c.Session.UndoLastStroke();
+                c.Redraw();
+                Note("deshace el ultimo trazo de Paper_S");
+            }
+            yield return WaitUntilMs(t0 + 30000);
+            Note("CANVAS " + world.Canvases.Describe());
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+
+        /// <summary>Dibuja un trazo punto a punto como lo hace el lapiz (agrega el trazo vacio y le va sumando puntos a lo largo de varios cuadros).</summary>
+        private IEnumerator DrawPolyline(DrawingCanvas canvas, Vector2 from, Vector2 to, int points)
+        {
+            var stroke = new Stroke();
+            canvas.Session.AddStroke(stroke);
+            for (int i = 0; i < points; i++)
+            {
+                Vector2 p = Vector2.Lerp(from, to, i / (float)(points - 1));
+                stroke.AddPoint(p);
+                canvas.DrawAt(p, i == 0, 0f);
+                if (i % 3 == 2) yield return null;
+            }
+            Note($"dibuja trazo {stroke.OwnerId}/{stroke.StrokeId} en {canvas.name} ({points} puntos)");
         }
 
         private static Vector3 ForwardOfPlayer()

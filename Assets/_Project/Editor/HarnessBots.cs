@@ -7,6 +7,7 @@ using System.Text;
 using UnityEditor;
 using UnityEngine;
 using SpellSimulator.Core;
+using SpellSimulator.Canvas;
 using SpellSimulator.Net;
 using SpellSimulator.World;
 
@@ -44,6 +45,12 @@ namespace SpellSimulator.EditorTools
 
         [MenuItem("SpellSimulator/Harness/Run Bots (churn local)")]
         public static void RunChurn() => Start("churn");
+
+        [MenuItem("SpellSimulator/Harness/Run Bots Cast (local)")]
+        public static void RunCast() => Start("cast");
+
+        [MenuItem("SpellSimulator/Harness/Run Bots Draw (local)")]
+        public static void RunDraw() => Start("draw");
 
         [MenuItem("SpellSimulator/Harness/Run Bots Grab (local)")]
         public static void RunGrab() => Start("grab");
@@ -219,9 +226,226 @@ namespace SpellSimulator.EditorTools
             NetSession.SimulatedLatencyMs = 0;
         }
 
+        // Escenario de dibujo de F3: dos bots dibujan a la vez en el mismo lienzo, otro deshace, el anfitrion tambien dibuja y un cuarto bot entra tarde.
+        private static IEnumerator ProbeDraw()
+        {
+            var menu = UI.MainMenu.Instance;
+            yield return 1f;
+            if (UI.MainMenu.IsActive) menu.EnterSandbox();
+            yield return 0.5f;
+            var session = NetSession.Instance;
+            Check(session.StartDirectHost(Port), "el anfitrion abre el puerto local");
+            if (!session.IsConnected) yield break;
+            yield return 1f;
+            NetWorld world = NetWorld.Active;
+            Check(world != null && world.Canvases != null && world.Canvases.CanvasCount > 20, "el dibujo compartido esta activo con lienzos (" + (world != null && world.Canvases != null ? world.Canvases.CanvasCount : 0) + ")");
+            if (world == null || world.Canvases == null) yield break;
+
+            Directory.CreateDirectory(BotLogDir);
+            foreach (string old in Directory.GetFiles(BotLogDir)) { try { File.Delete(old); } catch { } }
+            long t0 = NowMs() + 30000;
+            for (int i = 1; i <= 4; i++)
+            {
+                if (i == 4) { while (NowMs() < t0 + 6000) yield return null; } // el cuarto entra tarde, con los trazos ya dibujados
+                string name = "Bot" + i;
+                string args = "-batchmode -nographics -logFile \"" + Path.Combine(BotLogDir, name + "-unity.log") + "\" -bot -botdirect 127.0.0.1:" + Port + " -botname " + name + " "
+                              + "-botscript draw -botseconds 45 -botat " + t0 + " -botlog \"" + Path.Combine(BotLogDir, name + ".txt") + "\"";
+                var psi = new ProcessStartInfo(BotBuild.ExePath, args) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = BotBuild.OutputDir };
+                processes.Add(Process.Start(psi));
+                if (i < 4) yield return 1.5f;
+            }
+
+            // el anfitrion dibuja un trazo sobre Paper_M a la vez que los bots
+            while (NowMs() < t0 + 500) yield return null;
+            DrawingCanvas paper;
+            Check(world.Canvases.TryFindByName("Paper_M", out paper), "existe Paper_M");
+            var hostStroke = new Stroke();
+            if (paper != null)
+            {
+                paper.Session.AddStroke(hostStroke);
+                for (int i = 0; i < 40; i++) { Vector2 p = new Vector2(0.15f + i * 0.0175f, 0.5f); hostStroke.AddPoint(p); paper.DrawAt(p, i == 0, 0f); if (i % 3 == 2) yield return null; }
+            }
+
+            // al terminar, todos vuelcan: comparar con lo que ve el anfitrion
+            while (NowMs() < t0 + 31000) yield return null;
+            string hostView = world.Canvases.Describe();
+            float deadline = Time.realtimeSinceStartup + 60f;
+            while (Time.realtimeSinceStartup < deadline && processes.Any(p => { try { return !p.HasExited; } catch { return false; } })) yield return 0.5f;
+            Check(processes.All(p => { try { return p.HasExited; } catch { return true; } }), "los bots terminaron a tiempo");
+            notes.Add("anfitrion ve: " + hostView);
+            for (int i = 1; i <= 4; i++)
+            {
+                string report = Path.Combine(BotLogDir, "Bot" + i + ".txt");
+                string line = File.Exists(report) ? File.ReadAllLines(report).LastOrDefault(l => l.Contains("CANVAS ")) : null;
+                string view = line != null ? line.Substring(line.IndexOf("CANVAS ") + 7).Trim() : "(sin informe)";
+                int code = -1; try { code = processes[i - 1].HasExited ? processes[i - 1].ExitCode : -2; } catch { }
+                Check(code == 0, "Bot" + i + " termina bien (codigo " + code + ")");
+                Check(view == hostView, "Bot" + i + (i == 4 ? " (entro tarde)" : "") + " ve los mismos trazos que el anfitrion (" + view + ")");
+            }
+            // el contenido esperado: Paper_M tiene los trazos del anfitrion, Bot1 y Bot2; Paper_S uno (Bot3 deshizo el otro)
+            Check(hostView.Contains("/") && CountStrokes(hostView, world, "Paper_M") == 3, "Paper_M tiene 3 trazos (anfitrion, Bot1, Bot2)");
+            Check(CountStrokes(hostView, world, "Paper_S") == 1, "Paper_S tiene 1 trazo (Bot3 deshizo el segundo)");
+        }
+
+        private static int CountStrokes(string view, NetWorld world, string canvasName)
+        {
+            if (!world.Canvases.TryFindByName(canvasName, out DrawingCanvas canvas) || !world.Canvases.TryGetId(canvas, out ushort id)) return -1;
+            foreach (string part in view.Split(';'))
+            {
+                string[] kv = part.Split(':');
+                if (kv.Length != 2 || kv[0] != id.ToString()) continue;
+                return int.Parse(kv[1].Split('/')[0]);
+            }
+            return 0;
+        }
+
+        // Escenario de lanzamiento de F3: dos bots cierran un sello (tierra y viento) y el anfitrion ejecuta lo que proponen; un tercero entra tarde.
+        private static IEnumerator ProbeCast()
+        {
+            var menu = UI.MainMenu.Instance;
+            yield return 1f;
+            if (UI.MainMenu.IsActive) menu.EnterSandbox();
+            yield return 0.5f;
+            var session = NetSession.Instance;
+            Check(session.StartDirectHost(Port), "el anfitrion abre el puerto local");
+            if (!session.IsConnected) yield break;
+            yield return 1f;
+            NetWorld world = NetWorld.Active;
+            Check(world != null && world.Casts != null, "el lanzamiento compartido esta activo");
+            if (world == null || world.Casts == null) yield break;
+
+            Directory.CreateDirectory(BotLogDir);
+            foreach (string old in Directory.GetFiles(BotLogDir)) { try { File.Delete(old); } catch { } }
+            long t0 = NowMs() + 30000;
+            int windFieldsSeen = 0;
+            for (int i = 1; i <= 2; i++)
+            {
+                LaunchCastBot(i, t0);
+                yield return 1.5f;
+            }
+            bool lateLaunched = false; // el tercero entra tarde, con la roca ya creada
+
+            // mientras los bots lanzan, el anfitrion mira si aparece un campo de viento y una roca; dos cajas esperan quietas (una dentro del chorro de
+            // viento de Bot2 y otra lejos, de control) y se sueltan cuando aparece el campo: si el viento del cliente funciona, se mueven distinto
+            NetBody crateA = null, crateB = null;
+            Vector3 startA = default, startB = default;
+            float releasedAt = -1f, maxYA = float.NegativeInfinity, maxYB = float.NegativeInfinity;
+            bool prepared = false, measured = false;
+            while (NowMs() < t0 + 24000)
+            {
+                windFieldsSeen = Mathf.Max(windFieldsSeen, CountWindFields());
+                if (!lateLaunched && NowMs() >= t0 + 9000) { lateLaunched = true; LaunchCastBot(3, t0); }
+                if (!prepared && NowMs() > t0 - 2500)
+                {
+                    prepared = true;
+                    NetPlayer bot2 = Object.FindObjectsByType<NetPlayer>(FindObjectsSortMode.None).FirstOrDefault(pl => !pl.IsOwner && pl.DisplayName == "Bot2");
+                    if (bot2 != null && world.Canvases.TryFindByName("Paper_S", out DrawingCanvas windCanvas) && world.TryGetBody("Crate_2", out crateA) && world.TryGetBody("Crate_3", out crateB))
+                    {
+                        Vector3 eyes = bot2.Head != null ? bot2.Head.position : bot2.transform.position + Vector3.up * 1.6f;
+                        Vector3 n = windCanvas.EmissionNormal(eyes);
+                        Vector3 c = windCanvas.WorldCenter;
+                        HoldStill(crateA, c + n * 1.5f);
+                        HoldStill(crateB, c + windCanvas.transform.right * 6f + n * 1.5f);
+                        notes.Add("cajas de viento listas: normal " + n.ToString("F2") + ", centro " + c.ToString("F2"));
+                    }
+                    else { crateA = crateB = null; notes.Add("no se pudieron preparar las cajas de viento"); }
+                }
+                if (crateA != null && releasedAt < 0f && Output.WindColumn.UpdraftAt(crateA.Rb.position) > 0.3f) // la columna de aire ya esta activa sobre la caja
+                {
+                    startA = crateA.Rb.position; startB = crateB.Rb.position;
+                    crateA.Rb.isKinematic = false; crateB.Rb.isKinematic = false;
+                    releasedAt = Time.time;
+                }
+                if (releasedAt > 0f && !measured && Time.time - releasedAt >= 0.3f)
+                {
+                    // a los 0,3 s de soltarlas con la columna activa: con gravedad sola las dos llevan la misma velocidad vertical; el viento sube la de la caja alcanzada
+                    measured = true;
+                    float vyA = crateA.Rb.linearVelocity.y, vyB = crateB.Rb.linearVelocity.y;
+                    notes.Add("velocidad vertical a los 0,3 s: con viento " + vyA.ToString("F2") + " m/s, de control " + vyB.ToString("F2") + " m/s");
+                    Check(vyA - vyB > 0.8f, "el viento del hechizo del cliente empuja la caja que alcanza (" + vyA.ToString("F2") + " contra " + vyB.ToString("F2") + " m/s de la de control)");
+                }
+                yield return null;
+            }
+            if (crateA != null && !measured) failures.Add("el campo de viento nunca aparecio para soltar las cajas");
+            string hostCanvases = world.Canvases != null ? world.Canvases.Describe() : "";
+            var hostPos = new Dictionary<int, Vector3>();
+            int dynamics = 0;
+            foreach (var b in world.Bodies)
+            {
+                if (b == null) continue;
+                hostPos[b.Id] = b.Rb.position;
+                if (b.IsDynamic) dynamics++;
+            }
+            yield return 2f;
+            float deadline = Time.realtimeSinceStartup + 60f;
+            while (Time.realtimeSinceStartup < deadline && processes.Any(p => { try { return !p.HasExited; } catch { return false; } })) yield return 0.5f;
+            Check(processes.All(p => { try { return p.HasExited; } catch { return true; } }), "los bots terminaron a tiempo");
+
+            Check(world.Casts.ProposalsAccepted >= 2, "el anfitrion acepto las 2 propuestas (" + world.Casts.ProposalsAccepted + ", rechazadas " + world.Casts.ProposalsRejected + ")");
+            Check(windFieldsSeen > 0, "el anfitrion creo el campo de viento del hechizo del cliente (" + windFieldsSeen + ")");
+            Check(dynamics >= 1, "el anfitrion creo la roca del hechizo de tierra (" + dynamics + " cuerpos nuevos)");
+
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            for (int i = 1; i <= 3; i++)
+            {
+                string report = Path.Combine(BotLogDir, "Bot" + i + ".txt");
+                string[] l = File.Exists(report) ? File.ReadAllLines(report) : new string[0];
+                int code = -1; try { code = processes[i - 1].HasExited ? processes[i - 1].ExitCode : -2; } catch { }
+                Check(code == 0, "Bot" + i + " termina bien (codigo " + code + ")");
+                string stats = l.LastOrDefault(x => x.Contains("CASTSTATS")) ?? "(sin informe)";
+                string canvasLine = l.LastOrDefault(x => x.Contains("CANVAS "));
+                string botCanvases = canvasLine != null ? canvasLine.Substring(canvasLine.IndexOf("CANVAS ") + 7).Trim() : "(sin informe)";
+                Check(botCanvases == hostCanvases, "Bot" + i + " ve los mismos lienzos dibujados que el anfitrion (" + botCanvases + " contra " + hostCanvases + ")");
+                if (i <= 2) Check(l.Any(x => x.Contains("SPELL ")), "Bot" + i + " vio salir su propio hechizo");
+                if (i == 1) Check(stats.Contains("efectosRecibidos=1") || stats.Contains("efectosRecibidos=2"), "Bot1 vio el hechizo de viento de Bot2 (" + stats + ")");
+                if (i == 2) Check(stats.Contains("efectosRecibidos=1") || stats.Contains("efectosRecibidos=2"), "Bot2 vio el hechizo de tierra de Bot1 (" + stats + ")");
+                int total = 0, close = 0, dynSeen = 0; float worst = 0f; string worstId = "";
+                foreach (string line in l)
+                {
+                    if (!line.StartsWith("BODY ")) continue;
+                    string[] f = line.Split(' ');
+                    if (f.Length < 5 || !int.TryParse(f[1], out int id) || !hostPos.TryGetValue(id, out Vector3 hp)) continue;
+                    var bp = new Vector3(float.Parse(f[2], inv), float.Parse(f[3], inv), float.Parse(f[4], inv));
+                    float d = Vector3.Distance(hp, bp);
+                    total++;
+                    if (id >= 40000) dynSeen++;
+                    if (d <= 0.05f) close++;
+                    if (d > worst) { worst = d; worstId = id.ToString(); }
+                }
+                Check(dynSeen >= 1, "Bot" + i + (i == 3 ? " (entro tarde)" : "") + " tiene la roca replicada (" + dynSeen + ")");
+                Check(total > 50 && close >= total * 0.98f && worst < 0.5f, "Bot" + i + " ve el mundo igual que el anfitrion: " + close + "/" + total + "; peor " + worst.ToString("F2") + " m (cuerpo " + worstId + ")");
+            }
+            notes.Add("campos de viento vistos por el anfitrion: " + windFieldsSeen);
+        }
+
+        private static void LaunchCastBot(int i, long t0)
+        {
+            string name = "Bot" + i;
+            string args = "-batchmode -nographics -logFile \"" + Path.Combine(BotLogDir, name + "-unity.log") + "\" -bot -botdirect 127.0.0.1:" + Port + " -botname " + name + " "
+                          + "-botscript cast -botseconds 45 -botat " + t0 + " -botlog \"" + Path.Combine(BotLogDir, name + ".txt") + "\"";
+            var psi = new ProcessStartInfo(BotBuild.ExePath, args) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = BotBuild.OutputDir };
+            processes.Add(Process.Start(psi));
+        }
+
+        private static void HoldStill(NetBody b, Vector3 position)
+        {
+            b.Rb.isKinematic = true;
+            b.Rb.position = position;
+            b.transform.position = position;
+        }
+
+        private static int CountWindFields()
+        {
+            int n = 0;
+            foreach (var f in Output.MagicField.Active) if (f != null && f.name.Contains("Wind")) n++;
+            return n;
+        }
+
         private static IEnumerator Probe(string mode)
         {
             if (!File.Exists(BotBuild.ExePath)) { failures.Add("falta el ejecutable de los bots (menu SpellSimulator/Build/Windows (bots))"); yield break; }
+            if (mode == "cast") { var cast = ProbeCast(); while (cast.MoveNext()) yield return cast.Current; yield break; }
+            if (mode == "draw") { var draw = ProbeDraw(); while (draw.MoveNext()) yield return draw.Current; yield break; }
             if (mode.StartsWith("grab")) { var grab = ProbeGrab(mode); while (grab.MoveNext()) yield return grab.Current; yield break; }
             var menu = UI.MainMenu.Instance;
             if (menu == null) { failures.Add("no hay MainMenu"); yield break; }

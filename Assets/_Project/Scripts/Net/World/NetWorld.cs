@@ -26,6 +26,9 @@ namespace SpellSimulator.Net
     [DisallowMultipleComponent]
     public sealed class NetWorld : MonoBehaviour
     {
+        private const string MSpawn = "sw.spawn", MRemove = "sw.remove";
+        private const ushort FirstDynamicId = 40000;
+        private ushort nextDynamicId = FirstDynamicId;
         private const string MFull = "sw.full", MSnap = "sw.snap", MGrab = "sw.grab", MDeny = "sw.deny", MHeld = "sw.held",
                              MHold = "sw.hold", MRelease = "sw.rel", MReset = "sw.reset", MResetReq = "sw.resetreq";
         private const float SnapInterval = 1f / 15f, HoldInterval = 1f / 20f, KeyframeInterval = 0.5f;
@@ -59,6 +62,14 @@ namespace SpellSimulator.Net
         private int keyframeCursor;
         private bool applyingNet, applyingReset;
         private PlayerInteractor interactor;
+        private NetCanvasSync canvasSync;
+        private NetCast castSync;
+
+        /// <summary>Dibujo compartido (trazos de los lienzos); null si no hay sesion.</summary>
+        public NetCanvasSync Canvases => canvasSync;
+
+        /// <summary>Lanzamiento compartido; null si no hay sesion.</summary>
+        public NetCast Casts => castSync;
 
         public bool IsServer => nm != null && nm.IsServer;
         public bool Began => began;
@@ -110,7 +121,13 @@ namespace SpellSimulator.Net
             cm.RegisterNamedMessageHandler(MRelease, OnRelease);
             cm.RegisterNamedMessageHandler(MReset, OnResetMessage);
             cm.RegisterNamedMessageHandler(MResetReq, OnResetRequest);
+            cm.RegisterNamedMessageHandler(MSpawn, OnSpawnMessage);
+            cm.RegisterNamedMessageHandler(MRemove, OnRemoveMessage);
             MagicWorld.WorldReset += OnWorldReset;
+            canvasSync = new NetCanvasSync(nm);
+            canvasSync.Begin();
+            castSync = new NetCast(nm, canvasSync);
+            castSync.Begin();
             bool client = !nm.IsServer;
             foreach (var b in bodies)
             {
@@ -124,15 +141,19 @@ namespace SpellSimulator.Net
         private void End()
         {
             if (!began && Active != this) return;
+            Debug.Log("[NetWorld] fin de la sesion de mundo compartido:\n" + System.Environment.StackTrace);
             began = false;
             if (Active == this) Active = null;
             MagicWorld.WorldReset -= OnWorldReset;
+            if (castSync != null) { castSync.End(); castSync = null; }
+            if (canvasSync != null) { canvasSync.End(); canvasSync = null; }
             if (nm != null && nm.CustomMessagingManager != null)
             {
                 var cm = nm.CustomMessagingManager;
                 cm.UnregisterNamedMessageHandler(MFull); cm.UnregisterNamedMessageHandler(MSnap); cm.UnregisterNamedMessageHandler(MGrab);
                 cm.UnregisterNamedMessageHandler(MDeny); cm.UnregisterNamedMessageHandler(MHeld); cm.UnregisterNamedMessageHandler(MHold);
                 cm.UnregisterNamedMessageHandler(MRelease); cm.UnregisterNamedMessageHandler(MReset); cm.UnregisterNamedMessageHandler(MResetReq);
+                cm.UnregisterNamedMessageHandler(MSpawn); cm.UnregisterNamedMessageHandler(MRemove);
             }
             applyingNet = true;
             foreach (var b in bodies)
@@ -146,7 +167,15 @@ namespace SpellSimulator.Net
             applyingNet = false;
             PlayerRegistry.LocalOwnerId = 0;
             // los cuerpos quedan registrados con su Holdable; el siguiente Begin reconstruye la lista
-            foreach (var b in bodies) if (b != null) Destroy(b);
+            bool wasServer = nm != null && nm.IsServer;
+            foreach (var b in bodies)
+            {
+                if (b == null) continue;
+                bool replica = b.IsDynamic && !wasServer;
+                b.IsDynamic = false; // que su destruccion no avise a nadie
+                if (replica) Destroy(b.gameObject); else Destroy(b);
+            }
+            nextDynamicId = FirstDynamicId;
             bodies.Clear();
             byId.Clear();
         }
@@ -189,6 +218,7 @@ namespace SpellSimulator.Net
         private void FixedUpdate()
         {
             if (!began || mismatch) return;
+            if (canvasSync != null) canvasSync.Tick(Time.fixedDeltaTime);
             if (nm.IsServer) ServerTick(); else ClientTick();
         }
 
@@ -328,11 +358,28 @@ namespace SpellSimulator.Net
         private void SendFull(ulong clientId)
         {
             int held = 0;
-            for (int i = 0; i < bodies.Count; i++) if (bodies[i] != null && bodies[i].HeldBy != Holdable.NoOwner) held++;
-            int size = 4 + 2 + bodies.Count * PoseBytes + 2 + held * 6;
-            using (var w = new FastBufferWriter(size, Allocator.Temp))
+            var dynamics = new List<NetBody>();
+            for (int i = 0; i < bodies.Count; i++)
+            {
+                if (bodies[i] == null) continue;
+                if (bodies[i].HeldBy != Holdable.NoOwner) held++;
+                if (bodies[i].IsDynamic) dynamics.Add(bodies[i]);
+            }
+            var payloads = new List<byte[]>(dynamics.Count);
+            int spawnBytes = 0;
+            foreach (var d in dynamics) { byte[] p = CurrentPayload(d); payloads.Add(p); spawnBytes += 2 + 1 + 4 + p.Length; }
+            int size = 4 + 2 + spawnBytes + 2 + bodies.Count * PoseBytes + 2 + held * 6;
+            using (var w = new FastBufferWriter(size + 16, Allocator.Temp))
             {
                 w.WriteValueSafe(fingerprint);
+                w.WriteValueSafe((ushort)dynamics.Count);
+                for (int i = 0; i < dynamics.Count; i++)
+                {
+                    w.WriteValueSafe(dynamics[i].Id);
+                    w.WriteValueSafe(dynamics[i].SpawnKind);
+                    w.WriteValueSafe(payloads[i].Length);
+                    w.WriteBytesSafe(payloads[i]);
+                }
                 w.WriteValueSafe((ushort)bodies.Count);
                 for (int i = 0; i < bodies.Count; i++) WritePose(w, bodies[i]);
                 w.WriteValueSafe((ushort)held);
@@ -347,13 +394,26 @@ namespace SpellSimulator.Net
             }
         }
 
+        /// <summary>Datos para armar el cuerpo creado en juego tal como esta ahora (pose actual y cuanto lleva formandose).</summary>
+        private static byte[] CurrentPayload(NetBody b)
+        {
+            if ((NetSpawnKind)b.SpawnKind == NetSpawnKind.Rock && NetSpawn.TryDecodeRock(b.SpawnPayload, out NetSpawn.RockData d))
+            {
+                d.pos = b.Rb.position;
+                d.rot = b.Rb.rotation;
+                d.elapsed = Mathf.Max(0f, Time.time - b.SpawnedAt);
+                return NetSpawn.EncodeRock(d);
+            }
+            return b.SpawnPayload ?? new byte[0];
+        }
+
         // ---------------------------------------------------------------- conexion
 
         private void OnClientConnected(ulong clientId)
         {
             if (!began) return;
-            if (clientId == nm.LocalClientId) PlayerRegistry.LocalOwnerId = (int)clientId;
-            if (nm.IsServer && clientId != NetworkManager.ServerClientId) SendFull(clientId);
+            if (clientId == nm.LocalClientId) { PlayerRegistry.LocalOwnerId = (int)clientId; if (canvasSync != null) canvasSync.RefreshOwner(); }
+            if (nm.IsServer && clientId != NetworkManager.ServerClientId) { SendFull(clientId); if (canvasSync != null) canvasSync.SendFull(clientId); }
         }
 
         private void OnClientDisconnected(ulong clientId)
@@ -513,6 +573,104 @@ namespace SpellSimulator.Net
             if (world != null) world.ResetWorld();
         }
 
+        // ---------------------------------------------------------------- cuerpos creados en juego
+
+        /// <summary>Servidor: registra un cuerpo creado durante el juego (roca) y avisa a los clientes para que armen su copia.</summary>
+        public ushort RegisterSpawned(GameObject go, NetSpawnKind kind, byte[] payload)
+        {
+            if (!began || !nm.IsServer || go == null || nextDynamicId >= ushort.MaxValue - 1) return 0;
+            if (!go.TryGetComponent(out Rigidbody _)) return 0;
+            ushort id = nextDynamicId++;
+            NetBody body = go.TryGetComponent(out NetBody existing) ? existing : go.AddComponent<NetBody>();
+            body.Init(id);
+            body.SetOriginals(false, true); // una roca formada es un cuerpo normal con gravedad
+            body.IsDynamic = true;
+            body.SpawnKind = (byte)kind;
+            body.SpawnPayload = payload;
+            body.SpawnedAt = Time.time;
+            bodies.Add(body);
+            byId[id] = body;
+            var targets = ClientTargets();
+            if (targets.Count > 0)
+            {
+                using (var w = new FastBufferWriter(2 + 1 + 4 + payload.Length + 8, Allocator.Temp))
+                {
+                    w.WriteValueSafe(id);
+                    w.WriteValueSafe((byte)kind);
+                    w.WriteValueSafe(payload.Length);
+                    w.WriteBytesSafe(payload);
+                    nm.CustomMessagingManager.SendNamedMessage(MSpawn, targets, w, NetworkDelivery.Reliable);
+                }
+            }
+            return id;
+        }
+
+        private List<ulong> ClientTargets()
+        {
+            var targets = new List<ulong>(nm.ConnectedClientsIds.Count);
+            foreach (ulong id in nm.ConnectedClientsIds) if (id != NetworkManager.ServerClientId) targets.Add(id);
+            return targets;
+        }
+
+        /// <summary>Lo llama <see cref="NetBody"/> al destruirse un cuerpo creado en juego: sale de la lista y el servidor avisa a los clientes.</summary>
+        public void OnDynamicDestroyed(NetBody body)
+        {
+            if (!began) return;
+            bodies.Remove(body);
+            byId.Remove(body.Id);
+            if (!nm.IsServer) return;
+            var targets = ClientTargets();
+            if (targets.Count == 0) return;
+            using (var w = new FastBufferWriter(2, Allocator.Temp))
+            {
+                w.WriteValueSafe(body.Id);
+                nm.CustomMessagingManager.SendNamedMessage(MRemove, targets, w, NetworkDelivery.Reliable);
+            }
+        }
+
+        private void OnSpawnMessage(ulong sender, FastBufferReader r)
+        {
+            if (!began || nm.IsServer || mismatch) return;
+            r.ReadValueSafe(out ushort id);
+            r.ReadValueSafe(out byte kind);
+            r.ReadValueSafe(out int len);
+            if (len < 0 || len > 4096) return;
+            var bytes = new byte[len];
+            r.ReadBytesSafe(ref bytes, len);
+            CreateReplica(id, (NetSpawnKind)kind, bytes);
+        }
+
+        private void OnRemoveMessage(ulong sender, FastBufferReader r)
+        {
+            if (!began || nm.IsServer) return;
+            r.ReadValueSafe(out ushort id);
+            if (!byId.TryGetValue(id, out NetBody b) || b == null) return;
+            if (b.LocalHeld) ForceRelease(b);
+            bodies.Remove(b);
+            byId.Remove(id);
+            b.IsDynamic = false;
+            Destroy(b.gameObject);
+        }
+
+        /// <summary>Cliente: arma la copia de un cuerpo que creo el anfitrion y la deja siguiendo sus poses.</summary>
+        private void CreateReplica(ushort id, NetSpawnKind kind, byte[] payload)
+        {
+            if (byId.ContainsKey(id)) return;
+            GameObject go = NetSpawn.Create(kind, payload);
+            if (go == null) return;
+            NetBody body = go.AddComponent<NetBody>();
+            body.Init(id);
+            body.SetOriginals(false, true);
+            body.IsDynamic = true;
+            body.SpawnKind = (byte)kind;
+            body.SpawnPayload = payload;
+            body.SpawnedAt = Time.time;
+            bodies.Add(body);
+            byId[id] = body;
+            body.BecomeFollower();
+            body.SetTarget(go.transform.position, go.transform.rotation, true);
+        }
+
         // ---------------------------------------------------------------- mensajes: cliente
 
         private void OnFull(ulong sender, FastBufferReader r)
@@ -524,6 +682,17 @@ namespace SpellSimulator.Net
                 mismatch = true;
                 Debug.LogError($"[NetWorld] El mundo del anfitrion es distinto del tuyo (huella {remoteFingerprint:X8} contra {fingerprint:X8}): usen la misma version del juego. La replicacion de objetos queda apagada.");
                 return;
+            }
+            r.ReadValueSafe(out ushort spawnCount);
+            for (int i = 0; i < spawnCount; i++)
+            {
+                r.ReadValueSafe(out ushort sid);
+                r.ReadValueSafe(out byte skind);
+                r.ReadValueSafe(out int slen);
+                if (slen < 0 || slen > 4096) return;
+                var sbytes = new byte[slen];
+                r.ReadBytesSafe(ref sbytes, slen);
+                CreateReplica(sid, (NetSpawnKind)skind, sbytes);
             }
             r.ReadValueSafe(out ushort count);
             for (int i = 0; i < count; i++) ApplyPose(ReadPose(r), true);

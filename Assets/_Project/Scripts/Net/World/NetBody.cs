@@ -49,6 +49,19 @@ namespace SpellSimulator.Net
         public bool PendingRelease;
         public float GhostUntil;
 
+        // Cuerpos creados en juego (rocas): el anfitrion los registra con un tipo y datos; los clientes arman una copia.
+        public bool IsDynamic;
+        public byte SpawnKind;
+        public byte[] SpawnPayload;
+        public float SpawnedAt;
+
+        /// <summary>Fisica a la que vuelve el cuerpo cuando alguien lo suelta (para lo creado en juego no es la del momento de registrarlo: una roca se forma cinematica).</summary>
+        public void SetOriginals(bool kinematic, bool gravity)
+        {
+            OriginalKinematic = kinematic;
+            OriginalGravity = gravity;
+        }
+
         public int HeldBy => Holdable != null ? Holdable.HeldByOwnerId : Holdable.NoOwner;
 
         public void Init(ushort id)
@@ -67,6 +80,7 @@ namespace SpellSimulator.Net
         private void OnDestroy()
         {
             if (Holdable != null) Holdable.HeldChanged -= OnHeldChanged;
+            if (IsDynamic && NetWorld.Active != null) NetWorld.Active.OnDynamicDestroyed(this);
         }
 
         private void OnHeldChanged(int owner)

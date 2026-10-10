@@ -62,7 +62,7 @@ SpellSimulator/
 
 ## Red (multijugador)
 - `Scripts/Net/`: `NetSession` (sala por Relay/IP directa), `NetPlayer` (avatar de red), `NetHud`, `ClientNetworkTransform`.
-- `Scripts/Net/World/`: `NetWorld` (mundo compartido), `NetBody`, `NetBodyMath`.
+- `Scripts/Net/World/`: `NetWorld` (mundo compartido), `NetBody`, `NetBodyMath`, `NetCanvasSync` (trazos), `NetCast` + `SpellIRCodec` (lanzamiento), `NetSpawn` (cuerpos creados en juego).
 - `Scripts/Net/Bots/`: `BotOptions`, `NetBot` (jugadores automaticos; ver HARNESS).
 - `Editor/`: `NetSetup` (avatar de red), `HarnessNetSmoke`, `HarnessBots`, `BotBuild`.
 

@@ -583,7 +583,9 @@ Qué se hace:
 
 **A mano:** sensación de agarre con 100–200 ms.
 
-### F3 — Dibujo compartido y hechizos replicados (10–14 días)
+### F3 — Dibujo compartido y hechizos replicados (10–14 días) — HECHO 2026-10-10
+
+> Hecho con mensajes propios (como F2): `NetCanvasSync` (trazos por comparacion de sesiones), `NetCast` + `SpellIRCodec` (el cliente propone el SpellIR compilado; el anfitrion valida y ejecuta; los demas lo muestran) y `NetSpawn` (la roca se replica). Pendiente: union de mitades y de runas (crean lienzos en juego), tinta validada por el servidor (PvP), brillo de carga de los hechizos ajenos, matriz de lienzos desde un cliente.
 
 **Depende de:** F2.
 

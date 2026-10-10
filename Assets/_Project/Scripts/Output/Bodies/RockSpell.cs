@@ -70,7 +70,43 @@ namespace SpellSimulator.Output
             go.AddComponent<RockForming>().Init(rb, col, radius, formSeconds);
 
             Register(expiring, ownerId);
+            // En red el anfitrion crea la roca de verdad y los clientes arman una copia que sigue sus poses.
+            Net.NetWorld net = Net.NetWorld.Active;
+            if (net != null && net.IsServer)
+                net.RegisterSpawned(go, Net.NetSpawnKind.Rock, Net.NetSpawn.EncodeRock(new Net.NetSpawn.RockData
+                {
+                    pos = go.transform.position, rot = go.transform.rotation, variant = (byte)variant, radius = radius, formSeconds = formSeconds, elapsed = 0f
+                }));
             Debug.Log($"[Roca] radio {radius:F2} m masa {mass:F0} kg formacion {formSeconds:F1} s tinta x{spell.inkPower:F2}");
+        }
+
+        /// <summary>
+        /// Copia de una roca para un cliente de red: mismo aspecto y misma formacion (crece de 0 a 1), pero cinematica; su pose la manda el anfitrion.
+        /// No expira por su cuenta (el anfitrion avisa cuando desaparece). <paramref name="elapsed"/> = segundos que la roca original ya lleva formandose.
+        /// </summary>
+        public static GameObject BuildReplica(Vector3 position, Quaternion rotation, int variant, float radius, float formSeconds, float elapsed, ElementLook look)
+        {
+            variant = Mathf.Clamp(variant, 0, Variants - 1);
+            var go = new GameObject("Roca");
+            go.transform.SetPositionAndRotation(position, rotation);
+            go.transform.localScale = Vector3.zero;
+            var filter = go.AddComponent<MeshFilter>();
+            filter.sharedMesh = MeshFor(variant);
+            var meshRenderer = go.AddComponent<MeshRenderer>();
+            if (look != null && look.material != null) meshRenderer.sharedMaterial = look.material;
+            var rb = go.AddComponent<Rigidbody>();
+            rb.mass = RockMath.Mass(radius);
+            rb.useGravity = false;
+            rb.isKinematic = true;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            var col = go.AddComponent<MeshCollider>();
+            col.convex = true;
+            col.sharedMesh = filter.sharedMesh;
+            col.enabled = false;
+            go.AddComponent<Movable>().SetName("roca");
+            go.AddComponent<RockForming>().InitReplica(col, radius, formSeconds, elapsed);
+            return go;
         }
 
         private static void Register(ExpiringBody body, int ownerId)

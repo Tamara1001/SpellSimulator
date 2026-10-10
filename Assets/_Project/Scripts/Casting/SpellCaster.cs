@@ -41,6 +41,9 @@ namespace SpellSimulator.Casting
         /// <summary>Ultimo hechizo compilado (valido o no). Util para UI y tests.</summary>
         public SpellIR LastSpell { get; private set; }
 
+        /// <summary>Diccionario de glifos (con las plantillas de cada sigilo y signo); null si falta asignarlo. Lo usan las pruebas para dibujar sellos.</summary>
+        public SpellSimulator.Glyphs.GlyphDictionary Glyphs => dictionary != null ? dictionary.Dictionary : null;
+
         /// <summary>
         /// Se emite tras cada cast con la lectura completa (AST) ademas del hechizo: para overlays sobre el papel y
         /// herramientas de aprendizaje. Para reaccionar al hechizo en si, usar SpellCompiled.
@@ -292,6 +295,7 @@ namespace SpellSimulator.Casting
         public bool Trigger(DrawingCanvas canvas)
         {
             if (canvas == null || !SealActivation.ShouldFire(GetPhase(canvas)) || IsBlocked(canvas)) return false;
+            if (Net.NetCast.IsClientOnly) return false; // en red los disparadores (runas, placas) los decide solo el anfitrion
             SpellIR spell = Cast(canvas);
             bool launched = spell.valid && spell.active;
             SetPhase(canvas, launched ? SealPhase.Spent : SealPhase.Armed);
