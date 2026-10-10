@@ -63,3 +63,6 @@ semántica: se reportan como desconocidos (`unknown_class`) y no rompen el hechi
 `orientation` = sentido en que se dibujó.
 
 **VFX por elemento**: fire → `Prefabs/VFX/Fire.prefab` (VFX Graph); water/wind/earth/light → `Prefabs/VFX/{Water,Air,Earth,Light}.prefab`.
+
+## Efectos de los signos (octava tanda)
+Los signos del anillo ya no solo suman potencia: cada uno tiene efecto propio (crush, collection, billowing, repetition, weave, región, además de columna, dispersión, levitación, pull y convergencia). Tabla completa en [GAME_DESIGN](GAME_DESIGN.md#signos-y-sus-efectos); implementación en `PlanResolver` (signo -> `SpellPlan`) y `MagicField`/`EarthShapes` (efecto). El significado sigue siendo data del diccionario.

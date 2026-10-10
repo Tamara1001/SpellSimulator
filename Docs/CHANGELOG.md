@@ -6,6 +6,10 @@ tags: [doc, changelog]
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
 
+## 2026-10-10 — Cierre: documentacion y build WebGL
+
+Build WebGL rehecho con esta tanda (`SpellSimulator/Build/WebGL (itch.io)`, 33 MB, ~33 min; `Builds/SpellSimulator-WebGL.zip`, ignorado por git). Se actualizaron STATUS, ROADMAP y GLYPHS para quien continue. Sin probar en navegador todavia.
+
 ## 2026-10-10 — Prueba manual de Ale (13 puntos): signos con efecto propio, tierra con impacto, tutoriales de tierra y agua, ajustes
 
 **Ajustes (bugs y números)**

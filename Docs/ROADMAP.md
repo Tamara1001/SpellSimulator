@@ -129,6 +129,7 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 ---
 
 ## Siguiente (backlog priorizado para quien continúe)
+> Estado al 2026-10-10: tanda de la prueba manual (13 puntos) hecha y subida; falta probarla a mano (KI-123) y medir el reconocimiento de luz/raros (KI-124).
 > Plan vigente de la octava tanda (controles, tinta, hechizos, runas, cinturón, mundo y portales, multijugador): [PLAN_OCTAVA_TANDA](PLAN_OCTAVA_TANDA.md).
 1. **Probar a mano** lo hecho (ver M7) y corregir lo que aparezca. Es lo que más valor da ahora.
 2. ~~WebGL/itch.io (KI-104)~~ resuelto 2026-10-09.
