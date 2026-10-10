@@ -327,6 +327,8 @@ namespace SpellSimulator.EditorTools.Map
             ClearVegetation(t.TransformPoint(new Vector3(0f, 0f, zTop + run * 0.5f)), run * 0.5f + 1.2f);
 
             BuildPortal(t, "watchtower", new Vector3(0f, deck, -1.55f), 0f, PortalBase.Floor);
+            StandBook(t, "spells-siege", new Vector2(1.8f, 0.3f), Vector2.zero, deck);
+            StandBook(t, "portals-heights", new Vector2(1.8f, 1.5f), Vector2.zero, deck);
             var chest = Chest(t, "SupplyChest_Watchtower", new Vector3(-1.6f, deck, 0.9f), 90f, true, out float chestTop);
             Supply(chest, MapContraptions.CreateRune(RuneKind.Stone, "RuneTemplate_Stone", chest.position, lit), chestTop + 0.07f, StoneCooldown, 2, "watchtower-stone");
             // Pizarra fija: la cara mira a la plataforma y el hechizo sale hacia afuera (lejos de quien dibuja).
@@ -592,6 +594,8 @@ namespace SpellSimulator.EditorTools.Map
 
             HeightRange(t, -1.5f, 1.5f, -1f, 1f, out _, out float max);
             BuildPortal(t, "field-circle", new Vector3(0f, max + 0.15f, 0f), 0f, PortalBase.Terrain);
+            StandBook(t, "portals-valley", new Vector2(-1.9f, -1.9f), Vector2.zero);
+            StandBook(t, "spells-water-deep", new Vector2(1.9f, -1.9f), Vector2.zero);
             CanvasDesigns.Sign(t, lit, "Sign_Struct_StoneCircle", t.TransformPoint(new Vector3(2.6f, 0f, 6.4f)), t.forward,
                 "Círculo de piedras", "Dibujá el sello del portal\nen la placa para viajar.");
         }
@@ -688,6 +692,7 @@ namespace SpellSimulator.EditorTools.Map
             reliquary.isStatic = true;
             Supply(reliquary.transform, MapContraptions.CreateRune(RuneKind.Gold, "RuneTemplate_Gold", reliquary.transform.position, lit), 0.99f + 0.09f, GoldCooldown, 1, "shrine-gold");
 
+            StandBook(t, "spells-crystal", new Vector2(3.4f, -2.3f), new Vector2(0.5f, 0f));
             CanvasDesigns.Sign(t, lit, "Sign_Struct_Shrine", t.TransformPoint(new Vector3(-2.6f, 0f, 2.6f)), t.forward,
                 "Santuario", "Dejá en el círculo runas gastadas\no papeles: el altar te da otros.\nEl relicario guarda una runa de oro.");
         }
@@ -1203,6 +1208,28 @@ namespace SpellSimulator.EditorTools.Map
             if (respawn != null) Object.DestroyImmediate(respawn);
             clone.AddComponent<Respawnable>();
             clone.transform.SetParent(parent, true);
+        }
+
+        /// <summary>
+        /// Atril suelto con un libro encima (mismo modelo que el de la cabana), apoyado en el terreno. local: posicion en la raiz; toward: punto local
+        /// hacia donde mira quien lee (el atril se gira para dejarle el libro de frente).
+        /// </summary>
+        private static void StandBook(Transform t, string id, Vector2 local, Vector2 toward, float? floorY = null)
+        {
+            float y = floorY ?? Rel(t, local.x, local.y);
+            Vector2 v = (toward - local).normalized;
+            float yaw = Mathf.Atan2(-v.x, -v.y) * Mathf.Rad2Deg;
+            var b = new LowPolyMesh();
+            b.Frustum(Matrix4x4.identity, 0.25f, 0.12f, 0f, 0.1f, 6, WoodB);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.6f, 0f)), new Vector3(0.1f, 1.1f, 0.1f), WoodB);
+            b.Box(Matrix4x4.TRS(new Vector3(0f, 1.15f, 0f), Quaternion.Euler(-25f, 0f, 0f), Vector3.one), new Vector3(0.6f, 0.04f, 0.45f), WoodA);
+            var stand = MapBuilder.Place("Lectern_" + id, t, MapBuilder.SaveMesh(b.Build("Lectern_" + id)), lit,
+                t.TransformPoint(new Vector3(local.x, y, local.y)), t.rotation * Quaternion.Euler(0f, yaw, 0f));
+            var col = stand.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, 0.6f, 0f);
+            col.size = new Vector3(0.5f, 1.2f, 0.5f);
+            Matrix4x4 bookAt = stand.transform.localToWorldMatrix * Matrix4x4.TRS(new Vector3(0f, 1.17f, 0f), Quaternion.Euler(-25f, 0f, 0f), Vector3.one);
+            Book(t, id, bookAt.GetColumn(3), stand.transform.rotation * Quaternion.Euler(-25f, 0f, 0f));
         }
 
         /// <summary>Libro de aprendizaje (mismo modelo que los de la torre).</summary>

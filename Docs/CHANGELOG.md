@@ -6,6 +6,18 @@ tags: [doc, changelog]
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
 
+## 2026-10-10 — F6 del multijugador + Modo Libre diferido: efectos del agua, espectadores, coberturas, anti-trampas, hechizos propios y portales por libros
+
+- **Anti-trampas simple** (`Net/World/NetRateLimiter.cs`, 4 tests): cubo de fichas por (cliente, canal) en el anfitrión (agarrar, sostener, soltar, reiniciar, cruzar portal, trazos, lanzar); lo que excede se descarta y se cuenta (`Dropped`). Además `OnHold` descarta poses a más de 12 m de quien sostiene. Sin validación de velocidad de jugadores: no habrá competitivo con premios (ADR-035).
+- **Duelo:** espectadores (el tercero que entra mira desde una tribuna sobre la arena, sin tinta ni lanzamiento; HUD "Jugador 1/2"); coberturas destructibles (`DuelCover`, 60 de vida, solo por hechizos; el anfitrión manda la máscara en `du.state` y se restauran cada ronda); un sello compuesto ejecuta todos sus interiores (`SpellCaster.CompileAll`) y cobra tinta una sola vez (ventana de 0,6 s por jugador).
+- **Tinta limitada en coop** (opcional): casilla «Tinta limitada (sala cooperativa)» al crear sala (`NetCast.CoopInk`); mismas reglas que el duelo, un saldo por jugador.
+- **Efectos del agua replicados** (`Net/World/NetEffectsSync.cs`; cierra KI-121): charcos (cada 0,25 s si cambian), inundaciones, hielo y su congelación llegan a los clientes; quien entra tarde recibe todo.
+- **Hechizos propios** (ADR-034, `Learning/SpellLibrary*`, `SpellRecording`, `Casting/CastSnapshot`; 9 tests): «Guardar el último hechizo» en la lista del grimorio guarda los trazos del último lanzamiento (en unidades de anillo) en `hechizos.json`; nombre automático («Fuego propio 2») y renombrar con el teclado desde su página (solo PC; en VR queda el automático); borrar con doble toque.
+- **Portales por libros** (ADR-036, informativo; `Learning/PortalKnowledge`, 3 tests): libros «Caminos del valle» y «Caminos de las alturas» anotan en la nueva sección Portales del grimorio la identidad de 4 portales; no es requisito para usarlos. `GlyphLore` lee `portals` de `glifos.json`; `Grimoire.portalsFile` lo asigna `Setup Grimoire`.
+- **Mapa:** los 3 libros de hechizos pendientes (`spells-siege`, `spells-water-deep`, `spells-crystal`) y los 2 de portales están en atriles (`MapStructures.StandBook`) en la torre de vigía, el círculo de piedras y el santuario. **Pistas «Se dice que...»**: la página de Hechizos del grimorio muestra la de un hechizo aún no conocido (rota al cambiar de página).
+- **Harness:** `Run Bots Duel Extras (local)` 20/20 y `Run Bots Effects (local)` 9/9 (nuevos), `Duel Ink` 8/8, `Duel` 16/16; EditMode 464/464.
+- **Pendiente:** Quest/VR, WebGL wss, IA rival (descartada), compensación de latencia (no se hará, ADR-035), pruebas a mano.
+
 ## 2026-10-10 — F5 del multijugador (segundo lote): arena propia, tinta y lectura del servidor
 
 - **Arena** (`Net/World/DuelArena.cs`): plataforma cuadrada de 40 m en el cielo (centro 0, 100, 0; dentro del límite de 150 m de `Respawnable`), con muros del perímetro, 4 pilares, 6 muros bajos de cobertura simétricos y una fuente de agua (`WaterVolume` reutilizando el aspecto del lago). Se arma en cada máquina con las mismas medidas y se desarma al terminar; cada jugador vuelve a donde estaba. Como allá no hay mesas, el anfitrión crea 3 papeles limpios por lado en cada ronda (clones de la plantilla de `SupplyPoint`, replicados a los clientes y destruidos al terminar).

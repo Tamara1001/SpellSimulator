@@ -4,12 +4,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using Unity.Netcode;
 using UnityEditor;
 using UnityEngine;
 using SpellSimulator.Combat;
 using SpellSimulator.Core;
 using SpellSimulator.Canvas;
 using SpellSimulator.Net;
+using SpellSimulator.Output;
 using SpellSimulator.Reactions;
 using SpellSimulator.World;
 
@@ -56,6 +58,12 @@ namespace SpellSimulator.EditorTools
 
         [MenuItem("SpellSimulator/Harness/Run Bots Duel Ink (local)")]
         public static void RunDuelInk() => Start("duelink");
+
+        [MenuItem("SpellSimulator/Harness/Run Bots Duel Extras (local)")]
+        public static void RunDuelExtras() => Start("duelx");
+
+        [MenuItem("SpellSimulator/Harness/Run Bots Effects (local)")]
+        public static void RunEffects() => Start("fx");
 
         [MenuItem("SpellSimulator/Harness/Run Bots Portal (local)")]
         public static void RunPortal() => Start("portal");
@@ -511,11 +519,166 @@ namespace SpellSimulator.EditorTools
             Check(cast.ProposalsCorrected == cast.ProposalsAccepted && cast.ProposalsAccepted >= 1, "todas las propuestas falsas se corrigieron con la lectura del servidor (" + cast.ProposalsCorrected + "/" + cast.ProposalsAccepted + ")");
             Check(cast.LastExecutedElement == SpellSimulator.Compiler.ElementType.Earth, "se ejecuto tierra y no el fuego declarado (" + cast.LastExecutedElement + ")");
             Check(cast.ProposalsNoInk >= 1, "el servidor corto por falta de tinta (" + cast.ProposalsNoInk + " rechazadas)");
-            Check(cast.ProposalsAccepted <= 12, "la tinta limito los hechizos (" + cast.ProposalsAccepted + " de 25)");
+            Check(cast.ProposalsAccepted <= 20, "la tinta limito los hechizos (" + cast.ProposalsAccepted + " de 25)");
             string[] l = File.Exists(Path.Combine(BotLogDir, "Bot1.txt")) ? File.ReadAllLines(Path.Combine(BotLogDir, "Bot1.txt")) : new string[0];
             int code = -1; try { code = processes[0].HasExited ? processes[0].ExitCode : -2; } catch { }
             Check(code == 0, "el rival termina bien (codigo " + code + ")");
             notes.Add("rival: " + LastAfter(l, "PROPUESTAS ") + " | " + LastAfter(l, "LECTURA propia "));
+        }
+
+        // Efectos del agua en red (KI-121): charcos, zona inundada y hielo los simula el anfitrion; un bot temprano y uno tardio los tienen que ver.
+        private static IEnumerator ProbeEffects()
+        {
+            var menu = UI.MainMenu.Instance;
+            yield return 1f;
+            if (UI.MainMenu.IsActive) menu.EnterSandbox();
+            yield return 0.5f;
+            var session = NetSession.Instance;
+            Check(session.StartDirectHost(Port), "el anfitrion abre el puerto local");
+            if (!session.IsConnected) yield break;
+            yield return 1f;
+            NetWorld world = NetWorld.Active;
+            Check(world != null && world.Effects != null, "los efectos compartidos estan activos");
+            if (world == null || world.Effects == null) yield break;
+
+            Directory.CreateDirectory(BotLogDir);
+            foreach (string old in Directory.GetFiles(BotLogDir)) { try { File.Delete(old); } catch { } }
+            long t0 = NowMs() + 30000;
+            for (int i = 1; i <= 2; i++) { LaunchScriptBot(i, t0, "fx"); yield return 1.5f; }
+
+            // tres puntos de terreno llano
+            var spots = new List<Vector3>();
+            for (int ix = -40; ix <= 40 && spots.Count < 3; ix += 8)
+                for (int iz = -40; iz <= 40 && spots.Count < 3; iz += 8)
+                    if (Physics.Raycast(new Vector3(ix, 200f, iz), Vector3.down, out RaycastHit hit, 400f, ~0, QueryTriggerInteraction.Ignore) && hit.collider.name == "Terrain" && hit.normal.y > 0.97f
+                        && !WaterPuddleManager.InsideWater(hit.point) && spots.TrueForAll(s => (s - hit.point).sqrMagnitude > 100f))
+                        spots.Add(hit.point);
+            Check(spots.Count == 3, "hay 3 puntos de terreno llano (" + spots.Count + ")");
+            if (spots.Count < 3) yield break;
+
+            while (NowMs() < t0 + 500) yield return null;
+            WaterPuddleManager.AddImpact(spots[0], Vector3.up, 30f, 0f);
+            FloodZone zone = FloodZone.Create(spots[1], 5f, 40f, 0.5f, (ElementLook)null);
+            IceSheet.Create(spots[2] + Vector3.up * 1f, 2f, 2f, 0.1f, 40f);
+            Check(zone != null, "el anfitrion crea una zona inundada");
+            long lateAt = t0 + 3000;
+            while (NowMs() < lateAt) { WaterPuddleManager.AddImpact(spots[0], Vector3.up, 2f, 0f); yield return null; }
+            LaunchScriptBot(3, t0, "fx"); // entra tarde: tiene que recibir lo que ya existe
+            while (NowMs() < t0 + 4000) yield return null;
+            bool frozen = zone != null && zone.Freeze(new Vector3(zone.Ground.x, zone.SurfaceY, zone.Ground.z), 3f, 30f);
+            Check(frozen, "el anfitrion congela la zona (hielo encima)");
+            while (NowMs() < t0 + 13500) { WaterPuddleManager.AddImpact(spots[0], Vector3.up, 2f, 0f); yield return null; }
+            while (NowMs() < t0 + 14000) yield return null;
+            string host = world.Effects.Describe();
+            notes.Add("anfitrion: " + host);
+            Check(world.Effects.PuddlesActive >= 1 && world.Effects.ZonesActive == 1 && world.Effects.IceActive == 2, "el anfitrion tiene 1 zona, 2 placas y algun charco (" + host + ")");
+
+            float deadline = Time.realtimeSinceStartup + 60f;
+            while (Time.realtimeSinceStartup < deadline && processes.Any(p => { try { return !p.HasExited; } catch { return false; } })) yield return 0.5f;
+            for (int i = 1; i <= 3; i++)
+            {
+                string path = Path.Combine(BotLogDir, "Bot" + i + ".txt");
+                string[] l = File.Exists(path) ? File.ReadAllLines(path) : new string[0];
+                string seen = LastAfter(l, "FX ");
+                notes.Add("Bot" + i + ": " + seen);
+                Check(seen.Contains("zonas=1") && seen.Contains("hielo=2") && !seen.Contains("charcos=0"), "Bot" + i + (i == 3 ? " (tardio)" : "") + " ve lo mismo que el anfitrion (" + seen + ")");
+            }
+        }
+
+        // Extras del Duelo: sello compuesto completo, tope de frecuencia, coberturas destructibles y un espectador en la tribuna.
+        private static IEnumerator ProbeDuelExtras()
+        {
+            var menu = UI.MainMenu.Instance;
+            yield return 1f;
+            if (UI.MainMenu.IsActive) menu.EnterSandbox();
+            yield return 0.5f;
+            NetDuel.WantDuel = true;
+            var session = NetSession.Instance;
+            Check(session.StartDirectHost(Port), "el anfitrion abre el puerto local");
+            if (!session.IsConnected) yield break;
+            yield return 1f;
+            Directory.CreateDirectory(BotLogDir);
+            foreach (string old in Directory.GetFiles(BotLogDir)) { try { File.Delete(old); } catch { } }
+            LaunchScriptBot(1, 0, "duelx");
+
+            float deadline = Time.realtimeSinceStartup + 40f;
+            while (Time.realtimeSinceStartup < deadline && (NetDuel.Active == null || NetDuel.Active.Match == null)) yield return 0.25f;
+            NetDuel duel = NetDuel.Active;
+            Check(duel != null && duel.Match != null, "el duelo empieza al entrar el rival");
+            NetWorld world = NetWorld.Active;
+            if (duel == null || duel.Match == null || world == null || world.Casts == null) yield break;
+            DuelMatch m = duel.Match;
+            NetCast cast = world.Casts;
+
+            deadline = Time.realtimeSinceStartup + 30f;
+            while (Time.realtimeSinceStartup < deadline && !(m.Phase == DuelPhase.Round && m.RoundNumber == 1)) yield return 0.1f;
+            Check(m.Phase == DuelPhase.Round, "empieza la ronda 1");
+            deadline = Time.realtimeSinceStartup + 15f;
+            while (Time.realtimeSinceStartup < deadline && cast.DuelSpellsExecuted < 2) yield return 0.2f;
+            notes.Add($"compuesto: ejecutados={cast.DuelSpellsExecuted} aceptadas={cast.ProposalsAccepted} corregidas={cast.ProposalsCorrected} sinTinta={cast.ProposalsNoInk} rechazadas={cast.ProposalsRejected} descartadasPorFrecuencia={world.Limiter.Dropped}");
+            Check(cast.DuelSpellsExecuted == 2, "el servidor ejecuto los DOS interiores del sello compuesto (" + cast.DuelSpellsExecuted + ")");
+            Check(cast.ProposalsNoInk == 0, "la rafaga se cobro una sola vez (sin rechazos por tinta: " + cast.ProposalsNoInk + ")");
+            Check(world.Limiter.Dropped >= 1, "el tope de frecuencia descarto parte de la rafaga (" + world.Limiter.Dropped + ")");
+            Check(duel.InkFraction(1) < 0.95f && duel.InkFraction(1) > 0.4f, "la tinta del rival bajo una sola vez (" + duel.InkFraction(1).ToString("F2") + ")");
+
+            // un espectador entra con el duelo en marcha
+            LaunchScriptBot(2, 0, "duel");
+            deadline = Time.realtimeSinceStartup + 40f;
+            while (Time.realtimeSinceStartup < deadline && RemoteCount() < 2) yield return 0.25f;
+            Check(RemoteCount() >= 2, "el espectador se conecto (" + RemoteCount() + ")");
+            yield return 4f;
+            ulong spectatorId = 0;
+            foreach (ulong id in NetworkManager.Singleton.ConnectedClientsIds) if (id != NetworkManager.ServerClientId && duel.IndexOf(id) < 0) spectatorId = id;
+            Check(spectatorId != 0 && duel.IndexOf(spectatorId) == -1, "el tercer cliente es espectador (indice " + (spectatorId != 0 ? duel.IndexOf(spectatorId) : 99) + ")");
+
+            // una cobertura se rompe con el dano y todos lo ven
+            Check(DuelArena.Covers.Count == 10, "la arena tiene 10 coberturas (" + DuelArena.Covers.Count + ")");
+            if (DuelArena.Covers.Count > 0)
+            {
+                DuelArena.Covers[0].Health.Damage(1000f);
+                DuelArena.Covers[3].Health.Damage(1000f);
+            }
+            yield return 2f;
+            Check(DuelArena.BrokenMask() == (1 << 0 | 1 << 3), "el anfitrion tiene rotas las coberturas 0 y 3 (mascara " + DuelArena.BrokenMask() + ")");
+
+            // termina la ronda: al empezar la siguiente se restauran
+            Health victim = duel.PlayerHealth(1);
+            if (victim != null) victim.Damage(1000f);
+            deadline = Time.realtimeSinceStartup + 30f;
+            while (Time.realtimeSinceStartup < deadline && !(m.Phase == DuelPhase.Round && m.RoundNumber == 2)) yield return 0.1f;
+            Check(m.Phase == DuelPhase.Round && m.RoundNumber == 2, "empieza la ronda 2");
+            Check(DuelArena.BrokenMask() == 0, "las coberturas se restauran al empezar la ronda 2");
+            yield return 1f;
+            victim = duel.PlayerHealth(1);
+            if (victim != null) victim.Damage(1000f);
+            deadline = Time.realtimeSinceStartup + 20f;
+            while (Time.realtimeSinceStartup < deadline && !m.Over) yield return 0.25f;
+            Check(m.Over && m.Winner == 0, "el duelo termina 2-0 (ganador " + m.Winner + ")");
+
+            deadline = Time.realtimeSinceStartup + 50f;
+            while (Time.realtimeSinceStartup < deadline && processes.Any(p => { try { return !p.HasExited; } catch { return false; } })) yield return 0.5f;
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            string[] rival = File.Exists(Path.Combine(BotLogDir, "Bot1.txt")) ? File.ReadAllLines(Path.Combine(BotLogDir, "Bot1.txt")) : new string[0];
+            string[] spec = File.Exists(Path.Combine(BotLogDir, "Bot2.txt")) ? File.ReadAllLines(Path.Combine(BotLogDir, "Bot2.txt")) : new string[0];
+            notes.Add("rival: " + LastAfter(rival, "COMPUESTO ") + " | " + LastAfter(rival, "COBERTURAS "));
+            notes.Add("espectador: " + LastAfter(spec, "ROL ") + " | " + LastAfter(spec, "COBERTURAS "));
+            Check(LastAfter(rival, "COMPUESTO ").Contains("interiores=2"), "el rival leyo 2 interiores en su sello compuesto");
+            string rivalCovers = LastAfter(rival, "COBERTURAS ");
+            Check(rivalCovers.Contains("max=2") && rivalCovers.Contains("restauradas=1"), "el rival vio romperse 2 coberturas y restaurarse (" + rivalCovers + ")");
+            string role = LastAfter(spec, "ROL ");
+            Check(role.Contains("espectador=True"), "el espectador sabe que lo es (" + role + ")");
+            Vector3 stand = DuelArena.StandPoint;
+            bool onStand = false;
+            int posAt = role.IndexOf("pos=");
+            if (posAt >= 0)
+            {
+                string[] f = role.Substring(posAt + 4).Trim().Split(' ');
+                if (f.Length >= 3 && float.TryParse(f[0], System.Globalization.NumberStyles.Float, inv, out float px) && float.TryParse(f[1], System.Globalization.NumberStyles.Float, inv, out float py) && float.TryParse(f[2], System.Globalization.NumberStyles.Float, inv, out float pz))
+                    onStand = Mathf.Abs(px - stand.x) < 4f && Mathf.Abs(py - stand.y) < 3f && Mathf.Abs(pz - stand.z) < 4f;
+            }
+            Check(onStand, "el espectador mira desde la tribuna (" + role + ")");
+            Check(LastAfter(spec, "COBERTURAS ").Contains("max=2"), "el espectador vio romperse las coberturas (" + LastAfter(spec, "COBERTURAS ") + ")");
+            Check(spec.Any(x => x.Contains("FASE MatchEnd") && x.Contains("ganador=0")), "el espectador vio el final con ganador 0");
         }
 
         // Escenario del Duelo (F5): el anfitrion hospeda un duelo, un bot entra de rival; se mata a uno por ronda (1-0, 1-1, 2-1) y se comprueba lo que ve el cliente.
@@ -755,6 +918,8 @@ namespace SpellSimulator.EditorTools
         {
             if (!File.Exists(BotBuild.ExePath)) { failures.Add("falta el ejecutable de los bots (menu SpellSimulator/Build/Windows (bots))"); yield break; }
             if (mode == "duelink") { var inkProbe = ProbeDuelInk(); while (inkProbe.MoveNext()) yield return inkProbe.Current; yield break; }
+            if (mode == "fx") { var fxProbe = ProbeEffects(); while (fxProbe.MoveNext()) yield return fxProbe.Current; yield break; }
+            if (mode == "duelx") { var extrasProbe = ProbeDuelExtras(); while (extrasProbe.MoveNext()) yield return extrasProbe.Current; yield break; }
             if (mode == "duel") { var duelProbe = ProbeDuel(); while (duelProbe.MoveNext()) yield return duelProbe.Current; yield break; }
             if (mode == "world") { var worldProbe = ProbeWorld(); while (worldProbe.MoveNext()) yield return worldProbe.Current; yield break; }
             if (mode == "portal") { var portalProbe = ProbePortal(); while (portalProbe.MoveNext()) yield return portalProbe.Current; yield break; }

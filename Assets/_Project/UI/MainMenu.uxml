@@ -137,6 +137,7 @@
                     <ui:VisualElement class="divider divider--wide" />
                     <ui:Label text="Tu nombre" class="mm-net-label" />
                     <ui:TextField name="net-name" max-length="16" class="mm-net-field" />
+                    <ui:Toggle name="net-ink" text="Tinta limitada (sala cooperativa)" class="mm-net-label" />
                     <ui:Button name="net-host" class="mm-back mm-net-action" text="Crear sala" />
                     <ui:Label text="o unite a una sala con su código" class="mm-net-or" />
                     <ui:TextField name="net-code" max-length="8" class="mm-net-field mm-net-field--code" />

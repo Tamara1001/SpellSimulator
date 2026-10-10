@@ -73,6 +73,7 @@ namespace SpellSimulator.EditorTools
             if (so.FindProperty("input").objectReferenceValue == null)
                 Set(so, "input", Object.FindFirstObjectByType<PlayerInputReader>());
             AssignSpellFiles(so);
+            Set(so, "portalsFile", AssetDatabase.LoadAssetAtPath<TextAsset>(Casting.PortalRecipes.AssetPath));
             so.FindProperty("openDistance").floatValue = 0.72f;
             so.ApplyModifiedProperties();
 

@@ -106,6 +106,8 @@ namespace SpellSimulator.Net.Bots
                 else if (options.Script == BotScript.Portal) yield return PortalScenario();
                 else if (options.Script == BotScript.Duel) yield return DuelScenario();
                 else if (options.Script == BotScript.DuelInk) yield return DuelInkScenario();
+                else if (options.Script == BotScript.DuelX) yield return DuelXScenario();
+                else if (options.Script == BotScript.Fx) yield return FxScenario();
                 else yield return Play(options.Seconds, c == cycles);
                 if (c < cycles)
                 {
@@ -307,6 +309,19 @@ namespace SpellSimulator.Net.Bots
             yield return new WaitForSecondsRealtime(0.5f);
         }
 
+        // ---------------------------------------------------------------- guion Fx (efectos del agua)
+
+        /// <summary>A T0+14 s anota cuantos charcos, zonas inundadas y placas de hielo ve (el anfitrion los crea a T0+0,5 y congela la zona a T0+4).</summary>
+        private IEnumerator FxScenario()
+        {
+            NetWorld world = NetWorld.Active;
+            if (world == null || world.Effects == null) { failures.Add("sin NetWorld/efectos"); yield break; }
+            long t0 = options.StartAtMs > 0 ? options.StartAtMs : NowMs();
+            yield return WaitUntilMs(t0 + 14000);
+            Note("FX " + world.Effects.Describe());
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+
         // ---------------------------------------------------------------- guion Duel (F5)
 
         /// <summary>Rival del duelo: espera el estado del anfitrion y anota cada cambio de fase, la vida que ve y donde reaparece.</summary>
@@ -317,12 +332,26 @@ namespace SpellSimulator.Net.Bots
             DuelPhase lastPhase = (DuelPhase)255;
             int lastRound = -1;
             float minOwn = 1f, minRival = 1f;
+            int maxBroken = 0, restored = 0, prevBroken = 0;
+            bool roleNoted = false;
             while (Time.realtimeSinceStartup < limit)
             {
                 NetDuel duel = NetDuel.Active;
                 DuelMatch m = duel != null ? duel.Match : null;
                 if (m != null)
                 {
+                    if (!roleNoted)
+                    {
+                        roleNoted = true;
+                        yield return new WaitForSecondsRealtime(1.5f); // que lo teletransporten
+                        Transform rt = PlayerRegistry.Local != null ? PlayerRegistry.Local.Root : null;
+                        Note($"ROL espectador={duel.IsSpectator}" + (rt != null ? $" pos={rt.position.x.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)} {rt.position.y.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)} {rt.position.z.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}" : ""));
+                    }
+                    int broken = 0;
+                    foreach (var cover in DuelArena.Covers) if (cover != null && cover.Broken) broken++;
+                    if (broken > maxBroken) maxBroken = broken;
+                    if (prevBroken > 0 && broken == 0) restored++;
+                    prevBroken = broken;
                     int me = duel.LocalIndex;
                     minOwn = Mathf.Min(minOwn, duel.Life(me)); minRival = Mathf.Min(minRival, duel.Life(1 - me));
                     if (m.Phase != lastPhase || m.RoundNumber != lastRound)
@@ -336,7 +365,63 @@ namespace SpellSimulator.Net.Bots
                 yield return null;
             }
             Note($"VIDA minima propia={minOwn.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)} rival={minRival.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)}");
+            Note($"COBERTURAS max={maxBroken} restauradas={restored}");
             yield return new WaitForSecondsRealtime(0.5f);
+        }
+
+        /// <summary>
+        /// Rival del duelo con un sello COMPUESTO (dos circulos interiores dentro de uno exterior): propone el lanzamiento 12 veces seguidas, de golpe.
+        /// El anfitrion tiene que cobrar la tinta una sola vez, ejecutar los DOS interiores con su propia lectura y cortar el exceso de propuestas por
+        /// frecuencia. Despues sigue como un rival normal (mira las fases y las coberturas).
+        /// </summary>
+        private IEnumerator DuelXScenario()
+        {
+            NetWorld world = NetWorld.Active;
+            SpellCaster spellCaster = FindFirstObjectByType<SpellCaster>();
+            if (world == null || world.Canvases == null || spellCaster == null || spellCaster.Glyphs == null || world.Casts == null) { failures.Add("sin NetWorld/lienzos/diccionario"); yield break; }
+            float limit = Time.realtimeSinceStartup + 40f;
+            while (Time.realtimeSinceStartup < limit && !(NetDuel.Active != null && NetDuel.Active.Match != null && NetDuel.Active.Match.Phase == DuelPhase.Round)) yield return null;
+            yield return new WaitForSecondsRealtime(1f);
+            DrawingCanvas paper = null;
+            float best = float.MaxValue;
+            Transform me = PlayerRegistry.Local != null ? PlayerRegistry.Local.Root : null;
+            foreach (var body in world.Bodies)
+            {
+                if (body == null || !body.IsDynamic || !body.TryGetComponent(out DrawingCanvas dc) || me == null) continue;
+                float d = Vector3.Distance(dc.transform.position, me.position);
+                if (d < best) { best = d; paper = dc; }
+            }
+            if (paper == null) { failures.Add("no hay papeles en la arena"); yield break; }
+            DrawNested(paper, spellCaster.Glyphs, "earth", "earth");
+            yield return new WaitForSecondsRealtime(1.5f);
+            var spells = new List<Compiler.SpellIR>();
+            var centers = new List<Vector2>();
+            bool read = spellCaster.CompileAll(paper, spells, centers);
+            Note($"COMPUESTO leido={read} interiores={spells.Count}");
+            if (!read) { failures.Add("el sello compuesto no se leyo"); yield break; }
+            for (int k = 0; k < 12; k++) world.Casts.ProposeForTest(spells[0], paper, centers[0]);
+            Note("RAFAGA enviada=12");
+            yield return new WaitForSecondsRealtime(1f);
+            yield return DuelScenario();
+        }
+
+        /// <summary>Sello compuesto: un anillo exterior grande con dos sellos chicos adentro (a izquierda y derecha).</summary>
+        private static void DrawNested(DrawingCanvas canvas, Glyphs.GlyphDictionary dictionary, string sigilA, string sigilB)
+        {
+            canvas.Clear();
+            const float innerRadius = 0.17f;
+            for (int k = 0; k < 2; k++)
+            {
+                var c = new Vector2(k == 0 ? 0.29f : 0.71f, 0.5f);
+                AddTemplate(canvas.Session, dictionary, k == 0 ? sigilA : sigilB, c, 0.24f * innerRadius / 0.42f, 0f);
+                var inner = new Stroke();
+                for (int i = 0; i <= 48; i++) inner.AddPoint(c + GeometryUtils.VectorFromAngleDeg(i / 48f * 360f) * innerRadius);
+                canvas.Session.AddStroke(inner);
+            }
+            var outer = new Stroke();
+            for (int i = 0; i <= 96; i++) outer.AddPoint(new Vector2(0.5f, 0.5f) + GeometryUtils.VectorFromAngleDeg(i / 96f * 360f) * 0.48f);
+            canvas.Session.AddStroke(outer);
+            canvas.Redraw();
         }
 
         /// <summary>
@@ -373,7 +458,7 @@ namespace SpellSimulator.Net.Bots
             {
                 world.Casts.ProposeForTest(forged, paper, uv);
                 sent++;
-                yield return new WaitForSecondsRealtime(0.3f);
+                yield return new WaitForSecondsRealtime(0.7f); // mas lento que la ventana que ignora repetidos del mismo sello (0,6 s)
             }
             Note($"PROPUESTAS enviadas={sent} tintaVista={(NetDuel.Active != null ? NetDuel.Active.InkFraction(NetDuel.Active.LocalIndex).ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : "?")}");
             yield return new WaitForSecondsRealtime(1f);

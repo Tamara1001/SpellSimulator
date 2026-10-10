@@ -297,6 +297,7 @@ namespace SpellSimulator.Net
         {
             if (mismatch) return;
             if (!isServer) { ProcessOps(sender, r, null); return; }
+            if (NetWorld.Active != null && !NetWorld.Active.Limiter.Allow(sender, NetChannel.Strokes, Time.unscaledTime)) return;
             // El servidor lee el mensaje entero a un arreglo (para reenviarlo tal cual) y lo procesa desde una copia.
             var raw = new byte[r.Length - r.Position];
             r.ReadBytesSafe(ref raw, raw.Length);

@@ -3,6 +3,7 @@ using Unity.Collections;
 using Unity.Netcode;
 using UnityEngine;
 using SpellSimulator.Canvas;
+using SpellSimulator.Combat;
 using SpellSimulator.Casting;
 using SpellSimulator.Compiler;
 using SpellSimulator.Core;
@@ -20,7 +21,10 @@ namespace SpellSimulator.Net
     public sealed class NetCast
     {
         private const string MPropose = "sc.cast", MEffect = "sc.fx";
-        private const float MinInterval = 0.2f, MaxReach = 15f;
+        private const float MaxReach = 15f, DedupeWindow = 0.6f;
+
+        /// <summary>Sala cooperativa con tinta limitada (la elige el anfitrion en el menu): el servidor cobra la tinta de cada hechizo como en el duelo.</summary>
+        public static bool CoopInk;
 
         /// <summary>Instancia de la sesion actual (null sin red).</summary>
         public static NetCast Current { get; private set; }
@@ -34,7 +38,11 @@ namespace SpellSimulator.Net
         private readonly NetworkManager nm;
         private readonly NetCanvasSync canvases;
         private readonly bool isServer;
-        private readonly Dictionary<ulong, float> lastCastAt = new Dictionary<ulong, float>(8);
+        private readonly Dictionary<ulong, InkLedger> coopInk = new Dictionary<ulong, InkLedger>(4);
+        private readonly Dictionary<ulong, float> coopInkAt = new Dictionary<ulong, float>(4);
+        private readonly Dictionary<int, float> chargedAt = new Dictionary<int, float>(8); // lienzo -> ultimo cobro (un sello compuesto propone varias veces)
+        private readonly List<SpellIR> ownSpells = new List<SpellIR>(4);
+        private readonly List<Vector2> ownCenters = new List<Vector2>(4);
         private SpellOutputController output;
         private SpellCaster caster;
 
@@ -46,15 +54,35 @@ namespace SpellSimulator.Net
         /// <summary>Propuestas rechazadas por falta de tinta o por no estar en ronda (duelo).</summary>
         public int ProposalsNoInk { get; private set; }
         public ElementType LastExecutedElement { get; private set; }
+        /// <summary>Hechizos ejecutados por la lectura propia del servidor en el duelo (un sello compuesto cuenta uno por interior).</summary>
+        public int DuelSpellsExecuted { get; private set; }
 
-        /// <summary>Anfitrion en un duelo: el cobro de tinta de su propio lanzamiento. True = el hechizo no se ejecuta.</summary>
+        /// <summary>Anfitrion: el cobro de tinta de su propio lanzamiento (duelo, o coop con tinta limitada). True = el hechizo no se ejecuta.</summary>
         public static bool DeniedForHost(DrawingCanvas canvas)
         {
             NetCast c = Current;
-            if (c == null || ApplyingRemote || !c.isServer || NetDuel.Active == null || !NetDuel.Active.InDuel) return false;
-            if (NetDuel.Active.TryCharge(0, canvas, out _)) return false;
+            if (c == null || ApplyingRemote || !c.isServer || canvas == null) return false;
+            bool duel = NetDuel.Active != null && NetDuel.Active.InDuel;
+            if (!duel && !CoopInk) return false;
+            if (c.ChargedRecently(canvas)) return false; // otro interior del mismo sello compuesto: ya se cobro
+            bool ok = duel ? NetDuel.Active.TryCharge(0, canvas, out _) : c.ChargeCoop(NetworkManager.ServerClientId, canvas);
+            if (ok) { c.MarkCharged(canvas); return false; }
             c.ProposalsNoInk++;
             return true;
+        }
+
+        private bool ChargedRecently(DrawingCanvas canvas) => chargedAt.TryGetValue(canvas.GetInstanceID(), out float t) && Time.unscaledTime - t < DedupeWindow;
+        private void MarkCharged(DrawingCanvas canvas) => chargedAt[canvas.GetInstanceID()] = Time.unscaledTime;
+
+        /// <summary>Coop con tinta limitada: cada jugador tiene su saldo (mismas reglas que el duelo), que se recarga solo.</summary>
+        private bool ChargeCoop(ulong who, DrawingCanvas canvas)
+        {
+            DuelRules rules = DuelRules.Default;
+            float now = Time.unscaledTime;
+            if (!coopInk.TryGetValue(who, out InkLedger ledger)) { ledger = new InkLedger(rules.inkMax, rules.inkRegenPerSecond); coopInk[who] = ledger; coopInkAt[who] = now; }
+            ledger.Tick(now - coopInkAt[who]);
+            coopInkAt[who] = now;
+            return ledger.TryCharge(DuelInk.CanvasCost(canvas.Session.Strokes, canvas.WorldSize, rules.inkPerMeter));
         }
 
         /// <summary>Solo harness: propone al servidor un hechizo ya armado (para probar propuestas falsas).</summary>
@@ -80,6 +108,7 @@ namespace SpellSimulator.Net
         {
             if (Current == this) Current = null;
             ApplyingRemote = false;
+            CoopInk = false;
             if (nm != null && nm.CustomMessagingManager != null)
             {
                 nm.CustomMessagingManager.UnregisterNamedMessageHandler(MPropose);
@@ -138,30 +167,49 @@ namespace SpellSimulator.Net
 
             DrawingCanvas canvas = canvases != null ? canvases.CanvasById(cid) : null;
             if (canvas == null || !SpellIRCodec.TryDecode(bytes, Time.time, out SpellIR spell) || !spell.valid || !spell.active) { ProposalsRejected++; return; }
-            // Cheap checks: alcance y frecuencia.
+            // Controles baratos: alcance y frecuencia (tope por cliente; un sello compuesto propone varios hechizos seguidos).
             IPlayerContext p = PlayerRegistry.ById((int)sender);
             if (p != null && p.Root != null && Vector3.Distance(p.Root.position, canvas.WorldCenter) > MaxReach) { ProposalsRejected++; return; }
-            float now = Time.unscaledTime;
-            if (lastCastAt.TryGetValue(sender, out float last) && now - last < MinInterval) { ProposalsRejected++; return; }
-            lastCastAt[sender] = now;
+            NetWorld world = NetWorld.Active;
+            if (world != null && !world.Limiter.Allow(sender, NetChannel.Cast, Time.unscaledTime)) { ProposalsRejected++; return; }
             if (output == null) return;
 
             NetDuel duel = NetDuel.Active;
             if (duel != null && duel.InDuel)
             {
-                // Duelo: el servidor no confia en el cliente. Re-lee el lienzo (que el ya tiene) y ejecuta SU lectura; y cobra la tinta de sus trazos.
-                if (!duel.TryCharge(NetDuel.PlayerIndexOf(sender), canvas, out _)) { ProposalsNoInk++; return; }
-                if (caster == null || !caster.Compile(canvas, out SpellIR own, out Vector2 ownUv)) { ProposalsRejected++; return; }
-                if (own.element != spell.element || own.sigilId != spell.sigilId) ProposalsCorrected++;
-                spell = own; uv = ownUv;
+                // Duelo: el servidor no confia en el cliente. Re-lee el lienzo (que el ya tiene) y ejecuta SU lectura COMPLETA (todos los interiores de un
+                // sello compuesto); y cobra la tinta de sus trazos. Los espectadores no lanzan. Las demas propuestas del mismo sello se ignoran.
+                int index = duel.IndexOf(sender);
+                if (index < 0) { ProposalsRejected++; return; }
+                if (ChargedRecently(canvas)) return;
+                if (!duel.TryCharge(index, canvas, out _)) { ProposalsNoInk++; return; }
+                MarkCharged(canvas);
+                if (caster == null || !caster.CompileAll(canvas, ownSpells, ownCenters)) { ProposalsRejected++; return; }
+                bool corrected = ownSpells.Count != 1 || ownSpells[0].element != spell.element || ownSpells[0].sigilId != spell.sigilId;
+                if (corrected) ProposalsCorrected++;
+                for (int i = 0; i < ownSpells.Count; i++) Execute(ownSpells[i], canvas, ownCenters[i], p, sender);
+                DuelSpellsExecuted += ownSpells.Count;
+                caster.MarkSpent(canvas);
+                return;
+            }
+            if (CoopInk && !ChargedRecently(canvas))
+            {
+                if (!ChargeCoop(sender, canvas)) { ProposalsNoInk++; return; }
+                MarkCharged(canvas);
             }
 
+            Execute(spell, canvas, uv, p, sender);
+            if (caster != null) caster.MarkSpent(canvas);
+        }
+
+        /// <summary>El servidor ejecuta un hechizo de un cliente y lo anuncia a los demas.</summary>
+        private void Execute(SpellIR spell, DrawingCanvas canvas, Vector2 uv, IPlayerContext casterPlayer, ulong sender)
+        {
             ProposalsAccepted++;
             LastExecutedElement = spell.element;
             ApplyingRemote = true;
-            try { output.SpawnSpellEffect(spell, canvas, uv, p); }
+            try { output.SpawnSpellEffect(spell, canvas, uv, casterPlayer); }
             finally { ApplyingRemote = false; }
-            if (caster != null) caster.MarkSpent(canvas);
             Announce(spell, canvas, uv, (int)sender, sender);
         }
 

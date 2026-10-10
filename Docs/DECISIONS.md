@@ -153,6 +153,12 @@ ARRASTRA en el mundo con `ObjectMover` (nunca se guarda). Así un lienzo agarrad
 pantalla (V), y un cuaderno pasa de página con la rueda. La rueda sin nada agarrado cambia el grosor. La HUD es UI Toolkit
 (`Scripts/UI`), temática de pergamino, con miniaturas renderizadas de cada objeto.
 
+## ADR-035 — Anti-trampas simple y sin compensación de latencia
+Decisión: el anfitrión limita la frecuencia de cada mensaje de cliente (cubo de fichas) y descarta poses imposibles; no se valida la velocidad de los jugadores ni se compensa la latencia. Por qué: el juego es cooperativo/sandbox y no habrá competitivo con premios; más defensa costaría complejidad sin beneficio. Los portales por libros son solo informativos por la misma razón.
+
+## ADR-036 — Los libros de portales solo anotan destinos
+Decisión: leer «Caminos del valle/de las alturas» agrega la identidad de sus portales a la sección Portales del grimorio, pero cualquiera puede escribir cualquier identidad en una placa. Por qué: conserva la exploración libre y evita bloquear el viaje por no haber leído.
+
 ## ADR-032 — Dos modos de manipular: agarrar (E) y mover (G)
 **2026-10-07.** Llevar un objeto en la mano (E) no permite rotarlo ni acomodarlo, y sin eso es imposible unir dos mitades de un
 sello. Se separan: **E** = agarrar en la mano (herramientas, lienzos, estampas; las manos cuelgan de la cámara) y **G** = mover a

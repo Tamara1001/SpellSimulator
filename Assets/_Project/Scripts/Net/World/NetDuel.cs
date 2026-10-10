@@ -32,6 +32,8 @@ namespace SpellSimulator.Net
         private readonly List<GameObject> papers = new List<GameObject>(8);
         private Vector3 center;
         private bool started, finished;
+        private ulong rivalId;
+        private ushort coverMask;
         private float sendTimer, lingerTimer;
         private static bool homeSaved;
         private static Vector3 homePos;
@@ -44,7 +46,11 @@ namespace SpellSimulator.Net
         public float Life(int player) => life[Mathf.Clamp(player, 0, 1)];
         public float InkFraction(int player) => inkShown[Mathf.Clamp(player, 0, 1)];
         /// <summary>Jugador (0 anfitrion, 1 rival) al que pertenece un cliente de red.</summary>
-        public static int PlayerIndexOf(ulong clientId) => clientId == NetworkManager.ServerClientId ? 0 : 1;
+        public static int PlayerIndexOf(ulong clientId) => Active != null ? Active.IndexOf(clientId) : (clientId == NetworkManager.ServerClientId ? 0 : 1);
+        /// <summary>0 = anfitrion, 1 = el rival, -1 = espectador (cualquier otro cliente que entra con el duelo en marcha).</summary>
+        public int IndexOf(ulong clientId) => clientId == NetworkManager.ServerClientId ? 0 : (clientId == rivalId ? 1 : -1);
+        /// <summary>True si esta maquina mira el duelo sin jugarlo.</summary>
+        public bool IsSpectator => match != null && PlayerRegistry.LocalOwnerId != 0 && (ulong)PlayerRegistry.LocalOwnerId != rivalId;
         public bool CastsAllowed => match != null && match.Phase == DuelPhase.Round;
         public Health PlayerHealth(int player) => health[Mathf.Clamp(player, 0, 1)];
         public Vector3 Center => center;
@@ -96,6 +102,8 @@ namespace SpellSimulator.Net
             if (!started) { TryStart(); return; }
 
             if (!ConnectedRival(out _)) { if (!match.Over) match.Forfeit(1); }
+            DuelArena.HostTick();
+            coverMask = DuelArena.BrokenMask();
             for (int i = 0; i < 2; i++)
             {
                 if (health[i] == null) continue;
@@ -112,7 +120,12 @@ namespace SpellSimulator.Net
 
         private bool ConnectedRival(out ulong clientId)
         {
-            clientId = 0;
+            clientId = rivalId;
+            if (started)
+            {
+                foreach (ulong id in nm.ConnectedClientsIds) if (id == rivalId) return PlayerRegistry.ById((int)id) != null;
+                return false;
+            }
             foreach (ulong id in nm.ConnectedClientsIds)
             {
                 if (id == NetworkManager.ServerClientId) continue;
@@ -127,6 +140,7 @@ namespace SpellSimulator.Net
             if (!ConnectedRival(out ulong rival)) return;
             IPlayerContext host = PlayerRegistry.Local, other = PlayerRegistry.ById((int)rival);
             if (host == null || host.Root == null || other == null || other.Root == null) return;
+            rivalId = rival;
             health[0] = HealthOf(host.Root);
             health[1] = HealthOf(other.Root);
             center = DuelArena.Center;
@@ -153,6 +167,7 @@ namespace SpellSimulator.Net
             if (phase == DuelPhase.Countdown)
             {
                 for (int i = 0; i < 2; i++) { if (health[i] != null) health[i].ResetHealth(); if (ledger != null) ledger[i].Refill(); }
+                DuelArena.RestoreAll();
                 Respawn(0);
                 Respawn(1);
                 SpawnPapers();
@@ -225,6 +240,7 @@ namespace SpellSimulator.Net
                 w.WriteValueSafe((sbyte)match.RoundWinner); w.WriteValueSafe((sbyte)match.Winner);
                 w.WriteValueSafe(life[0]); w.WriteValueSafe(life[1]);
                 w.WriteValueSafe(inkShown[0]); w.WriteValueSafe(inkShown[1]);
+                w.WriteValueSafe(coverMask); w.WriteValueSafe((ushort)rivalId);
                 nm.CustomMessagingManager.SendNamedMessage(MState, targets, w, NetworkDelivery.Unreliable);
             }
         }
@@ -252,12 +268,28 @@ namespace SpellSimulator.Net
             r.ReadValueSafe(out sbyte rw); r.ReadValueSafe(out sbyte win);
             r.ReadValueSafe(out float l0); r.ReadValueSafe(out float l1);
             r.ReadValueSafe(out float i0); r.ReadValueSafe(out float i1);
+            r.ReadValueSafe(out ushort covers); r.ReadValueSafe(out ushort rival);
             if (phase > (byte)DuelPhase.MatchEnd) return;
             if (match == null) { match = new DuelMatch(DuelRules.Default); finished = false; }
             match.Apply((DuelPhase)phase, round, phaseTime, w0, w1, rw, win);
             life[0] = Mathf.Clamp01(l0); life[1] = Mathf.Clamp01(l1);
             inkShown[0] = Mathf.Clamp01(i0); inkShown[1] = Mathf.Clamp01(i1);
+            rivalId = rival;
+            if (DuelArena.Exists) DuelArena.ApplyMask(covers);
             finished = match.Over;
+        }
+
+        /// <summary>Anfitrion: alguien entro. Si el duelo ya esta en marcha y no es el rival, mira desde la tribuna.</summary>
+        public void OnClientJoined(ulong clientId)
+        {
+            if (nm == null || !nm.IsServer || !started || finished || clientId == NetworkManager.ServerClientId || clientId == rivalId) return;
+            Vector3 p = DuelArena.StandPoint;
+            using (var w = new FastBufferWriter(32, Allocator.Temp))
+            {
+                w.WriteValueSafe(p.x); w.WriteValueSafe(p.y); w.WriteValueSafe(p.z); w.WriteValueSafe(0f);
+                nm.CustomMessagingManager.SendNamedMessage(MTp, clientId, w, NetworkDelivery.Reliable);
+            }
+            BroadcastState();
         }
 
         private void OnTeleport(ulong sender, FastBufferReader r)
@@ -314,21 +346,26 @@ namespace SpellSimulator.Net
                 small = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperCenter, fontSize = 18, fontStyle = FontStyle.Bold };
                 big = new GUIStyle(small) { alignment = TextAnchor.MiddleCenter, fontSize = 54 };
             }
-            int me = LocalIndex, rival = 1 - me;
+            bool spectator = IsSpectator;
+            int me = spectator ? 0 : LocalIndex, rival = 1 - me;
             float w = Screen.width;
-            string head = "Ronda " + match.RoundNumber + "   ·   Vos " + match.Wins[me] + " - " + match.Wins[rival] + " Rival" +
+            string head = "Ronda " + match.RoundNumber + "   ·   " + (spectator ? "Jugador 1 " : "Vos ") + match.Wins[me] + " - " + match.Wins[rival] + (spectator ? " Jugador 2" : " Rival") +
                           (match.Phase == DuelPhase.Round ? "   ·   " + Mathf.CeilToInt(match.SecondsLeft) + " s" : "");
             Label(new Rect(w * 0.5f - 250f, 6f, 500f, 28f), head, small);
             Bar(new Rect(w * 0.5f - 250f, 36f, 240f, 14f), life[me], new Color(0.3f, 0.85f, 0.4f));
             Bar(new Rect(w * 0.5f + 10f, 36f, 240f, 14f), life[rival], new Color(0.9f, 0.35f, 0.3f));
-            Bar(new Rect(w * 0.5f - 250f, 54f, 240f, 8f), inkShown[me], new Color(0.35f, 0.55f, 1f));
+            if (!spectator) Bar(new Rect(w * 0.5f - 250f, 54f, 240f, 8f), inkShown[me], new Color(0.35f, 0.55f, 1f));
 
             string center = null;
             switch (match.Phase)
             {
                 case DuelPhase.Countdown: center = Mathf.CeilToInt(match.SecondsLeft).ToString(); break;
-                case DuelPhase.RoundEnd: center = match.RoundWinner < 0 ? "Empate" : (match.RoundWinner == me ? "¡Ronda tuya!" : "Ronda del rival"); break;
-                case DuelPhase.MatchEnd: center = match.Winner < 0 ? "Empate" : (match.Winner == me ? "¡Ganaste el duelo!" : "Perdiste el duelo"); break;
+                case DuelPhase.RoundEnd:
+                    center = match.RoundWinner < 0 ? "Empate" : (spectator ? "Ronda del jugador " + (match.RoundWinner + 1) : (match.RoundWinner == me ? "¡Ronda tuya!" : "Ronda del rival"));
+                    break;
+                case DuelPhase.MatchEnd:
+                    center = match.Winner < 0 ? "Empate" : (spectator ? "Gana el jugador " + (match.Winner + 1) : (match.Winner == me ? "¡Ganaste el duelo!" : "Perdiste el duelo"));
+                    break;
             }
             if (center != null) Label(new Rect(0f, Screen.height * 0.3f, w, 80f), center, big);
         }

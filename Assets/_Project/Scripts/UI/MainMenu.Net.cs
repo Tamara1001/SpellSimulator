@@ -13,6 +13,7 @@ namespace SpellSimulator.UI
         private VisualElement netPanel;
         private Button multiplayer, netHost, netJoin, netLeave, netBack, netReconnect;
         private TextField netName, netCode;
+        private Toggle netInk;
         private Label netStatus, multiplayerSub;
         private float netRevealAt = -1f, netHideAt = -1f;
         private bool netBusy;
@@ -30,11 +31,13 @@ namespace SpellSimulator.UI
             netBack = menu.Q<Button>("net-back");
             netReconnect = menu.Q<Button>("net-reconnect");
             netName = menu.Q<TextField>("net-name");
+            netInk = menu.Q<Toggle>("net-ink");
             netCode = menu.Q<TextField>("net-code");
             netStatus = menu.Q<Label>("net-status");
 
             multiplayer.clicked += () => { duelIntent = false; OpenNet(); };
             netBack.clicked += CloseNet;
+            if (netInk != null) netInk.RegisterValueChangedCallback(e => NetCast.CoopInk = e.newValue);
             netHost.clicked += HostClicked;
             netJoin.clicked += JoinClicked;
             netLeave.clicked += LeaveClicked;
@@ -98,6 +101,7 @@ namespace SpellSimulator.UI
             netBusy = connecting;
             if (connected && netStarted && state == State.Net) { EnterGameFromNet(); return; }
 
+            if (netInk != null) netInk.style.display = connected || duelIntent ? DisplayStyle.None : DisplayStyle.Flex;
             netHost.style.display = connected ? DisplayStyle.None : DisplayStyle.Flex;
             netJoin.style.display = connected ? DisplayStyle.None : DisplayStyle.Flex;
             netCode.style.display = connected ? DisplayStyle.None : DisplayStyle.Flex;
@@ -134,6 +138,7 @@ namespace SpellSimulator.UI
             if (netBusy) return;
             SaveName();
             NetDuel.WantDuel = duelIntent;
+            NetCast.CoopInk = !duelIntent && netInk != null && netInk.value;
             NetSession s = NetSession.Instance;
             s.Changed -= RefreshNetView; s.Changed += RefreshNetView;
             netStarted = true;

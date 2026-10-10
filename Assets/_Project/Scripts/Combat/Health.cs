@@ -57,6 +57,13 @@ namespace SpellSimulator.Combat
             }
         }
 
+        /// <summary>Cambia la vida maxima y llena la barra (coberturas, jugadores creados por codigo).</summary>
+        public void SetMax(float max)
+        {
+            maxHealth = Mathf.Max(1f, max);
+            Current = maxHealth;
+        }
+
         public void ResetHealth()
         {
             Current = maxHealth;

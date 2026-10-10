@@ -28,7 +28,10 @@ namespace SpellSimulator.Net
     {
         private const string MSpawn = "sw.spawn", MRemove = "sw.remove";
         private const string MPortalState = "pt.state", MPortalCross = "pt.cross", MPortalTp = "pt.tp";
-        private const float PortalReach = 8f;
+        private const float PortalReach = 8f, HoldReach = 12f;
+
+        /// <summary>Anti-trampas simple: tope de frecuencia por cliente y canal (solo lo usa el anfitrion).</summary>
+        public readonly NetRateLimiter Limiter = new NetRateLimiter();
         private const ushort FirstDynamicId = 40000;
         private const ushort FirstDynamicCanvasId = 1000;
 
@@ -72,6 +75,7 @@ namespace SpellSimulator.Net
         private NetCast castSync;
         private NetDuel duel;
         private NetReactiveSync reactiveSync;
+        private NetEffectsSync effectsSync;
 
         /// <summary>Dibujo compartido (trazos de los lienzos); null si no hay sesion.</summary>
         public NetCanvasSync Canvases => canvasSync;
@@ -81,6 +85,7 @@ namespace SpellSimulator.Net
 
         /// <summary>Mundo reactivo compartido (fuego, humedad, quemado); null si no hay sesion.</summary>
         public NetReactiveSync Reactive => reactiveSync;
+        public NetEffectsSync Effects => effectsSync;
 
         public bool IsServer => nm != null && nm.IsServer;
         public bool Began => began;
@@ -147,6 +152,8 @@ namespace SpellSimulator.Net
             castSync.Begin();
             reactiveSync = new NetReactiveSync(nm);
             reactiveSync.Begin();
+            effectsSync = new NetEffectsSync(nm);
+            effectsSync.Begin();
             duel = new NetDuel(nm);
             duel.Begin();
             bool client = !nm.IsServer;
@@ -168,6 +175,7 @@ namespace SpellSimulator.Net
             if (Active == this) Active = null;
             MagicWorld.WorldReset -= OnWorldReset;
             if (reactiveSync != null) { reactiveSync.End(); reactiveSync = null; }
+            if (effectsSync != null) { effectsSync.End(); effectsSync = null; }
             if (duel != null) { duel.End(); duel = null; }
             if (castSync != null) { castSync.End(); castSync = null; }
             if (canvasSync != null) { canvasSync.End(); canvasSync = null; }
@@ -245,6 +253,7 @@ namespace SpellSimulator.Net
             if (!began || mismatch) return;
             if (canvasSync != null) canvasSync.Tick(Time.fixedDeltaTime);
             if (reactiveSync != null) reactiveSync.Tick(Time.fixedDeltaTime);
+            if (effectsSync != null) effectsSync.Tick(Time.fixedDeltaTime);
             if (duel != null) duel.Tick(Time.fixedDeltaTime);
             if (nm.IsServer) ServerTick(); else ClientTick();
         }
@@ -445,6 +454,8 @@ namespace SpellSimulator.Net
                 SendFull(clientId);
                 if (canvasSync != null) canvasSync.SendFull(clientId);
                 if (reactiveSync != null) reactiveSync.SendFull(clientId);
+                if (effectsSync != null) effectsSync.SendFull(clientId);
+                if (duel != null) duel.OnClientJoined(clientId);
                 foreach (var portal in Portal.All) if (portal != null && portal.State != PortalState.Dormant) SendPortalState(portal, clientId);
             }
         }
@@ -452,6 +463,7 @@ namespace SpellSimulator.Net
         private void OnClientDisconnected(ulong clientId)
         {
             if (!began || !nm.IsServer) return;
+            Limiter.Forget(clientId);
             // lo que sostenia un jugador que se fue se suelta donde esta
             for (int i = 0; i < bodies.Count; i++)
             {
@@ -519,7 +531,7 @@ namespace SpellSimulator.Net
 
         private void OnGrab(ulong sender, FastBufferReader r)
         {
-            if (!began || !nm.IsServer) return;
+            if (!began || !nm.IsServer || !Limiter.Allow(sender, NetChannel.Grab, Time.unscaledTime)) return;
             r.ReadValueSafe(out ushort id);
             byId.TryGetValue(id, out NetBody body);
             float distance = 0f;
@@ -551,12 +563,15 @@ namespace SpellSimulator.Net
 
         private void OnHold(ulong sender, FastBufferReader r)
         {
-            if (!began || !nm.IsServer) return;
+            if (!began || !nm.IsServer || !Limiter.Allow(sender, NetChannel.Hold, Time.unscaledTime)) return;
             r.ReadValueSafe(out byte n);
+            IPlayerContext holder = PlayerRegistry.ById((int)sender);
             for (int i = 0; i < n; i++)
             {
                 Pose p = ReadPose(r);
                 if (!byId.TryGetValue(p.id, out NetBody b) || b.CurrentMode != NetBody.Mode.RemoteDriven || b.HeldBy != (int)sender) continue;
+                // un objeto sostenido no puede estar lejos de quien lo sostiene (evita teletransportar cosas)
+                if (holder != null && holder.Root != null && (p.pos - holder.Root.position).sqrMagnitude > HoldReach * HoldReach) continue;
                 b.SetTarget(p.pos, p.rot, false);
                 if (b.gameObject.activeSelf != p.active) b.gameObject.SetActive(p.active);
             }
@@ -564,7 +579,7 @@ namespace SpellSimulator.Net
 
         private void OnRelease(ulong sender, FastBufferReader r)
         {
-            if (!began || !nm.IsServer) return;
+            if (!began || !nm.IsServer || !Limiter.Allow(sender, NetChannel.Release, Time.unscaledTime)) return;
             Pose p = ReadPose(r);
             r.ReadValueSafe(out Vector3 vel);
             r.ReadValueSafe(out Vector3 ang);
@@ -601,7 +616,7 @@ namespace SpellSimulator.Net
 
         private void OnResetRequest(ulong sender, FastBufferReader r)
         {
-            if (!began || !nm.IsServer) return;
+            if (!began || !nm.IsServer || !Limiter.Allow(sender, NetChannel.Reset, Time.unscaledTime)) return;
             var world = FindFirstObjectByType<MagicWorld>();
             if (world != null) world.ResetWorld();
         }
@@ -687,7 +702,7 @@ namespace SpellSimulator.Net
 
         private void OnPortalCrossMessage(ulong sender, FastBufferReader r)
         {
-            if (!began || !nm.IsServer) return;
+            if (!began || !nm.IsServer || !Limiter.Allow(sender, NetChannel.PortalCross, Time.unscaledTime)) return;
             byte[] bytes = ReadBlob(r);
             if (bytes == null) return;
             string id;

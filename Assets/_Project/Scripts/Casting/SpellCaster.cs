@@ -41,6 +41,12 @@ namespace SpellSimulator.Casting
         /// <summary>Ultimo hechizo compilado (valido o no). Util para UI y tests.</summary>
         public SpellIR LastSpell { get; private set; }
 
+        /// <summary>
+        /// Lo dibujado en el ultimo sello simple que se lanzo bien (trazos en UV, centro del anillo, tamano del lienzo): lo que el grimorio guarda como hechizo
+        /// propio. Null si todavia no se lanzo ninguno (los sellos compuestos no se guardan).
+        /// </summary>
+        public CastSnapshot LastCast { get; private set; }
+
         /// <summary>Diccionario de glifos (con las plantillas de cada sigilo y signo); null si falta asignarlo. Lo usan las pruebas para dibujar sellos.</summary>
         public SpellSimulator.Glyphs.GlyphDictionary Glyphs => dictionary != null ? dictionary.Dictionary : null;
 
@@ -385,6 +391,7 @@ namespace SpellSimulator.Casting
             SealAnalyzed?.Invoke(ast, spell, canvas);
             SpellCompiled?.Invoke(spell, canvas);
 
+            if (spell.valid && spell.active) LastCast = CastSnapshot.Capture(canvas, spell, ringCenterUV);
             if (spell.valid && spell.active && output != null)
                 output.SpawnSpellEffect(spell, canvas, ringCenterUV);
             return spell;
@@ -413,6 +420,29 @@ namespace SpellSimulator.Casting
             }
             spell = Analyze(canvas, out _, out _, out _, out ringCenterUV);
             return spell.valid && spell.active;
+        }
+
+        /// <summary>
+        /// Como <see cref="Compile"/>, pero devuelve TODOS los hechizos que saldrian (un sello compuesto lanza cada interior valido, no solo el mayor).
+        /// Lo usa el servidor del duelo para ejecutar su propia lectura completa. Las listas se vacian antes.
+        /// </summary>
+        public bool CompileAll(DrawingCanvas canvas, List<SpellIR> spells, List<Vector2> centers)
+        {
+            spells.Clear(); centers.Clear();
+            if (canvas == null || canvas.Session.IsEmpty || classifier == null || dictionary == null) return false;
+            if (TryAnalyzeNested(canvas, out NestedReading nested))
+            {
+                foreach (NestedSubReading sub in nested.Subs)
+                {
+                    if (!sub.Launches || !sub.Spell.valid || !sub.Spell.active) continue;
+                    spells.Add(sub.Spell); centers.Add(sub.CenterUV);
+                }
+                return spells.Count > 0;
+            }
+            SpellIR single = Analyze(canvas, out _, out _, out _, out Vector2 uv);
+            if (!single.valid || !single.active) return false;
+            spells.Add(single); centers.Add(uv);
+            return true;
         }
 
         /// <summary>
