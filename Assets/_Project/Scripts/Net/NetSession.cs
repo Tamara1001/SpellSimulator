@@ -44,6 +44,9 @@ namespace SpellSimulator.Net
 
         public static bool Exists => instance != null;
 
+        /// <summary>Perfil de autenticacion (solo letras, numeros, - y _; max. 30). Vacio = el predeterminado. Los bots usan uno cada uno: varios ejecutables en la misma PC comparten el inicio de sesion anonimo guardado y Relay los tomaria por el mismo jugador.</summary>
+        public static string AuthProfile { get; set; } = "";
+
         private void Awake() => mainThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
 
         private void WarnIfOffMainThread(string where)
@@ -223,7 +226,12 @@ namespace SpellSimulator.Net
 
         private static async Task EnsureServicesAsync()
         {
-            if (UnityServices.State == ServicesInitializationState.Uninitialized) await UnityServices.InitializeAsync();
+            if (UnityServices.State == ServicesInitializationState.Uninitialized)
+            {
+                var init = new InitializationOptions();
+                if (!string.IsNullOrEmpty(AuthProfile)) init.SetProfile(AuthProfile);
+                await UnityServices.InitializeAsync(init);
+            }
             if (!AuthenticationService.Instance.IsSignedIn) await AuthenticationService.Instance.SignInAnonymouslyAsync();
         }
 

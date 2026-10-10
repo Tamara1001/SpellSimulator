@@ -64,6 +64,16 @@ ignorada por git). Verificar arrancándola con `-logFile` unos segundos: debe lo
 excepciones fuera de `[XR]` (OpenXR sin casco loguea `XR_ERROR_FORM_FACTOR_UNAVAILABLE`: esperado). Los ~500 warnings
 de la build son shaders del paquete de inferencia.
 
+## Bots de red
+Jugadores automaticos para probar la red sin gente (F1). Son el ejecutable de Windows del juego lanzado con `-bot` (`Scripts/Net/Bots/NetBot.cs`, opciones en `BotOptions`):
+se unen por codigo de Relay (`-botjoin CODIGO`) o por IP directa (`-botdirect ip:puerto`), entran al juego, caminan y saltan con un gamepad virtual, escriben un informe
+(`-botlog`) y salen con codigo 0 (bien) o 1 (mal). Cada bot usa su propio perfil de autenticacion (varios ejecutables en la misma PC compartirian el inicio de sesion anonimo).
+Sin ventana el cursor no se captura y el jugador no rota con la vista: el bot gira el cuerpo directamente.
+
+- **Build:** menu `SpellSimulator/Build/Windows (bots)` -> `Builds/Bot/SpellSimulator.exe` (233 MB; la primera vez cambia la plataforma activa del editor; despues 30 s-2 min). Rehacerlo cuando cambia el codigo de juego o de red. Resultado en `Logs/build-bot.txt`.
+- **Pruebas** (menu `SpellSimulator/Harness/...`, resultado en `Logs/harness-bots.txt`, informes de cada bot en `Logs/bots/`): `Run Bots (local)` (el editor hospeda por loopback y lanza 3 bots 35 s), `Run Bots (Relay)` (igual, por Relay real; necesita Internet), `Run Bots (churn local)` (los bots entran y salen 3 veces). El anfitrion comprueba cuantos bots ve a la vez, que se mueven (>= 4 m horizontales) y que sus avatares desaparecen al irse.
+- **Limitaciones actuales:** solo caminan y saltan; agarrar objetos y lanzar hechizos se suman en F2/F3. Con Unity en segundo plano `delayCall` no corre: los builds usan `EditorApplication.update`.
+
 ## Menús de Interaction y Map
 `SpellSimulator > Interaction > Setup Current Scene` deja movibles y rayables las cosas del mundo. `Map > Build Pradera`
 reconstruye todo el mapa (incluye herramientas con modelo nuevo, mesas de la torre, lienzos y contraptions) y llama a ese setup.

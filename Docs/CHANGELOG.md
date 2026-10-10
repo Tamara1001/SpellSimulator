@@ -6,6 +6,12 @@ tags: [doc, changelog]
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
 
+## 2026-10-09 — F1: bots de red
+- `Scripts/Net/Bots/` (`BotOptions` con 6 tests, `NetBot`): jugador automatico que se une por Relay o IP directa, camina y salta con un gamepad virtual, informa lo que ve de los demas y sale con codigo 0/1. Guion `churn`: entra y sale varias veces.
+- `NetSession.AuthProfile`: perfil de autenticacion por bot (si no, varios bots en la misma PC compartian el jugador anonimo y Relay respondia «player is already a member of the session»).
+- Editor: `BotBuild` (menu `Build/Windows (bots)`) y `HarnessBots` (`Run Bots (local | Relay | churn local)`). Verificado: 3 bots por loopback y por Relay real, el anfitrion los ve moverse; churn con entradas y salidas sin avatares fantasma. 415 tests EditMode.
+- Hallazgo: el jugador solo rota con la vista si el cursor esta capturado (`PlatformDetector.IsLookCaptured`); un proceso sin ventana no lo captura. Los bots giran el cuerpo directamente.
+
 ## 2026-10-09 — F1: arreglos tras la primera prueba entre dos personas
 
 - Probado por Ale y Tami: crear sala y unirse funcionan. Fallos hallados y corregidos: (1) el cliente quedaba en el menú tras unirse (la cabeza y el nombre de su avatar se veían a 34 m, en la órbita de la cámara del menú); ahora la entrada al juego la dispara el estado de `NetSession` y no la continuación del `await`; (2) volver al menú principal desde el juego sale de la sala; (3) si el anfitrión se va o cierra la sala, el cliente vuelve al menú con aviso (evento `NetSession.Disconnected`); (4) el avatar no copia la cámara del menú.
