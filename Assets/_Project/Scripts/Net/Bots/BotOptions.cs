@@ -4,7 +4,7 @@ using System.Globalization;
 namespace SpellSimulator.Net.Bots
 {
     /// <summary>Que hace el bot una vez dentro de la sala.</summary>
-    public enum BotScript { Walk, Churn }
+    public enum BotScript { Walk, Churn, Grab }
 
     /// <summary>
     /// Opciones de un bot de pruebas, leidas de la linea de comandos del ejecutable (logica pura, con tests).
@@ -27,6 +27,10 @@ namespace SpellSimulator.Net.Bots
         /// <summary>Ciclos de entrar y salir (solo Churn).</summary>
         public int Cycles = 3;
         public string LogPath = "";
+        /// <summary>Momento (ms UTC desde 1970) en que arranca el guion Grab: todos los bots empiezan a la vez para pelear por las mismas cajas.</summary>
+        public long StartAtMs;
+        /// <summary>Latencia simulada de ida (ms) en el transporte (solo builds de desarrollo): el viaje de ida y vuelta es el doble.</summary>
+        public int LatencyMs;
 
         public bool HasTarget => !string.IsNullOrEmpty(JoinCode) || !string.IsNullOrEmpty(DirectIp);
 
@@ -48,8 +52,10 @@ namespace SpellSimulator.Net.Bots
                         break;
                     case "-botname": if (hasValue) o.Name = args[++i]; break;
                     case "-botscript":
-                        if (hasValue) o.Script = args[++i].ToLowerInvariant() == "churn" ? BotScript.Churn : BotScript.Walk;
+                        if (hasValue) o.Script = ParseScript(args[++i]);
                         break;
+                    case "-botat": if (hasValue && long.TryParse(args[++i], NumberStyles.Integer, CultureInfo.InvariantCulture, out long at)) o.StartAtMs = at; break;
+                    case "-botlatency": if (hasValue) o.LatencyMs = Math.Max(0, (int)ParseFloat(args[++i], 0f)); break;
                     case "-botseconds": if (hasValue) o.Seconds = Math.Max(1f, ParseFloat(args[++i], o.Seconds)); break;
                     case "-botexpect": if (hasValue) o.ExpectRemotes = Math.Max(0, (int)ParseFloat(args[++i], 0f)); break;
                     case "-botcycles": if (hasValue) o.Cycles = Math.Max(1, (int)ParseFloat(args[++i], o.Cycles)); break;
@@ -57,6 +63,25 @@ namespace SpellSimulator.Net.Bots
                 }
             }
             return o;
+        }
+
+        public static BotScript ParseScript(string text)
+        {
+            switch ((text ?? "").ToLowerInvariant())
+            {
+                case "churn": return BotScript.Churn;
+                case "grab": return BotScript.Grab;
+                default: return BotScript.Walk;
+            }
+        }
+
+        /// <summary>Numero del final del nombre ("Bot3" -> 3; 0 si no hay).</summary>
+        public static int IndexOfName(string name)
+        {
+            if (string.IsNullOrEmpty(name)) return 0;
+            int end = name.Length, start = end;
+            while (start > 0 && char.IsDigit(name[start - 1])) start--;
+            return start < end && int.TryParse(name.Substring(start), out int n) ? n : 0;
         }
 
         /// <summary>"ip:puerto" o solo "ip".</summary>

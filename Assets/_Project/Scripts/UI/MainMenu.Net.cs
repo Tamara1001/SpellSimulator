@@ -11,7 +11,7 @@ namespace SpellSimulator.UI
     public partial class MainMenu
     {
         private VisualElement netPanel;
-        private Button multiplayer, netHost, netJoin, netLeave, netBack;
+        private Button multiplayer, netHost, netJoin, netLeave, netBack, netReconnect;
         private TextField netName, netCode;
         private Label netStatus, multiplayerSub;
         private float netRevealAt = -1f, netHideAt = -1f;
@@ -27,6 +27,7 @@ namespace SpellSimulator.UI
             netJoin = menu.Q<Button>("net-join");
             netLeave = menu.Q<Button>("net-leave");
             netBack = menu.Q<Button>("net-back");
+            netReconnect = menu.Q<Button>("net-reconnect");
             netName = menu.Q<TextField>("net-name");
             netCode = menu.Q<TextField>("net-code");
             netStatus = menu.Q<Label>("net-status");
@@ -36,13 +37,14 @@ namespace SpellSimulator.UI
             netHost.clicked += HostClicked;
             netJoin.clicked += JoinClicked;
             netLeave.clicked += LeaveClicked;
+            netReconnect.clicked += ReconnectClicked;
             menu.Q("net-backdrop").RegisterCallback<ClickEvent>(_ => CloseNet());
             netCode.RegisterValueChangedCallback(e =>
             {
                 string up = e.newValue.ToUpperInvariant();
                 if (up != e.newValue) netCode.SetValueWithoutNotify(up);
             });
-            foreach (var b in new[] { netHost, netJoin, netLeave, netBack })
+            foreach (var b in new[] { netHost, netJoin, netLeave, netBack, netReconnect })
                 b.RegisterCallback<PointerEnterEvent>(_ => { if (b.enabledSelf) b.Focus(); });
         }
 
@@ -100,6 +102,9 @@ namespace SpellSimulator.UI
             netHost.SetEnabled(!connecting);
             netJoin.SetEnabled(!connecting);
             netLeave.style.display = connected ? DisplayStyle.Flex : DisplayStyle.None;
+            bool canReconnect = s != null && s.CanReconnect && !connected && !connecting;
+            netReconnect.style.display = canReconnect ? DisplayStyle.Flex : DisplayStyle.None;
+            if (canReconnect) netReconnect.text = "Reconectar a " + s.LastJoinCode;
 
             if (connected)
             {
@@ -149,12 +154,30 @@ namespace SpellSimulator.UI
         private void LeaveClicked()
         {
             if (NetSession.Exists) NetSession.Instance.Leave();
+            ResetWorldAfterNet();
+        }
+
+        private void ReconnectClicked()
+        {
+            if (netBusy || !NetSession.Exists) return;
+            string code = NetSession.Instance.LastJoinCode;
+            if (string.IsNullOrEmpty(code)) return;
+            netCode.SetValueWithoutNotify(code);
+            JoinClicked();
+        }
+
+        /// <summary>Al salir de una sala (o perderla) el mundo vuelve a su estado inicial: no hay guardado de partida.</summary>
+        public static void ResetWorldAfterNet()
+        {
+            var world = Object.FindFirstObjectByType<Reactions.MagicWorld>();
+            if (world != null) world.ResetWorld();
         }
 
         /// <summary>Se perdio la conexion (el anfitrion se fue o cerro la sala): vuelve al menu y muestra el aviso en la hoja.</summary>
         private void OnNetLost(string reason)
         {
             netStarted = false;
+            ResetWorldAfterNet();
             if (state == State.Playing) ShowMenu();
             if (state == State.Menu) OpenNet();
         }

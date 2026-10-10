@@ -19,6 +19,7 @@ namespace SpellSimulator.Net
     public sealed class NetSession : MonoBehaviour
     {
         public const int MaxPlayersCoop = 4;
+        public const string RoomClosedReason = "La sala se cerró.";
         public const string AvatarResource = "Net/NetPlayer";
         private const string NameKey = "net.name";
 
@@ -47,6 +48,9 @@ namespace SpellSimulator.Net
         /// <summary>Perfil de autenticacion (solo letras, numeros, - y _; max. 30). Vacio = el predeterminado. Los bots usan uno cada uno: varios ejecutables en la misma PC comparten el inicio de sesion anonimo guardado y Relay los tomaria por el mismo jugador.</summary>
         public static string AuthProfile { get; set; } = "";
 
+        /// <summary>Latencia simulada de ida (ms) en el transporte, para probar con retraso (solo editor y builds de desarrollo).</summary>
+        public static int SimulatedLatencyMs { get; set; }
+
         private void Awake() => mainThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
 
         private void WarnIfOffMainThread(string where)
@@ -59,6 +63,10 @@ namespace SpellSimulator.Net
         /// <summary>Codigo para compartir (solo el anfitrion por Relay).</summary>
         public string JoinCode { get; private set; } = "";
         public string LastError { get; private set; } = "";
+        /// <summary>Ultimo codigo al que se unio por Relay (para volver a entrar si se corto la conexion).</summary>
+        public string LastJoinCode { get; private set; } = "";
+        /// <summary>True si se perdio la conexion y la sala puede seguir viva (no si el anfitrion la cerro o se salio uno mismo).</summary>
+        public bool CanReconnect { get; private set; }
         public bool IsHost => State == NetState.Hosting;
         public bool IsConnected => State == NetState.Hosting || State == NetState.Joined;
         /// <summary>Se emite al cambiar el estado, el codigo o el error.</summary>
@@ -92,6 +100,10 @@ namespace SpellSimulator.Net
                 TickRate = 30,
             };
             nm.NetworkConfig.Prefabs.Add(new NetworkPrefab { Prefab = prefab });
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (SimulatedLatencyMs > 0) transport.SetDebugSimulatorParameters(SimulatedLatencyMs, 0, 0);
+#endif
+            go.AddComponent<NetWorld>(); // mundo compartido: replica los cuerpos fisicos de la escena
             go.SetActive(true);
             return nm;
         }
@@ -128,6 +140,8 @@ namespace SpellSimulator.Net
                 WarnIfOffMainThread("JoinAsync");
                 HookSession(session);
                 JoinCode = session.Code ?? code;
+                LastJoinCode = JoinCode;
+                CanReconnect = false;
                 SetState(NetState.Joined);
                 return true;
             }
@@ -166,6 +180,7 @@ namespace SpellSimulator.Net
         public async void Leave()
         {
             leaving = true;
+            CanReconnect = false;
             try
             {
                 if (session != null)
@@ -196,7 +211,7 @@ namespace SpellSimulator.Net
             s.Deleted -= OnSessionGone;
         }
 
-        private void OnSessionGone() => Lose("La sala se cerró.");
+        private void OnSessionGone() => Lose(RoomClosedReason);
 
         /// <summary>Marca la conexion como perdida; la limpieza y los eventos corren en Update (hilo principal).</summary>
         private void Lose(string reason)
@@ -277,6 +292,7 @@ namespace SpellSimulator.Net
             var nm = NetworkManager.Singleton;
             if (nm != null && nm.IsListening) nm.Shutdown();
             LastError = reason;
+            CanReconnect = State == NetState.Joined && !string.IsNullOrEmpty(LastJoinCode) && reason != RoomClosedReason;
             JoinCode = "";
             State = NetState.Failed;
             pendingChanged = false;

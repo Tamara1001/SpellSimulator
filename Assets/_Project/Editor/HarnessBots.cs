@@ -8,6 +8,7 @@ using UnityEditor;
 using UnityEngine;
 using SpellSimulator.Core;
 using SpellSimulator.Net;
+using SpellSimulator.World;
 
 namespace SpellSimulator.EditorTools
 {
@@ -43,6 +44,12 @@ namespace SpellSimulator.EditorTools
 
         [MenuItem("SpellSimulator/Harness/Run Bots (churn local)")]
         public static void RunChurn() => Start("churn");
+
+        [MenuItem("SpellSimulator/Harness/Run Bots Grab (local)")]
+        public static void RunGrab() => Start("grab");
+
+        [MenuItem("SpellSimulator/Harness/Run Bots Grab (150 ms)")]
+        public static void RunGrabLatency() => Start("grab150");
 
         private static void Start(string mode)
         {
@@ -105,9 +112,117 @@ namespace SpellSimulator.EditorTools
             return n;
         }
 
+        private static long NowMs() => (long)(System.DateTime.UtcNow - new System.DateTime(1970, 1, 1, 0, 0, 0, System.DateTimeKind.Utc)).TotalMilliseconds;
+
+        private static IEnumerator WaitUntilMs(long ms) { while (NowMs() < ms) yield return null; }
+
+        // Escenario de agarre de F2: tres bots pelean por una caja, se la pasan, una queda flotando; el anfitrion empuja 30 objetos; al final todos comparan posiciones.
+        private static IEnumerator ProbeGrab(string mode)
+        {
+            int oneWayMs = mode == "grab150" ? 75 : 0;
+            NetSession.SimulatedLatencyMs = oneWayMs;
+            var menu = UI.MainMenu.Instance;
+            yield return 1f;
+            if (UI.MainMenu.IsActive) menu.EnterSandbox();
+            yield return 0.5f;
+            var session = NetSession.Instance;
+            Check(session.StartDirectHost(Port), "el anfitrion abre el puerto local");
+            if (!session.IsConnected) yield break;
+            yield return 1f;
+            NetWorld world = NetWorld.Active;
+            Check(world != null && world.Began && world.BodyCount > 50, "el mundo compartido esta activo con muchos cuerpos (" + (world != null ? world.BodyCount : 0) + ")");
+            if (world == null) yield break;
+
+            Directory.CreateDirectory(BotLogDir);
+            foreach (string old in Directory.GetFiles(BotLogDir)) { try { File.Delete(old); } catch { } }
+            long t0 = NowMs() + 32000; // los bots tardan en cargar la escena y conectarse
+            for (int i = 1; i <= BotCount; i++)
+            {
+                string name = "Bot" + i;
+                string args = "-batchmode -nographics -logFile \"" + Path.Combine(BotLogDir, name + "-unity.log") + "\" -bot -botdirect 127.0.0.1:" + Port + " -botname " + name + " "
+                              + "-botscript grab -botseconds 45 -botat " + t0 + " -botlatency " + oneWayMs + " -botlog \"" + Path.Combine(BotLogDir, name + ".txt") + "\"";
+                var psi = new ProcessStartInfo(BotBuild.ExePath, args) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = BotBuild.OutputDir };
+                processes.Add(Process.Start(psi));
+                yield return 1.5f;
+            }
+
+            float limit = Time.realtimeSinceStartup + 40f;
+            while (Time.realtimeSinceStartup < limit && RemoteCount() < BotCount) yield return 0.5f;
+            Check(RemoteCount() >= BotCount, "los 3 bots se conectaron antes del arranque (" + RemoteCount() + ")");
+
+            // T0+2.5: alguien (un bot) tiene Crate_0
+            while (NowMs() < t0 + 2500) yield return null;
+            world.TryGetBody("Crate_0", out NetBody crate0);
+            int holder = crate0 != null ? crate0.HeldBy : -2;
+            Check(holder > 0, "tras la pelea por Crate_0 la tiene un bot (dueno " + holder + ")");
+
+            // T0+9: el anfitrion empuja 30 objetos
+            while (NowMs() < t0 + 9000) yield return null;
+            int pushed = 0;
+            var rnd = new System.Random(11);
+            foreach (var b in world.Bodies)
+            {
+                if (pushed >= 30) break;
+                if (b == null || b.name == "Crate_0" || b.name == "Crate_1" || b.Rb == null || b.Rb.isKinematic || b.HeldBy != Holdable.NoOwner || !b.TryGetComponent(out Movable _)) continue;
+                Vector3 dir = new Vector3((float)rnd.NextDouble() - 0.5f, 0.6f, (float)rnd.NextDouble() - 0.5f).normalized;
+                b.Rb.AddForce(dir * 4f, ForceMode.VelocityChange);
+                pushed++;
+            }
+            Check(pushed >= 25, "el anfitrion empujo " + pushed + " objetos");
+
+            // T0+24: volcado del anfitrion
+            while (NowMs() < t0 + 24000) yield return null;
+            var hostPos = new Dictionary<int, Vector3>();
+            foreach (var b in world.Bodies) if (b != null) hostPos[b.Id] = b.Rb.position;
+            yield return 1f;
+
+            float deadline = Time.realtimeSinceStartup + 40f;
+            while (Time.realtimeSinceStartup < deadline && processes.Any(p => { try { return !p.HasExited; } catch { return false; } })) yield return 0.5f;
+            Check(processes.All(p => { try { return p.HasExited; } catch { return true; } }), "los bots terminaron a tiempo");
+
+            int wins = 0;
+            var lines = new Dictionary<int, string[]>();
+            for (int i = 1; i <= BotCount; i++)
+            {
+                string report = Path.Combine(BotLogDir, "Bot" + i + ".txt");
+                string[] l = File.Exists(report) ? File.ReadAllLines(report) : new string[0];
+                lines[i] = l;
+                if (l.Any(x => x.Contains("GRAB Crate_0 WIN"))) wins++;
+                int code = -1; try { code = processes[i - 1].HasExited ? processes[i - 1].ExitCode : -2; } catch { }
+                Check(code == 0, "Bot" + i + " termina bien (codigo " + code + ")");
+            }
+            Check(wins == 1, "exactamente un bot se queda con Crate_0 (" + wins + ")");
+            Check(lines[1].Any(x => x.Contains("GRAB Crate_1 OK")), "Bot1 agarra Crate_1");
+            Check(lines[2].Any(x => x.Contains("GRAB Crate_1 OK")), "Bot2 agarra Crate_1 (ya soltado por Bot1)");
+            Check(lines[3].Any(x => x.Contains("GRAB Crate_1 (ocupado) DENIED")), "Bot3 no puede agarrar Crate_1 mientras lo tiene Bot2");
+            Check(lines[3].Any(x => x.Contains("GRAB Crate_1 (flotando) OK")), "Bot3 agarra Crate_1 cuando Bot2 lo dejo flotando");
+
+            // posiciones: lo que ve cada bot contra el anfitrion
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            for (int i = 1; i <= BotCount; i++)
+            {
+                int total = 0, close = 0; float worst = 0f; string worstName = "";
+                foreach (string line in lines[i])
+                {
+                    if (!line.StartsWith("BODY ")) continue;
+                    string[] f = line.Split(' ');
+                    if (f.Length < 5 || !int.TryParse(f[1], out int id) || !hostPos.TryGetValue(id, out Vector3 hp)) continue;
+                    var bp = new Vector3(float.Parse(f[2], inv), float.Parse(f[3], inv), float.Parse(f[4], inv));
+                    float d = Vector3.Distance(hp, bp);
+                    total++;
+                    if (d <= 0.05f) close++;
+                    if (d > worst) { worst = d; worstName = id < world.Bodies.Count && world.Bodies[id] != null ? world.Bodies[id].name : "?"; }
+                }
+                Check(total > 50, "Bot" + i + " volco las posiciones (" + total + " cuerpos)");
+                Check(total > 0 && close >= total * 0.98f && worst < 0.5f, "Bot" + i + " ve el mundo igual que el anfitrion: " + close + "/" + total + " a menos de 5 cm; peor " + worst.ToString("F2") + " m (" + worstName + ")");
+            }
+            NetSession.SimulatedLatencyMs = 0;
+        }
+
         private static IEnumerator Probe(string mode)
         {
             if (!File.Exists(BotBuild.ExePath)) { failures.Add("falta el ejecutable de los bots (menu SpellSimulator/Build/Windows (bots))"); yield break; }
+            if (mode.StartsWith("grab")) { var grab = ProbeGrab(mode); while (grab.MoveNext()) yield return grab.Current; yield break; }
             var menu = UI.MainMenu.Instance;
             if (menu == null) { failures.Add("no hay MainMenu"); yield break; }
             yield return 1f;

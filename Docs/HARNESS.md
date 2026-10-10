@@ -72,7 +72,8 @@ Sin ventana el cursor no se captura y el jugador no rota con la vista: el bot gi
 
 - **Build:** menu `SpellSimulator/Build/Windows (bots)` -> `Builds/Bot/SpellSimulator.exe` (233 MB; la primera vez cambia la plataforma activa del editor; despues 30 s-2 min). Rehacerlo cuando cambia el codigo de juego o de red. Resultado en `Logs/build-bot.txt`.
 - **Pruebas** (menu `SpellSimulator/Harness/...`, resultado en `Logs/harness-bots.txt`, informes de cada bot en `Logs/bots/`): `Run Bots (local)` (el editor hospeda por loopback y lanza 3 bots 35 s), `Run Bots (Relay)` (igual, por Relay real; necesita Internet), `Run Bots (churn local)` (los bots entran y salen 3 veces). El anfitrion comprueba cuantos bots ve a la vez, que se mueven (>= 4 m horizontales) y que sus avatares desaparecen al irse.
-- **Limitaciones actuales:** solo caminan y saltan; agarrar objetos y lanzar hechizos se suman en F2/F3. Con Unity en segundo plano `delayCall` no corre: los builds usan `EditorApplication.update`.
+- **Agarre (F2):** `Run Bots Grab (local)` y `Run Bots Grab (150 ms)` (latencia simulada de 75 ms de ida con `-botlatency`). Linea de tiempo comun (`-botat`): +0 los tres bots piden `Crate_0` a la vez (debe quedar uno), +6 Bot1 agarra y arroja `Crate_1`, +14 Bot2 lo agarra y lo deja flotando, +15 Bot3 intenta agarrarlo (rechazado), +19 Bot3 lo agarra flotando, +9 el anfitrion empuja 30 objetos, +24 todos vuelcan las posiciones de los ~157 cuerpos y el editor las compara (>= 98 % a menos de 5 cm, peor < 0,5 m).
+- **Limitaciones actuales:** solo caminan, saltan y agarran cajas; lanzar hechizos se suma en F3. Con Unity en segundo plano `delayCall` no corre: los builds usan `EditorApplication.update`.
 
 ## Menús de Interaction y Map
 `SpellSimulator > Interaction > Setup Current Scene` deja movibles y rayables las cosas del mundo. `Map > Build Pradera`

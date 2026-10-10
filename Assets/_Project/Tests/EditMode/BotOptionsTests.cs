@@ -54,6 +54,24 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
+        public void Parse_GrabScriptStartTimeAndLatency()
+        {
+            var o = BotOptions.Parse(new[] { "-bot", "-botscript", "grab", "-botat", "1790000000123", "-botlatency", "75" });
+            Assert.AreEqual(BotScript.Grab, o.Script);
+            Assert.AreEqual(1790000000123L, o.StartAtMs);
+            Assert.AreEqual(75, o.LatencyMs);
+        }
+
+        [Test]
+        public void IndexOfName_ReadsTrailingNumber()
+        {
+            Assert.AreEqual(3, BotOptions.IndexOfName("Bot3"));
+            Assert.AreEqual(12, BotOptions.IndexOfName("Bot12"));
+            Assert.AreEqual(0, BotOptions.IndexOfName("Bot"));
+            Assert.AreEqual(0, BotOptions.IndexOfName(null));
+        }
+
+        [Test]
         public void Parse_NullAndFlagsAreCaseInsensitive()
         {
             Assert.IsFalse(BotOptions.Parse(null).Enabled);

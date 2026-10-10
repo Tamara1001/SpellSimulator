@@ -561,7 +561,9 @@ Qué se hace:
 
 **A mano:** PC↔PC por Internet, PC↔Quest.
 
-### F2 — Mundo compartido: objetos físicos y agarre (8–12 días)
+### F2 — Mundo compartido: objetos físicos y agarre (8–12 días) — HECHO 2026-10-09
+
+> Cambio respecto de lo planeado: **no se usa `NetworkObject` por cuerpo** (los objetos son de la escena, no prefabs). Se replica con mensajes con nombre y un registro de ids por orden de la jerarquía (`NetWorld`, `NetBody`; ver CHANGELOG). Agarre = el cliente empieza al instante y el servidor valida (decisión de Ale: en coop manda el que agarra). Pendiente de F2: clonados en juego (reposición/reciclaje/hechizos: F3-F4), empuje por caminar de un cliente, prueba a mano con 100-200 ms.
 
 **Depende de:** F1.
 

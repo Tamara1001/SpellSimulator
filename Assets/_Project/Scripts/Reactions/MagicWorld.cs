@@ -198,6 +198,8 @@ namespace SpellSimulator.Reactions
         /// <summary>Reinicio del mundo: objetos sanos y en su lugar, sin fragmentos ni hechizos.</summary>
         public void ResetWorld()
         {
+            // En red un cliente no reinicia por su cuenta: se lo pide al anfitrion, que reinicia a todos.
+            if (Net.NetWorld.InterceptReset()) return;
             WorldReset?.Invoke();
             if (output != null) output.ClearAll();
             Shatter.ClearAll();

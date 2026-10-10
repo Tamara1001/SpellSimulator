@@ -143,6 +143,7 @@
                     <ui:TextField name="net-code" max-length="8" class="mm-net-field mm-net-field--code" />
                     <ui:Button name="net-join" class="mm-back mm-net-action" text="Unirse" />
                     <ui:Label name="net-status" text="" class="mm-net-status" />
+                    <ui:Button name="net-reconnect" class="mm-back mm-net-action" text="Reconectar" />
                     <ui:Button name="net-leave" class="mm-back mm-net-action" text="Salir de la sala" />
                     <ui:Button name="net-back" class="mm-back" text="Volver" />
                 </ui:VisualElement>

@@ -60,6 +60,12 @@ SpellSimulator/
 └── ProjectSettings/
 ```
 
+## Red (multijugador)
+- `Scripts/Net/`: `NetSession` (sala por Relay/IP directa), `NetPlayer` (avatar de red), `NetHud`, `ClientNetworkTransform`.
+- `Scripts/Net/World/`: `NetWorld` (mundo compartido), `NetBody`, `NetBodyMath`.
+- `Scripts/Net/Bots/`: `BotOptions`, `NetBot` (jugadores automaticos; ver HARNESS).
+- `Editor/`: `NetSetup` (avatar de red), `HarnessNetSmoke`, `HarnessBots`, `BotBuild`.
+
 ## Dónde va cada cosa nueva
 | Tipo | Lugar |
 |---|---|

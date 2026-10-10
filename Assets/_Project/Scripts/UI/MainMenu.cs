@@ -197,7 +197,7 @@ namespace SpellSimulator.UI
             if (!bound) return;
             bool wasPlaying = state == State.Playing;
             // volver al menu principal desde el juego = salir de la sala
-            if (wasPlaying && Net.NetSession.Exists && Net.NetSession.Instance.IsConnected) Net.NetSession.Instance.Leave();
+            if (wasPlaying && Net.NetSession.Exists && Net.NetSession.Instance.IsConnected) { Net.NetSession.Instance.Leave(); ResetWorldAfterNet(); }
             if (BookReaderUI.IsOpen) BookReaderUI.CloseReader();
             state = State.Menu;
             if (input != null) input.Gate = InputGate.None;

@@ -6,6 +6,18 @@ tags: [doc, changelog]
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
 
+## 2026-10-09 — F2 del multijugador: mundo compartido (objetos físicos y agarre)
+
+- `Scripts/Net/World/`: `NetWorld` (gestor; vive en el GameObject del NetworkManager, solo en el singleton), `NetBody` (un cuerpo replicado) y `NetBodyMath` (parte pura, 13 tests). **No se usan `NetworkObject` por cuerpo**: los objetos son de la escena, no prefabs; la replicación va con mensajes con nombre de Netcode (`sw.*`).
+- **Quién simula qué:** el anfitrión simula lo suelto y manda las poses cambiadas a ~15 Hz (+ cuadros completos rotativos por si se pierde un paquete, + estado completo al entrar un cliente). Los clientes ven los cuerpos como seguidores cinemáticos. El que agarra algo lo lleva con su propia física (el agarre empieza al instante) y manda su pose a ~20 Hz; al soltar manda pose y velocidad y el servidor retoma la simulación.
+- **Agarre validado:** un cliente pide al servidor (`sw.grab`); si otro lo tiene o está muy lejos (20 m) el servidor lo rechaza y el cliente lo suelta. `PlayerInteractor.TryGrab` rechaza al instante lo que ya sostiene otro (`NetWorld.AllowLocalGrab`) y tiene `ForceRelease`. El servidor reproduce `OnRemoteGrab/OnRemoteRelease` (lienzos) o `OnDrop` + `PinnedBody.Pin` (el resto), así que soltar, arrojar y dejar flotando dan lo mismo en todas las máquinas.
+- **Ids:** orden de las claves de ruta de los objetos con `Rigidbody` + `Respawnable` que existen al cargar la escena (los raíz se distinguen por posición: en un ejecutable el índice de hermano de la raíz es siempre 0). Una huella (FNV-1a) avisa si el anfitrión y el cliente tienen versiones distintas del mundo y apaga la replicación.
+- **Reinicio del mundo en red:** un cliente se lo pide al anfitrión (`MagicWorld.ResetWorld` consulta `NetWorld.InterceptReset`); el anfitrión reinicia y avisa a todos. Al salir de la sala o perderla, el mundo se reinicia (no hay guardado de partida).
+- **F1 restos:** botón «Reconectar a CÓDIGO» (si se cortó la conexión y la sala sigue viva); el mundo se reinicia al salir; la entrada tardía recibe el estado completo.
+- Harness: `Run Bots Grab (local)` y `Run Bots Grab (150 ms)` (tres bots: pelean por `Crate_0`, se pasan `Crate_1` —arrojada, flotando, rechazada mientras la tiene otro—, el anfitrión empuja 30 objetos; todos vuelcan posiciones y se comparan, 20 chequeos). Opción `-botlatency`/`NetSession.SimulatedLatencyMs` (latencia simulada en el transporte).
+- Verificado: 428 tests EditMode, smoke de Play, entrada real (30), pruebas de red y bots (caminar, churn, Relay, agarre con y sin 150 ms).
+- Límites conocidos (F2): lo que se crea durante el juego (reposición, hechizos, reciclaje) no se replica todavía (F3/F4); un cliente que empuja una caja caminando la encuentra como una pared (sus cuerpos son cinemáticos); el dibujo de los lienzos no se replica (F3); VR no se probó.
+
 ## 2026-10-09 — F1: bots de red
 - `Scripts/Net/Bots/` (`BotOptions` con 6 tests, `NetBot`): jugador automatico que se une por Relay o IP directa, camina y salta con un gamepad virtual, informa lo que ve de los demas y sale con codigo 0/1. Guion `churn`: entra y sale varias veces.
 - `NetSession.AuthProfile`: perfil de autenticacion por bot (si no, varios bots en la misma PC compartian el jugador anonimo y Relay respondia «player is already a member of the session»).
