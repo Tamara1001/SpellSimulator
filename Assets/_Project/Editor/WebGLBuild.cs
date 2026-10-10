@@ -8,7 +8,6 @@ namespace SpellSimulator.EditorTools
 {
     /// <summary>
     /// Build de WebGL para itch.io. Menu: SpellSimulator/Build/WebGL (itch.io). Por MCP: WebGLBuild.Run().
-    /// Requiere que la ventana de Unity tenga el foco: en segundo plano el editor no ejecuta delayCall y el build no arranca.
     /// Salida: Builds/WebGL (index.html en la raiz, listo para comprimir en un .zip). Resultado en Logs/build-webgl.txt.
     /// </summary>
     public static class WebGLBuild
@@ -37,8 +36,14 @@ namespace SpellSimulator.EditorTools
         {
             Directory.CreateDirectory(Path.GetDirectoryName(ResultPath));
             File.WriteAllText(ResultPath, "RUNNING");
-            // BuildPlayer no puede llamarse dentro del loop del player: se difiere un tick.
-            EditorApplication.delayCall += Build;
+            // Se difiere un tick por EditorApplication.update (no delayCall: ese no corre si Unity esta en segundo plano).
+            EditorApplication.update += BuildOnce;
+        }
+
+        private static void BuildOnce()
+        {
+            EditorApplication.update -= BuildOnce;
+            Build();
         }
 
         private static void Build()
