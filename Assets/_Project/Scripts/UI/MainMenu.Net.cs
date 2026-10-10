@@ -16,6 +16,7 @@ namespace SpellSimulator.UI
         private Label netStatus, multiplayerSub;
         private float netRevealAt = -1f, netHideAt = -1f;
         private bool netBusy;
+        private bool netStarted; // el usuario apreto Crear sala / Unirse: al conectar se entra solo al juego
 
         private void BindNet()
         {
@@ -90,6 +91,7 @@ namespace SpellSimulator.UI
             bool connected = s != null && s.IsConnected;
             bool connecting = s != null && s.State == NetState.Connecting;
             netBusy = connecting;
+            if (connected && netStarted && state == State.Net) { EnterGameFromNet(); return; }
 
             netHost.style.display = connected ? DisplayStyle.None : DisplayStyle.Flex;
             netJoin.style.display = connected ? DisplayStyle.None : DisplayStyle.Flex;
@@ -108,7 +110,7 @@ namespace SpellSimulator.UI
             else if (s != null && s.State == NetState.Failed)
             {
                 netStatus.text = "No se pudo conectar: " + s.LastError;
-                multiplayerSub.text = "Crear una sala o unirse con un código";
+                multiplayerSub.text = "Sin conexión: " + s.LastError;
             }
             else
             {
@@ -125,8 +127,10 @@ namespace SpellSimulator.UI
             SaveName();
             NetSession s = NetSession.Instance;
             s.Changed -= RefreshNetView; s.Changed += RefreshNetView;
+            netStarted = true;
             bool ok = await s.HostAsync();
-            if (ok) EnterGameFromNet();
+            if (!ok) netStarted = false;
+            else if (state == State.Net) EnterGameFromNet();
         }
 
         private async void JoinClicked()
@@ -136,8 +140,10 @@ namespace SpellSimulator.UI
             SaveName();
             NetSession s = NetSession.Instance;
             s.Changed -= RefreshNetView; s.Changed += RefreshNetView;
+            netStarted = true;
             bool ok = await s.JoinAsync(netCode.value);
-            if (ok) EnterGameFromNet();
+            if (!ok) netStarted = false;
+            else if (state == State.Net) EnterGameFromNet();
         }
 
         private void LeaveClicked()
@@ -145,9 +151,18 @@ namespace SpellSimulator.UI
             if (NetSession.Exists) NetSession.Instance.Leave();
         }
 
+        /// <summary>Se perdio la conexion (el anfitrion se fue o cerro la sala): vuelve al menu y muestra el aviso en la hoja.</summary>
+        private void OnNetLost(string reason)
+        {
+            netStarted = false;
+            if (state == State.Playing) ShowMenu();
+            if (state == State.Menu) OpenNet();
+        }
+
         private void EnterGameFromNet()
         {
             if (state != State.Net) return;
+            netStarted = false;
             if (NetSession.Exists) NetSession.Instance.Changed -= RefreshNetView;
             HideNetNow();
             state = State.Menu;

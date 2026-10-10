@@ -8,6 +8,7 @@ namespace SpellSimulator.EditorTools
 {
     /// <summary>
     /// Build de WebGL para itch.io. Menu: SpellSimulator/Build/WebGL (itch.io). Por MCP: WebGLBuild.Run().
+    /// Requiere que la ventana de Unity tenga el foco: en segundo plano el editor no ejecuta delayCall y el build no arranca.
     /// Salida: Builds/WebGL (index.html en la raiz, listo para comprimir en un .zip). Resultado en Logs/build-webgl.txt.
     /// </summary>
     public static class WebGLBuild

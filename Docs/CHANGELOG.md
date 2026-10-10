@@ -6,6 +6,12 @@ tags: [doc, changelog]
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
 
+## 2026-10-09 — F1: arreglos tras la primera prueba entre dos personas
+
+- Probado por Ale y Tami: crear sala y unirse funcionan. Fallos hallados y corregidos: (1) el cliente quedaba en el menú tras unirse (la cabeza y el nombre de su avatar se veían a 34 m, en la órbita de la cámara del menú); ahora la entrada al juego la dispara el estado de `NetSession` y no la continuación del `await`; (2) volver al menú principal desde el juego sale de la sala; (3) si el anfitrión se va o cierra la sala, el cliente vuelve al menú con aviso (evento `NetSession.Disconnected`); (4) el avatar no copia la cámara del menú.
+- `NetSession`: los eventos y el HUD salen siempre en el hilo principal (`Update`); se engancha a `RemovedFromSession`/`Deleted` de la sesión; avisa si un `await` termina fuera del hilo principal.
+- Harness: `Run Net Disconnect Probe` (13 chequeos: el anfitrión se va, volver al menú sale de la sala, sin jugadores fantasma).
+
 ## 2026-10-09 — F1 del multijugador: menú Multijugador
 
 - `MainMenu` (ahora `partial`, con `MainMenu.Net.cs`): botón **Multijugador** y hoja con nombre, **Crear sala** (muestra el código), **Unirse** con código y **Salir de la sala**. Al conectar entra directo al juego. Reemplaza el cartel «Multijugador: próximamente».
