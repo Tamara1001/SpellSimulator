@@ -62,7 +62,11 @@ namespace SpellSimulator.World
 
         private string SupplyKey => string.IsNullOrEmpty(supplyId) ? (template != null ? template.name : name) : supplyId;
 
-        private void OnEnable() => MagicWorld.WorldReset += OnWorldReset;
+        private void OnEnable()
+        {
+            MagicWorld.WorldReset += OnWorldReset;
+            Net.NetTemplates.Register(template); // en red los clientes clonan la plantilla que el anfitrion les indica
+        }
         private void OnDisable() => MagicWorld.WorldReset -= OnWorldReset;
 
         /// <summary>Repone ya, sin esperar el enfriamiento, para el jugador local (0).</summary>
@@ -96,6 +100,7 @@ namespace SpellSimulator.World
             live.Add(new Live { go = clone, ownerId = ownerId });
             secondsSinceFree = 0f;
             WorldObjectBudget.Register(clone, SupplyKey, ownerId);
+            if (Net.NetWorld.Active != null) Net.NetWorld.Active.RegisterClone(clone, template, ownerId);
             Debug.Log($"[Suministro] {name} repuso {clone.name} ({SupplyKey}).", this);
             Supplied?.Invoke(this, clone);
         }
@@ -113,6 +118,7 @@ namespace SpellSimulator.World
         private void Update()
         {
             if (template == null || spawnAnchor == null) return;
+            if (Net.NetCast.IsClientOnly) return; // en red solo el anfitrion repone; los clientes ven las copias
             if (!filled)
             {
                 filled = true;
@@ -140,6 +146,7 @@ namespace SpellSimulator.World
         private void OnWorldReset()
         {
             if (template == null || spawnAnchor == null) return;
+            if (Net.NetCast.IsClientOnly) return; // las copias de un cliente las quita el anfitrion (mensaje de baja)
             for (int i = live.Count - 1; i >= 0; i--)
             {
                 GameObject go = live[i].go;

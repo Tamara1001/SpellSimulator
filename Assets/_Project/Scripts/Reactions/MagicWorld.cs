@@ -42,6 +42,7 @@ namespace SpellSimulator.Reactions
         private void Tick(float dt)
         {
             if (reactions == null) return;
+            if (Net.NetCast.IsClientOnly) return; // en red solo el anfitrion simula las reacciones; los clientes reciben el estado (NetReactiveSync)
             ExposeToSpells();
             ExposeToWater();
             SpreadFire();
@@ -158,6 +159,9 @@ namespace SpellSimulator.Reactions
                 }
             }
         }
+
+        /// <summary>Red: un cliente reproduce los efectos (llamas, romperse) de un cambio de estado que mando el anfitrion.</summary>
+        public void NetHandle(ElementReactive reactive, ReactionEvents events) => Handle(reactive, events);
 
         private void Handle(ElementReactive reactive, ReactionEvents events)
         {

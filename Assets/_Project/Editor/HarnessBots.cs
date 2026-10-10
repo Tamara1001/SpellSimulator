@@ -9,6 +9,7 @@ using UnityEngine;
 using SpellSimulator.Core;
 using SpellSimulator.Canvas;
 using SpellSimulator.Net;
+using SpellSimulator.Reactions;
 using SpellSimulator.World;
 
 namespace SpellSimulator.EditorTools
@@ -45,6 +46,12 @@ namespace SpellSimulator.EditorTools
 
         [MenuItem("SpellSimulator/Harness/Run Bots (churn local)")]
         public static void RunChurn() => Start("churn");
+
+        [MenuItem("SpellSimulator/Harness/Run Bots World (local)")]
+        public static void RunWorld() => Start("world");
+
+        [MenuItem("SpellSimulator/Harness/Run Bots Portal (local)")]
+        public static void RunPortal() => Start("portal");
 
         [MenuItem("SpellSimulator/Harness/Run Bots Cast (local)")]
         public static void RunCast() => Start("cast");
@@ -441,9 +448,185 @@ namespace SpellSimulator.EditorTools
             return n;
         }
 
+        private static void LaunchScriptBot(int i, long t0, string script)
+        {
+            string name = "Bot" + i;
+            string args = "-batchmode -nographics -logFile \"" + Path.Combine(BotLogDir, name + "-unity.log") + "\" -bot -botdirect 127.0.0.1:" + Port + " -botname " + name + " "
+                          + "-botscript " + script + " -botseconds 45 -botat " + t0 + " -botlog \"" + Path.Combine(BotLogDir, name + ".txt") + "\"";
+            var psi = new ProcessStartInfo(BotBuild.ExePath, args) { UseShellExecute = false, CreateNoWindow = true, WorkingDirectory = BotBuild.OutputDir };
+            processes.Add(Process.Start(psi));
+        }
+
+        private static string LastAfter(string[] lines, string marker)
+        {
+            string line = lines.LastOrDefault(x => x.Contains(marker));
+            return line != null ? line.Substring(line.IndexOf(marker) + marker.Length).Trim() : "(sin informe)";
+        }
+
+        // Escenario del mundo reactivo (F4): fuego del pasto, un objeto que arde y se moja, suministros y un papel dibujado; todos tienen que ver lo mismo.
+        private static IEnumerator ProbeWorld()
+        {
+            var menu = UI.MainMenu.Instance;
+            yield return 1f;
+            if (UI.MainMenu.IsActive) menu.EnterSandbox();
+            yield return 0.5f;
+            var session = NetSession.Instance;
+            Check(session.StartDirectHost(Port), "el anfitrion abre el puerto local");
+            if (!session.IsConnected) yield break;
+            yield return 1f;
+            NetWorld world = NetWorld.Active;
+            Check(world != null && world.Reactive != null && world.Reactive.ReactiveCount > 20, "el mundo reactivo compartido esta activo (" + (world != null && world.Reactive != null ? world.Reactive.ReactiveCount : 0) + " objetos)");
+            if (world == null || world.Reactive == null) yield break;
+            int supplied = 0;
+            foreach (var b in world.Bodies) if (b != null && b.IsDynamic) supplied++;
+            Check(supplied > 0, "el anfitrion repuso suministros que se replican (" + supplied + " cuerpos nuevos)");
+
+            Directory.CreateDirectory(BotLogDir);
+            foreach (string old in Directory.GetFiles(BotLogDir)) { try { File.Delete(old); } catch { } }
+            long t0 = NowMs() + 30000;
+            for (int i = 1; i <= 2; i++) { LaunchScriptBot(i, t0, "world"); yield return 1.5f; }
+            bool lateLaunched = false; // el tercero entra tarde: tiene que recibir el estado completo (suministros, papel dibujado)
+
+            // el anfitrion busca pasto que arda y un objeto que quemar
+            GrassFire fire = GrassFire.Current;
+            Check(fire != null, "hay GrassFire en la escena");
+            Vector3 spot = default;
+            bool ignited = false;
+            ElementReactive crate = null;
+            if (world.TryGetBody("Crate_2", out NetBody crateBody)) crate = crateBody.GetComponent<ElementReactive>();
+            Check(crate != null, "Crate_2 tiene ElementReactive");
+
+            while (NowMs() < t0 + 500) yield return null;
+            // T0+0,5: se enciende el pasto en el primer lugar donde prenda
+            for (int ix = -60; ix <= 60 && !ignited && fire != null; ix += 6)
+            {
+                for (int iz = -60; iz <= 60 && !ignited; iz += 6)
+                {
+                    if (!Physics.Raycast(new Vector3(ix, 200f, iz), Vector3.down, out RaycastHit hit, 400f, ~0, QueryTriggerInteraction.Ignore) || hit.collider.name != "Terrain" || hit.normal.y < 0.9f) continue;
+                    int before = fire.BurningCells;
+                    fire.Ignite(hit.point, 3f);
+                    if (fire.BurningCells > before) { ignited = true; spot = hit.point; }
+                }
+            }
+            Check(ignited, "el anfitrion enciende pasto (" + spot.ToString("F0") + ")");
+            // el objeto empieza a arder
+            float until = Time.realtimeSinceStartup + 1.5f;
+            while (crate != null && Time.realtimeSinceStartup < until) { crate.AddExposure(new Exposure { Heat = 120f }, 1f); yield return null; }
+            Check(crate != null && crate.State.Burning, "Crate_2 arde en el anfitrion");
+
+            while (NowMs() < t0 + 3600)
+            {
+                if (!lateLaunched && NowMs() >= t0 + 500) { lateLaunched = true; LaunchScriptBot(3, t0, "world"); }
+                yield return null;
+            }
+            string hostFire = world.Reactive.Describe();
+            notes.Add("anfitrion (fuego): " + hostFire);
+
+            // T0+5: agua sobre el pasto (todo lo que arde) y sobre el objeto
+            while (NowMs() < t0 + 5000) yield return null;
+            if (fire != null) fire.ExtinguishAt(spot, 60f);
+            until = Time.realtimeSinceStartup + 1.5f;
+            while (crate != null && Time.realtimeSinceStartup < until) { crate.AddExposure(new Exposure { Heat = -150f, Wet = 6f }, 1f); yield return null; }
+
+            while (NowMs() < t0 + 10500) yield return null;
+            string hostFinal = world.Reactive.Describe();
+            string hostCanvases = world.Canvases.Describe();
+            var hostPos = new Dictionary<int, Vector3>();
+            foreach (var b in world.Bodies) if (b != null) hostPos[b.Id] = b.Rb.position;
+            notes.Add("anfitrion (final): " + hostFinal);
+            Check(fire != null && fire.BurntCells > 0, "el fuego dejo pasto quemado en el anfitrion (" + (fire != null ? fire.BurntCells : -1) + " celdas)");
+
+            float deadline = Time.realtimeSinceStartup + 60f;
+            while (Time.realtimeSinceStartup < deadline && processes.Any(p => { try { return !p.HasExited; } catch { return false; } })) yield return 0.5f;
+            Check(processes.All(p => { try { return p.HasExited; } catch { return true; } }), "los bots terminaron a tiempo");
+
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            for (int i = 1; i <= 3; i++)
+            {
+                string report = Path.Combine(BotLogDir, "Bot" + i + ".txt");
+                string[] l = File.Exists(report) ? File.ReadAllLines(report) : new string[0];
+                int code = -1; try { code = processes[i - 1].HasExited ? processes[i - 1].ExitCode : -2; } catch { }
+                Check(code == 0, "Bot" + i + " termina bien (codigo " + code + ")");
+                string fireSeen = LastAfter(l, "REACT(fuego) ");
+                if (i <= 2) Check(!fireSeen.Contains("pasto ardiendo=0") && !fireSeen.Contains("pasto ardiendo=-1"), "Bot" + i + " ve el pasto ardiendo (" + fireSeen + ")");
+                string finalSeen = LastAfter(l, "REACT(final) ");
+                Check(finalSeen == hostFinal, "Bot" + i + (i == 3 ? " (entro tarde)" : "") + " ve el mismo mundo reactivo final que el anfitrion (" + finalSeen + ")");
+                string canvasSeen = LastAfter(l, "CANVAS ");
+                Check(canvasSeen == hostCanvases, "Bot" + i + " ve los mismos lienzos (incluido el papel de suministro dibujado): " + canvasSeen + " contra " + hostCanvases);
+                int total = 0, close = 0; float worst = 0f;
+                foreach (string line in l)
+                {
+                    if (!line.StartsWith("BODY ")) continue;
+                    string[] f = line.Split(' ');
+                    if (f.Length < 5 || !int.TryParse(f[1], out int id) || !hostPos.TryGetValue(id, out Vector3 hp)) continue;
+                    var bp = new Vector3(float.Parse(f[2], inv), float.Parse(f[3], inv), float.Parse(f[4], inv));
+                    float d = Vector3.Distance(hp, bp);
+                    total++;
+                    if (d <= 0.05f) close++;
+                    worst = Mathf.Max(worst, d);
+                }
+                Check(total > 50 && close >= total * 0.98f && worst < 0.5f, "Bot" + i + " ve los cuerpos (suministros incluidos) igual que el anfitrion: " + close + "/" + total + "; peor " + worst.ToString("F2") + " m");
+            }
+        }
+
+        // Escenario de portales (F4): un bot abre una ruta dibujando la identidad; dos bots cruzan casi a la vez y el enfriamiento de uno no afecta al otro.
+        private static IEnumerator ProbePortal()
+        {
+            var menu = UI.MainMenu.Instance;
+            yield return 1f;
+            if (UI.MainMenu.IsActive) menu.EnterSandbox();
+            yield return 0.5f;
+            var session = NetSession.Instance;
+            Check(session.StartDirectHost(Port), "el anfitrion abre el puerto local");
+            if (!session.IsConnected) yield break;
+            yield return 1f;
+            NetWorld world = NetWorld.Active;
+            Portal origin = Portal.Find("tower-study"), dest = Portal.Find("watchtower");
+            Check(world != null && origin != null && dest != null, "estan los portales tower-study y watchtower");
+            if (world == null || origin == null || dest == null) yield break;
+
+            Directory.CreateDirectory(BotLogDir);
+            foreach (string old in Directory.GetFiles(BotLogDir)) { try { File.Delete(old); } catch { } }
+            long t0 = NowMs() + 30000;
+            for (int i = 1; i <= 3; i++) { LaunchScriptBot(i, t0, "portal"); if (i < 3) yield return 1.5f; }
+
+            bool routeSeen = false, openSeen = false;
+            while (NowMs() < t0 + 11000)
+            {
+                if (origin.Destination == dest) routeSeen = true;
+                if (origin.State == PortalState.Open && dest.State == PortalState.Open) openSeen = true;
+                yield return null;
+            }
+            Check(routeSeen, "el anfitrion leyo la identidad dibujada por un cliente y abrio la ruta tower-study -> watchtower");
+            Check(openSeen, "los dos portales llegaron a estar abiertos");
+
+            float deadline = Time.realtimeSinceStartup + 60f;
+            while (Time.realtimeSinceStartup < deadline && processes.Any(p => { try { return !p.HasExited; } catch { return false; } })) yield return 0.5f;
+            Check(processes.All(p => { try { return p.HasExited; } catch { return true; } }), "los bots terminaron a tiempo");
+            Check(world.PortalCrossingsApproved >= 2, "el anfitrion autorizo el cruce de los dos clientes (aprobados " + world.PortalCrossingsApproved + ", rechazados " + world.PortalCrossingsDenied + ")");
+            for (int i = 1; i <= 3; i++)
+            {
+                string[] l = File.Exists(Path.Combine(BotLogDir, "Bot" + i + ".txt")) ? File.ReadAllLines(Path.Combine(BotLogDir, "Bot" + i + ".txt")) : new string[0];
+                int code = -1; try { code = processes[i - 1].HasExited ? processes[i - 1].ExitCode : -2; } catch { }
+                Check(code == 0, "Bot" + i + " termina bien (codigo " + code + ")");
+                string state = LastAfter(l, "PORTAL estado ");
+                Check(state.Contains("destino=watchtower"), "Bot" + i + " ve la ruta abierta (" + state + ")");
+                if (i >= 2)
+                {
+                    string cross = LastAfter(l, "PORTAL cruces=");
+                    Check(cross.StartsWith("1"), "Bot" + i + " cruzo el portal (" + cross + ")");
+                    int at = cross.IndexOf("distanciaALaLlegada=");
+                    float far = at >= 0 && float.TryParse(cross.Substring(at + 20).Replace(',', '.'), System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float f) ? f : 999f;
+                    Check(far >= 0f && far < 4f, "Bot" + i + " llego al portal de destino (a " + far.ToString("F1") + " m)");
+                }
+            }
+        }
+
         private static IEnumerator Probe(string mode)
         {
             if (!File.Exists(BotBuild.ExePath)) { failures.Add("falta el ejecutable de los bots (menu SpellSimulator/Build/Windows (bots))"); yield break; }
+            if (mode == "world") { var worldProbe = ProbeWorld(); while (worldProbe.MoveNext()) yield return worldProbe.Current; yield break; }
+            if (mode == "portal") { var portalProbe = ProbePortal(); while (portalProbe.MoveNext()) yield return portalProbe.Current; yield break; }
             if (mode == "cast") { var cast = ProbeCast(); while (cast.MoveNext()) yield return cast.Current; yield break; }
             if (mode == "draw") { var draw = ProbeDraw(); while (draw.MoveNext()) yield return draw.Current; yield break; }
             if (mode.StartsWith("grab")) { var grab = ProbeGrab(mode); while (grab.MoveNext()) yield return grab.Current; yield break; }

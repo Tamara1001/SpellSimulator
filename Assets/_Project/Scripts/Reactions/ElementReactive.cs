@@ -94,6 +94,15 @@ namespace SpellSimulator.Reactions
         }
 
         /// <summary>Vuelve a su estado inicial (reinicio del mundo).</summary>
+        /// <summary>Red: un cliente recibe del anfitrion el estado del objeto (no lo simula por su cuenta).</summary>
+        public void NetApply(ReactiveState next, bool isCrystallized)
+        {
+            state = next;
+            pending = default;
+            if (crystallized != isCrystallized) { crystallized = isCrystallized; }
+            RefreshLook();
+        }
+
         public void ResetState()
         {
             state = ReactiveState.Fresh;

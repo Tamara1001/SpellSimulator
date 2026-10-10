@@ -10,6 +10,7 @@ using SpellSimulator.Canvas;
 using SpellSimulator.Casting;
 using SpellSimulator.Core;
 using SpellSimulator.Player;
+using SpellSimulator.World;
 
 namespace SpellSimulator.Net.Bots
 {
@@ -100,6 +101,8 @@ namespace SpellSimulator.Net.Bots
                 if (options.Script == BotScript.Grab) yield return GrabScenario();
                 else if (options.Script == BotScript.Draw) yield return DrawScenario();
                 else if (options.Script == BotScript.Cast) yield return CastScenario();
+                else if (options.Script == BotScript.World) yield return WorldScenario();
+                else if (options.Script == BotScript.Portal) yield return PortalScenario();
                 else yield return Play(options.Seconds, c == cycles);
                 if (c < cycles)
                 {
@@ -262,6 +265,106 @@ namespace SpellSimulator.Net.Bots
             DumpBodies(world);
             yield return new WaitForSecondsRealtime(1f);
         }
+
+        // ---------------------------------------------------------------- guion World (F4)
+
+        /// <summary>
+        /// Observador del mundo reactivo: Bot1 dibuja un trazo en un papel de suministro (cuerpo creado en juego con su lienzo); el anfitrion enciende pasto
+        /// y un objeto (+3.5 s: se cuenta lo que se ve), los apaga con agua (+10 s: se cuenta de nuevo). Cada bot vuelca lo que ve.
+        /// </summary>
+        private IEnumerator WorldScenario()
+        {
+            NetWorld world = NetWorld.Active;
+            if (world == null || world.Reactive == null || world.Canvases == null) { failures.Add("sin NetWorld/mundo reactivo"); yield break; }
+            long t0 = options.StartAtMs > 0 ? options.StartAtMs : NowMs() + 3000;
+            int idx = BotOptions.IndexOfName(options.Name);
+            yield return WaitUntilMs(t0);
+            if (idx == 1)
+            {
+                // un papel de suministro (cuerpo dinamico con lienzo): se dibuja un trazo en el
+                foreach (var body in world.Bodies)
+                {
+                    if (body != null && body.IsDynamic && body.TryGetComponent(out DrawingCanvas dc) && dc.isActiveAndEnabled)
+                    {
+                        var stroke = new Stroke();
+                        dc.Session.AddStroke(stroke);
+                        for (int i = 0; i < 30; i++) { Vector2 p = new Vector2(0.2f + i * 0.02f, 0.5f); stroke.AddPoint(p); }
+                        dc.Redraw();
+                        Note($"dibuja un trazo en el papel de suministro {body.name} (id {body.Id})");
+                        break;
+                    }
+                }
+            }
+            yield return WaitUntilMs(t0 + 3500);
+            Note("REACT(fuego) " + world.Reactive.Describe());
+            yield return WaitUntilMs(t0 + 10000);
+            Note("REACT(final) " + world.Reactive.Describe());
+            Note("CANVAS " + world.Canvases.Describe());
+            DumpBodies(world);
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+
+        // ---------------------------------------------------------------- guion Portal (F4)
+
+        private int travelsSeen;
+
+        private void TeleportTo(Vector3 position)
+        {
+            IPlayerContext me = PlayerRegistry.Local;
+            if (me == null || me.Root == null) return;
+            if (me.Root.TryGetComponent(out Rigidbody prb)) { prb.position = position; prb.linearVelocity = Vector3.zero; }
+            me.Root.position = position;
+            Physics.SyncTransforms();
+        }
+
+        /// <summary>
+        /// +0 Bot1 dibuja la identidad de 'watchtower' en la placa de 'tower-study' (el anfitrion la lee y abre la ruta); +6 Bot2 y Bot3 entran al cruce
+        /// de 'tower-study' casi a la vez: el anfitrion los autoriza a los dos (el enfriamiento es por jugador) y llegan a 'watchtower'.
+        /// </summary>
+        private IEnumerator PortalScenario()
+        {
+            NetWorld world = NetWorld.Active;
+            SpellCaster spellCaster = FindFirstObjectByType<SpellCaster>();
+            Portal origin = Portal.Find("tower-study"), dest = Portal.Find("watchtower");
+            if (world == null || spellCaster == null || spellCaster.Glyphs == null || origin == null || dest == null || origin.Plate == null || origin.CrossTrigger == null)
+            { failures.Add("faltan NetWorld/diccionario/portales tower-study y watchtower"); yield break; }
+            long t0 = options.StartAtMs > 0 ? options.StartAtMs : NowMs() + 3000;
+            int idx = BotOptions.IndexOfName(options.Name);
+            Portal.Traveled += OnTraveled;
+            yield return WaitUntilMs(t0);
+
+            if (idx == 1)
+            {
+                // cerca de la placa (el anfitrion mide el alcance con el avatar), un instante para que llegue, y se dibuja la identidad
+                Vector3 plate = origin.Plate.WorldCenter;
+                TeleportTo(plate + Vector3.back * 2.5f);
+                yield return new WaitForSecondsRealtime(0.8f);
+                var identity = dest.Identity;
+                var signs = new (string id, float angleDeg)[identity.Signs.Length];
+                for (int i = 0; i < signs.Length; i++) signs[i] = (identity.Signs[i], 90f + i * 360f / signs.Length);
+                DrawSeal(origin.Plate, spellCaster.Glyphs, identity.Sigil, signs);
+                spellCaster.OnStrokeFinished(origin.Plate);
+                Note("dibuja la identidad de watchtower en la placa de tower-study");
+            }
+            else if (idx == 2 || idx == 3)
+            {
+                yield return WaitUntilMs(t0 + 6000 + (idx - 2) * 200);
+                Vector3 gate = origin.CrossTrigger.bounds.center;
+                TeleportTo(gate + Vector3.back * 3f);
+                yield return new WaitForSecondsRealtime(0.6f); // que el anfitrion vea el avatar cerca
+                TeleportTo(gate);
+                yield return new WaitForSecondsRealtime(2f);
+                IPlayerContext me = PlayerRegistry.Local;
+                float far = me != null && me.Root != null && dest.Arrival != null ? Vector3.Distance(me.Root.position, dest.Arrival.position) : -1f;
+                Note($"PORTAL cruces={travelsSeen} distanciaALaLlegada={far:F1}");
+            }
+            yield return WaitUntilMs(t0 + 12000);
+            Note($"PORTAL estado tower-study={origin.State} destino={origin.DestinationId} watchtower={dest.State}");
+            Portal.Traveled -= OnTraveled;
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+
+        private void OnTraveled(Portal from, Portal to) { travelsSeen++; Note($"cruzo {from.Id} -> {to.Id}"); }
 
         // ---------------------------------------------------------------- guion Cast (F3)
 

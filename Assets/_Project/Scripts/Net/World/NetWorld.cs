@@ -27,7 +27,13 @@ namespace SpellSimulator.Net
     public sealed class NetWorld : MonoBehaviour
     {
         private const string MSpawn = "sw.spawn", MRemove = "sw.remove";
+        private const string MPortalState = "pt.state", MPortalCross = "pt.cross", MPortalTp = "pt.tp";
+        private const float PortalReach = 8f;
         private const ushort FirstDynamicId = 40000;
+        private const ushort FirstDynamicCanvasId = 1000;
+
+        /// <summary>Id del lienzo de un cuerpo creado en juego: se deriva del id del cuerpo (igual en todas las maquinas).</summary>
+        public static ushort CanvasIdFor(ushort bodyId) => (ushort)(FirstDynamicCanvasId + (bodyId - FirstDynamicId));
         private ushort nextDynamicId = FirstDynamicId;
         private const string MFull = "sw.full", MSnap = "sw.snap", MGrab = "sw.grab", MDeny = "sw.deny", MHeld = "sw.held",
                              MHold = "sw.hold", MRelease = "sw.rel", MReset = "sw.reset", MResetReq = "sw.resetreq";
@@ -64,6 +70,7 @@ namespace SpellSimulator.Net
         private PlayerInteractor interactor;
         private NetCanvasSync canvasSync;
         private NetCast castSync;
+        private NetReactiveSync reactiveSync;
 
         /// <summary>Dibujo compartido (trazos de los lienzos); null si no hay sesion.</summary>
         public NetCanvasSync Canvases => canvasSync;
@@ -71,10 +78,16 @@ namespace SpellSimulator.Net
         /// <summary>Lanzamiento compartido; null si no hay sesion.</summary>
         public NetCast Casts => castSync;
 
+        /// <summary>Mundo reactivo compartido (fuego, humedad, quemado); null si no hay sesion.</summary>
+        public NetReactiveSync Reactive => reactiveSync;
+
         public bool IsServer => nm != null && nm.IsServer;
         public bool Began => began;
         public int BodyCount => bodies.Count;
         public bool Mismatch => mismatch;
+        /// <summary>Cruces de portal de clientes que el anfitrion autorizo / rechazo (pruebas y diagnostico).</summary>
+        public int PortalCrossingsApproved { get; private set; }
+        public int PortalCrossingsDenied { get; private set; }
 
         // ---------------------------------------------------------------- ciclo de vida
 
@@ -123,11 +136,16 @@ namespace SpellSimulator.Net
             cm.RegisterNamedMessageHandler(MResetReq, OnResetRequest);
             cm.RegisterNamedMessageHandler(MSpawn, OnSpawnMessage);
             cm.RegisterNamedMessageHandler(MRemove, OnRemoveMessage);
+            cm.RegisterNamedMessageHandler(MPortalState, OnPortalStateMessage);
+            cm.RegisterNamedMessageHandler(MPortalCross, OnPortalCrossMessage);
+            cm.RegisterNamedMessageHandler(MPortalTp, OnPortalTeleportMessage);
             MagicWorld.WorldReset += OnWorldReset;
             canvasSync = new NetCanvasSync(nm);
             canvasSync.Begin();
             castSync = new NetCast(nm, canvasSync);
             castSync.Begin();
+            reactiveSync = new NetReactiveSync(nm);
+            reactiveSync.Begin();
             bool client = !nm.IsServer;
             foreach (var b in bodies)
             {
@@ -145,6 +163,7 @@ namespace SpellSimulator.Net
             began = false;
             if (Active == this) Active = null;
             MagicWorld.WorldReset -= OnWorldReset;
+            if (reactiveSync != null) { reactiveSync.End(); reactiveSync = null; }
             if (castSync != null) { castSync.End(); castSync = null; }
             if (canvasSync != null) { canvasSync.End(); canvasSync = null; }
             if (nm != null && nm.CustomMessagingManager != null)
@@ -154,6 +173,7 @@ namespace SpellSimulator.Net
                 cm.UnregisterNamedMessageHandler(MDeny); cm.UnregisterNamedMessageHandler(MHeld); cm.UnregisterNamedMessageHandler(MHold);
                 cm.UnregisterNamedMessageHandler(MRelease); cm.UnregisterNamedMessageHandler(MReset); cm.UnregisterNamedMessageHandler(MResetReq);
                 cm.UnregisterNamedMessageHandler(MSpawn); cm.UnregisterNamedMessageHandler(MRemove);
+                cm.UnregisterNamedMessageHandler(MPortalState); cm.UnregisterNamedMessageHandler(MPortalCross); cm.UnregisterNamedMessageHandler(MPortalTp);
             }
             applyingNet = true;
             foreach (var b in bodies)
@@ -172,7 +192,7 @@ namespace SpellSimulator.Net
             {
                 if (b == null) continue;
                 bool replica = b.IsDynamic && !wasServer;
-                b.IsDynamic = false; // que su destruccion no avise a nadie
+                b.SuppressDestroyNotify = true; // cerrar la sesion no es una baja del mundo: que no avise a nadie
                 if (replica) Destroy(b.gameObject); else Destroy(b);
             }
             nextDynamicId = FirstDynamicId;
@@ -219,6 +239,7 @@ namespace SpellSimulator.Net
         {
             if (!began || mismatch) return;
             if (canvasSync != null) canvasSync.Tick(Time.fixedDeltaTime);
+            if (reactiveSync != null) reactiveSync.Tick(Time.fixedDeltaTime);
             if (nm.IsServer) ServerTick(); else ClientTick();
         }
 
@@ -413,7 +434,13 @@ namespace SpellSimulator.Net
         {
             if (!began) return;
             if (clientId == nm.LocalClientId) { PlayerRegistry.LocalOwnerId = (int)clientId; if (canvasSync != null) canvasSync.RefreshOwner(); }
-            if (nm.IsServer && clientId != NetworkManager.ServerClientId) { SendFull(clientId); if (canvasSync != null) canvasSync.SendFull(clientId); }
+            if (nm.IsServer && clientId != NetworkManager.ServerClientId)
+            {
+                SendFull(clientId);
+                if (canvasSync != null) canvasSync.SendFull(clientId);
+                if (reactiveSync != null) reactiveSync.SendFull(clientId);
+                foreach (var portal in Portal.All) if (portal != null && portal.State != PortalState.Dormant) SendPortalState(portal, clientId);
+            }
         }
 
         private void OnClientDisconnected(ulong clientId)
@@ -573,6 +600,127 @@ namespace SpellSimulator.Net
             if (world != null) world.ResetWorld();
         }
 
+        // ---------------------------------------------------------------- portales
+
+        private static byte[] EncodePortal(string id, byte state, string destId, bool origin, float elapsed)
+        {
+            using (var ms = new System.IO.MemoryStream(64))
+            using (var w = new System.IO.BinaryWriter(ms))
+            {
+                w.Write(id ?? ""); w.Write(state); w.Write(destId ?? ""); w.Write(origin); w.Write(elapsed);
+                w.Flush();
+                return ms.ToArray();
+            }
+        }
+
+        private void SendBlob(string message, List<ulong> targets, byte[] bytes)
+        {
+            if (targets.Count == 0) return;
+            using (var w = new FastBufferWriter(4 + bytes.Length + 8, Allocator.Temp))
+            {
+                w.WriteValueSafe(bytes.Length);
+                w.WriteBytesSafe(bytes);
+                nm.CustomMessagingManager.SendNamedMessage(message, targets, w, NetworkDelivery.Reliable);
+            }
+        }
+
+        private static byte[] ReadBlob(FastBufferReader r)
+        {
+            r.ReadValueSafe(out int len);
+            if (len < 0 || len > 1024) return null;
+            var bytes = new byte[len];
+            r.ReadBytesSafe(ref bytes, len);
+            return bytes;
+        }
+
+        /// <summary>Lo llama <see cref="Portal"/> al cambiar de estado: el anfitrion avisa a los clientes.</summary>
+        public void OnPortalState(Portal portal)
+        {
+            if (!began || !nm.IsServer) return;
+            SendPortalState(portal, null);
+        }
+
+        private void SendPortalState(Portal portal, ulong? only)
+        {
+            var targets = new List<ulong>(4);
+            if (only.HasValue) targets.Add(only.Value); else targets = ClientTargets();
+            SendBlob(MPortalState, targets, EncodePortal(portal.Id, (byte)portal.State, portal.DestinationId, portal.IsRouteOrigin, portal.SecondsInState));
+        }
+
+        private void OnPortalStateMessage(ulong sender, FastBufferReader r)
+        {
+            if (!began || nm.IsServer) return;
+            byte[] bytes = ReadBlob(r);
+            if (bytes == null) return;
+            try
+            {
+                using (var ms = new System.IO.MemoryStream(bytes))
+                using (var br = new System.IO.BinaryReader(ms))
+                {
+                    string id = br.ReadString(); byte state = br.ReadByte(); string destId = br.ReadString(); bool origin = br.ReadBoolean(); float elapsed = br.ReadSingle();
+                    Portal portal = Portal.Find(id);
+                    if (portal == null || state > (byte)PortalState.Cooldown) return;
+                    portal.NetApply((PortalState)state, Portal.Find(destId), origin, elapsed);
+                }
+            }
+            catch (System.IO.EndOfStreamException) { }
+        }
+
+        /// <summary>Cliente: pide cruzar un portal (lo valida el anfitrion).</summary>
+        public void RequestPortalCross(Portal portal)
+        {
+            if (!began || nm.IsServer || portal == null) return;
+            byte[] bytes = EncodePortal(portal.Id, 0, "", false, 0f);
+            using (var w = new FastBufferWriter(4 + bytes.Length + 8, Allocator.Temp))
+            {
+                w.WriteValueSafe(bytes.Length);
+                w.WriteBytesSafe(bytes);
+                nm.CustomMessagingManager.SendNamedMessage(MPortalCross, NetworkManager.ServerClientId, w, NetworkDelivery.Reliable);
+            }
+        }
+
+        private void OnPortalCrossMessage(ulong sender, FastBufferReader r)
+        {
+            if (!began || !nm.IsServer) return;
+            byte[] bytes = ReadBlob(r);
+            if (bytes == null) return;
+            string id;
+            try { using (var ms = new System.IO.MemoryStream(bytes)) using (var br = new System.IO.BinaryReader(ms)) id = br.ReadString(); }
+            catch (System.IO.EndOfStreamException) { return; }
+            Portal portal = Portal.Find(id);
+            if (portal == null || portal.State != PortalState.Open || portal.Destination == null || portal.Destination.Arrival == null) { PortalCrossingsDenied++; return; }
+            IPlayerContext traveler = PlayerRegistry.ById((int)sender);
+            if (traveler == null || traveler.Root == null) { PortalCrossingsDenied++; return; }
+            Vector3 at = portal.CrossTrigger != null ? portal.CrossTrigger.bounds.center : portal.transform.position;
+            if (Vector3.Distance(traveler.Root.position, at) > PortalReach) { PortalCrossingsDenied++; return; }
+            if (!PortalTravelerCooldowns.Ready((int)sender, GameClock.Time)) { PortalCrossingsDenied++; return; } // el enfriamiento es por jugador
+            PortalCrossingsApproved++;
+            PortalTravelerCooldowns.Mark((int)sender, GameClock.Time, portal.TravelerCooldown);
+            var target = new List<ulong>(1) { sender };
+            SendBlob(MPortalTp, target, EncodePortal(portal.Id, 0, portal.DestinationId, false, 0f));
+            Debug.Log($"[Portal] {portal.Id} -> {portal.DestinationId}: cruce de {sender} autorizado");
+        }
+
+        private void OnPortalTeleportMessage(ulong sender, FastBufferReader r)
+        {
+            if (!began || nm.IsServer) return;
+            byte[] bytes = ReadBlob(r);
+            if (bytes == null) return;
+            try
+            {
+                using (var ms = new System.IO.MemoryStream(bytes))
+                using (var br = new System.IO.BinaryReader(ms))
+                {
+                    string id = br.ReadString(); br.ReadByte(); string destId = br.ReadString();
+                    Portal origin = Portal.Find(id), dest = Portal.Find(destId);
+                    if (origin == null || dest == null) return;
+                    PortalTravelerCooldowns.Mark(PlayerRegistry.LocalOwnerId, GameClock.Time, origin.TravelerCooldown);
+                    origin.NetTeleportLocal(dest);
+                }
+            }
+            catch (System.IO.EndOfStreamException) { }
+        }
+
         // ---------------------------------------------------------------- cuerpos creados en juego
 
         /// <summary>Servidor: registra un cuerpo creado durante el juego (roca) y avisa a los clientes para que armen su copia.</summary>
@@ -583,13 +731,14 @@ namespace SpellSimulator.Net
             ushort id = nextDynamicId++;
             NetBody body = go.TryGetComponent(out NetBody existing) ? existing : go.AddComponent<NetBody>();
             body.Init(id);
-            body.SetOriginals(false, true); // una roca formada es un cuerpo normal con gravedad
+            if (kind == NetSpawnKind.Rock) body.SetOriginals(false, true); // una roca formada es un cuerpo normal con gravedad
             body.IsDynamic = true;
             body.SpawnKind = (byte)kind;
             body.SpawnPayload = payload;
             body.SpawnedAt = Time.time;
             bodies.Add(body);
             byId[id] = body;
+            RegisterBodyCanvas(body);
             var targets = ClientTargets();
             if (targets.Count > 0)
             {
@@ -605,6 +754,23 @@ namespace SpellSimulator.Net
             return id;
         }
 
+        /// <summary>Servidor: un clon de plantilla (suministro, reciclaje) se replica: los clientes clonan la misma plantilla en la misma pose.</summary>
+        public ushort RegisterClone(GameObject clone, GameObject template, int ownerId = 0)
+        {
+            if (!began || !nm.IsServer || clone == null || template == null) return 0;
+            return RegisterSpawned(clone, NetSpawnKind.Clone, NetSpawn.EncodeClone(new NetSpawn.CloneData
+            {
+                templateKey = NetTemplates.KeyOf(template), pos = clone.transform.position, rot = clone.transform.rotation, scale = clone.transform.localScale, owner = ownerId
+            }));
+        }
+
+        private void RegisterBodyCanvas(NetBody body)
+        {
+            if (canvasSync == null || !body.TryGetComponent(out Canvas.DrawingCanvas dc)) return;
+            canvasSync.RegisterDynamic(dc, CanvasIdFor(body.Id));
+            body.HasDynamicCanvas = true;
+        }
+
         private List<ulong> ClientTargets()
         {
             var targets = new List<ulong>(nm.ConnectedClientsIds.Count);
@@ -612,10 +778,11 @@ namespace SpellSimulator.Net
             return targets;
         }
 
-        /// <summary>Lo llama <see cref="NetBody"/> al destruirse un cuerpo creado en juego: sale de la lista y el servidor avisa a los clientes.</summary>
-        public void OnDynamicDestroyed(NetBody body)
+        /// <summary>Lo llama <see cref="NetBody"/> al destruirse un cuerpo (reciclaje, expiracion, tope de objetos): sale de la lista y el servidor avisa a los clientes.</summary>
+        public void OnBodyDestroyed(NetBody body)
         {
             if (!began) return;
+            if (body.HasDynamicCanvas && canvasSync != null) canvasSync.UnregisterDynamic(CanvasIdFor(body.Id));
             bodies.Remove(body);
             byId.Remove(body.Id);
             if (!nm.IsServer) return;
@@ -646,9 +813,10 @@ namespace SpellSimulator.Net
             r.ReadValueSafe(out ushort id);
             if (!byId.TryGetValue(id, out NetBody b) || b == null) return;
             if (b.LocalHeld) ForceRelease(b);
+            if (b.HasDynamicCanvas && canvasSync != null) canvasSync.UnregisterDynamic(CanvasIdFor(id));
             bodies.Remove(b);
             byId.Remove(id);
-            b.IsDynamic = false;
+            b.SuppressDestroyNotify = true;
             Destroy(b.gameObject);
         }
 
@@ -660,13 +828,14 @@ namespace SpellSimulator.Net
             if (go == null) return;
             NetBody body = go.AddComponent<NetBody>();
             body.Init(id);
-            body.SetOriginals(false, true);
+            if (kind == NetSpawnKind.Rock) body.SetOriginals(false, true);
             body.IsDynamic = true;
             body.SpawnKind = (byte)kind;
             body.SpawnPayload = payload;
             body.SpawnedAt = Time.time;
             bodies.Add(body);
             byId[id] = body;
+            RegisterBodyCanvas(body);
             body.BecomeFollower();
             body.SetTarget(go.transform.position, go.transform.rotation, true);
         }

@@ -127,6 +127,26 @@ namespace SpellSimulator.Net
             foreach (var s in states) if (s.canvas != null) s.canvas.Session.SetOwnerForNewStrokes(me);
         }
 
+        /// <summary>Registra el lienzo de un cuerpo creado en juego (clon de suministro, papel reciclado) con un id que ambas maquinas calculan igual.</summary>
+        public void RegisterDynamic(DrawingCanvas canvas, ushort cid)
+        {
+            if (canvas == null || byId.ContainsKey(cid)) return;
+            var s = new State { canvas = canvas, id = cid };
+            states.Add(s);
+            byId[cid] = s;
+            byCanvas[canvas] = s;
+            canvas.Session.SetOwnerForNewStrokes(PlayerRegistry.LocalOwnerId);
+            SnapshotKnown(s);
+        }
+
+        public void UnregisterDynamic(ushort cid)
+        {
+            if (!byId.TryGetValue(cid, out State s)) return;
+            states.Remove(s);
+            byId.Remove(cid);
+            if (s.canvas != null) byCanvas.Remove(s.canvas);
+        }
+
         public bool TryGetId(DrawingCanvas canvas, out ushort id)
         {
             if (canvas != null && byCanvas.TryGetValue(canvas, out State s)) { id = s.id; return true; }

@@ -51,6 +51,10 @@ namespace SpellSimulator.Net
 
         // Cuerpos creados en juego (rocas): el anfitrion los registra con un tipo y datos; los clientes arman una copia.
         public bool IsDynamic;
+        /// <summary>El cuerpo tiene un lienzo registrado en el dibujo compartido (se quita al destruirse).</summary>
+        public bool HasDynamicCanvas;
+        /// <summary>No avisar al destruirse (cierre de la sesion: no es una baja del mundo).</summary>
+        public bool SuppressDestroyNotify;
         public byte SpawnKind;
         public byte[] SpawnPayload;
         public float SpawnedAt;
@@ -80,7 +84,7 @@ namespace SpellSimulator.Net
         private void OnDestroy()
         {
             if (Holdable != null) Holdable.HeldChanged -= OnHeldChanged;
-            if (IsDynamic && NetWorld.Active != null) NetWorld.Active.OnDynamicDestroyed(this);
+            if (!SuppressDestroyNotify && NetWorld.Active != null) NetWorld.Active.OnBodyDestroyed(this);
         }
 
         private void OnHeldChanged(int owner)

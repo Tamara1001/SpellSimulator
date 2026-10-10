@@ -219,6 +219,7 @@ namespace SpellSimulator.World
         private void Update()
         {
             if (caster == null && plate != null) Hook();
+            if (Net.NetCast.IsClientOnly) return; // en red solo el anfitrion abre y cierra portales; los clientes reciben el estado
             float elapsed = GameClock.Time - stateStart;
             switch (State)
             {
@@ -332,6 +333,36 @@ namespace SpellSimulator.World
             if (next == PortalState.Dormant && plate != null && caster != null && caster.GetPhase(plate) == SealPhase.Armed)
                 evaluatePending = true; // alguien dibujo mientras estaba ocupado
             StateChanged?.Invoke(this);
+            if (Net.NetWorld.Active != null) Net.NetWorld.Active.OnPortalState(this);
+        }
+
+        /// <summary>Segundos que lleva en el estado actual.</summary>
+        public float SecondsInState => GameClock.Time - stateStart;
+        public bool IsRouteOrigin => isOrigin;
+        public float TravelerCooldown => travelerCooldown;
+
+        /// <summary>Red: un cliente recibe del anfitrion el estado del portal (no decide nada por su cuenta).</summary>
+        public void NetApply(PortalState state, Portal destination, bool origin, float elapsed)
+        {
+            State = state;
+            Destination = destination;
+            isOrigin = origin;
+            stateStart = GameClock.Time - Mathf.Max(0f, elapsed);
+            StateChanged?.Invoke(this);
+        }
+
+        /// <summary>Red: el anfitrion autorizo el cruce de este jugador: se teletransporta a la llegada del portal de destino.</summary>
+        public void NetTeleportLocal(Portal dest)
+        {
+            if (dest == null || dest.arrival == null) return;
+            IPlayerContext local = PlayerRegistry.Local;
+            PlayerMovement mover = local != null && local.Root != null ? local.Root.GetComponent<PlayerMovement>() : null;
+            if (mover == null) return;
+            player = mover;
+            playerBody = mover.GetComponent<Rigidbody>();
+            Teleport(dest.arrival);
+            Debug.Log($"[Portal] {id} -> {dest.id}: cruce del jugador (autorizado por el anfitrion)", this);
+            Traveled?.Invoke(this, dest);
         }
 
         /// <summary>Lo llama PortalGate cuando algo entra al volumen de cruce. Viaja si el portal esta Open y es el jugador.</summary>
@@ -344,6 +375,13 @@ namespace SpellSimulator.World
             if (mover == null) return;
             int ownerId = mover.TryGetComponent(out IPlayerContext traveler) ? traveler.OwnerId : 0;
             if (!PortalTravelerCooldowns.Ready(ownerId, GameClock.Time)) return;
+            if (Net.NetCast.IsClientOnly)
+            {
+                // En red el cruce lo valida el anfitrion (portal abierto, cerca, enfriamiento de este jugador) y el contesta con la orden de teletransportarse.
+                PortalTravelerCooldowns.Mark(ownerId, GameClock.Time, travelerCooldown); // no insistir mientras llega la respuesta
+                Net.NetWorld.Active.RequestPortalCross(this);
+                return;
+            }
             player = mover;
             playerBody = mover.GetComponent<Rigidbody>();
 
