@@ -62,12 +62,33 @@ namespace SpellSimulator.World
 
         private string SupplyKey => string.IsNullOrEmpty(supplyId) ? (template != null ? template.name : name) : supplyId;
 
+        private static readonly List<SupplyPoint> all = new List<SupplyPoint>(8);
+
+        /// <summary>Red: al empezar la sesion compartida, el anfitrion adopta las copias que ya existian (las crea Update antes de que haya red) y un cliente descarta las suyas.</summary>
+        public static void NetBegin(Net.NetWorld world, bool server)
+        {
+            for (int p = 0; p < all.Count; p++)
+            {
+                SupplyPoint sp = all[p];
+                if (sp == null) continue;
+                sp.Prune();
+                for (int i = sp.live.Count - 1; i >= 0; i--)
+                {
+                    GameObject go = sp.live[i].go;
+                    if (go == null) continue;
+                    if (server) world.RegisterClone(go, sp.template, sp.live[i].ownerId);
+                    else if (!WorldObjectBudget.IsHeld(go)) { Destroy(go); sp.live.RemoveAt(i); }
+                }
+            }
+        }
+
         private void OnEnable()
         {
+            if (!all.Contains(this)) all.Add(this);
             MagicWorld.WorldReset += OnWorldReset;
             Net.NetTemplates.Register(template); // en red los clientes clonan la plantilla que el anfitrion les indica
         }
-        private void OnDisable() => MagicWorld.WorldReset -= OnWorldReset;
+        private void OnDisable() { all.Remove(this); MagicWorld.WorldReset -= OnWorldReset; }
 
         /// <summary>Repone ya, sin esperar el enfriamiento, para el jugador local (0).</summary>
         public bool TrySpawnNow() => TrySpawnNow(0);

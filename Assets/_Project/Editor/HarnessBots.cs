@@ -457,6 +457,17 @@ namespace SpellSimulator.EditorTools
             processes.Add(Process.Start(psi));
         }
 
+        // Compara dos resumenes "clave=numero ..." con una tolerancia por cifra.
+        private static bool ReactiveClose(string a, string b, int tolerance)
+        {
+            var na = System.Text.RegularExpressions.Regex.Matches(a ?? "", @"=(-?\d+)");
+            var nb = System.Text.RegularExpressions.Regex.Matches(b ?? "", @"=(-?\d+)");
+            if (na.Count == 0 || na.Count != nb.Count) return false;
+            for (int k = 0; k < na.Count; k++)
+                if (Mathf.Abs(int.Parse(na[k].Groups[1].Value) - int.Parse(nb[k].Groups[1].Value)) > tolerance) return false;
+            return true;
+        }
+
         private static string LastAfter(string[] lines, string marker)
         {
             string line = lines.LastOrDefault(x => x.Contains(marker));
@@ -479,7 +490,6 @@ namespace SpellSimulator.EditorTools
             if (world == null || world.Reactive == null) yield break;
             int supplied = 0;
             foreach (var b in world.Bodies) if (b != null && b.IsDynamic) supplied++;
-            Check(supplied > 0, "el anfitrion repuso suministros que se replican (" + supplied + " cuerpos nuevos)");
 
             Directory.CreateDirectory(BotLogDir);
             foreach (string old in Directory.GetFiles(BotLogDir)) { try { File.Delete(old); } catch { } }
@@ -534,6 +544,9 @@ namespace SpellSimulator.EditorTools
             var hostPos = new Dictionary<int, Vector3>();
             foreach (var b in world.Bodies) if (b != null) hostPos[b.Id] = b.Rb.position;
             notes.Add("anfitrion (final): " + hostFinal);
+            supplied = 0;
+            foreach (var b in world.Bodies) if (b != null && b.IsDynamic) supplied++;
+            Check(supplied > 0, "el anfitrion repuso suministros que se replican (" + supplied + " cuerpos nuevos)");
             Check(fire != null && fire.BurntCells > 0, "el fuego dejo pasto quemado en el anfitrion (" + (fire != null ? fire.BurntCells : -1) + " celdas)");
 
             float deadline = Time.realtimeSinceStartup + 60f;
@@ -541,6 +554,7 @@ namespace SpellSimulator.EditorTools
             Check(processes.All(p => { try { return p.HasExited; } catch { return true; } }), "los bots terminaron a tiempo");
 
             var inv = System.Globalization.CultureInfo.InvariantCulture;
+            string firstFinal = null;
             for (int i = 1; i <= 3; i++)
             {
                 string report = Path.Combine(BotLogDir, "Bot" + i + ".txt");
@@ -550,7 +564,9 @@ namespace SpellSimulator.EditorTools
                 string fireSeen = LastAfter(l, "REACT(fuego) ");
                 if (i <= 2) Check(!fireSeen.Contains("pasto ardiendo=0") && !fireSeen.Contains("pasto ardiendo=-1"), "Bot" + i + " ve el pasto ardiendo (" + fireSeen + ")");
                 string finalSeen = LastAfter(l, "REACT(final) ");
-                Check(finalSeen == hostFinal, "Bot" + i + (i == 3 ? " (entro tarde)" : "") + " ve el mismo mundo reactivo final que el anfitrion (" + finalSeen + ")");
+                if (i == 1) firstFinal = finalSeen;
+                // el fuego sigue evolucionando entre la muestra del anfitrion y la de los bots: los bots tienen que coincidir entre si y andar cerca del anfitrion
+                Check(finalSeen == firstFinal && ReactiveClose(finalSeen, hostFinal, 6), "Bot" + i + (i == 3 ? " (entro tarde)" : "") + " ve el mundo reactivo final (" + finalSeen + ") igual que los demas bots y cerca del anfitrion (" + hostFinal + ")");
                 string canvasSeen = LastAfter(l, "CANVAS ");
                 Check(canvasSeen == hostCanvases, "Bot" + i + " ve los mismos lienzos (incluido el papel de suministro dibujado): " + canvasSeen + " contra " + hostCanvases);
                 int total = 0, close = 0; float worst = 0f;

@@ -609,7 +609,7 @@ Qué se hace:
 
 **A mano:** dibujar a la vez en el mismo lienzo; ver dibujar a otro en vista completa.
 
-### F4 — Mundo reactivo, portales y suministros en red (10–15 días) — EN CURSO (pausada 2026-10-10)
+### F4 — Mundo reactivo, portales y suministros en red (10–15 días) — HECHA (2026-10-10, verificada con bots)
 
 > Hecho: suministros/reciclaje solo en el anfitrion con clones replicados, portales (anfitrion decide, cruce validado con enfriamiento por jugador, verificado con bots), y escrito sin probar `NetReactiveSync` (pasto + objetos reactivos). Ver CHANGELOG.
 

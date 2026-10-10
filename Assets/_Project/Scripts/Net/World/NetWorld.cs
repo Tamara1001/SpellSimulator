@@ -151,6 +151,7 @@ namespace SpellSimulator.Net
             {
                 if (client) { b.BecomeFollower(); if (b.TryGetComponent(out Respawnable r)) r.enabled = false; }
             }
+            SupplyPoint.NetBegin(this, !client);
             Debug.Log($"[NetWorld] {(client ? "cliente" : "anfitrion")}: {bodies.Count} cuerpos, huella {fingerprint:X8}");
         }
 
@@ -826,7 +827,7 @@ namespace SpellSimulator.Net
             if (byId.ContainsKey(id)) return;
             GameObject go = NetSpawn.Create(kind, payload);
             if (go == null) return;
-            NetBody body = go.AddComponent<NetBody>();
+            NetBody body = go.TryGetComponent(out NetBody existing) ? existing : go.AddComponent<NetBody>(); // un clon de plantilla hereda el NetBody de la plantilla
             body.Init(id);
             if (kind == NetSpawnKind.Rock) body.SetOriginals(false, true);
             body.IsDynamic = true;
