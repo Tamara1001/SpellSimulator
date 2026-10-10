@@ -60,6 +60,9 @@ namespace SpellSimulator.Reactions
             }
         }
 
+        /// <summary>Signo Crush: golpe extra (por segundo) que rompe lo fragil que alcanza el hechizo, del elemento que sea.</summary>
+        private static readonly Exposure CrushExposure = new Exposure { Impact = 4f };
+
         private void ExposeToSpells()
         {
             var fields = MagicField.Active;
@@ -74,6 +77,7 @@ namespace SpellSimulator.Reactions
                     float intensity = field.ExposureAt(reactive.WorldBounds.center);
                     if (intensity <= 0f) continue;
                     reactive.AddExposure(reactions.For(field.Element, reactive.Profile), intensity);
+                    if (field.CrushPower > 0f) reactive.AddExposure(CrushExposure, intensity * Mathf.Min(field.CrushPower, 3f));
                 }
             }
         }
@@ -94,7 +98,7 @@ namespace SpellSimulator.Reactions
                 {
                     var field = fields[f];
                     if (field.Source != null && field.Source == health.gameObject) continue;
-                    total += DamageModel.SpellDamage(damage.values, field.Element, field.ExposureAt(center), dt);
+                    total += DamageModel.SpellDamage(damage.values, field.Element, field.ExposureAt(center), dt) * field.DamageMultiplier;
                 }
                 var reactive = health.GetComponent<ElementReactive>();
                 total += DamageModel.BurnDamage(damage.values, reactive != null && reactive.State.Burning, dt);

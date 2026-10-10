@@ -269,6 +269,53 @@ namespace SpellSimulator.EditorTools
                 if (trigger != null && trigger.isTrigger && portal.GetComponent<PortalVisuals>() != null) crossable++;
             }
             Check(crossable == 4, $"portales: {crossable}/4 con trigger para atravesar el disco y PortalVisuals");
+
+            // --- Tutoriales nuevos, hojas livianas, barquito estable, muros de tierra y Wall Breaker.
+            Check(GameObject.Find("Struct_EarthWorkshop") != null && GameObject.Find("Struct_WaterLab") != null && GameObject.Find("Slate_WaterLab") != null,
+                "tutoriales nuevos: taller de piedra y laboratorio del lago con su pizarra");
+            Check(Object.FindObjectsByType<Flutter>(FindObjectsSortMode.None).Length >= 20, "tutorial de viento: muchas hojas livianas que revolotean");
+            var boat = GameObject.Find("ToyBoat");
+            Check(boat != null && boat.GetComponent<KeepUpright>() != null && boat.GetComponent<Rigidbody>().mass <= 0.1f, "tutorial de agua: barquito liviano que se mantiene boca arriba");
+
+            var columns = new System.Collections.Generic.List<SpellSimulator.Compiler.SignReading>
+            {
+                SmokeSign("column", 0f), SmokeSign("column", 180f)
+            };
+            var wallSpell = new SpellSimulator.Compiler.SpellIR
+            {
+                element = SpellSimulator.Compiler.ElementType.Earth, inkPower = 1f, range = 0.5f, force = 0.6f,
+                plan = SpellSimulator.Compiler.PlanResolver.Resolve(columns, "earth", "earth", 0.9f)
+            };
+            var frame = new SpellSimulator.Output.SealFrame { Origin = new Vector3(0f, 0.1f, -20f), Right = Vector3.right, Up = Vector3.forward, Normal = Vector3.up, Radius = 0.3f, Scale = 0.3f };
+            int piecesBefore = SpellSimulator.Output.SolidPiece.Count;
+            int pieces = SpellSimulator.Output.EarthShapes.Spawn(wallSpell, frame, null);
+            Check(pieces >= 2 && SpellSimulator.Output.SolidPiece.Count == piecesBefore + pieces, $"tierra + columna levanta un muro de {pieces} piezas");
+            int removed = MeshBreaker.Break(TowerWallPoint(), 1.5f, false);
+            Check(removed > 0, $"Wall Breaker abre un hueco en la pared de la torre ({removed} triangulos)");
+            var studyPortal = Portal.Find("tower-study");
+            int safe = studyPortal != null ? MeshBreaker.Break(studyPortal.transform.position, 1.2f, false) : -1;
+            Check(safe == 0, "Wall Breaker no corta cerca de un portal");
+            MeshBreaker.RestoreAll();
+            foreach (var piece in Object.FindObjectsByType<SpellSimulator.Output.SolidPiece>(FindObjectsSortMode.None)) Object.Destroy(piece.gameObject);
         }
+
+        /// <summary>Un punto sobre la cara este de la pared de la torre (centro de las bounds de TowerWall, corrido al borde exterior).</summary>
+        internal static Vector3 TowerWallPoint()
+        {
+            foreach (var breakable in Breakable.All)
+            {
+                if (breakable == null || breakable.name != "TowerWall") continue;
+                Bounds b = breakable.Bounds;
+                return new Vector3(b.max.x - 0.3f, b.min.y + 1.5f, b.center.z);
+            }
+            return Vector3.zero;
+        }
+
+        private static SpellSimulator.Compiler.SignReading SmokeSign(string manifestation, float bearingDeg) => new SpellSimulator.Compiler.SignReading
+        {
+            Id = manifestation, Manifestation = manifestation,
+            At = SpellSimulator.Core.GeometryUtils.VectorFromAngleDeg(bearingDeg) * 0.8f, Length = 1f,
+            Facing = SpellSimulator.Core.GeometryUtils.VectorFromAngleDeg(bearingDeg + 180f), FacingTrust = 0.9f
+        };
     }
 }

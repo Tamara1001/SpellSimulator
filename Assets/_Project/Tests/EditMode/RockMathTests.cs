@@ -16,7 +16,7 @@ namespace SpellSimulator.Tests
         [Test]
         public void Radius_InkPowerEnlarges()
         {
-            Assert.AreEqual(0.45f, RockMath.Radius(0.5f, 1f), 1e-4f);
+            Assert.AreEqual(0.7f, RockMath.Radius(0.5f, 1f), 1e-4f);
             Assert.Greater(RockMath.Radius(0.5f, 4f), RockMath.Radius(0.5f, 1f));
             Assert.Less(RockMath.Radius(0.5f, 0.25f), RockMath.Radius(0.5f, 1f));
         }

@@ -87,6 +87,7 @@ namespace SpellSimulator.Learning
         // ---- Brillo sutil para que se note que se puede leer: una luz calida que late despacio.
         private void Awake()
         {
+            if (!TryGetComponent<World.Indestructible>(out _)) gameObject.AddComponent<World.Indestructible>(); // los libros de los tutoriales no se rompen
             var go = new GameObject("BrilloLibro");
             go.transform.SetParent(transform, false);
             go.transform.localPosition = new Vector3(0f, 0.18f, 0f);

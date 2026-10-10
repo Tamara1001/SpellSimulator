@@ -153,6 +153,9 @@ ARRASTRA en el mundo con `ObjectMover` (nunca se guarda). Así un lienzo agarrad
 pantalla (V), y un cuaderno pasa de página con la rueda. La rueda sin nada agarrado cambia el grosor. La HUD es UI Toolkit
 (`Scripts/UI`), temática de pergamino, con miniaturas renderizadas de cada objeto.
 
+## ADR-037 — Los signos «de potencia» pasan a tener efecto propio; la tierra rompe estructuras recortando mallas
+Decisión: los signos crush, collection, billowing, repetition, weave y región (antes solo sumaban potencia) quedan en el `SpellPlan` y actúan en `MagicField` según la wiki de Witch Hat Atelier (Crush = «Wall Breaker», Collection recoge, Billowing = nube, Repetition rebobina, Weave trenza). La tierra con Crush rompe estructuras fijas recortando triángulos de su malla (`Breakable` + `MeshCut`, copia hija «Corte» con su MeshCollider) en vez de dividirlas en piezas: no hay que pre-fracturar el mapa. Por qué: era la queja principal de la prueba manual y es barato (un corte por lanzamiento). Costos: las estructuras rompibles no pueden usar batching estático (con él la malla deja de ser legible en juego) y los portales y libros quedan protegidos por radio (`Indestructible`). Ver también `MeshBreaker.ProtectedRadius`.
+
 ## ADR-035 — Anti-trampas simple y sin compensación de latencia
 Decisión: el anfitrión limita la frecuencia de cada mensaje de cliente (cubo de fichas) y descarta poses imposibles; no se valida la velocidad de los jugadores ni se compensa la latencia. Por qué: el juego es cooperativo/sandbox y no habrá competitivo con premios; más defensa costaría complejidad sin beneficio. Los portales por libros son solo informativos por la misma razón.
 

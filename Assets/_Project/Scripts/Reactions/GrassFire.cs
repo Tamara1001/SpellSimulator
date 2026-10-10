@@ -51,9 +51,9 @@ namespace SpellSimulator.Reactions
         /// <summary>Un hechizo de fuego enciende el pasto solo si su origen esta a menos de esta altura del suelo (m).</summary>
         private const float FireSpellHeight = 2.5f;
         /// <summary>Maximo de celdas que enciende cada hechizo de fuego por revision.</summary>
-        private const int FieldFireBudget = 12;
+        private const int FieldFireBudget = 6;
         /// <summary>Radio (fraccion del ReachRadius) dentro del cual un hechizo de fuego enciende celdas.</summary>
-        private const float FieldFireRadiusFactor = 0.35f;
+        private const float FieldFireRadiusFactor = 0.25f;
         /// <summary>Un objeto ardiendo enciende el pasto si esta a menos de esta altura del suelo (m).</summary>
         private const float ReactiveFireHeight = 1.5f;
         /// <summary>
@@ -66,11 +66,11 @@ namespace SpellSimulator.Reactions
         private const int DecayTableSize = 33;
 
         // Defaults. Los valores serializados de la escena pisan estos; ApplyDefaults() los restablece.
-        private const float DefaultSpreadChance = 0.07f;
-        private const float DefaultBurnSeconds = 5f;
+        private const float DefaultSpreadChance = 0.045f;
+        private const float DefaultBurnSeconds = 4f;
         private const float DefaultHeatPerSecond = 5f;
         private const float DefaultGenerationDecay = 0.78f;
-        private const int DefaultMaxGenerations = 9;
+        private const int DefaultMaxGenerations = 6;
         /// <summary>Celdas ardiendo que dañan objetos por pasada (round-robin).</summary>
         private const int DamageCellsPerPass = 16;
         private const float DamageRadius = 1.4f;

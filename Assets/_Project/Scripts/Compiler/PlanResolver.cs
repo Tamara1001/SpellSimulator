@@ -29,6 +29,9 @@ namespace SpellSimulator.Compiler
         // plan/focus.ts
         private const float LensPerLength = 0.6f;
 
+        /// <summary>Weave trenza: cada radio de tinta suma este giro al remolino (el chorro se vuelve helicoidal).</summary>
+        public const float WeaveSwirl = 0.8f;
+
         // plan/spinUp.ts
         private const float SpinMinClash = 0.3f, SpinMinSwirl = 0.55f, SpinMinTwistShare = 0.35f;
         private const float SpinClashGain = 6f, SpinDrawGain = 1.5f;
@@ -166,6 +169,7 @@ namespace SpellSimulator.Compiler
             var levitation = new List<SignReading>();
             var pulls = new List<SignReading>();
             float lensBudget = 0f, power = 0f;
+            float crush = 0f, collection = 0f, billow = 0f, repetition = 0f, weave = 0f, directed = 0f;
             bool leak = false;
             var unmodeled = new SortedSet<string>();
 
@@ -182,7 +186,16 @@ namespace SpellSimulator.Compiler
                     case Family.Convergence: lensBudget += s.Length; break;
                     default:
                         power += s.Length;
-                        unmodeled.Add(s.Manifestation);
+                        switch (s.Manifestation)
+                        {
+                            case Manifestations.Crush: crush += s.Length; break;
+                            case Manifestations.Collection: collection += s.Length; break;
+                            case Manifestations.Billowing: billow += s.Length; break;
+                            case Manifestations.Repetition: repetition += s.Length; break;
+                            case Manifestations.Weave: weave += s.Length; break;
+                            case Manifestations.Directed: directed += s.Length; break;
+                            default: unmodeled.Add(s.Manifestation); break;
+                        }
                         break;
                 }
             }
@@ -193,8 +206,9 @@ namespace SpellSimulator.Compiler
                 Mode = ModeOf(sigilId, element),
                 Aim = new Vector3(agg.Lateral.x, agg.Lateral.y, Mathf.Max(agg.Convergence, 0f)),
                 Dispersion = Mathf.Max(-agg.Convergence, 0f),
-                Circulation = agg.Circulation,
+                Circulation = agg.Circulation + WeaveSwirl * weave,
                 Budget = agg.Budget + power,
+                Crush = crush, Collection = collection, Billow = billow, Repetition = repetition, Weave = weave, Directed = directed,
                 Hold = ResolveHold(levitation),
                 Intake = ResolveIntake(pulls),
                 Focus = 1f + LensPerLength * lensBudget,

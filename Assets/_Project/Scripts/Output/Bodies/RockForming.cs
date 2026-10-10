@@ -16,6 +16,19 @@ namespace SpellSimulator.Output
         private float radius, seconds, t, phase;
         private Vector3 spinAxis;
         private bool replica;
+        private bool hover;
+        private Vector3 launch;
+        private bool hasLaunch;
+
+        /// <summary>Levitacion: al terminar de formarse queda flotando (cinematica, sin gravedad) hasta que alguien la agarre.</summary>
+        public void Hover() => hover = true;
+
+        /// <summary>Region: al terminar de formarse sale con esta velocidad.</summary>
+        public void Launch(Vector3 velocity)
+        {
+            launch = velocity;
+            hasLaunch = true;
+        }
 
         /// <summary>Copia de red: solo crece de escala (la pose, con su temblor, la manda el anfitrion) y al terminar activa el collider; sigue cinematica.</summary>
         public void InitReplica(Collider collider, float rockRadius, float formSeconds, float elapsed)
@@ -59,8 +72,10 @@ namespace SpellSimulator.Output
 
             transform.localScale = Vector3.one * radius;
             col.enabled = true;
+            if (hover) { Destroy(this); return; } // queda flotando
             rb.isKinematic = false;
             rb.useGravity = true;
+            if (hasLaunch) rb.linearVelocity = launch;
             rb.WakeUp();
             Destroy(this);
         }

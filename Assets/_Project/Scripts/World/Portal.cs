@@ -178,6 +178,12 @@ namespace SpellSimulator.World
             if (Application.isPlaying && isActiveAndEnabled) Hook();
         }
 
+        private void Awake()
+        {
+            // Ningun hechizo destruye un portal ni deja sin apoyo lo que tiene cerca (Wall Breaker, MeshBreaker).
+            if (!TryGetComponent<Indestructible>(out _)) gameObject.AddComponent<Indestructible>();
+        }
+
         private void OnEnable()
         {
             if (!all.Contains(this)) all.Add(this);

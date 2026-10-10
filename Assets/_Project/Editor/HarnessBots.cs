@@ -8,6 +8,7 @@ using Unity.Netcode;
 using UnityEditor;
 using UnityEngine;
 using SpellSimulator.Combat;
+using SpellSimulator.Compiler;
 using SpellSimulator.Core;
 using SpellSimulator.Canvas;
 using SpellSimulator.Net;
@@ -526,6 +527,13 @@ namespace SpellSimulator.EditorTools
             notes.Add("rival: " + LastAfter(l, "PROPUESTAS ") + " | " + LastAfter(l, "LECTURA propia "));
         }
 
+        private static SignReading EarthSign(string manifestation, float bearingDeg) => new SignReading
+        {
+            Id = manifestation, Manifestation = manifestation,
+            At = Core.GeometryUtils.VectorFromAngleDeg(bearingDeg) * 0.8f, Length = 1f,
+            Facing = Core.GeometryUtils.VectorFromAngleDeg(bearingDeg + 180f), FacingTrust = 0.9f
+        };
+
         // Efectos del agua en red (KI-121): charcos, zona inundada y hielo los simula el anfitrion; un bot temprano y uno tardio los tienen que ver.
         private static IEnumerator ProbeEffects()
         {
@@ -561,6 +569,15 @@ namespace SpellSimulator.EditorTools
             FloodZone zone = FloodZone.Create(spots[1], 5f, 40f, 0.5f, (ElementLook)null);
             IceSheet.Create(spots[2] + Vector3.up * 1f, 2f, 2f, 0.1f, 40f);
             Check(zone != null, "el anfitrion crea una zona inundada");
+            // Tierra: un muro (columna) y un corte de la torre (Crush); los clientes tienen que ver las piezas y repetir el corte.
+            var columns = new List<SignReading> { EarthSign("column", 0f), EarthSign("column", 180f) };
+            var wallSpell = new SpellIR { element = ElementType.Earth, inkPower = 1f, range = 0.5f, force = 0.6f, plan = PlanResolver.Resolve(columns, "earth", "earth", 0.9f) };
+            var wallFrame = new SealFrame { Origin = spots[0] + Vector3.up * 0.05f, Right = Vector3.right, Up = Vector3.forward, Normal = Vector3.up, Radius = 0.3f, Scale = 0.3f };
+            var outputController = Object.FindFirstObjectByType<SpellOutputController>();
+            int pieces = EarthShapes.Spawn(wallSpell, wallFrame, outputController != null ? outputController.LookFor(ElementType.Earth) : null);
+            Check(pieces >= 2, "el anfitrion levanta un muro de tierra (" + pieces + " piezas)");
+            int removed = MeshBreaker.Break(HarnessPlaySmoke.TowerWallPoint(), 1.5f);
+            Check(removed > 0, "el anfitrion abre un hueco en la pared de la torre (" + removed + " triangulos)");
             long lateAt = t0 + 3000;
             while (NowMs() < lateAt) { WaterPuddleManager.AddImpact(spots[0], Vector3.up, 2f, 0f); yield return null; }
             LaunchScriptBot(3, t0, "fx"); // entra tarde: tiene que recibir lo que ya existe
@@ -581,7 +598,7 @@ namespace SpellSimulator.EditorTools
                 string[] l = File.Exists(path) ? File.ReadAllLines(path) : new string[0];
                 string seen = LastAfter(l, "FX ");
                 notes.Add("Bot" + i + ": " + seen);
-                Check(seen.Contains("zonas=1") && seen.Contains("hielo=2") && !seen.Contains("charcos=0"), "Bot" + i + (i == 3 ? " (tardio)" : "") + " ve lo mismo que el anfitrion (" + seen + ")");
+                Check(seen.Contains("zonas=1") && seen.Contains("hielo=2") && !seen.Contains("charcos=0") && seen.Contains("cortes=1") && !seen.Contains("piezas=0"), "Bot" + i + (i == 3 ? " (tardio)" : "") + " ve lo mismo que el anfitrion (" + seen + ")");
             }
         }
 

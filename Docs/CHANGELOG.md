@@ -6,6 +6,31 @@ tags: [doc, changelog]
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
 
+## 2026-10-10 — Prueba manual de Ale (13 puntos): signos con efecto propio, tierra con impacto, tutoriales de tierra y agua, ajustes
+
+**Ajustes (bugs y números)**
+- **Agarrar objetos grandes** (`ObjectMover`): la distancia inicial y el mínimo salen del tamaño del objeto (radio × 1,5 + 0,7 m, ya no se atraviesan al caminar); el tope de la rueda baja de 14 a 7 m.
+- **Lápiz por defecto en «fino»** (`PhysicalTool`: índice 2 de los grosores, también para el tamaño inicial de la goma).
+- **Trazos del suelo** (`Inscribable`): calcomanía del terreno de 2,4 a 5 m (un anillo grande ya no se corta) y tope blando de 16 calcomanías: solo se descartan las lejanas (25 m) y viejas (45 s); tope duro 40. Ya no se borran mientras se termina un hechizo grande.
+- **Círculo más permisivo** (`RingDetector`): redondez mínima 0,36→0,30, banda 0,055→0,07, cierre 0,985→0,96 / 0,9→0,86 y hueco 0,2→0,3.
+- **Viento** ×2,6 de empuje (`MagicField.WindPower`), **agua** ×1,7 (`WaterPower`), **fuego** más tranquilo: alcance ×0,7, presupuesto de celdas de pasto 12→6, propagación 0,07→0,045, generaciones 9→6, brasas 5→4 s (los modificadores —rango, tinta— lo siguen potenciando). `GrassFire.ApplyDefaults()` aplicado a la escena.
+- **Tutorial de viento**: 24 hojas de árbol livianísimas (3 g) sobre la mesa y el piso, hojas de papel y plumas más livianas y con menos roce; componente `Flutter` (revoloteo y planeo).
+- **Tutorial de agua**: caldero de 0,56 a 0,84 m de radio, barquito de 250 a 60 g con `KeepUpright` (siempre boca arriba).
+
+**Signos con efecto propio** (ADR-037; `SpellPlan` guarda `Crush/Collection/Billow/Repetition/Weave/Directed`; `PlanResolver`, `MagicField`)
+- Crush (rompe lo frágil y +50 % de daño; con tierra: Wall Breaker), Collection (junta lo suelto), Billowing (nube: casi sin gravedad), Repetition (rebobina: objetos a su lugar y sin quemar/mojar), Weave (suma giro: chorro helicoidal) y Directed/región (tierra: lanza la roca). Los 12 signos con entrada ya hacen algo reconocible (ver `GAME_DESIGN.md`, «Signos y sus efectos»).
+
+**Tierra** (`EarthShapes`, `RockSpell`, `RockMath`, `MeshBreaker`, `Breakable`)
+- Rocas más grandes (anillo × 1,4, tope 2 m). Sin las esquirlas de partículas de otro color: el cuerpo sólido es el espectáculo.
+- Tierra + columna: **muro** en el piso (hasta 7 rocas) o **puente** en una pared; + dispersión: **estacas**; + levitación: roca flotante; + región: roca lanzada; + convergencia: la forma queda **fija** (si no, se hunde a los 60 s). Topes: 48 piezas temporales y 24 fijas.
+- **Wall Breaker (Crush)**: abre un hueco esférico en estructuras fijas (torre, cabañas, cueva, rocas, muros de cualquier estructura generada) con escombros; no corta a 1,6 m de libros ni portales (`Indestructible`). Se repone con el reinicio del mundo.
+- Red: muros y cortes se replican (`fx.sol`, `fx.cut`) y quien entra tarde los recibe.
+
+**Mapa**: `Struct_EarthWorkshop` (taller de piedra: muro blanco, cajas, mostrador con papeles y 4 carteles) y `Struct_WaterLab` (laboratorio del lago: tarima con **pizarra que dispara hacia el lado contrario**, cajas como blanco, 3 carteles de columnas). `Sitios` nuevos al final, sin mover los demás.
+
+**Harness**: EditMode 473/473 (+9: signos, formas de tierra, recorte de mallas); Play Smoke +6 chequeos (tutoriales, hojas, barquito, muro, Wall Breaker, protección de portales); `Run Bots Effects` 11/11 (anfitrión y 3 bots, uno tardío: 2 piezas y 1 corte); Cast 23/23, World 23/23, Portal 16/16, Duel 16/16.
+**Pendiente**: reconocimiento de glifos (luz/raros vs «viento especial»): hay que medir con sellos reales (`persistentDataPath/Sellos`, ver `Tests/Fixtures/README.md`); probar todo a mano.
+
 ## 2026-10-10 — F6 del multijugador + Modo Libre diferido: efectos del agua, espectadores, coberturas, anti-trampas, hechizos propios y portales por libros
 
 - **Anti-trampas simple** (`Net/World/NetRateLimiter.cs`, 4 tests): cubo de fichas por (cliente, canal) en el anfitrión (agarrar, sostener, soltar, reiniciar, cruzar portal, trazos, lanzar); lo que excede se descarta y se cuenta (`Dropped`). Además `OnHold` descarta poses a más de 12 m de quien sostiene. Sin validación de velocidad de jugadores: no habrá competitivo con premios (ADR-035).

@@ -83,7 +83,7 @@ namespace SpellSimulator.World
         private bool held;
         private PlayerInputReader input;
         private float baseStrokeWidth;
-        private int widthIndex = 4;
+        private int widthIndex = 2;
 
         /// <summary>(herramienta, usando) al empezar y terminar de dibujar/borrar/limpiar sobre un lienzo.</summary>
         public static event System.Action<PhysicalTool, bool> UseChanged;
@@ -133,12 +133,16 @@ namespace SpellSimulator.World
             float stabilizer = PlatformDetector.IsVR ? vrStabilizerSpeed : pcStabilizerSpeed;
             switch (kind)
             {
-                case ToolKind.Pen: tool = new PenTool(stabilizer, strokeWidth); break;
-                case ToolKind.Eraser: tool = new EraserTool(definition != null ? definition.eraseRadius : 0.025f); break;
+                case ToolKind.Pen: tool = new PenTool(stabilizer, baseStrokeWidth * StartPreset()); break;
+                case ToolKind.Eraser: tool = new EraserTool((definition != null ? definition.eraseRadius : 0.025f) * StartPreset()); break;
                 default: tool = new RagTool(definition != null ? definition.wipeLengthToClear : 1.2f); break;
             }
             RefreshInkVisual();
         }
+
+        /// <summary>Multiplicador del grosor inicial (por defecto «fino»).</summary>
+        private float StartPreset() =>
+            widthPresets != null && widthPresets.Length > 0 ? widthPresets[Mathf.Clamp(widthIndex, 0, widthPresets.Length - 1)] : 1f;
 
         private void Update()
         {

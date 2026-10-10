@@ -24,6 +24,20 @@ namespace SpellSimulator.Output
             return world.sqrMagnitude > 1e-8f ? world.normalized : Normal;
         }
 
+        /// <summary>
+        /// Hacia donde "sale" el hechizo sobre la superficie: en el piso, lejos de quien dibuja (el borde de arriba del dibujo, horizontal);
+        /// en una pared, hacia afuera del papel.
+        /// </summary>
+        public Vector3 Outward
+        {
+            get
+            {
+                if (Normal.y <= 0.5f) return Normal;
+                var away = new Vector3(Up.x, 0f, Up.z);
+                return away.sqrMagnitude < 1e-4f ? Vector3.forward : away.normalized;
+            }
+        }
+
         /// <summary>Punto en espacio-sello (unidades de radio) a mundo.</summary>
         public Vector3 Point(Vector3 seal) => Origin + (Right * seal.x + Up * seal.y + Normal * seal.z) * Radius;
 

@@ -15,7 +15,9 @@ namespace SpellSimulator.Player
     {
         private const float PickRange = 12f;
         private const float MinDistance = 0.8f;
-        private const float MaxDistance = 14f;
+        private const float MaxDistance = 7f;
+        /// <summary>Un objeto grande se sostiene mas lejos: distancia minima = radio * HoldRadiusFactor + HoldMargin.</summary>
+        private const float HoldRadiusFactor = 1.5f, HoldMargin = 0.7f;
         private const float DistanceStep = 0.35f;
         private const float RollStep = 15f;
         private const float RotateDegreesPerUnit = 0.6f;
@@ -38,6 +40,7 @@ namespace SpellSimulator.Player
         // Marca de "quien lo sostiene" (dato, F0): se fija al empezar y se limpia en ClearHeld.
         private Holdable heldHoldable;
         private float holdDistance;
+        private float minHoldDistance = MinDistance, maxHoldDistance = MaxDistance;
         private Quaternion relativeRotation;
 
         // Valores originales del objeto genérico (sin IRemoteGrabbable), para restaurarlos al soltar.
@@ -85,7 +88,7 @@ namespace SpellSimulator.Player
                 if (inputReader.IsRunning)
                     relativeRotation = Quaternion.AngleAxis(step * RollStep, Vector3.forward) * relativeRotation;
                 else if (!FocusMode.CanvasView)
-                    holdDistance = Mathf.Clamp(holdDistance + step * DistanceStep, MinDistance, MaxDistance);
+                    holdDistance = Mathf.Clamp(holdDistance + step * DistanceStep, minHoldDistance, maxHoldDistance);
             }
 
             if (inputReader.IsRotateHeld)
@@ -145,6 +148,18 @@ namespace SpellSimulator.Player
             return true;
         }
 
+        private static readonly System.Collections.Generic.List<Collider> boundsBuffer = new System.Collections.Generic.List<Collider>(16);
+
+        /// <summary>Radio aproximado del cuerpo (mitad de la diagonal de sus colliders).</summary>
+        private static float BoundsRadius(Rigidbody rb)
+        {
+            rb.GetComponentsInChildren(false, boundsBuffer);
+            if (boundsBuffer.Count == 0) return 0.3f;
+            Bounds b = boundsBuffer[0].bounds;
+            for (int i = 1; i < boundsBuffer.Count; i++) b.Encapsulate(boundsBuffer[i].bounds);
+            return b.extents.magnitude;
+        }
+
         /// <summary>Suelta lo que se mueve: cae, o queda flotando donde esta si pin es true.</summary>
         public void End(bool pin)
         {
@@ -158,7 +173,11 @@ namespace SpellSimulator.Player
             held = rb;
             holding = true;
             pinRequested = false;
-            holdDistance = Mathf.Clamp(distance, MinDistance, PickRange);
+            // Objetos grandes (rocas): por defecto quedan lejos y no se atraviesan al caminar; el tope tambien crece un poco con el tamano.
+            float radius = BoundsRadius(rb);
+            minHoldDistance = Mathf.Max(MinDistance, radius * HoldRadiusFactor + HoldMargin);
+            maxHoldDistance = Mathf.Max(MaxDistance, minHoldDistance + 1.5f);
+            holdDistance = Mathf.Clamp(Mathf.Max(distance, minHoldDistance), minHoldDistance, maxHoldDistance);
             relativeRotation = Quaternion.Inverse(cam.transform.rotation) * rb.rotation;
 
             grabbable = rb.GetComponentInParent<IRemoteGrabbable>();

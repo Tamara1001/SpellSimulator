@@ -13,7 +13,12 @@ namespace SpellSimulator.World
     /// </summary>
     public class Inscribable : MonoBehaviour
     {
-        public const int MaxDecals = 10;
+        /// <summary>
+        /// Tope blando: pasado esto solo se descartan calcomanias viejas (EvictAgeSeconds) y lejanas (EvictDistance) del jugador, para que un sello grande
+        /// hecho de muchos trazos no pierda los primeros mientras se termina. HardMaxDecals es el tope duro (se descarta la mas vieja).
+        /// </summary>
+        public const int MaxDecals = 16, HardMaxDecals = 40;
+        public const float EvictAgeSeconds = 45f, EvictDistance = 25f;
 
         [SerializeField, Tooltip("Lado (m) de la calcomania que se crea al dibujar.")]
         private float decalSize = 1.2f;
@@ -76,10 +81,21 @@ namespace SpellSimulator.World
         private static void Register(InscribedDecal decal)
         {
             decals.Add(decal);
+            Transform viewer = Camera.main != null ? Camera.main.transform : null;
             while (decals.Count > MaxDecals)
             {
-                if (decals[0] != null) Destroy(decals[0].gameObject);
-                decals.RemoveAt(0);
+                int victim = decals.Count > HardMaxDecals ? 0 : -1;
+                for (int i = 0; victim < 0 && i < decals.Count - 1; i++) // la recien creada (ultima) nunca se descarta
+                {
+                    InscribedDecal d = decals[i];
+                    if (d == null) { victim = i; break; }
+                    bool old = Time.time - d.CreatedAt > EvictAgeSeconds;
+                    bool far = viewer == null || (d.transform.position - viewer.position).sqrMagnitude > EvictDistance * EvictDistance;
+                    if (old && far) victim = i;
+                }
+                if (victim < 0) break;
+                if (decals[victim] != null) Destroy(decals[victim].gameObject);
+                decals.RemoveAt(victim);
             }
         }
 

@@ -32,17 +32,17 @@ namespace SpellSimulator.Parsing
     {
         // Constantes de parser/rings/constants.ts de la referencia.
         public const float FoundCompleteness = 0.52f;
-        public const float MinRoundness = 0.36f;
+        public const float MinRoundness = 0.30f; // referencia: 0.36 (relajado por pedido de prueba manual: círculos a mano alzada)
         public const int BinCount = 96;
-        public const float BandHalfWidthRatio = 0.055f;
+        public const float BandHalfWidthRatio = 0.07f; // referencia: 0.055 (relajado: trazos temblorosos)
         public const float JoinNearRatio = 0.45f;
 
         // Propios: tamanio minimo en unidades del lienzo y tolerancia de cierre.
         public const float MinRadius = 0.06f;
         public const int MinSeedPoints = 10;
-        public const float ClosedCoverage = 0.985f;
-        public const float NearlyClosedCoverage = 0.9f;
-        public const float ClosureGapRatio = 0.2f;
+        public const float ClosedCoverage = 0.96f;
+        public const float NearlyClosedCoverage = 0.86f;
+        public const float ClosureGapRatio = 0.3f;
 
         public static RingInfo Detect(DrawingSession session)
         {

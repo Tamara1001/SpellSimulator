@@ -27,6 +27,8 @@ namespace SpellSimulator.World
         private Quaternion lastTargetRotation;
 
         public DrawingCanvas Canvas => canvas;
+        /// <summary>Momento (Time.time) en que se creo, para el descarte por antiguedad.</summary>
+        public float CreatedAt { get; private set; }
         /// <summary>La superficie que creo esta calcomania (para poner otra mas chica encima).</summary>
         public Inscribable Owner { get; private set; }
         public void SetOwner(Inscribable owner) => Owner = owner;
@@ -34,6 +36,7 @@ namespace SpellSimulator.World
         public void Init(DrawingCanvas decalCanvas, SpellCaster spellCaster, Transform surface, float size)
         {
             canvas = decalCanvas;
+            CreatedAt = Time.time;
             caster = spellCaster;
             target = surface;
             radius = size * 0.5f;

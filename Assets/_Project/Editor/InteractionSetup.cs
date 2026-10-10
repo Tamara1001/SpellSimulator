@@ -170,7 +170,7 @@ namespace SpellSimulator.EditorTools
                 count++;
             }
             // Grandes: un sello grande no debe cortarse en el borde de la calcomania.
-            Mark(GameObject.Find("Terrain"), 2.4f);
+            Mark(GameObject.Find("Terrain"), 5f);
             Mark(GameObject.Find("Tower"), 2f);
             Mark(GameObject.Find("Platform"), 1.8f);
             foreach (var movable in Object.FindObjectsByType<Movable>(FindObjectsInactive.Include, FindObjectsSortMode.None))

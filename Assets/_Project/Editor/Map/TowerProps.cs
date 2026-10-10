@@ -164,11 +164,21 @@ namespace SpellSimulator.EditorTools.Map
             MovablesSetup.Prop(map, material, "Candle_Wind_A", MovablesSetup.Kind.Candle, On(-0.56f, 0f), 0f);
             MovablesSetup.Prop(map, material, "Candle_Wind_B", MovablesSetup.Kind.Candle, On(0.56f, -0.05f), 0f);
             for (int i = 0; i < 3; i++)
-                LightProp(map, material, $"WindSheet_{i}", LooseSheet(), On(-0.26f + i * 0.26f, -0.05f), yaw + 90f + (i - 1) * 9f,
-                    new Vector3(0.29f, 0.008f, 0.21f), new Vector3(0f, 0.003f, 0f), 0.02f, "hoja suelta", PaperPath, 0.7f);
+                Flutterer(LightProp(map, material, $"WindSheet_{i}", LooseSheet(), On(-0.26f + i * 0.26f, -0.05f), yaw + 90f + (i - 1) * 9f,
+                    new Vector3(0.29f, 0.008f, 0.21f), new Vector3(0f, 0.003f, 0f), 0.006f, "hoja suelta", PaperPath, 0.3f));
             for (int i = 0; i < 3; i++)
-                LightProp(map, material, $"Feather_{i}", Feather(i), On(-0.28f + i * 0.28f, 0.17f), yaw + (i - 1) * 20f,
-                    new Vector3(0.24f, 0.012f, 0.05f), new Vector3(0f, 0.006f, 0f), 0.01f, "pluma", PaperPath, 0.8f);
+                Flutterer(LightProp(map, material, $"Feather_{i}", Feather(i), On(-0.28f + i * 0.28f, 0.17f), yaw + (i - 1) * 20f,
+                    new Vector3(0.24f, 0.012f, 0.05f), new Vector3(0f, 0.006f, 0f), 0.004f, "pluma", PaperPath, 0.25f));
+            // Hojas de arbol: muchas, livianisimas, sobre la mesa y en el piso delante de ella (salen volando con gracia).
+            Vector3 floorFront = top - Vector3.up * 0.825f;
+            for (int i = 0; i < LeafCount; i++)
+            {
+                bool onTable = i < LeafCount * 2 / 3;
+                float lateral = Mathf.Lerp(-0.62f, 0.62f, Hash(i, 1)), toCenter = onTable ? Mathf.Lerp(-0.2f, 0.2f, Hash(i, 2)) : Mathf.Lerp(0.5f, 1.4f, Hash(i, 2));
+                Vector3 at = (onTable ? top : floorFront) + tangent * lateral + inward * toCenter + Vector3.up * (onTable ? 0.004f * i : 0.01f);
+                Flutterer(LightProp(map, material, $"WindLeaf_{i}", Leaf(i), at, Hash(i, 3) * 360f,
+                    new Vector3(0.12f, 0.012f, 0.09f), new Vector3(0f, 0.006f, 0f), 0.003f, "hoja", PaperPath, 0.2f));
+            }
 
             Bunting(stations, material, origin, a);
             Sign(stations, material, "Sign_WindStation", origin + TowerBuilder.Polar(3.7f, 306f, 0.05f), origin + new Vector3(0f, 0f, -1.5f),
@@ -235,6 +245,33 @@ namespace SpellSimulator.EditorTools.Map
             return b;
         }
 
+        private const int LeafCount = 24;
+
+        /// <summary>Numero pseudoaleatorio estable (0..1) por indice y canal: la escena se reconstruye igual cada vez.</summary>
+        private static float Hash(int i, int channel) => Mathf.Abs(Mathf.Sin(i * 12.9898f + channel * 78.233f) * 43758.5453f) % 1f;
+
+        /// <summary>Hoja de arbol: rombo chato con nervio, verde u otonal.</summary>
+        private static LowPolyMesh Leaf(int variant)
+        {
+            Color[] tones = { new Color(0.36f, 0.58f, 0.25f), new Color(0.48f, 0.66f, 0.28f), new Color(0.82f, 0.55f, 0.2f), new Color(0.7f, 0.32f, 0.16f) };
+            Color c = tones[variant % tones.Length];
+            var b = new LowPolyMesh();
+            Vector3 tip = new Vector3(0f, 0.005f, 0.06f), tail = new Vector3(0f, 0.005f, -0.05f), l = new Vector3(-0.045f, 0.005f, 0.005f), r = new Vector3(0.045f, 0.005f, 0.005f);
+            b.Tri(tail, l, tip, c);
+            b.Tri(tail, tip, r, c * 0.92f);
+            b.Tri(tail, tip, l, c * 0.8f);
+            b.Tri(tail, r, tip, c * 0.75f);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.0055f, 0f)), new Vector3(0.006f, 0.002f, 0.11f), c * 0.7f);
+            return b;
+        }
+
+        /// <summary>Le agrega el revoloteo a un objeto liviano.</summary>
+        private static GameObject Flutterer(GameObject go)
+        {
+            if (go != null && go.GetComponent<World.Flutter>() == null) go.AddComponent<World.Flutter>();
+            return go;
+        }
+
         private static LowPolyMesh Feather(int variant)
         {
             var b = new LowPolyMesh();
@@ -294,7 +331,7 @@ namespace SpellSimulator.EditorTools.Map
         {
             float a = WaterAngle;
             Vector3 basinAt = origin + TowerBuilder.Polar(3.85f, a, 0.05f);
-            const float outer = 0.56f, inner = 0.46f, height = 0.78f, bottom = 0.26f, water = 0.66f;
+            const float outer = 0.84f, inner = 0.7f, height = 0.78f, bottom = 0.26f, water = 0.66f;
             var b = new LowPolyMesh();
             b.Frustum(Matrix4x4.identity, outer + 0.04f, outer + 0.04f, 0f, 0.12f, 8, StoneDark, true, false);        // base
             b.Frustum(Matrix4x4.identity, outer - 0.04f, outer, 0.12f, height - 0.08f, 8, Stone, false);            // cuerpo
@@ -320,7 +357,7 @@ namespace SpellSimulator.EditorTools.Map
                 c.size = size;
             }
             Box(new Vector3(0f, bottom / 2f, 0f), new Vector3(outer * 1.6f, bottom, outer * 1.6f));
-            const float wallT = 0.1f, side = 0.45f;
+            const float wallT = 0.1f, side = 0.68f;
             Box(new Vector3(side, height / 2f, 0f), new Vector3(wallT, height, side * 2f + wallT));
             Box(new Vector3(-side, height / 2f, 0f), new Vector3(wallT, height, side * 2f + wallT));
             Box(new Vector3(0f, height / 2f, side), new Vector3(side * 2f + wallT, height, wallT));
@@ -353,8 +390,10 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 s0 = new Vector3(0f, 0.08f, -0.005f), s1 = new Vector3(0f, 0.21f, -0.005f), s2 = new Vector3(0f, 0.08f, -0.09f);
             boat.Tri(s0, s1, s2, Paper);
             boat.Tri(s1, s0, s2, Paper * 0.9f);
-            LightProp(map, material, "ToyBoat", boat, basinAt + new Vector3(0.05f, water - 0.02f, -0.08f), 35f,
-                new Vector3(0.1f, 0.06f, 0.24f), new Vector3(0f, 0.03f, 0f), 0.25f, "barquito", WoodPath, 0.3f);
+            var boatGo = LightProp(map, material, "ToyBoat", boat, basinAt + new Vector3(0.05f, water - 0.02f, -0.08f), 35f,
+                new Vector3(0.1f, 0.06f, 0.24f), new Vector3(0f, 0.03f, 0f), 0.06f, "barquito", WoodPath, 0.3f);
+            // Siempre boca arriba (antes a veces se daba vuelta) y sin roce de pared: el agua lo mueve aunque toque el borde.
+            if (boatGo != null && boatGo.GetComponent<World.KeepUpright>() == null) boatGo.AddComponent<World.KeepUpright>();
 
             var bucket = new LowPolyMesh();
             bucket.Frustum(Matrix4x4.identity, 0.13f, 0.16f, 0f, 0.28f, 8, WoodLight, false, true);

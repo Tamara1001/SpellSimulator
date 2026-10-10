@@ -43,12 +43,12 @@ SpellSimulator/
 │   │   │   ├── Glyphs/           #   GlyphDictionary, GlyphEntry, GlyphDictionaryAsset
 │   │   │   ├── Input/Tools/      #   IDrawingTool, PenTool, EraserTool, RagTool
 │   │   │   ├── Interfaces/       #   IInteractable, IUsable, HandType
-│   │   │   ├── Output/           #   SpellOutputController, SpellManifestation, MagicField, ElementLook, SealFrame, SealFeedback
+│   │   │   ├── Output/           #   SpellOutputController, SpellManifestation, MagicField, ElementLook, SealFrame, SealFeedback; Bodies/EarthShapes (muros, puentes, estacas), RockSpell, RockMath
 │   │   │   ├── Parsing/          #   RingDetector, StrokeGrouper, SymbolCandidate, SealParser
 │   │   │   ├── Player/           #   PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor, ObjectMover, FocusMode, InkSupply, Haptics
 │   │   │   ├── Reactions/        #   ReactionModel, MaterialProfile, ReactionTable, ElementReactive, MagicWorld, BurnEffect, Shatter, WorldResetter, WaterVolume, WaterEffects, GroundSurface, GroundReactions, GroundMarks, RockRise, MarkFade
 │   │   │   ├── Recognition/      #   TensorRasterizer, GlyphClassifier, SentisGlyphClassifier, GlyphPrediction (+ClassificationMath), PoseMath
-│   │   │   └── World/            #   PhysicalTool, ToolDefinition, PhysicalCanvas, Inkwell, Respawnable, PinnedBody, SealBreaker, TrainingDummy, Stamp, FaceCamera, SealTrigger, Movable, Inscribable, InscribedDecal, SplitSealHalf; Map/ValleyShape
+│   │   │   └── World/            #   PhysicalTool, ToolDefinition, PhysicalCanvas, Inkwell, Respawnable, PinnedBody, SealBreaker, TrainingDummy, Stamp, FaceCamera, SealTrigger, Movable, Inscribable, InscribedDecal, SplitSealHalf, Breakable/Indestructible, MeshCut, MeshBreaker, Flutter, KeepUpright; Map/ValleyShape
 │   │   ├── Tests/EditMode/       #   SpellSimulator.Tests.EditMode.asmdef — Parsing, Recognition, Compiler, modelo
 │   │   └── Tests/Fixtures/       #   Sellos reales grabados (SealRecord .json) para SealFixtureTests
 │   ├── Settings/                 # URP assets (PC_RPAsset, renderers, volume profiles)
