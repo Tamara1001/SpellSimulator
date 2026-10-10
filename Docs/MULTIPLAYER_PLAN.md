@@ -561,7 +561,9 @@ Qué se hace:
 
 **A mano:** PC↔PC por Internet, PC↔Quest.
 
-### F2 — Mundo compartido: objetos físicos y agarre (8–12 días)
+### F2 — Mundo compartido: objetos físicos y agarre (8–12 días) — HECHO 2026-10-09
+
+> Cambio respecto de lo planeado: **no se usa `NetworkObject` por cuerpo** (los objetos son de la escena, no prefabs). Se replica con mensajes con nombre y un registro de ids por orden de la jerarquía (`NetWorld`, `NetBody`; ver CHANGELOG). Agarre = el cliente empieza al instante y el servidor valida (decisión de Ale: en coop manda el que agarra). Pendiente de F2: clonados en juego (reposición/reciclaje/hechizos: F3-F4), empuje por caminar de un cliente, prueba a mano con 100-200 ms.
 
 **Depende de:** F1.
 
@@ -581,7 +583,9 @@ Qué se hace:
 
 **A mano:** sensación de agarre con 100–200 ms.
 
-### F3 — Dibujo compartido y hechizos replicados (10–14 días)
+### F3 — Dibujo compartido y hechizos replicados (10–14 días) — HECHO 2026-10-10
+
+> Hecho con mensajes propios (como F2): `NetCanvasSync` (trazos por comparacion de sesiones), `NetCast` + `SpellIRCodec` (el cliente propone el SpellIR compilado; el anfitrion valida y ejecuta; los demas lo muestran) y `NetSpawn` (la roca se replica). Pendiente: union de mitades y de runas (crean lienzos en juego), tinta validada por el servidor (PvP), brillo de carga de los hechizos ajenos, matriz de lienzos desde un cliente.
 
 **Depende de:** F2.
 
@@ -605,7 +609,9 @@ Qué se hace:
 
 **A mano:** dibujar a la vez en el mismo lienzo; ver dibujar a otro en vista completa.
 
-### F4 — Mundo reactivo, portales y suministros en red (10–15 días)
+### F4 — Mundo reactivo, portales y suministros en red (10–15 días) — HECHA (2026-10-10, verificada con bots)
+
+> Hecho: suministros/reciclaje solo en el anfitrion con clones replicados, portales (anfitrion decide, cruce validado con enfriamiento por jugador, verificado con bots), y escrito sin probar `NetReactiveSync` (pasto + objetos reactivos). Ver CHANGELOG.
 
 **Depende de:** F3.
 
@@ -624,7 +630,7 @@ Qué se hace:
 
 **A mano:** 30 min de coop con 3–4 personas (sesión de juego para la asignatura).
 
-### F5 — PvP/Duelo y balance (12–18 días)
+### F5 — PvP/Duelo y balance (12–18 días) — HECHA EN DOS LOTES (2026-10-10: reglas, red, HUD, arena, tinta del servidor y re-lectura; falta IA, coberturas destructibles y balance a mano)
 
 **Depende de:** F4 (y D1/D2 del ROADMAP, que se pueden hacer en paralelo en local desde F0).
 

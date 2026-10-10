@@ -13,6 +13,8 @@ namespace SpellSimulator.Learning
         public readonly List<string> Glyphs = new List<string>();
         /// <summary>Hechizos (Data/Spells) que ensena; vacio en los libros de glifos.</summary>
         public readonly List<string> Spells = new List<string>();
+        /// <summary>Portales (Data/Portals) cuya identidad anota; solo informativo (ADR-035).</summary>
+        public readonly List<string> Portals = new List<string>();
     }
 
     /// <summary>
@@ -42,6 +44,7 @@ namespace SpellSimulator.Learning
                     if (b["color"] is JArray c && c.Count >= 3) info.Color = new Color((float)c[0], (float)c[1], (float)c[2]);
                     if (b["glyphs"] is JArray ids) foreach (var id in ids) info.Glyphs.Add((string)id);
                     if (b["spells"] is JArray spells) foreach (var id in spells) info.Spells.Add((string)id);
+                    if (b["portals"] is JArray portals) foreach (var id in portals) info.Portals.Add((string)id);
                     lore.Books.Add(info);
                 }
             return lore;

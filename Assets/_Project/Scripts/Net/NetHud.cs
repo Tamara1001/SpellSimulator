@@ -19,6 +19,7 @@ namespace SpellSimulator.Net
             NetSession s = NetSession.Exists ? NetSession.Instance : null;
             if (s == null || !s.IsConnected) return;
             if (MainMenuActive()) return;
+            NetDuel.Active?.DrawHud();
             if (style == null)
             {
                 style = new GUIStyle(GUI.skin.label) { alignment = TextAnchor.UpperRight, fontSize = 15, fontStyle = FontStyle.Bold };

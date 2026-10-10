@@ -79,7 +79,7 @@ namespace SpellSimulator.Reactions
         /// <summary>Encola una gota que choco con el mundo (lo llama WaterDropSink). Sin allocations; si el buffer se llena, se descarta.</summary>
         public static void AddImpact(Vector3 point, Vector3 normal, float liters, float inkPower)
         {
-            if (impactCount >= MaxImpacts) return;
+            if (impactCount >= MaxImpacts || Net.NetCast.IsClientOnly) return; // en red los charcos los simula solo el anfitrion
             EnsureRunner();
             impacts[impactCount++] = new Impact { Point = point, Normal = normal, Liters = liters, InkPower = inkPower };
         }
@@ -144,8 +144,38 @@ namespace SpellSimulator.Reactions
             }
         }
 
+        // ---------------------------------------------------------------- red (copia del anfitrion)
+
+        public static Material CurrentMaterial => waterMaterial;
+
+        /// <summary>Crea el pool si hace falta (un cliente recibe charcos sin haber lanzado agua).</summary>
+        public static void NetEnsurePool()
+        {
+            if (waterMaterial == null && WaterVolume.All.Count > 0) waterMaterial = WaterVolume.All[0].SurfaceMaterial;
+            EnsureRunner();
+        }
+
+        /// <summary>Estado del charco i del pool (para mandarlo a los clientes).</summary>
+        public static void NetRead(int i, out bool active, out Vector3 position, out float liters, out bool frozen)
+        {
+            var p = pool[i];
+            active = p != null && p.IsActive;
+            position = active ? p.transform.position : Vector3.zero;
+            liters = active ? p.Liters : 0f;
+            frozen = active && p.IsFrozen;
+        }
+
+        /// <summary>Cliente: aplica el estado del charco i.</summary>
+        public static void NetApply(int i, bool active, Vector3 position, float liters, bool frozen)
+        {
+            if (i < 0 || i >= MaxPuddles) return;
+            NetEnsurePool();
+            if (pool[i] != null) pool[i].NetApply(active, position, liters, frozen);
+        }
+
         private static void Step(float dt)
         {
+            if (Net.NetCast.IsClientOnly) { impactCount = 0; return; } // el cliente solo muestra lo que manda el anfitrion
             ProcessImpacts();
 
             bool sample = Time.time >= nextSample;

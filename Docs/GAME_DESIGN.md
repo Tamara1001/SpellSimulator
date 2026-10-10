@@ -144,6 +144,26 @@ suena: pluma/pincel al dibujar, goma, trapo, tintero, campanita de sello **prepa
 elemento, chisporroteo si el sello falla, fuego que arde, vapor al apagarse, salpicaduras, roturas de madera y piedra,
 rocas que emergen, pasos según el piso (pasto, madera, piedra). Créditos: sonidos de Kenney (kenney.nl), CC0.
 
+## Signos y sus efectos
+
+Cada signo dibujado en el anillo hace algo propio (canon: wiki de Witch Hat Atelier, «Signs Explained»). Valen para todos los elementos salvo donde se aclara. Más tinta (largo del signo) = más efecto.
+
+| Signo | Efecto general | Con Tierra |
+|---|---|---|
+| **Columna** | Chorro recto (largo, dirección y fuerza). | Muro (en el piso) o puente (en una pared). |
+| **Dispersión** | Abanico o fuga lenta. | Estacas de piedra alrededor. |
+| **Levitación / Flotar** | Sostiene la magia a una altura (orbe). | La roca queda flotando. |
+| **Atracción (pull)** | Atrae materia del mismo elemento. | Atrae piedras. |
+| **Convergencia** | Lente: chorro más fino y fuerte. | Compacta: la forma queda **fija** hasta reiniciar. |
+| **Crush** | Rompe lo frágil y +50 % de daño a seres vivos. | **Wall Breaker**: abre un hueco en paredes y estructuras (no en libros ni portales). |
+| **Región** | Apunta la magia. | La roca sale **lanzada**. |
+| **Weave** | Trenza: suma giro (chorro helicoidal). | Rocas en remolino. |
+| **Collection** | Junta lo suelto alrededor en un punto. | — |
+| **Billowing** | Nube: lo suelto casi no pesa un rato. | — |
+| **Repetition** | Rebobina: los objetos vuelven a su lugar y se desquema el fuego/agua. | — |
+
+Los muros, puentes y estacas se hunden solos a los 60 s (salvo con convergencia; máximo 48 temporales y 24 fijos). Tutoriales: **Taller de piedra** (tierra) y **Laboratorio del lago** (agua con columnas y la pizarra que dispara hacia el lado contrario) en el mapa, además de las estaciones de la torre.
+
 ## Controles
 
 Esquema (ADR-032/033). Se repasa en el grimorio (Tab → Controles).

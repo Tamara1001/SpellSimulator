@@ -34,6 +34,8 @@
     { "id": "spells-fire-earth", "title": "Hechizos de fuego y tierra", "color": [0.6, 0.3, 0.14], "glyphs": [], "spells": [ "small_flame", "earth_spike", "blaze", "stone_wall" ] },
     { "id": "spells-water-deep", "title": "Aguas y mareas", "color": [0.14, 0.38, 0.7], "glyphs": [], "spells": [ "downpour", "wave", "water_lance", "water_draw" ] },
     { "id": "spells-crystal", "title": "Cristal y centelleo", "color": [0.5, 0.72, 0.8], "glyphs": [], "spells": [ "crystal_shard", "crystal_dome" ] },
-    { "id": "spells-siege", "title": "Arte de asedio", "color": [0.55, 0.2, 0.2], "glyphs": [], "spells": [ "thrown_rock", "fire_wall" ] }
+    { "id": "spells-siege", "title": "Arte de asedio", "color": [0.55, 0.2, 0.2], "glyphs": [], "spells": [ "thrown_rock", "fire_wall" ] },
+    { "id": "portals-valley", "title": "Caminos del valle", "color": [0.35, 0.2, 0.5], "glyphs": [], "spells": [], "portals": [ "tower-study", "field-circle" ] },
+    { "id": "portals-heights", "title": "Caminos de las alturas", "color": [0.25, 0.3, 0.5], "glyphs": [], "spells": [], "portals": [ "watchtower", "cave" ] }
   ]
 }

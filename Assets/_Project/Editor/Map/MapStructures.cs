@@ -113,6 +113,10 @@ namespace SpellSimulator.EditorTools.Map
             for (int i = 0; i < crags.Length; i++)
                 Add("Crag_" + (i + 1), Find(crags[i], 7f, 6f, 1.8f, false, taken), ValleyShape.FieldCenter, 6f, false);
 
+            // Tutoriales nuevos (al final: no mueven los sitios anteriores).
+            Add("EarthWorkshop", Find(new Vector2(40f, 30f), 10f, 6f, 1.0f, false, taken), ValleyShape.FieldCenter, 6f, false);
+            Add("WaterLab", FindLakeside(5f, taken), ValleyShape.LakeCenter, 5f, false);
+
             sites = result;
             return sites;
         }
@@ -144,6 +148,31 @@ namespace SpellSimulator.EditorTools.Map
             }
             Debug.LogWarning($"[Estructuras] sin sitio libre cerca de {preferred}: se usa el preferido.");
             return preferred;
+        }
+
+        /// <summary>
+        /// Sitio junto a la orilla del lago (los demas sitios se alejan de el): prueba los angulos libres de zonas de practica
+        /// (CanvasDesigns.LakeSpots) acercandose al agua hasta encontrar piso firme y plano.
+        /// </summary>
+        private static Vector2 FindLakeside(float radius, List<Site> taken)
+        {
+            foreach (float angle in new[] { 112f, 242f, 300f, 172f, 62f, 12f })
+                for (float k = 1.7f; k >= 1.25f; k -= 0.05f)
+                {
+                    float a = angle * Mathf.Deg2Rad;
+                    Vector2 p = ValleyShape.LakeCenter + new Vector2(Mathf.Cos(a) * ValleyShape.LakeRadii.x * k, Mathf.Sin(a) * ValleyShape.LakeRadii.y * k);
+                    if (p.magnitude + radius > 63f) continue;
+                    if (ValleyShape.LakeFactor(p.x, p.y) < 1.2f + radius / 12f) continue;
+                    if (Vector2.Distance(p, ValleyShape.TowerCenter) < ValleyShape.HillRadius + 1f + radius) continue;
+                    if (ValleyShape.RiverDistance(p.x, p.y) < ValleyShape.RiverHalfWidth + 3f + radius) continue;
+                    if (ValleyShape.PathDistance(p.x, p.y) < ValleyShape.PathWidth + 1f + radius) continue;
+                    bool free = true;
+                    foreach (var t in taken)
+                        if (Vector2.Distance(p, t.Pos) < t.Radius + radius + 3f) { free = false; break; }
+                    if (free && Delta(p, radius * 0.7f) <= 0.6f) return p;
+                }
+            Debug.LogWarning("[Estructuras] sin sitio junto al lago para el laboratorio de agua: se usa uno aproximado.");
+            return ValleyShape.LakeCenter + new Vector2(0f, -ValleyShape.LakeRadii.y * 1.7f);
         }
 
         /// <summary>Lejos del lago y sus zonas de practica, el arroyo, la loma, el campo, el spawn, los caminos y las otras estructuras.</summary>
@@ -214,6 +243,8 @@ namespace SpellSimulator.EditorTools.Map
             StoneCircle(root, s["StoneCircle"]);
             Shrine(root, s["Shrine"]);
             SupplyStall(root, s["SupplyStall"]);
+            EarthWorkshop(root, s["EarthWorkshop"]);
+            WaterLab(root, s["WaterLab"]);
             StudyPortal(root);
             Debug.Log("[Estructuras] posiciones:\n" + report);
         }
@@ -327,6 +358,8 @@ namespace SpellSimulator.EditorTools.Map
             ClearVegetation(t.TransformPoint(new Vector3(0f, 0f, zTop + run * 0.5f)), run * 0.5f + 1.2f);
 
             BuildPortal(t, "watchtower", new Vector3(0f, deck, -1.55f), 0f, PortalBase.Floor);
+            StandBook(t, "spells-siege", new Vector2(1.8f, 0.3f), Vector2.zero, deck);
+            StandBook(t, "portals-heights", new Vector2(1.8f, 1.5f), Vector2.zero, deck);
             var chest = Chest(t, "SupplyChest_Watchtower", new Vector3(-1.6f, deck, 0.9f), 90f, true, out float chestTop);
             Supply(chest, MapContraptions.CreateRune(RuneKind.Stone, "RuneTemplate_Stone", chest.position, lit), chestTop + 0.07f, StoneCooldown, 2, "watchtower-stone");
             // Pizarra fija: la cara mira a la plataforma y el hechizo sale hacia afuera (lejos de quien dibuja).
@@ -592,6 +625,8 @@ namespace SpellSimulator.EditorTools.Map
 
             HeightRange(t, -1.5f, 1.5f, -1f, 1f, out _, out float max);
             BuildPortal(t, "field-circle", new Vector3(0f, max + 0.15f, 0f), 0f, PortalBase.Terrain);
+            StandBook(t, "portals-valley", new Vector2(-1.9f, -1.9f), Vector2.zero);
+            StandBook(t, "spells-water-deep", new Vector2(1.9f, -1.9f), Vector2.zero);
             CanvasDesigns.Sign(t, lit, "Sign_Struct_StoneCircle", t.TransformPoint(new Vector3(2.6f, 0f, 6.4f)), t.forward,
                 "Círculo de piedras", "Dibujá el sello del portal\nen la placa para viajar.");
         }
@@ -688,6 +723,7 @@ namespace SpellSimulator.EditorTools.Map
             reliquary.isStatic = true;
             Supply(reliquary.transform, MapContraptions.CreateRune(RuneKind.Gold, "RuneTemplate_Gold", reliquary.transform.position, lit), 0.99f + 0.09f, GoldCooldown, 1, "shrine-gold");
 
+            StandBook(t, "spells-crystal", new Vector2(3.4f, -2.3f), new Vector2(0.5f, 0f));
             CanvasDesigns.Sign(t, lit, "Sign_Struct_Shrine", t.TransformPoint(new Vector3(-2.6f, 0f, 2.6f)), t.forward,
                 "Santuario", "Dejá en el círculo runas gastadas\no papeles: el altar te da otros.\nEl relicario guarda una runa de oro.");
         }
@@ -735,6 +771,96 @@ namespace SpellSimulator.EditorTools.Map
             Supply(runeChest, MapContraptions.CreateRune(RuneKind.Stone, "RuneTemplate_Stone", runeChest.position, lit), runeTop + 0.07f, StoneCooldown, 2, "stall-stone");
             CanvasDesigns.Sign(t, lit, "Sign_Struct_SupplyStall", t.TransformPoint(new Vector3(2.4f, 0f, 1.6f)), t.forward,
                 "Puesto de suministros", "Papeles y runas de piedra:\nse reponen solos con el tiempo.");
+        }
+
+        // ---------------------------------------------------------------- taller de piedra (tutorial de tierra)
+
+        /// <summary>
+        /// Patio de practica de tierra: muro de piedra como blanco (para el signo Crush, que lo abre), cajas para lanzar, un mostrador con papeles y
+        /// tintero fijo, y cuatro carteles que explican roca, muro/puente, lanzar/flotar y romper. Se dibuja en el piso (terreno rayable).
+        /// </summary>
+        private static void EarthWorkshop(Transform parent, Site site)
+        {
+            var t = StructRoot(parent, "EarthWorkshop", site);
+            float yaw = t.eulerAngles.y;
+            HeightRange(t, -4f, 4f, -3f, 6.5f, out float min, out _);
+            var b = new LowPolyMesh();
+            // Muro de practica al fondo (piedra con tapa clara) y dos pilas de piedra bajas a los lados.
+            float wg = Rel(t, 0f, 5.6f);
+            Solid(b, t, new Vector3(0f, wg + 1.3f, 5.6f), new Vector3(5.2f, 2.6f, 0.9f), StoneB, StoneA);
+            foreach (float sx in new[] { -3.4f, 3.4f })
+            {
+                float g = Rel(t, sx, 5.6f);
+                Solid(b, t, new Vector3(sx, g + 0.45f, 5.6f), new Vector3(1.1f, 0.9f, 0.9f), StoneA, Moss);
+            }
+            Finish(t, b, "Struct_EarthWorkshop");
+
+            // Mostrador con papeles y tintero fijo (a la izquierda del patio).
+            TowerBuilder.Table(t, lit, "WorkshopTable", t.rotation * new Vector3(-3.2f, min, -1.6f), yaw, 1.6f, 0.7f);
+            float desk = min + 0.82f;
+            FixedInkwell(t, "Inkwell_EarthWorkshop", t.TransformPoint(new Vector3(-3.75f, desk, -1.7f)), yaw);
+            var tray = Tray(t, "PaperTray_EarthWorkshop", new Vector3(-2.75f, desk, -1.6f));
+            Supply(tray, PaperTemplate("PaperTemplate"), 0.08f, PaperCooldown, 2, "earthshop-paper");
+
+            // Cajas delante del muro: para lanzarles rocas.
+            MovablesSetup.Prop(t, lit, "EarthCrate_A", MovablesSetup.Kind.BigBox, t.TransformPoint(new Vector3(-1.3f, 0f, 3.6f)), yaw + 8f, true);
+            MovablesSetup.Prop(t, lit, "EarthCrate_B", MovablesSetup.Kind.SmallBox, t.TransformPoint(new Vector3(0.2f, 0f, 3.9f)), yaw - 12f, true);
+            MovablesSetup.Prop(t, lit, "EarthCrate_C", MovablesSetup.Kind.BigBox, t.TransformPoint(new Vector3(1.6f, 0f, 3.5f)), yaw + 20f, true);
+
+            // Carteles a los lados del patio, de cara al centro.
+            Vector3 toLeft = t.right, toRight = -t.right;
+            CanvasDesigns.Sign(t, lit, "Sign_EarthShop_1", t.TransformPoint(new Vector3(-3.9f, 0f, 0.8f)), toLeft,
+                "1 · Roca", "Dibujá <b>Tierra</b> en el suelo\ny cerrá el anillo: crece una\nroca. Anillo grande, roca grande.");
+            CanvasDesigns.Sign(t, lit, "Sign_EarthShop_2", t.TransformPoint(new Vector3(-3.9f, 0f, 3.0f)), toLeft,
+                "2 · Muro y puente", "Tierra + <b>columna</b> en el suelo:\nun muro. En una pared: un\npuente. Con <b>convergencia</b> queda\nfijo; si no, se hunde a los 60 s.");
+            CanvasDesigns.Sign(t, lit, "Sign_EarthShop_3", t.TransformPoint(new Vector3(3.9f, 0f, 0.8f)), toRight,
+                "3 · Lanzar y flotar", "Tierra + <b>región</b>: la roca sale\ndisparada. Con <b>levitación</b>\nqueda flotando: agarrala (E).");
+            CanvasDesigns.Sign(t, lit, "Sign_EarthShop_4", t.TransformPoint(new Vector3(3.9f, 0f, 3.0f)), toRight,
+                "4 · Romper", "Tierra + <b>crush</b> abre un hueco\nen paredes y estructuras (menos\nlibros y portales). Probá el muro.\n<size=75%>Backspace lo reconstruye.</size>");
+        }
+
+        // ---------------------------------------------------------------- laboratorio del lago (tutorial avanzado de agua)
+
+        /// <summary>
+        /// Tarima junto al lago con una pizarra especial que dispara hacia el lado CONTRARIO a donde se mira (EmissionSide.AwayFromViewer): se
+        /// dibuja de espaldas al agua y el hechizo sale hacia ella, mas facil de apuntar. Cajas en la orilla como blanco y tres carteles con
+        /// ejercicios de columnas (chorro recto, convergencia, dispersion).
+        /// </summary>
+        private static void WaterLab(Transform parent, Site site)
+        {
+            var t = StructRoot(parent, "WaterLab", site);
+            float yaw = t.eulerAngles.y;
+            HeightRange(t, -3.2f, 3.2f, -2.5f, 2.5f, out float min, out float max);
+            float f = max + 0.14f, fb = min - 0.4f;
+            var b = new LowPolyMesh();
+            Solid(b, t, new Vector3(0f, (f + fb) * 0.5f, 0f), new Vector3(6.4f, f - fb, 5f), StoneB, Plank);
+            for (int k = -5; k <= 5; k++) B(b, new Vector3(k * 0.55f, f + 0.002f, 0f), new Vector3(0.02f, 0.006f, 4.9f), WoodB);
+            foreach (float sx in new[] { -0.85f, 0.85f }) Solid(b, t, new Vector3(sx, f + 0.9f, 0.2f), new Vector3(0.14f, 1.8f, 0.14f), WoodB);
+            B(b, new Vector3(0f, f + 1.82f, 0.2f), new Vector3(1.95f, 0.12f, 0.16f), WoodA);
+            Finish(t, b, "Struct_WaterLab");
+
+            // Pizarra: la cara visible mira hacia tierra (-Z local); la magia sale por la cara opuesta, hacia el lago (+Z local).
+            FixedCanvas(t, "Slate_WaterLab", t.TransformPoint(new Vector3(0f, f + 1.1f, 0.2f)), t.rotation, 1.5f, 1.2f, EmissionSide.AwayFromViewer);
+
+            // Mesa con papeles y tintero, en la tarima.
+            TowerBuilder.Table(t, lit, "LabTable", t.rotation * new Vector3(-2.2f, f, -1.5f), yaw, 1.6f, 0.7f);
+            float desk = f + 0.82f;
+            FixedInkwell(t, "Inkwell_WaterLab", t.TransformPoint(new Vector3(-2.75f, desk, -1.6f)), yaw);
+            var tray = Tray(t, "PaperTray_WaterLab", new Vector3(-1.75f, desk, -1.5f));
+            Supply(tray, PaperTemplate("PaperTemplate"), 0.08f, PaperCooldown, 2, "waterlab-paper");
+
+            // Blancos hacia el agua.
+            MovablesSetup.Prop(t, lit, "LabCrate_A", MovablesSetup.Kind.SmallBox, t.TransformPoint(new Vector3(-1.2f, 0f, 4.4f)), yaw + 10f, true);
+            MovablesSetup.Prop(t, lit, "LabCrate_B", MovablesSetup.Kind.BigBox, t.TransformPoint(new Vector3(0.6f, 0f, 5.6f)), yaw - 15f, true);
+            MovablesSetup.Prop(t, lit, "LabBarrel", MovablesSetup.Kind.Barrel, t.TransformPoint(new Vector3(2f, 0f, 4.6f)), 0f, true);
+
+            Vector3 toLeft = t.right, toRight = -t.right;
+            CanvasDesigns.Sign(t, lit, "Sign_WaterLab_1", t.TransformPoint(new Vector3(-3.7f, 0f, 1.0f)), toLeft,
+                "Laboratorio del lago", "Esta pizarra dispara hacia el\nlado <b>contrario</b>: dibujá de\nespaldas al agua y apuntá con\nla pizarra, no con la mirada.");
+            CanvasDesigns.Sign(t, lit, "Sign_WaterLab_2", t.TransformPoint(new Vector3(3.7f, 0f, 0.4f)), toRight,
+                "Ejercicio 1 · Columna", "Agua + <b>columna</b>: un chorro\nrecto. Dos columnas opuestas lo\nalargan. Con <b>convergencia</b>:\nchorro fino y fuerte.");
+            CanvasDesigns.Sign(t, lit, "Sign_WaterLab_3", t.TransformPoint(new Vector3(3.7f, 0f, 2.4f)), toRight,
+                "Ejercicio 2 · Dispersión", "Agua + <b>dispersión</b>: lluvia en\nabanico. Empujá las cajas al\nlago. Un <b>pull</b> atrae el agua.");
         }
 
         // ---------------------------------------------------------------- portal del estudio
@@ -1205,6 +1331,28 @@ namespace SpellSimulator.EditorTools.Map
             clone.transform.SetParent(parent, true);
         }
 
+        /// <summary>
+        /// Atril suelto con un libro encima (mismo modelo que el de la cabana), apoyado en el terreno. local: posicion en la raiz; toward: punto local
+        /// hacia donde mira quien lee (el atril se gira para dejarle el libro de frente).
+        /// </summary>
+        private static void StandBook(Transform t, string id, Vector2 local, Vector2 toward, float? floorY = null)
+        {
+            float y = floorY ?? Rel(t, local.x, local.y);
+            Vector2 v = (toward - local).normalized;
+            float yaw = Mathf.Atan2(-v.x, -v.y) * Mathf.Rad2Deg;
+            var b = new LowPolyMesh();
+            b.Frustum(Matrix4x4.identity, 0.25f, 0.12f, 0f, 0.1f, 6, WoodB);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.6f, 0f)), new Vector3(0.1f, 1.1f, 0.1f), WoodB);
+            b.Box(Matrix4x4.TRS(new Vector3(0f, 1.15f, 0f), Quaternion.Euler(-25f, 0f, 0f), Vector3.one), new Vector3(0.6f, 0.04f, 0.45f), WoodA);
+            var stand = MapBuilder.Place("Lectern_" + id, t, MapBuilder.SaveMesh(b.Build("Lectern_" + id)), lit,
+                t.TransformPoint(new Vector3(local.x, y, local.y)), t.rotation * Quaternion.Euler(0f, yaw, 0f));
+            var col = stand.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, 0.6f, 0f);
+            col.size = new Vector3(0.5f, 1.2f, 0.5f);
+            Matrix4x4 bookAt = stand.transform.localToWorldMatrix * Matrix4x4.TRS(new Vector3(0f, 1.17f, 0f), Quaternion.Euler(-25f, 0f, 0f), Vector3.one);
+            Book(t, id, bookAt.GetColumn(3), stand.transform.rotation * Quaternion.Euler(-25f, 0f, 0f));
+        }
+
         /// <summary>Libro de aprendizaje (mismo modelo que los de la torre).</summary>
         private static void Book(Transform parent, string id, Vector3 position, Quaternion rotation)
         {
@@ -1349,7 +1497,10 @@ namespace SpellSimulator.EditorTools.Map
             var mesh = MapBuilder.SaveMesh(b.Build(meshName));
             t.gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
             t.gameObject.AddComponent<MeshRenderer>().sharedMaterial = material != null ? material : lit;
-            t.gameObject.isStatic = true;
+            if (t.name.Contains("Portal")) { t.gameObject.isStatic = true; return; } // los portales no se rompen
+            // La tierra con Crush (Wall Breaker) puede abrir huecos: sin batching estatico (con el, la malla deja de ser legible en juego).
+            t.gameObject.AddComponent<World.Breakable>();
+            UnityEditor.GameObjectUtility.SetStaticEditorFlags(t.gameObject, (UnityEditor.StaticEditorFlags)~0 & ~UnityEditor.StaticEditorFlags.BatchingStatic);
         }
 
         private static void B(LowPolyMesh b, Vector3 center, Vector3 size, Color color, Color? top = null) =>

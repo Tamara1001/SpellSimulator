@@ -126,6 +126,19 @@ namespace SpellSimulator.World
         // Un lienzo que cayo (soltado o arrojado) se acuesta cara arriba; uno apoyado de pie desde el arranque no.
         private bool settling;
 
+        /// <summary>True si esta flotando en el aire (se replica en red).</summary>
+        public bool IsFloating => floating;
+
+        /// <summary>Red (F2): en un cliente el servidor manda la pose; se apaga lo que movia el lienzo por su cuenta (flotar, animar, acostarse).</summary>
+        public void NetNeutralize()
+        {
+            floating = false;
+            animating = false;
+            settling = false;
+            remoteHeld = false;
+            if (focused) SetFocus(null, false);
+        }
+
         public void OnRemoteGrab()
         {
             remoteHeld = true;

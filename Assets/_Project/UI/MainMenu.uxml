@@ -41,9 +41,8 @@
                     <ui:VisualElement class="mm-gem" picking-mode="Ignore" />
                     <ui:VisualElement class="mm-button-text" picking-mode="Ignore">
                         <ui:Label text="Modo Duelo" class="mm-label" picking-mode="Ignore" />
-                        <ui:Label text="Hechicero contra hechicero" class="mm-sub" picking-mode="Ignore" />
+                        <ui:Label text="1 contra 1 en red, al mejor de 3" class="mm-sub" picking-mode="Ignore" />
                     </ui:VisualElement>
-                    <ui:Label text="PRÓXIMAMENTE" class="mm-soon" picking-mode="Ignore" />
                 </ui:Button>
                 <ui:Button name="info" class="mm-button">
                     <ui:VisualElement class="mm-gem" picking-mode="Ignore" />
@@ -138,11 +137,13 @@
                     <ui:VisualElement class="divider divider--wide" />
                     <ui:Label text="Tu nombre" class="mm-net-label" />
                     <ui:TextField name="net-name" max-length="16" class="mm-net-field" />
+                    <ui:Toggle name="net-ink" text="Tinta limitada (sala cooperativa)" class="mm-net-label" />
                     <ui:Button name="net-host" class="mm-back mm-net-action" text="Crear sala" />
                     <ui:Label text="o unite a una sala con su código" class="mm-net-or" />
                     <ui:TextField name="net-code" max-length="8" class="mm-net-field mm-net-field--code" />
                     <ui:Button name="net-join" class="mm-back mm-net-action" text="Unirse" />
                     <ui:Label name="net-status" text="" class="mm-net-status" />
+                    <ui:Button name="net-reconnect" class="mm-back mm-net-action" text="Reconectar" />
                     <ui:Button name="net-leave" class="mm-back mm-net-action" text="Salir de la sala" />
                     <ui:Button name="net-back" class="mm-back" text="Volver" />
                 </ui:VisualElement>

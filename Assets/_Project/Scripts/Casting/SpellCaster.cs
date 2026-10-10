@@ -42,6 +42,15 @@ namespace SpellSimulator.Casting
         public SpellIR LastSpell { get; private set; }
 
         /// <summary>
+        /// Lo dibujado en el ultimo sello simple que se lanzo bien (trazos en UV, centro del anillo, tamano del lienzo): lo que el grimorio guarda como hechizo
+        /// propio. Null si todavia no se lanzo ninguno (los sellos compuestos no se guardan).
+        /// </summary>
+        public CastSnapshot LastCast { get; private set; }
+
+        /// <summary>Diccionario de glifos (con las plantillas de cada sigilo y signo); null si falta asignarlo. Lo usan las pruebas para dibujar sellos.</summary>
+        public SpellSimulator.Glyphs.GlyphDictionary Glyphs => dictionary != null ? dictionary.Dictionary : null;
+
+        /// <summary>
         /// Se emite tras cada cast con la lectura completa (AST) ademas del hechizo: para overlays sobre el papel y
         /// herramientas de aprendizaje. Para reaccionar al hechizo en si, usar SpellCompiled.
         /// </summary>
@@ -292,6 +301,7 @@ namespace SpellSimulator.Casting
         public bool Trigger(DrawingCanvas canvas)
         {
             if (canvas == null || !SealActivation.ShouldFire(GetPhase(canvas)) || IsBlocked(canvas)) return false;
+            if (Net.NetCast.IsClientOnly) return false; // en red los disparadores (runas, placas) los decide solo el anfitrion
             SpellIR spell = Cast(canvas);
             bool launched = spell.valid && spell.active;
             SetPhase(canvas, launched ? SealPhase.Spent : SealPhase.Armed);
@@ -381,6 +391,7 @@ namespace SpellSimulator.Casting
             SealAnalyzed?.Invoke(ast, spell, canvas);
             SpellCompiled?.Invoke(spell, canvas);
 
+            if (spell.valid && spell.active) LastCast = CastSnapshot.Capture(canvas, spell, ringCenterUV);
             if (spell.valid && spell.active && output != null)
                 output.SpawnSpellEffect(spell, canvas, ringCenterUV);
             return spell;
@@ -409,6 +420,29 @@ namespace SpellSimulator.Casting
             }
             spell = Analyze(canvas, out _, out _, out _, out ringCenterUV);
             return spell.valid && spell.active;
+        }
+
+        /// <summary>
+        /// Como <see cref="Compile"/>, pero devuelve TODOS los hechizos que saldrian (un sello compuesto lanza cada interior valido, no solo el mayor).
+        /// Lo usa el servidor del duelo para ejecutar su propia lectura completa. Las listas se vacian antes.
+        /// </summary>
+        public bool CompileAll(DrawingCanvas canvas, List<SpellIR> spells, List<Vector2> centers)
+        {
+            spells.Clear(); centers.Clear();
+            if (canvas == null || canvas.Session.IsEmpty || classifier == null || dictionary == null) return false;
+            if (TryAnalyzeNested(canvas, out NestedReading nested))
+            {
+                foreach (NestedSubReading sub in nested.Subs)
+                {
+                    if (!sub.Launches || !sub.Spell.valid || !sub.Spell.active) continue;
+                    spells.Add(sub.Spell); centers.Add(sub.CenterUV);
+                }
+                return spells.Count > 0;
+            }
+            SpellIR single = Analyze(canvas, out _, out _, out _, out Vector2 uv);
+            if (!single.valid || !single.active) return false;
+            spells.Add(single); centers.Add(uv);
+            return true;
         }
 
         /// <summary>

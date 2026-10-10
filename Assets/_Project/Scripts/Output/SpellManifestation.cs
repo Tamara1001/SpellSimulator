@@ -58,13 +58,19 @@ namespace SpellSimulator.Output
             Speed(charge, -speed * 0.25f, s * 0.35f);
             Emit(charge, 40f * density);
 
+            // Tierra de roca: el cuerpo solido (roca, muro, puente, estacas) es el espectaculo; sus esquirlas de particulas
+            // salian en otro color y movimiento (prueba manual), asi que solo queda la carga y un golpe de polvo.
+            bool solidEarth = spell.element == ElementType.Earth && !look.crystalline;
+
             if (plan.Has(PlanPrimitive.Burst))
             {
                 var burst = Track("Burst", look, frame.Origin, frame.Facing(frame.Normal), s);
                 Shape(burst, ParticleSystemShapeType.Hemisphere, s * 0.4f, 0f);
                 Speed(burst, speed * 0.6f, look.lifetime);
-                AddBurst(burst, Mathf.RoundToInt(220f * density * (1f + spell.strength)));
+                AddBurst(burst, Mathf.RoundToInt(220f * density * (1f + spell.strength) * (solidEarth ? 0.25f : 1f)));
             }
+
+            if (solidEarth) plan = SpellPlan.Inert(); // sin chorro, abanico, vortice, orbe ni succion de particulas
 
             if (plan.Has(PlanPrimitive.Jet))
             {

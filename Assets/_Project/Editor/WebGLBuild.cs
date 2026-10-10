@@ -36,8 +36,14 @@ namespace SpellSimulator.EditorTools
         {
             Directory.CreateDirectory(Path.GetDirectoryName(ResultPath));
             File.WriteAllText(ResultPath, "RUNNING");
-            // BuildPlayer no puede llamarse dentro del loop del player: se difiere un tick.
-            EditorApplication.delayCall += Build;
+            // Se difiere un tick por EditorApplication.update (no delayCall: ese no corre si Unity esta en segundo plano).
+            EditorApplication.update += BuildOnce;
+        }
+
+        private static void BuildOnce()
+        {
+            EditorApplication.update -= BuildOnce;
+            Build();
         }
 
         private static void Build()

@@ -68,7 +68,12 @@ namespace SpellSimulator.World
             }
         }
 
-        private void OnEnable() => MagicWorld.WorldReset += OnWorldReset;
+        private void OnEnable()
+        {
+            MagicWorld.WorldReset += OnWorldReset;
+            Net.NetTemplates.Register(paperTemplate);
+            if (runeTemplates != null) foreach (var template in runeTemplates) Net.NetTemplates.Register(template);
+        }
         private void OnDisable() => MagicWorld.WorldReset -= OnWorldReset;
 
         // Lo pendiente se pierde al reiniciar el mundo (lo consumido ya no existe y el mundo vuelve a su estado inicial).
@@ -76,6 +81,7 @@ namespace SpellSimulator.World
 
         private void Update()
         {
+            if (Net.NetCast.IsClientOnly) return; // en red solo el anfitrion recicla
             float dt = Time.deltaTime;
             for (int i = rising.Count - 1; i >= 0; i--)
             {
@@ -266,6 +272,7 @@ namespace SpellSimulator.World
             item.SetActive(true);
             if (item.TryGetComponent(out Rune newRune)) newRune.SetOwner(owner);
             WorldObjectBudget.Register(item, SupplyKey);
+            if (Net.NetWorld.Active != null) Net.NetWorld.Active.RegisterClone(item, template, owner);
             Debug.Log($"[Reciclaje] {name} entrega {item.name}.", this);
         }
     }

@@ -92,12 +92,14 @@ namespace SpellSimulator.UI
         {
             Grimoire.MainMenuRequested += ShowMenu;
             Grimoire.Closed += OnGrimoireClosed;
+            Net.NetSession.Disconnected += OnNetLost;
         }
 
         private void OnDisable()
         {
             Grimoire.MainMenuRequested -= ShowMenu;
             Grimoire.Closed -= OnGrimoireClosed;
+            Net.NetSession.Disconnected -= OnNetLost;
         }
 
         private void OnDestroy()
@@ -137,7 +139,7 @@ namespace SpellSimulator.UI
             creditsBack.clicked += CloseCredits;
             BindNet();
             menu.Q("credits-backdrop").RegisterCallback<ClickEvent>(_ => CloseCredits());
-            duel.SetEnabled(false);
+            duel.clicked += OpenDuel;
 
             order.Clear();
             order.Add(sandbox);
@@ -194,6 +196,8 @@ namespace SpellSimulator.UI
             if (!bound) bound = Bind();
             if (!bound) return;
             bool wasPlaying = state == State.Playing;
+            // volver al menu principal desde el juego = salir de la sala
+            if (wasPlaying && Net.NetSession.Exists && Net.NetSession.Instance.IsConnected) { Net.NetSession.Instance.Leave(); ResetWorldAfterNet(); }
             if (BookReaderUI.IsOpen) BookReaderUI.CloseReader();
             state = State.Menu;
             if (input != null) input.Gate = InputGate.None;

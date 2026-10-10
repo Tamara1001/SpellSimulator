@@ -19,12 +19,17 @@ namespace SpellSimulator.Net
     public sealed class NetSession : MonoBehaviour
     {
         public const int MaxPlayersCoop = 4;
+        public const string RoomClosedReason = "La sala se cerró.";
         public const string AvatarResource = "Net/NetPlayer";
         private const string NameKey = "net.name";
 
         private static NetSession instance;
         private ISession session;
         private bool hooked;
+        private int mainThreadId;
+        private volatile bool pendingChanged;
+        private volatile string pendingLost;
+        private bool leaving;
 
         public static NetSession Instance
         {
@@ -39,14 +44,35 @@ namespace SpellSimulator.Net
         }
 
         public static bool Exists => instance != null;
+
+        /// <summary>Perfil de autenticacion (solo letras, numeros, - y _; max. 30). Vacio = el predeterminado. Los bots usan uno cada uno: varios ejecutables en la misma PC comparten el inicio de sesion anonimo guardado y Relay los tomaria por el mismo jugador.</summary>
+        public static string AuthProfile { get; set; } = "";
+
+        /// <summary>Latencia simulada de ida (ms) en el transporte, para probar con retraso (solo editor y builds de desarrollo).</summary>
+        public static int SimulatedLatencyMs { get; set; }
+
+        private void Awake() => mainThreadId = System.Threading.Thread.CurrentThread.ManagedThreadId;
+
+        private void WarnIfOffMainThread(string where)
+        {
+            if (System.Threading.Thread.CurrentThread.ManagedThreadId != mainThreadId)
+                Debug.LogWarning("[Net] " + where + " completo fuera del hilo principal (los eventos se pasan al hilo principal en Update).");
+        }
+
         public NetState State { get; private set; } = NetState.Offline;
         /// <summary>Codigo para compartir (solo el anfitrion por Relay).</summary>
         public string JoinCode { get; private set; } = "";
         public string LastError { get; private set; } = "";
+        /// <summary>Ultimo codigo al que se unio por Relay (para volver a entrar si se corto la conexion).</summary>
+        public string LastJoinCode { get; private set; } = "";
+        /// <summary>True si se perdio la conexion y la sala puede seguir viva (no si el anfitrion la cerro o se salio uno mismo).</summary>
+        public bool CanReconnect { get; private set; }
         public bool IsHost => State == NetState.Hosting;
         public bool IsConnected => State == NetState.Hosting || State == NetState.Joined;
         /// <summary>Se emite al cambiar el estado, el codigo o el error.</summary>
         public event Action Changed;
+        /// <summary>Se emite (en el hilo principal) cuando la conexion se pierde por causas ajenas: el anfitrion se fue o cerro la sala. No se emite al salir uno mismo.</summary>
+        public static event Action<string> Disconnected;
 
         public static string PlayerName
         {
@@ -74,6 +100,10 @@ namespace SpellSimulator.Net
                 TickRate = 30,
             };
             nm.NetworkConfig.Prefabs.Add(new NetworkPrefab { Prefab = prefab });
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+            if (SimulatedLatencyMs > 0) transport.SetDebugSimulatorParameters(SimulatedLatencyMs, 0, 0);
+#endif
+            go.AddComponent<NetWorld>(); // mundo compartido: replica los cuerpos fisicos de la escena
             go.SetActive(true);
             return nm;
         }
@@ -89,6 +119,8 @@ namespace SpellSimulator.Net
                 await EnsureServicesAsync();
                 var options = new SessionOptions { MaxPlayers = maxPlayers }.WithRelayNetwork().WithNetworkOptions(WssOptions());
                 session = await MultiplayerService.Instance.CreateSessionAsync(options);
+                WarnIfOffMainThread("HostAsync");
+                HookSession(session);
                 JoinCode = session.Code ?? "";
                 SetState(NetState.Hosting);
                 return true;
@@ -105,7 +137,11 @@ namespace SpellSimulator.Net
                 UseTransport(CreateNetworkManager(), true);
                 await EnsureServicesAsync();
                 session = await MultiplayerService.Instance.JoinSessionByCodeAsync(code.Trim().ToUpperInvariant(), new JoinSessionOptions().WithNetworkOptions(WssOptions()));
+                WarnIfOffMainThread("JoinAsync");
+                HookSession(session);
                 JoinCode = session.Code ?? code;
+                LastJoinCode = JoinCode;
+                CanReconnect = false;
                 SetState(NetState.Joined);
                 return true;
             }
@@ -143,11 +179,14 @@ namespace SpellSimulator.Net
         /// <summary>Sale de la partida y vuelve a modo solitario.</summary>
         public async void Leave()
         {
+            leaving = true;
+            CanReconnect = false;
             try
             {
                 if (session != null)
                 {
                     var s = session; session = null;
+                    UnhookSession(s);
                     if (s.IsHost) await s.AsHost().DeleteAsync(); else await s.LeaveAsync();
                 }
             }
@@ -155,7 +194,30 @@ namespace SpellSimulator.Net
             var nm = NetworkManager.Singleton;
             if (nm != null && nm.IsListening) nm.Shutdown();
             JoinCode = "";
+            pendingLost = null;
+            leaving = false;
             SetState(NetState.Offline);
+        }
+
+        private void HookSession(ISession s)
+        {
+            s.RemovedFromSession += OnSessionGone;
+            s.Deleted += OnSessionGone;
+        }
+
+        private void UnhookSession(ISession s)
+        {
+            s.RemovedFromSession -= OnSessionGone;
+            s.Deleted -= OnSessionGone;
+        }
+
+        private void OnSessionGone() => Lose(RoomClosedReason);
+
+        /// <summary>Marca la conexion como perdida; la limpieza y los eventos corren en Update (hilo principal).</summary>
+        private void Lose(string reason)
+        {
+            if (leaving || !IsConnected) return;
+            pendingLost = reason;
         }
 
         private bool BeginConnect()
@@ -179,7 +241,12 @@ namespace SpellSimulator.Net
 
         private static async Task EnsureServicesAsync()
         {
-            if (UnityServices.State == ServicesInitializationState.Uninitialized) await UnityServices.InitializeAsync();
+            if (UnityServices.State == ServicesInitializationState.Uninitialized)
+            {
+                var init = new InitializationOptions();
+                if (!string.IsNullOrEmpty(AuthProfile)) init.SetProfile(AuthProfile);
+                await UnityServices.InitializeAsync(init);
+            }
             if (!AuthenticationService.Instance.IsSignedIn) await AuthenticationService.Instance.SignInAnonymouslyAsync();
         }
 
@@ -196,8 +263,7 @@ namespace SpellSimulator.Net
         private void SetState(NetState s)
         {
             State = s;
-            if ((s == NetState.Hosting || s == NetState.Joined) && GetComponent<NetHud>() == null) gameObject.AddComponent<NetHud>();
-            Changed?.Invoke();
+            pendingChanged = true; // el HUD y los eventos salen en Update, siempre en el hilo principal
         }
 
         private void Update()
@@ -205,20 +271,45 @@ namespace SpellSimulator.Net
             // engancha el callback de desconexion cuando el NetworkManager aparece
             var nm = NetworkManager.Singleton;
             if (nm != null && !hooked) { nm.OnClientDisconnectCallback += OnDisconnected; hooked = true; }
+
+            string lost = pendingLost;
+            if (lost != null)
+            {
+                pendingLost = null;
+                if (IsConnected && !leaving) DropConnection(lost);
+            }
+            if (pendingChanged)
+            {
+                pendingChanged = false;
+                if (IsConnected && GetComponent<NetHud>() == null) gameObject.AddComponent<NetHud>();
+                Changed?.Invoke();
+            }
+        }
+
+        private void DropConnection(string reason)
+        {
+            if (session != null) { UnhookSession(session); session = null; }
+            var nm = NetworkManager.Singleton;
+            if (nm != null && nm.IsListening) nm.Shutdown();
+            LastError = reason;
+            CanReconnect = State == NetState.Joined && !string.IsNullOrEmpty(LastJoinCode) && reason != RoomClosedReason;
+            JoinCode = "";
+            State = NetState.Failed;
+            pendingChanged = false;
+            Changed?.Invoke();
+            Disconnected?.Invoke(reason);
         }
 
         private void OnDisconnected(ulong clientId)
         {
             var nm = NetworkManager.Singleton;
             if (nm == null || clientId != nm.LocalClientId || State != NetState.Joined) return;
-            LastError = "Se perdio la conexion con el anfitrion.";
-            JoinCode = "";
-            SetState(NetState.Failed);
+            Lose("Se perdió la conexión con el anfitrión.");
         }
 
         private void OnDestroy() { if (instance == this) instance = null; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => instance = null;
+        private static void ResetStatics() { instance = null; Disconnected = null; }
     }
 }

@@ -360,6 +360,7 @@ namespace SpellSimulator.Player
         private void ApplyGate()
         {
             bool book = Gate == InputGate.BookOnly;
+            bool typing = Gate == InputGate.Typing;
             MoveValue = Vector2.zero;
             LookValue = Vector2.zero;
             IsJumping = IsInteracting = IsSecondaryUsingTool = IsReloading = IsCyclingInk = IsResettingWorld = false;
@@ -368,6 +369,13 @@ namespace SpellSimulator.Player
             WidthPreset = -1;
             HotbarKey = -1;
             Scroll = 0f;
+            if (typing)
+            {
+                // Escribiendo un nombre: el teclado es del texto. Solo quedan el clic (botones del libro) y Esc "crudo" (cancelar).
+                IsTogglingBook = IsPressingEscape = false;
+                PageDelta = 0;
+                return;
+            }
             if (book) return;
             IsUsingTool = IsTogglingBook = IsPressingEscape = IsPressingEscapeRaw = false;
             PageDelta = 0;
@@ -375,5 +383,5 @@ namespace SpellSimulator.Player
     }
 
     /// <summary>Compuerta de la entrada del jugador (ver <see cref="PlayerInputReader.Gate"/>).</summary>
-    public enum InputGate { Full, BookOnly, None }
+    public enum InputGate { Full, BookOnly, None, Typing }
 }

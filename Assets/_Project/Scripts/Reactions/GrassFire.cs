@@ -51,9 +51,9 @@ namespace SpellSimulator.Reactions
         /// <summary>Un hechizo de fuego enciende el pasto solo si su origen esta a menos de esta altura del suelo (m).</summary>
         private const float FireSpellHeight = 2.5f;
         /// <summary>Maximo de celdas que enciende cada hechizo de fuego por revision.</summary>
-        private const int FieldFireBudget = 12;
+        private const int FieldFireBudget = 6;
         /// <summary>Radio (fraccion del ReachRadius) dentro del cual un hechizo de fuego enciende celdas.</summary>
-        private const float FieldFireRadiusFactor = 0.35f;
+        private const float FieldFireRadiusFactor = 0.25f;
         /// <summary>Un objeto ardiendo enciende el pasto si esta a menos de esta altura del suelo (m).</summary>
         private const float ReactiveFireHeight = 1.5f;
         /// <summary>
@@ -66,11 +66,11 @@ namespace SpellSimulator.Reactions
         private const int DecayTableSize = 33;
 
         // Defaults. Los valores serializados de la escena pisan estos; ApplyDefaults() los restablece.
-        private const float DefaultSpreadChance = 0.07f;
-        private const float DefaultBurnSeconds = 5f;
+        private const float DefaultSpreadChance = 0.045f;
+        private const float DefaultBurnSeconds = 4f;
         private const float DefaultHeatPerSecond = 5f;
         private const float DefaultGenerationDecay = 0.78f;
-        private const int DefaultMaxGenerations = 9;
+        private const int DefaultMaxGenerations = 6;
         /// <summary>Celdas ardiendo que dañan objetos por pasada (round-robin).</summary>
         private const int DamageCellsPerPass = 16;
         private const float DamageRadius = 1.4f;
@@ -150,6 +150,57 @@ namespace SpellSimulator.Reactions
         /// <summary>Instancia activa (la usa el viento para sesgar la propagacion).</summary>
         public static GrassFire Current { get; private set; }
 
+        // ---------------------------------------------------------------- red (F4 de MULTIPLAYER_PLAN)
+
+        /// <summary>
+        /// En un cliente de red el fuego no se simula: el anfitrion manda el estado de las celdas (<see cref="NetApplyState"/>) y aca solo se
+        /// dibujan las llamas y el quemado. Asi todos ven el mismo incendio (la propagacion es al azar).
+        /// </summary>
+        public bool NetFollower { get; set; }
+
+        /// <summary>Sube con cada cambio de una celda (encender, apagar, quemarse del todo, reiniciar): el anfitrion manda el estado cuando cambia.</summary>
+        public int NetVersion { get; private set; }
+
+        public const int NetPackedBytes = (Cells + 3) / 4;
+
+        /// <summary>Estado de las 4900 celdas a 2 bits cada una (pasto, ardiendo, quemada, a prueba de fuego).</summary>
+        public byte[] NetPackState()
+        {
+            var packed = new byte[NetPackedBytes];
+            for (int c = 0; c < Cells; c++) packed[c >> 2] |= (byte)((state[c] & 3) << ((c & 3) * 2));
+            return packed;
+        }
+
+        /// <summary>Cliente: pone el estado que mando el anfitrion; las celdas que cambian ajustan llamas y contadores.</summary>
+        public void NetApplyState(byte[] packed)
+        {
+            if (packed == null || packed.Length < NetPackedBytes) return;
+            for (int c = 0; c < Cells; c++)
+            {
+                byte next = (byte)((packed[c >> 2] >> ((c & 3) * 2)) & 3);
+                byte old = state[c];
+                if (next == old) continue;
+                if (old == Burning) { burningCells--; ReleaseFlame(c); }
+                else if (old == Burnt) { burntCells--; burntDirty = true; }
+                if (next == Burning) { burningCells++; generation[c] = 0; timers[c] = burnSeconds; }
+                else if (next == Burnt) { burntCells++; burntDirty = true; }
+                state[c] = next;
+            }
+            // La lista de celdas ardiendo se rearma desde el estado (las llamas salen de ella).
+            listCount = 0;
+            for (int c = 0; c < Cells; c++)
+            {
+                bool isBurning = state[c] == Burning;
+                inList[c] = isBurning;
+                if (isBurning) burning[listCount++] = c;
+            }
+        }
+
+        /// <summary>Apaga las celdas ardiendo cerca de un punto (el agua; lo usan las pruebas).</summary>
+        public void ExtinguishAt(Vector3 worldPoint, float radius) => ExtinguishArea(worldPoint, radius);
+
+        private float followerFlameTimer;
+
         // Sesgo de viento: zonas (del cono de un hechizo de viento) donde el fuego se propaga mas a favor del viento y menos en contra.
         // Cada entrada expira sola si no se refresca (AddWindBias). Preasignado, sin allocations.
         private const int MaxWindBiases = 6;
@@ -221,6 +272,14 @@ namespace SpellSimulator.Reactions
 
         private void Update()
         {
+            if (NetFollower)
+            {
+                // Solo presentacion: llamas de las celdas ardiendo y mapa de quemado.
+                followerFlameTimer += Time.deltaTime;
+                if (followerFlameTimer >= 0.5f) { followerFlameTimer = 0f; AssignFlames(); }
+                if (burntDirty || burningCells > 0 || hotCells > 0) UpdateBurnMap(Time.deltaTime);
+                return;
+            }
             accumulator += Time.deltaTime;
             int steps = 0;
             while (accumulator >= LogicStep)
@@ -303,6 +362,7 @@ namespace SpellSimulator.Reactions
         {
             for (int r = 0; r < listCount; r++) inList[burning[r]] = false;
             listCount = 0;
+            NetVersion++;
             for (int c = 0; c < Cells; c++)
             {
                 state[c] = baseState[c];
@@ -401,6 +461,7 @@ namespace SpellSimulator.Reactions
                     continue;
                 }
                 state[c] = Burnt;
+                NetVersion++;
                 timers[c] = 0f;
                 inList[c] = false;
                 burningCells--;
@@ -487,6 +548,7 @@ namespace SpellSimulator.Reactions
         {
             if (state[c] != Grass) return false;
             state[c] = Burning;
+            NetVersion++;
             generation[c] = gen;
             timers[c] = burnSeconds;
             burningCells++;
@@ -503,6 +565,7 @@ namespace SpellSimulator.Reactions
             if (state[c] != Burning) return false;
             // Vuelve a pasto (no a quemada). La entrada en la lista queda para la compactacion.
             state[c] = Grass;
+            NetVersion++;
             timers[c] = 0f;
             burningCells--;
             ReleaseFlame(c);

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using SpellSimulator.Canvas;
+using SpellSimulator.Casting;
 using SpellSimulator.Glyphs;
 using SpellSimulator.Interfaces;
 using SpellSimulator.Player;
@@ -13,7 +15,7 @@ namespace SpellSimulator.Learning
     /// <summary>
     /// Pantallas del grimorio. La portada (Menu) es un indice: desde ahi se llega a cada seccion en cualquier orden.
     /// </summary>
-    public enum GrimoireScreen { Menu, Magic, GlyphIndex, GlyphDetail, Seals, Controls, Options, Spells, SpellDetail, Pause }
+    public enum GrimoireScreen { Menu, Magic, GlyphIndex, GlyphDetail, Seals, Controls, Options, Spells, SpellDetail, Pause, Portals }
 
     /// <summary>
     /// Libro-menu diegetico (SYSTEMS_DESIGN 9). Tab / Y / menu izquierdo lo abre flotando frente al jugador, un poco
@@ -37,6 +39,8 @@ namespace SpellSimulator.Learning
         [SerializeField] private GlyphDictionaryAsset dictionary;
         [SerializeField, Tooltip("Hechizos (Data/Spells/*.json). Los asigna SpellSimulator > Learning > Setup Grimoire; en el Editor, si queda vacio, se leen de la carpeta.")]
         private TextAsset[] spellFiles;
+        [SerializeField, Tooltip("Portales (Data/Portals/portals.json), para la seccion Portales. Lo asigna Setup Grimoire.")]
+        private TextAsset portalsFile;
         [Header("Materiales (SpellSimulator > Learning > Setup Grimoire)")]
         [SerializeField, Tooltip("Pagina izquierda (lienzo del glifo animado).")] private Material pageMaterial;
         [SerializeField, Tooltip("Pagina derecha (pergamino espejado).")] private Material pageRightMaterial;
@@ -111,6 +115,16 @@ namespace SpellSimulator.Learning
         private int spellPage;                              // pagina de la lista de hechizos
         private Func<string, bool> bookRead;
         private const int SpellsPerPage = 7;
+
+        // Hechizos propios (ADR-034, H5): biblioteca guardada, ultimo lanzamiento, renombrar con el teclado y borrar con doble clic.
+        private SpellLibrary library;
+        private SpellCaster spellCaster;
+        private bool renaming;
+        private string renameText = "";
+        private InputGate gateBeforeRename;
+        private bool deleteArmed;
+        private float deleteArmedAt;
+        private const float DeleteConfirmSeconds = 3f;
 
         // Pools fijos (creados en Build): cada pantalla reutiliza los primeros y oculta el resto.
         private GrimoireButton[] buttons;
@@ -223,6 +237,13 @@ namespace SpellSimulator.Learning
                 if (screen == GrimoireScreen.Pause || screen == GrimoireScreen.Options) Refresh();
             }
 
+            if (renaming) UpdateRename();
+            if (deleteArmed && Time.unscaledTime - deleteArmedAt > DeleteConfirmSeconds)
+            {
+                deleteArmed = false;
+                if (screen == GrimoireScreen.SpellDetail) Refresh();
+            }
+
             UpdateHover();
             AnimateStroke();
         }
@@ -286,6 +307,7 @@ namespace SpellSimulator.Learning
 
         public void Close()
         {
+            if (renaming) EndRename(false);
             if (!IsOpen) return;
             if (remoteHeld && mover != null) mover.End(true);
             remoteHeld = false;
@@ -501,6 +523,8 @@ namespace SpellSimulator.Learning
             screen = s;
             glyph = id;
             if (s != GrimoireScreen.Pause && s != GrimoireScreen.Options) { resetArmed = false; resetArmedAt = PauseMenuMath.Disarmed; }
+            if (renaming && s != GrimoireScreen.SpellDetail) EndRename(false);
+            if (s != GrimoireScreen.SpellDetail) deleteArmed = false;
             leftCanvas.Clear();
             strokeQueue.Clear();
             strokeIndex = 0;
@@ -524,6 +548,7 @@ namespace SpellSimulator.Learning
                 case GrimoireScreen.Options: ShowOptions(); break;
                 case GrimoireScreen.Pause: ShowPause(); break;
                 case GrimoireScreen.Spells: ShowSpells(); break;
+                case GrimoireScreen.Portals: ShowPortals(); break;
                 case GrimoireScreen.SpellDetail: ShowSpellDetail(); break;
             }
             PlaceMenuButton();
@@ -551,14 +576,46 @@ namespace SpellSimulator.Learning
             string n = $"<color={GrimoireTexts.Gold}>";
             RefreshSpells();
             h = 0.028f;
-            Place(Right, 0f, 0.098f, w, h, $"{n}I</color>   Magia", ButtonSize, () => Go(GrimoireScreen.Magic));
-            Place(Right, 0f, 0.064f, w, h, $"{n}II</color>   Glifos   <size=75%>({glyphs.Count} de {total})</size>", ButtonSize, () => Go(GrimoireScreen.GlyphIndex));
-            Place(Right, 0f, 0.030f, w, h, $"{n}III</color>   Sellos", ButtonSize, () => Go(GrimoireScreen.Seals));
-            Place(Right, 0f, -0.004f, w, h, $"{n}IV</color>   Hechizos   <size=75%>({spells.Count})</size>", ButtonSize, () => Go(GrimoireScreen.Spells));
-            Place(Right, 0f, -0.038f, w, h, $"{n}V</color>   Controles", ButtonSize, () => Go(GrimoireScreen.Controls));
-            Place(Right, 0f, -0.072f, w, h, $"{n}VI</color>   Opciones", ButtonSize, () => Go(GrimoireScreen.Options));
-            Place(Right, 0f, -0.106f, w, h, $"{n}VII</color>   Pausa", ButtonSize, () => Go(GrimoireScreen.Pause));
+            int portalsKnown = KnownPortals().Count;
+            Place(Right, 0f, 0.108f, w, h, $"{n}I</color>   Magia", ButtonSize, () => Go(GrimoireScreen.Magic));
+            Place(Right, 0f, 0.0785f, w, h, $"{n}II</color>   Glifos   <size=75%>({glyphs.Count} de {total})</size>", ButtonSize, () => Go(GrimoireScreen.GlyphIndex));
+            Place(Right, 0f, 0.049f, w, h, $"{n}III</color>   Sellos", ButtonSize, () => Go(GrimoireScreen.Seals));
+            Place(Right, 0f, 0.0195f, w, h, $"{n}IV</color>   Hechizos   <size=75%>({spells.Count})</size>", ButtonSize, () => Go(GrimoireScreen.Spells));
+            Place(Right, 0f, -0.010f, w, h, $"{n}V</color>   Portales   <size=75%>({portalsKnown})</size>", ButtonSize, () => Go(GrimoireScreen.Portals));
+            Place(Right, 0f, -0.0395f, w, h, $"{n}VI</color>   Controles", ButtonSize, () => Go(GrimoireScreen.Controls));
+            Place(Right, 0f, -0.069f, w, h, $"{n}VII</color>   Opciones", ButtonSize, () => Go(GrimoireScreen.Options));
+            Place(Right, 0f, -0.0985f, w, h, $"{n}VIII</color>   Pausa", ButtonSize, () => Go(GrimoireScreen.Pause));
             PlaceOrnament(Right, 0f, -0.145f, 0.1f);
+        }
+
+        private List<Casting.PortalDefinition> KnownPortals() =>
+            PortalKnowledge.Known(PortalKnowledge.Shared, Discovery.Instance != null ? Discovery.Instance.Lore.Books : null, bookRead);
+
+        /// <summary>Portales anotados por los libros de caminos leidos (solo informativo, ADR-035).</summary>
+        private void ShowPortals()
+        {
+            List<Casting.PortalDefinition> known = KnownPortals();
+            int total = Discovery.Instance != null ? PortalKnowledge.Total(PortalKnowledge.Shared, Discovery.Instance.Lore.Books) : known.Count;
+            SetTitle(Left, "Portales");
+            SetBody(Left, GrimoireTexts.PortalsIntro(known.Count, total), BodyTop, BodyBottom);
+            SetTitle(Right, "Caminos anotados");
+            if (known.Count == 0) { SetBody(Right, GrimoireTexts.NoPortals, BodyTop, BodyBottom); return; }
+            var text = new System.Text.StringBuilder();
+            for (int k = 0; k < known.Count; k++)
+            {
+                if (k > 0) text.Append("\n\n");
+                text.Append(GrimoireTexts.PortalEntry(known[k].DisplayName, IdentityParts(known[k], true), IdentityParts(known[k], false)));
+            }
+            SetBody(Right, text.ToString(), BodyTop, BodyBottom);
+        }
+
+        private static string IdentityParts(Casting.PortalDefinition portal, bool sigil)
+        {
+            var lore = Discovery.Instance != null ? Discovery.Instance.Lore : null;
+            if (sigil) return lore != null ? lore.Name(portal.Identity.Sigil) : portal.Identity.Sigil;
+            var names = new List<string>();
+            foreach (string s in portal.Identity.Signs) names.Add(lore != null ? lore.Name(s) : s);
+            return string.Join("  +  ", names);
         }
 
         private void ShowSpread(GrimoireScreen s)
@@ -668,6 +725,9 @@ namespace SpellSimulator.Learning
             catalog = SpellCatalog.FromJsons(texts, msg => Debug.LogWarning("[Hechizos] " + msg));
             SpellCatalog.Shared = catalog;
             bookRead = IsBookRead;
+            PortalKnowledge.Shared = portalsFile != null ? Casting.PortalRecipes.Load(portalsFile.text) : Casting.PortalRecipes.LoadDefault();
+            library = SpellLibraryStore.Load(msg => Debug.LogWarning("[Hechizos] " + msg));
+            foreach (SpellDef own in library.Items) catalog.AddPlayer(own);
         }
 
         private static bool IsBookRead(string book) => Discovery.Instance != null && Discovery.Instance.State.HasRead(book);
@@ -681,12 +741,23 @@ namespace SpellSimulator.Learning
 
         private int SpellPageCount() => Mathf.Max(1, Mathf.CeilToInt(spells.Count / (float)SpellsPerPage));
 
+        /// <summary>Pista de un hechizo que todavia no se conoce; cambia al pasar de pagina de la lista.</summary>
+        private string NextRumor()
+        {
+            if (catalog == null) return "";
+            var hints = new List<string>();
+            foreach (SpellDef def in catalog.All)
+                if (def.Origin != SpellLibrary.PlayerOrigin && !spells.Contains(def) && !string.IsNullOrWhiteSpace(def.Hint)) hints.Add(def.Hint);
+            return hints.Count == 0 ? "" : hints[Mathf.Abs(spellPage) % hints.Count];
+        }
+
         private void ShowSpells()
         {
             RefreshSpells();
             int total = catalog != null ? catalog.All.Count : 0;
             SetTitle(Left, "Hechizos");
-            SetBody(Left, GrimoireTexts.SpellIntro(spells.Count, total), BodyTop, BodyBottom);
+            SetBody(Left, GrimoireTexts.SpellIntro(spells.Count, total) + GrimoireTexts.Rumor(NextRumor()), BodyTop, BodyBottom + 0.04f);
+            Place(Left, 0f, BarY + 0.04f, ContentWidth * 0.9f, BarHeight, "Guardar el último hechizo", ButtonSize * 0.9f, SaveLastCast);
 
             SetTitle(Right, "Conocidos");
             if (spells.Count == 0)
@@ -731,7 +802,99 @@ namespace SpellSimulator.Learning
                 if (World.Stamp.Held == null) { Hud.Notify("stampspell", "Necesitás un sello en la mano", 2.5f); return; }
                 World.Stamp.Held.LoadSpell(shown.Id, shown.Name, SpellStrokeBuilder.Build(shown, TemplateOf));
             });
+            if (spell.Origin == SpellLibrary.PlayerOrigin)
+            {
+                SpellDef own = spell;
+                if (renaming)
+                {
+                    titles[Right].text = renameText + "<color=" + GrimoireTexts.Faded + ">|</color>";
+                    Place(Right, -0.066f, -0.150f, 0.094f, BarHeight, "Aceptar", ButtonSize * 0.85f, () => EndRename(true));
+                    Place(Right, 0.066f, -0.150f, 0.094f, BarHeight, "Cancelar", ButtonSize * 0.85f, () => EndRename(false));
+                    return;
+                }
+                if (!PlatformDetector.IsVR)
+                    Place(Left, 0.129f, BarY, 0.088f, BarHeight, "Renombrar", ButtonSize * 0.9f, BeginRename);
+                Place(Right, 0f, -0.150f, ContentWidth * 0.86f, BarHeight, deleteArmed ? "¿Seguro? Tocá de nuevo" : "Borrar hechizo", ButtonSize * 0.9f, () => DeleteSpell(own));
+                return;
+            }
             Pager(i, spells.Count, () => Step(-1), () => Step(1));
+        }
+
+        // ---------------------------------------------------------------- hechizos propios (guardar, renombrar, borrar)
+
+        /// <summary>Guarda lo dibujado en el ultimo hechizo lanzado como hechizo propio y abre su pagina.</summary>
+        private void SaveLastCast()
+        {
+            if (spellCaster == null) spellCaster = FindFirstObjectByType<SpellCaster>();
+            CastSnapshot snap = spellCaster != null ? spellCaster.LastCast : null;
+            if (snap == null) { Hud.Notify("savespell", "Lanzá un hechizo primero: se guarda el último que lanzaste", 3f); return; }
+            if (!library.CanAdd) { Hud.Notify("savespell", $"Ya tenés {SpellLibrary.MaxSpells} hechizos propios: borrá alguno", 3f); return; }
+            const float gap = 34f;
+            var strokes = SpellRecording.ToRingUnits(snap.Strokes, snap.RingCenterUV, snap.WorldSize, snap.Spell.sealRadius, gap);
+            SpellDef def = strokes != null ? library.Add(null, SpellRecording.ElementId(snap.Spell.element), strokes, gap) : null;
+            if (def == null) { Hud.Notify("savespell", "No se pudo guardar ese hechizo", 3f); return; }
+            catalog.AddPlayer(def);
+            SpellLibraryStore.Save(library, msg => Debug.LogWarning("[Hechizos] " + msg));
+            Hud.Notify("savespell", $"Hechizo guardado: {def.Name}", 3f);
+            RefreshSpells();
+            spell = def;
+            spellPage = Mathf.Max(0, spells.IndexOf(def)) / SpellsPerPage;
+            Go(GrimoireScreen.SpellDetail);
+        }
+
+        private void DeleteSpell(SpellDef own)
+        {
+            if (!deleteArmed) { deleteArmed = true; deleteArmedAt = Time.unscaledTime; Refresh(); return; }
+            deleteArmed = false;
+            library.Remove(own.Id);
+            catalog.RemovePlayer(own.Id);
+            SpellLibraryStore.Save(library, msg => Debug.LogWarning("[Hechizos] " + msg));
+            Hud.Notify("savespell", $"Hechizo borrado: {own.Name}", 2.5f);
+            RefreshSpells();
+            spell = null;
+            spellPage = Mathf.Clamp(spellPage, 0, SpellPageCount() - 1);
+            Go(GrimoireScreen.Spells);
+        }
+
+        private void BeginRename()
+        {
+            if (spell == null || Keyboard.current == null) return;
+            if (!focused) { Hud.Notify("rename", "Abrí el grimorio a pantalla completa (Esc) para renombrar", 3f); return; }
+            renaming = true;
+            renameText = spell.Name;
+            gateBeforeRename = input.Gate;
+            input.Gate = InputGate.Typing;
+            Keyboard.current.onTextInput += OnTextInput;
+            Refresh();
+        }
+
+        private void EndRename(bool accept)
+        {
+            if (!renaming) return;
+            renaming = false;
+            if (Keyboard.current != null) Keyboard.current.onTextInput -= OnTextInput;
+            if (input != null) input.Gate = gateBeforeRename;
+            if (accept && spell != null && library.Rename(spell.Id, renameText))
+            {
+                SpellLibraryStore.Save(library, msg => Debug.LogWarning("[Hechizos] " + msg));
+            }
+            if (screen == GrimoireScreen.SpellDetail) Refresh();
+        }
+
+        private void OnTextInput(char c)
+        {
+            if (!renaming) return;
+            if (c == '\b') { if (renameText.Length > 0) renameText = renameText.Substring(0, renameText.Length - 1); }
+            else if (!char.IsControl(c) && c != '<' && c != '>' && renameText.Length < SpellLibrary.MaxNameLength) renameText += c;
+            if (titles[Right] != null) titles[Right].text = renameText + "<color=" + GrimoireTexts.Faded + ">|</color>";
+        }
+
+        private void UpdateRename()
+        {
+            Keyboard kb = Keyboard.current;
+            if (kb == null) { EndRename(false); return; }
+            if (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame) EndRename(true);
+            else if (input.IsPressingEscapeRaw) EndRename(false);
         }
 
         /// <summary>Radio del anillo del sello dibujado en la pagina (m).</summary>

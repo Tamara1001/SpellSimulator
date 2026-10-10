@@ -73,7 +73,7 @@ Están detalladas en `ground-truth.md`. Las que más impactan el diseño 3D son 
 ## 4. Traducción a reglas de juego
 
 Leyes del §3 implementadas en M3 (`PlanResolver` + `SpellManifestation` + `MagicField`): ráfaga, columna (chorro,
-abanico, vórtice), levitación (orbe), pull (succión) y convergencia (lente). Faltan región, weave y orbe-vasija.
+abanico, vórtice), levitación (orbe), pull (succión) y convergencia (lente). Desde la octava tanda también crush (Wall Breaker con tierra), collection, billowing, repetition, weave y región (ver `GAME_DESIGN.md`, «Signos y sus efectos»). Falta orbe-vasija.
 Desde M4 el pull respeta la ley 7: solo atrae materia de su elemento (piedra con tierra, lo que arde con fuego, agua
 del estanque con agua).
 

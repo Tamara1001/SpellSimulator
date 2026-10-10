@@ -163,11 +163,29 @@ namespace SpellSimulator.Learning
             "Copialo en el papel y cerrá el anillo a mano para lanzarlo. Los básicos ya los sabés; los demás los enseñan los <b>libros de hechizos</b> de la biblioteca.\n\n" +
             $"<i><color={Faded}>Conocés {known} de {total}.</color></i>";
 
+        /// <summary>Pagina izquierda de Portales.</summary>
+        public static string PortalsIntro(int known, int total) =>
+            "Cada portal tiene una <b>identidad</b>: un sigilo y dos signos. Para viajar a uno, escribila en la <b>placa</b> de otro portal y cerrá el círculo.\n\n" +
+            "Los <b>libros de caminos</b> de la biblioteca anotan acá los destinos que explican. Es solo una guía: nada te impide probar otras combinaciones.\n\n" +
+            $"<i><color={Faded}>Anotados {known} de {total}.</color></i>";
+
+        public const string NoPortals = "Aún no anotaste ningún camino.\n\nBuscá los libros de caminos: uno en la torre de vigía y otro en el círculo de piedra.";
+
+        /// <summary>Una entrada de portal: nombre y su identidad (nombres de glifos).</summary>
+        public static string PortalEntry(string name, string sigil, string signs) =>
+            $"<b>{name}</b>\n<color={Faded}>{sigil}  +  {signs}</color>";
+
+        /// <summary>Rumor de un hechizo aun no descubierto (su pista ya empieza con «Se dice que...»), o "" si no hay.</summary>
+        public static string Rumor(string hint) =>
+            string.IsNullOrWhiteSpace(hint) ? "" : "\n\n<i><color=" + Gold + ">" + hint.Trim() + "</color></i>";
+
         public const string NoSpells = "Aún no conocés ningún hechizo.\n\nBuscá los libros de hechizos en la biblioteca.";
 
         /// <summary>Pagina derecha de un hechizo: ficha, descripcion y como hacerlo.</summary>
         public static string SpellPage(SpellDef spell) =>
-            $"<i><color={Faded}>{spell.ElementName} · dificultad {spell.Difficulty} de 3</color></i>\n\n" +
+            (spell.Origin == SpellLibrary.PlayerOrigin
+                ? $"<i><color={Faded}>{spell.ElementName} · hechizo propio</color></i>\n\n"
+                : $"<i><color={Faded}>{spell.ElementName} · dificultad {spell.Difficulty} de 3</color></i>\n\n") +
             $"{spell.Description}\n\n{Heading("Cómo hacerlo")}\n{spell.HowTo}";
 
         // ---------------------------------------------------------------- creacion de textos

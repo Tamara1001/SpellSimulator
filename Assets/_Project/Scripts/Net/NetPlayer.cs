@@ -31,6 +31,8 @@ namespace SpellSimulator.Net
         private static MaterialPropertyBlock block;
         private static readonly int BaseColor = Shader.PropertyToID("_BaseColor");
 
+        private static readonly Vector3 StandingHead = new Vector3(0f, 0.7f, 0f);
+
         public Transform Head => head;
         public string DisplayName => playerName.Value.ToString();
 
@@ -105,6 +107,15 @@ namespace SpellSimulator.Net
             }
             // el avatar se pega al cuerpo local; la raiz de red lleva posicion y giro en Y (ClientNetworkTransform)
             transform.SetPositionAndRotation(root.position, Quaternion.Euler(0f, root.eulerAngles.y, 0f));
+            if (driver == null && UI.MainMenu.IsActive)
+            {
+                // en el menu la camara orbita la torre: la cabeza queda en su sitio y las manos al costado
+                headPos.Value = StandingHead;
+                headRot.Value = Quaternion.identity;
+                mainHandPos.Value = new Vector3(0.3f, 0.2f, 0.3f);
+                secondaryHandPos.Value = new Vector3(-0.3f, 0.2f, 0.3f);
+                return;
+            }
             headPos.Value = transform.InverseTransformPoint(eyes.position);
             headRot.Value = Quaternion.Inverse(transform.rotation) * eyes.rotation;
             if (main != null) mainHandPos.Value = transform.InverseTransformPoint(main.position);

@@ -82,7 +82,8 @@ namespace SpellSimulator.EditorTools.Map
             var mesh = MapBuilder.SaveMesh(b.Build(name));
             var go = MapBuilder.Place(name, parent, mesh, material, parent.position, Quaternion.identity);
             go.AddComponent<MeshCollider>().sharedMesh = mesh;
-            go.isStatic = true;
+            go.AddComponent<World.Breakable>(); // la tierra con Crush (Wall Breaker) puede abrir huecos
+            UnityEditor.GameObjectUtility.SetStaticEditorFlags(go, (UnityEditor.StaticEditorFlags)~0 & ~UnityEditor.StaticEditorFlags.BatchingStatic); // sin batching: la malla se tiene que poder leer
             return b.TriangleCount;
         }
 

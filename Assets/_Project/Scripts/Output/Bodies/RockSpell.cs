@@ -15,6 +15,7 @@ namespace SpellSimulator.Output
     public static class RockSpell
     {
         private const int Variants = 4;
+        internal const int VariantCount = Variants;
         private const float SpawnGap = 0.1f;
 
         private static readonly Mesh[] meshes = new Mesh[Variants];
@@ -33,6 +34,15 @@ namespace SpellSimulator.Output
 
         public static void Spawn(SpellIR spell, SealFrame frame, ElementLook look, DrawingCanvas source, GameObject spellGo, int ownerId)
         {
+            SpellPlan plan = spell.plan ?? SpellPlan.Inert();
+            // Crush (Wall Breaker): destruye en vez de crear (MagicField + MeshBreaker); columna/dispersion: muro, puente o estacas.
+            if (plan.Crush > 0f) return;
+            if (EarthShapes.IsShape(plan))
+            {
+                int pieces = EarthShapes.Spawn(spell, frame, look);
+                Debug.Log($"[Roca] forma solida de {pieces} piezas ({(plan.Has(PlanPrimitive.Jet) ? "columna" : "estacas")}){(RockMath.IsPermanent(plan.Focus) ? " fija" : "")}");
+                return;
+            }
             float radius = RockMath.Radius(frame.Radius, spell.inkPower);
             float formSeconds = RockMath.FormSeconds(radius);
             float mass = RockMath.Mass(radius);
@@ -67,10 +77,58 @@ namespace SpellSimulator.Output
             var expiring = go.AddComponent<ExpiringBody>();
             expiring.Init(RockMath.LifeSeconds, RockMath.ShrinkSeconds);
 
-            go.AddComponent<RockForming>().Init(rb, col, radius, formSeconds);
+            var forming = go.AddComponent<RockForming>();
+            forming.Init(rb, col, radius, formSeconds);
+            // Levitacion: la roca queda flotando donde nace. Region (directed): sale lanzada.
+            if (plan.Has(PlanPrimitive.Hold)) forming.Hover();
+            else if (plan.Directed > 0f) forming.Launch(LaunchDirection(frame) * RockMath.LaunchSpeed(spell.force));
 
             Register(expiring, ownerId);
+            // En red el anfitrion crea la roca de verdad y los clientes arman una copia que sigue sus poses.
+            Net.NetWorld net = Net.NetWorld.Active;
+            if (net != null && net.IsServer)
+                net.RegisterSpawned(go, Net.NetSpawnKind.Rock, Net.NetSpawn.EncodeRock(new Net.NetSpawn.RockData
+                {
+                    pos = go.transform.position, rot = go.transform.rotation, variant = (byte)variant, radius = radius, formSeconds = formSeconds, elapsed = 0f
+                }));
             Debug.Log($"[Roca] radio {radius:F2} m masa {mass:F0} kg formacion {formSeconds:F1} s tinta x{spell.inkPower:F2}");
+        }
+
+        /// <summary>Hacia donde sale lanzada: en el piso, lejos de quien dibuja (y un poco arriba); en una pared, hacia afuera del papel.</summary>
+        private static Vector3 LaunchDirection(SealFrame frame)
+        {
+            return frame.Normal.y > 0.5f
+                ? (frame.Outward * 0.9f + Vector3.up * 0.35f).normalized
+                : (frame.Normal + Vector3.up * 0.12f).normalized;
+        }
+
+        /// <summary>
+        /// Copia de una roca para un cliente de red: mismo aspecto y misma formacion (crece de 0 a 1), pero cinematica; su pose la manda el anfitrion.
+        /// No expira por su cuenta (el anfitrion avisa cuando desaparece). <paramref name="elapsed"/> = segundos que la roca original ya lleva formandose.
+        /// </summary>
+        public static GameObject BuildReplica(Vector3 position, Quaternion rotation, int variant, float radius, float formSeconds, float elapsed, ElementLook look)
+        {
+            variant = Mathf.Clamp(variant, 0, Variants - 1);
+            var go = new GameObject("Roca");
+            go.transform.SetPositionAndRotation(position, rotation);
+            go.transform.localScale = Vector3.zero;
+            var filter = go.AddComponent<MeshFilter>();
+            filter.sharedMesh = MeshFor(variant);
+            var meshRenderer = go.AddComponent<MeshRenderer>();
+            if (look != null && look.material != null) meshRenderer.sharedMaterial = look.material;
+            var rb = go.AddComponent<Rigidbody>();
+            rb.mass = RockMath.Mass(radius);
+            rb.useGravity = false;
+            rb.isKinematic = true;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+            var col = go.AddComponent<MeshCollider>();
+            col.convex = true;
+            col.sharedMesh = filter.sharedMesh;
+            col.enabled = false;
+            go.AddComponent<Movable>().SetName("roca");
+            go.AddComponent<RockForming>().InitReplica(col, radius, formSeconds, elapsed);
+            return go;
         }
 
         private static void Register(ExpiringBody body, int ownerId)
@@ -109,7 +167,7 @@ namespace SpellSimulator.Output
             }
         }
 
-        private static Mesh MeshFor(int variant)
+        internal static Mesh MeshFor(int variant)
         {
             if (meshes[variant] == null) meshes[variant] = BuildRock(1000 + variant * 7919);
             return meshes[variant];

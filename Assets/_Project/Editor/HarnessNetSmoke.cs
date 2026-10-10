@@ -43,6 +43,9 @@ namespace SpellSimulator.EditorTools
         [MenuItem("SpellSimulator/Harness/Run Net Menu Probe")]
         public static void RunMenu() => Start("menu");
 
+        [MenuItem("SpellSimulator/Harness/Run Net Disconnect Probe")]
+        public static void RunDisconnect() => Start("disc");
+
         private static void Start(string mode)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(ResultPath));
@@ -67,7 +70,7 @@ namespace SpellSimulator.EditorTools
                 return;
             }
             if (Time.frameCount - start < WarmupFrames) return;
-            if (routine == null) routine = mode == "relay" ? ProbeRelay() : mode == "menu" ? ProbeMenu() : ProbeLocal();
+            if (routine == null) routine = mode == "relay" ? ProbeRelay() : mode == "menu" ? ProbeMenu() : mode == "disc" ? ProbeDisconnect() : ProbeLocal();
             if (Time.realtimeSinceStartup < waitUntil) return;
             bool more;
             try
@@ -181,6 +184,61 @@ namespace SpellSimulator.EditorTools
             menu.CloseNet();
             yield return 0.6f;
             Check(root.Q("net-panel").resolvedStyle.display == DisplayStyle.None, "Volver cierra el panel");
+        }
+
+        // Cliente de la sesion (singleton) contra un anfitrion aparte en el mismo proceso: probar que perder al anfitrion devuelve al menu
+        // y que volver al menu desde el juego saca de la sala.
+        private static IEnumerator ProbeDisconnect()
+        {
+            var menu = UI.MainMenu.Instance;
+            if (menu == null) { failures.Add("no hay MainMenu"); yield break; }
+            NetSession.CreateNetworkManager(); // el NetworkManager de la sesion (singleton) tiene que existir antes que el anfitrion de prueba
+            host = NetSession.CreateNetworkManager("NM_Host", false);
+            if (host == null) { failures.Add("sin avatar de red"); yield break; }
+            host.GetComponent<UnityTransport>().SetConnectionData("127.0.0.1", Port, "0.0.0.0");
+            Check(host.StartHost(), "el anfitrion inicia");
+            yield return 0.5f;
+            if (UI.MainMenu.IsActive) menu.EnterSandbox();
+            yield return 0.5f;
+            Check(!UI.MainMenu.IsActive, "se empieza jugando");
+
+            var session = NetSession.Instance;
+            Check(session.StartDirectClient("127.0.0.1", Port), "el cliente de la sesion arranca");
+            float limit = Time.realtimeSinceStartup + 10f;
+            while (Time.realtimeSinceStartup < limit && !(NetworkManager.Singleton != null && NetworkManager.Singleton.IsConnectedClient)) yield return 0.1f;
+            Check(NetworkManager.Singleton != null && NetworkManager.Singleton.IsConnectedClient, "el cliente se conecta");
+            yield return 1f;
+
+            // 1) el anfitrion se va: el cliente vuelve al menu con aviso
+            host.Shutdown();
+            limit = Time.realtimeSinceStartup + 8f;
+            while (Time.realtimeSinceStartup < limit && session.State != NetState.Failed) yield return 0.1f;
+            Check(session.State == NetState.Failed, $"el cliente detecta que el anfitrion se fue (estado={session.State})");
+            yield return 1f;
+            Check(UI.MainMenu.IsActive, "al perder la sala se vuelve al menu");
+            Check(!string.IsNullOrEmpty(session.LastError), "hay aviso de la causa: " + session.LastError);
+            Check(PlayerRegistry.Players.Count(p => p != null && !p.IsLocal) == 0, "no quedan jugadores remotos fantasma");
+
+            // 2) volver al menu desde el juego saca de la sala
+            UnityEngine.Object.Destroy(host.gameObject); host = null;
+            yield return 0.3f;
+            var host2 = NetSession.CreateNetworkManager("NM_Host2", false);
+            host2.GetComponent<UnityTransport>().SetConnectionData("127.0.0.1", Port, "0.0.0.0");
+            host = host2;
+            Check(host.StartHost(), "segundo anfitrion inicia");
+            yield return 0.5f;
+            menu.EnterSandbox();
+            yield return 0.5f;
+            Check(session.StartDirectClient("127.0.0.1", Port), "el cliente se une otra vez");
+            limit = Time.realtimeSinceStartup + 10f;
+            while (Time.realtimeSinceStartup < limit && !session.IsConnected) yield return 0.1f;
+            yield return 1f;
+            Check(session.IsConnected, "conectado de nuevo");
+            menu.ShowMenu();
+            yield return 1.5f;
+            Check(session.State == NetState.Offline, $"volver al menu sale de la sala (estado={session.State})");
+            Check(NetworkManager.Singleton == null || !NetworkManager.Singleton.IsListening, "el NetworkManager del cliente se apaga");
+            menu.EnterSandbox();
         }
 
         private static IEnumerator ProbeRelay()

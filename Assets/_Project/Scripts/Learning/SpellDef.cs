@@ -78,6 +78,32 @@ namespace SpellSimulator.Learning
                 if (seen.Add(Signs[i].Id)) yield return Signs[i].Id;
         }
 
+        /// <summary>Escribe el hechizo con el mismo esquema que <see cref="FromJson"/> (trazos explicitos incluidos).</summary>
+        public string ToJson()
+        {
+            var root = new JObject
+            {
+                ["id"] = Id, ["name"] = Name, ["description"] = Description, ["howTo"] = HowTo, ["hint"] = Hint,
+                ["element"] = Element, ["origin"] = Origin, ["difficulty"] = Difficulty, ["book"] = Book, ["sigil"] = Sigil,
+                ["ring"] = new JObject { ["gapDeg"] = GapDeg },
+            };
+            var signs = new JArray();
+            foreach (SpellSign s in Signs) signs.Add(new JObject { ["id"] = s.Id, ["angle"] = s.AngleDeg, ["turn"] = s.TurnDeg });
+            root["signs"] = signs;
+            if (Strokes != null)
+            {
+                var strokes = new JArray();
+                foreach (List<Vector2> stroke in Strokes)
+                {
+                    var pts = new JArray();
+                    foreach (Vector2 p in stroke) pts.Add(new JArray(Math.Round(p.x, 4), Math.Round(p.y, 4)));
+                    strokes.Add(pts);
+                }
+                root["strokes"] = strokes;
+            }
+            return root.ToString();
+        }
+
         /// <summary>Lee un hechizo. Lanza si el JSON es invalido o falta id/nombre.</summary>
         public static SpellDef FromJson(string json)
         {

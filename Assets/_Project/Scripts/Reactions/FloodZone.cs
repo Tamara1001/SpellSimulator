@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Interfaces;
@@ -29,6 +30,19 @@ namespace SpellSimulator.Reactions
         private static readonly Exposure Immersion = new Exposure { Heat = -4f, Wet = 3f };
 
         public static int ActiveCount => zones.Count;
+        public static IReadOnlyList<FloodZone> Zones => zones;
+        /// <summary>Se creo una zona / se congelo una zona (en red, el anfitrion lo anuncia a los clientes).</summary>
+        public static event Action<FloodZone> Spawned;
+        public static event Action<FloodZone, float> Frozen;
+        private static int nextNetId = 1;
+
+        /// <summary>Identificador compartido en red (lo asigna el anfitrion; los clientes copian el suyo).</summary>
+        public int NetId { get; set; }
+        public Vector3 Ground => new Vector3(transform.position.x, groundY, transform.position.z);
+        public float Size => halfSize * 2f;
+        public float Life => life;
+        public float Delay => startDelay;
+        public float Age => age;
 
         private readonly Rigidbody[] bodies = new Rigidbody[MaxBodies];
         private readonly Collider[] bodyColliders = new Collider[MaxBodies];
@@ -48,7 +62,11 @@ namespace SpellSimulator.Reactions
 
         /// <summary>Crea una zona apoyada en <paramref name="ground"/>, de lado <paramref name="size"/> m, que dura <paramref name="seconds"/>.</summary>
         public static FloodZone Create(Vector3 ground, float size, float seconds, float delay, ElementLook look)
+            => Create(ground, size, seconds, delay, look != null ? look.material : null, 0f);
+
+        public static FloodZone Create(Vector3 ground, float size, float seconds, float delay, Material material, float elapsed)
         {
+            if (Net.NetCast.IsClientOnly && !Net.NetEffectsSync.Applying) return null; // en red solo el anfitrion crea zonas; los clientes reciben el aviso
             zones.RemoveAll(z => z == null);
             while (zones.Count >= MaxZones)
             {
@@ -73,11 +91,14 @@ namespace SpellSimulator.Reactions
             zone.groundY = ground.y;
             zone.life = seconds;
             zone.startDelay = delay;
-            var disc = WaterMeshes.CreateDisc("Superficie", go.transform, look != null ? look.material : null);
+            zone.age = Mathf.Max(0f, elapsed);
+            zone.NetId = nextNetId++;
+            var disc = WaterMeshes.CreateDisc("Superficie", go.transform, material);
             disc.gameObject.layer = 2;
             zone.surface = disc.transform;
             zone.surface.localScale = Vector3.zero;
             zones.Add(zone);
+            Spawned?.Invoke(zone);
             return zone;
         }
 
@@ -106,9 +127,13 @@ namespace SpellSimulator.Reactions
         private void OnDestroy() => zones.Remove(this);
         private void OnWorldReset() => Destroy(gameObject);
 
+        /// <summary>Cliente: copia que el anfitrion congelo la zona (pausa el drenaje; la placa de hielo llega aparte).</summary>
+        public void NetFreeze(float seconds) => frozenUntil = Mathf.Max(frozenUntil, Time.time + seconds);
+
         public bool Freeze(Vector3 center, float radius, float seconds)
         {
             if (level <= 0.05f || seconds <= 0f) return false;
+            if (Net.NetCast.IsClientOnly && !Net.NetEffectsSync.Applying) return false;
             Vector3 c = transform.position;
             float dx = Mathf.Max(0f, Mathf.Abs(center.x - c.x) - halfSize);
             float dz = Mathf.Max(0f, Mathf.Abs(center.z - c.z) - halfSize);
@@ -120,6 +145,7 @@ namespace SpellSimulator.Reactions
             {
                 Vector3 top = new Vector3(c.x, groundY + level * Depth, c.z);
                 IceSheet.Create(top, halfSize, halfSize, IceSheet.DefaultThickness, seconds);
+                Frozen?.Invoke(this, seconds);
             }
             return true;
         }
@@ -212,6 +238,6 @@ namespace SpellSimulator.Reactions
         }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => zones.Clear();
+        private static void ResetStatics() { zones.Clear(); nextNetId = 1; }
     }
 }

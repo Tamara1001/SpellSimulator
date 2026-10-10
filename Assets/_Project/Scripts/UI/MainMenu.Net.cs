@@ -11,11 +11,14 @@ namespace SpellSimulator.UI
     public partial class MainMenu
     {
         private VisualElement netPanel;
-        private Button multiplayer, netHost, netJoin, netLeave, netBack;
+        private Button multiplayer, netHost, netJoin, netLeave, netBack, netReconnect;
         private TextField netName, netCode;
+        private Toggle netInk;
         private Label netStatus, multiplayerSub;
         private float netRevealAt = -1f, netHideAt = -1f;
         private bool netBusy;
+        private bool duelIntent; // la hoja se abrio desde "Modo Duelo": la sala que se cree es un duelo
+        private bool netStarted; // el usuario apreto Crear sala / Unirse: al conectar se entra solo al juego
 
         private void BindNet()
         {
@@ -26,24 +29,30 @@ namespace SpellSimulator.UI
             netJoin = menu.Q<Button>("net-join");
             netLeave = menu.Q<Button>("net-leave");
             netBack = menu.Q<Button>("net-back");
+            netReconnect = menu.Q<Button>("net-reconnect");
             netName = menu.Q<TextField>("net-name");
+            netInk = menu.Q<Toggle>("net-ink");
             netCode = menu.Q<TextField>("net-code");
             netStatus = menu.Q<Label>("net-status");
 
-            multiplayer.clicked += OpenNet;
+            multiplayer.clicked += () => { duelIntent = false; OpenNet(); };
             netBack.clicked += CloseNet;
+            if (netInk != null) netInk.RegisterValueChangedCallback(e => NetCast.CoopInk = e.newValue);
             netHost.clicked += HostClicked;
             netJoin.clicked += JoinClicked;
             netLeave.clicked += LeaveClicked;
+            netReconnect.clicked += ReconnectClicked;
             menu.Q("net-backdrop").RegisterCallback<ClickEvent>(_ => CloseNet());
             netCode.RegisterValueChangedCallback(e =>
             {
                 string up = e.newValue.ToUpperInvariant();
                 if (up != e.newValue) netCode.SetValueWithoutNotify(up);
             });
-            foreach (var b in new[] { netHost, netJoin, netLeave, netBack })
+            foreach (var b in new[] { netHost, netJoin, netLeave, netBack, netReconnect })
                 b.RegisterCallback<PointerEnterEvent>(_ => { if (b.enabledSelf) b.Focus(); });
         }
+
+        public void OpenDuel() { duelIntent = true; OpenNet(); }
 
         public void OpenNet()
         {
@@ -90,7 +99,9 @@ namespace SpellSimulator.UI
             bool connected = s != null && s.IsConnected;
             bool connecting = s != null && s.State == NetState.Connecting;
             netBusy = connecting;
+            if (connected && netStarted && state == State.Net) { EnterGameFromNet(); return; }
 
+            if (netInk != null) netInk.style.display = connected || duelIntent ? DisplayStyle.None : DisplayStyle.Flex;
             netHost.style.display = connected ? DisplayStyle.None : DisplayStyle.Flex;
             netJoin.style.display = connected ? DisplayStyle.None : DisplayStyle.Flex;
             netCode.style.display = connected ? DisplayStyle.None : DisplayStyle.Flex;
@@ -98,6 +109,9 @@ namespace SpellSimulator.UI
             netHost.SetEnabled(!connecting);
             netJoin.SetEnabled(!connecting);
             netLeave.style.display = connected ? DisplayStyle.Flex : DisplayStyle.None;
+            bool canReconnect = s != null && s.CanReconnect && !connected && !connecting;
+            netReconnect.style.display = canReconnect ? DisplayStyle.Flex : DisplayStyle.None;
+            if (canReconnect) netReconnect.text = "Reconectar a " + s.LastJoinCode;
 
             if (connected)
             {
@@ -108,11 +122,11 @@ namespace SpellSimulator.UI
             else if (s != null && s.State == NetState.Failed)
             {
                 netStatus.text = "No se pudo conectar: " + s.LastError;
-                multiplayerSub.text = "Crear una sala o unirse con un código";
+                multiplayerSub.text = "Sin conexión: " + s.LastError;
             }
             else
             {
-                netStatus.text = "";
+                netStatus.text = duelIntent ? "Duelo 1 contra 1 al mejor de 3: creá la sala y pasale el código a tu rival." : "";
                 multiplayerSub.text = "Crear una sala o unirse con un código";
             }
         }
@@ -123,10 +137,14 @@ namespace SpellSimulator.UI
         {
             if (netBusy) return;
             SaveName();
+            NetDuel.WantDuel = duelIntent;
+            NetCast.CoopInk = !duelIntent && netInk != null && netInk.value;
             NetSession s = NetSession.Instance;
             s.Changed -= RefreshNetView; s.Changed += RefreshNetView;
+            netStarted = true;
             bool ok = await s.HostAsync();
-            if (ok) EnterGameFromNet();
+            if (!ok) netStarted = false;
+            else if (state == State.Net) EnterGameFromNet();
         }
 
         private async void JoinClicked()
@@ -136,18 +154,47 @@ namespace SpellSimulator.UI
             SaveName();
             NetSession s = NetSession.Instance;
             s.Changed -= RefreshNetView; s.Changed += RefreshNetView;
+            netStarted = true;
             bool ok = await s.JoinAsync(netCode.value);
-            if (ok) EnterGameFromNet();
+            if (!ok) netStarted = false;
+            else if (state == State.Net) EnterGameFromNet();
         }
 
         private void LeaveClicked()
         {
             if (NetSession.Exists) NetSession.Instance.Leave();
+            ResetWorldAfterNet();
+        }
+
+        private void ReconnectClicked()
+        {
+            if (netBusy || !NetSession.Exists) return;
+            string code = NetSession.Instance.LastJoinCode;
+            if (string.IsNullOrEmpty(code)) return;
+            netCode.SetValueWithoutNotify(code);
+            JoinClicked();
+        }
+
+        /// <summary>Al salir de una sala (o perderla) el mundo vuelve a su estado inicial: no hay guardado de partida.</summary>
+        public static void ResetWorldAfterNet()
+        {
+            var world = Object.FindFirstObjectByType<Reactions.MagicWorld>();
+            if (world != null) world.ResetWorld();
+        }
+
+        /// <summary>Se perdio la conexion (el anfitrion se fue o cerro la sala): vuelve al menu y muestra el aviso en la hoja.</summary>
+        private void OnNetLost(string reason)
+        {
+            netStarted = false;
+            ResetWorldAfterNet();
+            if (state == State.Playing) ShowMenu();
+            if (state == State.Menu) OpenNet();
         }
 
         private void EnterGameFromNet()
         {
             if (state != State.Net) return;
+            netStarted = false;
             if (NetSession.Exists) NetSession.Instance.Changed -= RefreshNetView;
             HideNetNow();
             state = State.Menu;

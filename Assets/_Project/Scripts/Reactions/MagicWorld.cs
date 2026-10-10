@@ -42,6 +42,7 @@ namespace SpellSimulator.Reactions
         private void Tick(float dt)
         {
             if (reactions == null) return;
+            if (Net.NetCast.IsClientOnly) return; // en red solo el anfitrion simula las reacciones; los clientes reciben el estado (NetReactiveSync)
             ExposeToSpells();
             ExposeToWater();
             SpreadFire();
@@ -59,6 +60,9 @@ namespace SpellSimulator.Reactions
             }
         }
 
+        /// <summary>Signo Crush: golpe extra (por segundo) que rompe lo fragil que alcanza el hechizo, del elemento que sea.</summary>
+        private static readonly Exposure CrushExposure = new Exposure { Impact = 4f };
+
         private void ExposeToSpells()
         {
             var fields = MagicField.Active;
@@ -73,6 +77,7 @@ namespace SpellSimulator.Reactions
                     float intensity = field.ExposureAt(reactive.WorldBounds.center);
                     if (intensity <= 0f) continue;
                     reactive.AddExposure(reactions.For(field.Element, reactive.Profile), intensity);
+                    if (field.CrushPower > 0f) reactive.AddExposure(CrushExposure, intensity * Mathf.Min(field.CrushPower, 3f));
                 }
             }
         }
@@ -93,7 +98,7 @@ namespace SpellSimulator.Reactions
                 {
                     var field = fields[f];
                     if (field.Source != null && field.Source == health.gameObject) continue;
-                    total += DamageModel.SpellDamage(damage.values, field.Element, field.ExposureAt(center), dt);
+                    total += DamageModel.SpellDamage(damage.values, field.Element, field.ExposureAt(center), dt) * field.DamageMultiplier;
                 }
                 var reactive = health.GetComponent<ElementReactive>();
                 total += DamageModel.BurnDamage(damage.values, reactive != null && reactive.State.Burning, dt);
@@ -159,6 +164,9 @@ namespace SpellSimulator.Reactions
             }
         }
 
+        /// <summary>Red: un cliente reproduce los efectos (llamas, romperse) de un cambio de estado que mando el anfitrion.</summary>
+        public void NetHandle(ElementReactive reactive, ReactionEvents events) => Handle(reactive, events);
+
         private void Handle(ElementReactive reactive, ReactionEvents events)
         {
             if ((events & ReactionEvents.Ignited) != 0)
@@ -198,6 +206,8 @@ namespace SpellSimulator.Reactions
         /// <summary>Reinicio del mundo: objetos sanos y en su lugar, sin fragmentos ni hechizos.</summary>
         public void ResetWorld()
         {
+            // En red un cliente no reinicia por su cuenta: se lo pide al anfitrion, que reinicia a todos.
+            if (Net.NetWorld.InterceptReset()) return;
             WorldReset?.Invoke();
             if (output != null) output.ClearAll();
             Shatter.ClearAll();

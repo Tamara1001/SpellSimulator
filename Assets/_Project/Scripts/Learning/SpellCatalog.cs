@@ -46,6 +46,24 @@ namespace SpellSimulator.Learning
             return catalog;
         }
 
+        /// <summary>Agrega un hechizo propio del jugador (al final; siempre desbloqueado). False si el id ya existe.</summary>
+        public bool AddPlayer(SpellDef def)
+        {
+            if (def == null || byId.ContainsKey(def.Id)) return false;
+            byId[def.Id] = def;
+            spells.Add(def);
+            return true;
+        }
+
+        /// <summary>Quita un hechizo propio (los del proyecto no se pueden quitar).</summary>
+        public bool RemovePlayer(string id)
+        {
+            if (!byId.TryGetValue(id ?? "", out SpellDef def) || def.Origin != SpellLibrary.PlayerOrigin) return false;
+            byId.Remove(id);
+            spells.Remove(def);
+            return true;
+        }
+
         public SpellDef Get(string id) => id != null && byId.TryGetValue(id, out var s) ? s : null;
 
         /// <summary>True si es inicial o su libro fue leido. bookRead: id de libro -> leido.</summary>

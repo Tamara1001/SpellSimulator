@@ -30,6 +30,9 @@ namespace SpellSimulator.Reactions
 
         [SerializeField, Tooltip("Renderer de la superficie (material StylizedWater).")]
         private Renderer surface;
+
+        /// <summary>Material de la superficie (para las zonas inundadas que un cliente arma sin haber lanzado agua).</summary>
+        public Material SurfaceMaterial => surface != null ? surface.sharedMaterial : null;
         [SerializeField, Tooltip("Looks de los elementos (salpicaduras, vapor).")]
         private SpellOutputController output;
 

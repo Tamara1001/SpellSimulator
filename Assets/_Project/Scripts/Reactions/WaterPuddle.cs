@@ -115,9 +115,23 @@ namespace SpellSimulator.Reactions
             transform.position = position;
         }
 
+        /// <summary>Cliente: copia el estado del charco del anfitrion (activo, lugar, volumen, congelado).</summary>
+        internal void NetApply(bool active, Vector3 position, float liters, bool frozen)
+        {
+            if (!active) { if (IsActive) Deactivate(); return; }
+            if (!IsActive) { Activate(position, 0f, 0f); }
+            transform.position = position;
+            Liters = Mathf.Max(0f, liters);
+            Radius = WaterMath.PuddleRadius(Liters);
+            RefreshScale();
+            frozenUntil = frozen ? Time.time + 3600f : 0f;
+            SetFrozenVisual(frozen);
+        }
+
         public bool Freeze(Vector3 center, float radius, float seconds)
         {
             if (!IsActive || Liters <= 0f || seconds <= 0f) return false;
+            if (Net.NetCast.IsClientOnly) return false; // en red el anfitrion decide el hielo
             Vector3 p = transform.position;
             float dx = p.x - center.x, dz = p.z - center.z;
             float reach = radius + Radius;

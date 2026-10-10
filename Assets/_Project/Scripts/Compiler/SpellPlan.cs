@@ -71,12 +71,20 @@ namespace SpellSimulator.Compiler
         /// <summary>Dispersion como fuga lenta (mas larga, menos intensa) en vez de rafaga (R-08).</summary>
         public bool Leak;
         public float Quality;
+        /// <summary>
+        /// Signos con efecto propio (suma de sus largos, en radios de anillo; 0 = no hay). Crush destruye, Collection reune, Billow vuelve
+        /// livianos (nube), Repetition rebobina, Weave trenza (suma giro al remolino) y Directed apunta (tierra: lanza la roca). Ver SignEffects.
+        /// </summary>
+        public float Crush, Collection, Billow, Repetition, Weave, Directed;
         public PlanPrimitive Primitives;
         public readonly List<string> Notes = new List<string>();
         /// <summary>Lectura de cada signo que entro al plan (para diagnostico y overlays).</summary>
         public readonly List<SignReading> Signs = new List<SignReading>();
 
         public static SpellPlan Inert() => new SpellPlan { Primitives = PlanPrimitive.Burst };
+
+        /// <summary>True si algun signo con efecto propio (crush, collection, billowing, repetition) esta presente.</summary>
+        public bool HasAreaSigns => Crush > 0f || Collection > 0f || Billow > 0f || Repetition > 0f;
 
         public bool Has(PlanPrimitive primitive) => (Primitives & primitive) != 0;
     }

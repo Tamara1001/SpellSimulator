@@ -15,6 +15,31 @@ namespace SpellSimulator.Output
         private Vector3 basePos;
         private float radius, seconds, t, phase;
         private Vector3 spinAxis;
+        private bool replica;
+        private bool hover;
+        private Vector3 launch;
+        private bool hasLaunch;
+
+        /// <summary>Levitacion: al terminar de formarse queda flotando (cinematica, sin gravedad) hasta que alguien la agarre.</summary>
+        public void Hover() => hover = true;
+
+        /// <summary>Region: al terminar de formarse sale con esta velocidad.</summary>
+        public void Launch(Vector3 velocity)
+        {
+            launch = velocity;
+            hasLaunch = true;
+        }
+
+        /// <summary>Copia de red: solo crece de escala (la pose, con su temblor, la manda el anfitrion) y al terminar activa el collider; sigue cinematica.</summary>
+        public void InitReplica(Collider collider, float rockRadius, float formSeconds, float elapsed)
+        {
+            col = collider;
+            radius = rockRadius;
+            seconds = Mathf.Max(0.05f, formSeconds);
+            t = Mathf.Clamp01(elapsed / seconds);
+            replica = true;
+            transform.localScale = Vector3.one * (radius * Mathf.SmoothStep(0f, 1f, t));
+        }
 
         public void Init(Rigidbody body, Collider collider, float rockRadius, float formSeconds)
         {
@@ -30,6 +55,13 @@ namespace SpellSimulator.Output
 
         private void Update()
         {
+            if (replica)
+            {
+                t += Time.deltaTime / seconds;
+                transform.localScale = Vector3.one * (radius * Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t)));
+                if (t >= 1f) { col.enabled = true; Destroy(this); }
+                return;
+            }
             t += Time.deltaTime / seconds;
             float k = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t));
             transform.localScale = Vector3.one * (radius * k);
@@ -40,8 +72,10 @@ namespace SpellSimulator.Output
 
             transform.localScale = Vector3.one * radius;
             col.enabled = true;
+            if (hover) { Destroy(this); return; } // queda flotando
             rb.isKinematic = false;
             rb.useGravity = true;
+            if (hasLaunch) rb.linearVelocity = launch;
             rb.WakeUp();
             Destroy(this);
         }

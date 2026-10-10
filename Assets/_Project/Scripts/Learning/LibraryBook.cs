@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using UnityEngine;
+using SpellSimulator.Casting;
 using SpellSimulator.DebugTools;
 using SpellSimulator.Interfaces;
 using SpellSimulator.Player;
@@ -86,6 +87,7 @@ namespace SpellSimulator.Learning
         // ---- Brillo sutil para que se note que se puede leer: una luz calida que late despacio.
         private void Awake()
         {
+            if (!TryGetComponent<World.Indestructible>(out _)) gameObject.AddComponent<World.Indestructible>(); // los libros de los tutoriales no se rompen
             var go = new GameObject("BrilloLibro");
             go.transform.SetParent(transform, false);
             go.transform.localPosition = new Vector3(0f, 0.18f, 0f);
@@ -147,10 +149,13 @@ namespace SpellSimulator.Learning
             var contents = new StringBuilder();
             foreach (var g in info.Glyphs) contents.Append("·  ").Append(lore.Name(g)).Append('\n');
             foreach (var id in info.Spells) contents.Append("·  ").Append(SpellName(id)).Append('\n');
+            foreach (var id in info.Portals) contents.Append("·  ").Append(PortalName(id)).Append('\n');
             pages.Add(new UI.ReaderPage
             {
                 CoverTitle = info.Title,
-                CoverSubtitle = $"Libro {Number} de {Total}  ·  " + (info.Spells.Count > 0
+                CoverSubtitle = $"Libro {Number} de {Total}  ·  " + (info.Portals.Count > 0
+                    ? $"{info.Portals.Count} caminos anotados"
+                    : info.Spells.Count > 0
                     ? $"{info.Spells.Count} hechizos explicados"
                     : info.Glyphs.Count == 1 ? "un glifo explicado" : $"{info.Glyphs.Count} glifos explicados"),
                 Kicker = "Contenido",
@@ -175,6 +180,29 @@ namespace SpellSimulator.Learning
                     Heading = SpellName(id),
                     Body = spell != null ? $"{spell.Description}\n\n{spell.HowTo}" : "",
                 });
+            }
+            foreach (var id in info.Portals)
+            {
+                PortalDefinition portal = PortalKnowledge.Shared?.Find(id);
+                pages.Add(new UI.ReaderPage
+                {
+                    Kicker = "Camino",
+                    Heading = PortalName(id),
+                    Body = portal == null ? "" : "Para llegar hasta acá, escribí en la placa de otro portal:\n\n" + IdentityText(portal) +
+                        "\n\nEl sigilo va al centro del sello y los signos sobre el anillo.",
+                });
+            }
+            if (info.Portals.Count > 0)
+            {
+                pages.Add(new UI.ReaderPage
+                {
+                    CoverTitle = "Colofón",
+                    CoverSubtitle = "Fin del tratado",
+                    Kicker = "Para anotar",
+                    Heading = state.HasRead(bookId) ? "Nada nuevo en estas páginas" : "Anotá los caminos en tu grimorio",
+                    Body = "Al aprender este conocimiento, los caminos quedan anotados en la sección Portales de tu grimorio (T). Es solo una guía: cualquier combinación se puede probar.",
+                });
+                return pages;
             }
             if (info.Spells.Count > 0)
             {
@@ -207,6 +235,18 @@ namespace SpellSimulator.Learning
 
         private static string SpellName(string id) => SpellCatalog.Shared?.Get(id)?.Name ?? id;
 
+        private static string PortalName(string id) => PortalKnowledge.Shared?.Find(id)?.DisplayName ?? id;
+
+        /// <summary>"Sigilo + signo + signo" con los nombres del grimorio.</summary>
+        internal static string IdentityText(PortalDefinition portal)
+        {
+            var lore = Discovery.Instance != null ? Discovery.Instance.Lore : null;
+            string sigil = lore != null ? lore.Name(portal.Identity.Sigil) : portal.Identity.Sigil;
+            var signs = new List<string>();
+            foreach (string s in portal.Identity.Signs) signs.Add(lore != null ? lore.Name(s) : s);
+            return sigil + "  +  " + string.Join("  +  ", signs);
+        }
+
         private void Learn()
         {
             var info = Info;
@@ -215,10 +255,13 @@ namespace SpellSimulator.Learning
             int learned = Discovery.Instance.Read(info);
             // Libro de hechizos: aprender = leerlo (el grimorio desbloquea sus hechizos por libro leido).
             if (info.Spells.Count > 0) learned = wasRead ? 0 : info.Spells.Count;
-            var names = info.Spells.Count > 0
+            if (info.Portals.Count > 0) learned = wasRead ? 0 : info.Portals.Count;
+            var names = info.Portals.Count > 0
+                ? string.Join(", ", info.Portals.ConvertAll(PortalName))
+                : info.Spells.Count > 0
                 ? string.Join(", ", info.Spells.ConvertAll(SpellName))
                 : string.Join(", ", info.Glyphs.ConvertAll(g => Discovery.Instance.Lore.Name(g)));
-            string where = info.Spells.Count > 0 ? "la seccion Hechizos del grimorio (T)" : "el grimorio (T)";
+            string where = info.Portals.Count > 0 ? "la seccion Portales del grimorio (T)" : info.Spells.Count > 0 ? "la seccion Hechizos del grimorio (T)" : "el grimorio (T)";
             DiagnosticBus.OnDiagnosticsUpdated?.Invoke(learned > 0
                 ? $"<b>[Libro] {info.Title}</b>\nAprendiste: {names}. Abri {where} para verlos."
                 : $"<b>[Libro] {info.Title}</b>\nYa conocias: {names}.");

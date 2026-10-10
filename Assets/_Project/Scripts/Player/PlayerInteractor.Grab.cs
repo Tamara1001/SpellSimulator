@@ -28,6 +28,8 @@ namespace SpellSimulator.Player
         public bool TryGrab(GrabRequest request)
         {
             if (request.ownerId != LocalOwnerId || request.target == null) return false;
+            // En red: lo que ya sostiene otro jugador se rechaza al instante; si no, el cuerpo queda listo para simularse aca.
+            if (!Net.NetWorld.AllowLocalGrab(request.target)) return false;
             if (!request.target.TryGetComponent(out IInteractable interactable)) return false;
             if (interactable is PhysicalTool || interactable is Stamp) return PickUpToHotbar(interactable);
             return GrabSecondary(interactable, request.distance);
@@ -47,6 +49,15 @@ namespace SpellSimulator.Player
             if (pin) hand.TryGetComponent(out pinnable);
             DropHandSecondary();
             if (pinnable != null) pinnable.Pin();
+        }
+
+        /// <summary>Suelta lo que sostiene el jugador si es ese objeto (el servidor lo rechazo o se lo dio a otro). Sin avisar a nadie.</summary>
+        public void ForceRelease(GameObject go)
+        {
+            if (go == null) return;
+            if (IsDragging && mover.HeldBody != null && mover.HeldBody.gameObject == go) { mover.End(false); return; }
+            if (inventory.HeldMain == go) { DropMain(false, Vector3.zero); return; }
+            if (inventory.HandSecondary == go) DropHandSecondary();
         }
 
         /// <summary>Pedido de arrojar con esa velocidad: lo arrastrado, si no lo de la mano secundaria (VR), si no lo de la principal.</summary>

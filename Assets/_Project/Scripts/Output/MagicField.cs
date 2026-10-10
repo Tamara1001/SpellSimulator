@@ -29,6 +29,8 @@ namespace SpellSimulator.Output
         public const float MaxBurstDeltaV = 7f;
         /// <summary>Area de referencia: anillo de 0.3 m de radio.</summary>
         public const float ReferenceRadius = 0.3f;
+        /// <summary>Ajustes de potencia por elemento (prueba manual: el viento casi no empujaba, el agua poco y el fuego era excesivo).</summary>
+        public const float WindPower = 2.6f, WaterPower = 1.7f, FireReach = 0.7f;
 
         /// <summary>Campos vivos (para MagicWorld: reacciones de materiales).</summary>
         public static readonly List<MagicField> Active = new List<MagicField>();
@@ -46,6 +48,10 @@ namespace SpellSimulator.Output
         public bool HasIntake => plan != null && plan.Has(PlanPrimitive.Intake);
         /// <summary>Esfera que contiene todo el alcance del hechizo.</summary>
         public float ReachRadius { get; private set; }
+        /// <summary>Fuerza del signo Crush (0 = no hay): destruye estructuras (tierra), rompe lo fragil y suma dano.</summary>
+        public float CrushPower => plan != null ? plan.Crush : 0f;
+        /// <summary>Multiplicador del dano a seres vivos por el signo Crush.</summary>
+        public float DamageMultiplier => 1f + 0.5f * Mathf.Min(CrushPower, 3f);
 
         private SpellManifestation manifestation;
         private SpellIR spell;
@@ -56,6 +62,7 @@ namespace SpellSimulator.Output
         private float push;
         private float areaFactor;
         private bool burstApplied;
+        private bool signsApplied;
 
         // Viento: arrastre cuadratico (WindMath.Drag) en vez del acople lineal; la tinta poderosa lo potencia y alarga el cono.
         private bool isWind;
@@ -81,11 +88,13 @@ namespace SpellSimulator.Output
             isWind = compiled.element == ElementType.Wind;
             float inkBoost = isWind && compiled.inkPower > 0f ? compiled.inkPower : 1f;
             if (isWind) flowSpeed = Mathf.Min(flowSpeed * inkBoost, 30f);
-            windGain = push * Mathf.Sqrt(areaFactor) * Mathf.Lerp(0.6f, 1f, compiled.quality);
+            windGain = push * Mathf.Sqrt(areaFactor) * Mathf.Lerp(0.6f, 1f, compiled.quality) * WindPower;
             coneSpread = Mathf.Clamp01(compiled.spread);
-            ConeLength = frame.Scale * (4f + 10f * compiled.range) * inkBoost;
-            coupling = BaseCoupling * push * areaFactor * Mathf.Lerp(0.6f, 1f, compiled.quality);
-            ReachRadius = frame.Scale * Mathf.Max(4f + 10f * compiled.range, 6f) * inkBoost;
+            float elementReach = compiled.element == ElementType.Fire ? FireReach : 1f;
+            float elementCoupling = compiled.element == ElementType.Water ? WaterPower : 1f;
+            ConeLength = frame.Scale * (4f + 10f * compiled.range) * inkBoost * elementReach;
+            coupling = BaseCoupling * push * areaFactor * Mathf.Lerp(0.6f, 1f, compiled.quality) * elementCoupling;
+            ReachRadius = frame.Scale * Mathf.Max(4f + 10f * compiled.range, 6f) * inkBoost * elementReach;
         }
 
         /// <summary>Radio del chorro a una distancia axial. Viento: se abre como cono segun la dispersion (spread).</summary>
@@ -169,13 +178,84 @@ namespace SpellSimulator.Output
                 ApplyBurst();
             }
 
+            if (!signsApplied)
+            {
+                signsApplied = true;
+                if (plan.Repetition > 0f) ApplyRepetition();
+                if (plan.Crush > 0f) ApplyCrush();
+            }
+
             if (!manifestation.InBody) return;
             float envelope = manifestation.Envelope(t);
+            if (plan.Collection > 0f) ApplyCollection(envelope);
+            if (plan.Billow > 0f) ApplyBillow(envelope);
             if (plan.Has(PlanPrimitive.Jet)) ApplyJet(envelope);
             if (plan.Has(PlanPrimitive.Fan)) ApplyFan(envelope);
             if (plan.Has(PlanPrimitive.Vortex)) ApplyVortex(envelope);
             if (plan.Has(PlanPrimitive.Hold)) ApplyHold(envelope);
             if (plan.Has(PlanPrimitive.Intake)) ApplyIntake(envelope);
+        }
+
+        // ---------------------------------------------------------------- signos con efecto propio (crush, repetition, collection, billowing)
+
+        private static bool IsPlayerBody(Rigidbody rb) => rb.GetComponent<Player.PlayerMovement>() != null;
+
+        /// <summary>Esfera delante del sello donde actuan los signos de area (crece con el anillo y con el largo de los signos).</summary>
+        private float AreaRadius(float strength) => Mathf.Max(frame.Scale, 0.3f) * (2.2f + 1.2f * Mathf.Min(strength, 3f));
+
+        /// <summary>Wall Breaker: la tierra abre un hueco en las estructuras fijas (no cerca de libros ni portales) y dispersa escombros.</summary>
+        private void ApplyCrush()
+        {
+            if (spell.element != ElementType.Earth) return; // en los demas elementos solo suma dano y rompe objetos reactivos (MagicWorld)
+            float radius = AreaRadius(plan.Crush);
+            Vector3 center = frame.Origin + frame.Outward * radius * 0.7f + Vector3.up * (frame.Normal.y > 0.5f ? radius * 0.3f : 0f);
+            if (Net.NetCast.IsClientOnly) return; // en red solo el anfitrion corta; los clientes reciben el corte (NetEffectsSync)
+            int removed = World.MeshBreaker.Break(center, radius);
+            if (removed > 0) Debug.Log($"[Romper] hueco de {radius:F1} m, {removed} triangulos");
+        }
+
+        /// <summary>Repetition: lo que toca vuelve a su estado anterior (lugar de origen, sin quemar ni mojar).</summary>
+        private void ApplyRepetition()
+        {
+            if (Net.NetCast.IsClientOnly) return;
+            int n = Gather(frame.Origin + frame.Outward * AreaRadius(plan.Repetition) * 0.5f, AreaRadius(plan.Repetition));
+            for (int i = 0; i < n; i++)
+            {
+                var rb = bodies[i];
+                if (IsPlayerBody(rb)) continue;
+                if (rb.TryGetComponent(out World.Respawnable respawnable)) respawnable.Respawn("repeticion (rebobinado)");
+                if (rb.TryGetComponent(out Reactions.ElementReactive reactive)) reactive.ResetState();
+            }
+        }
+
+        /// <summary>Collection: reune lo suelto alrededor y arriba del sello en un punto (resorte amortiguado que ademas sostiene el peso).</summary>
+        private void ApplyCollection(float envelope)
+        {
+            float radius = AreaRadius(plan.Collection);
+            Vector3 point = frame.Origin + frame.Normal * frame.Scale * 0.9f;
+            int n = Gather(point, radius);
+            for (int i = 0; i < n; i++)
+            {
+                var rb = bodies[i];
+                if (IsPlayerBody(rb) || rb.mass > 60f) continue;
+                Vector3 a = (point - rb.worldCenterOfMass) * 10f - rb.linearVelocity * 3f;
+                if (rb.useGravity) a -= Physics.gravity;
+                rb.AddForce(Vector3.ClampMagnitude(a * envelope, MaxAcceleration), ForceMode.Acceleration);
+            }
+        }
+
+        /// <summary>Billowing: las cosas sueltas se vuelven livianas como una nube (casi sin gravedad y con mucho roce) mientras dura el cuerpo.</summary>
+        private void ApplyBillow(float envelope)
+        {
+            float radius = AreaRadius(plan.Billow);
+            int n = Gather(frame.Origin + frame.Outward * radius * 0.5f, radius);
+            for (int i = 0; i < n; i++)
+            {
+                var rb = bodies[i];
+                if (rb.mass > 250f) continue;
+                if (rb.useGravity) rb.AddForce(-Physics.gravity * 0.85f * envelope, ForceMode.Acceleration);
+                rb.AddForce(-rb.linearVelocity * 1.8f * envelope, ForceMode.Acceleration);
+            }
         }
 
         private int Gather(Vector3 center, float radius)

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -17,10 +18,19 @@ namespace SpellSimulator.Reactions
 
         private static readonly List<IceSheet> all = new List<IceSheet>();
         public static int ActiveCount => all.Count;
+        public static IReadOnlyList<IceSheet> All => all;
+        /// <summary>Se creo una placa (en red, el anfitrion la anuncia a los clientes).</summary>
+        public static event Action<IceSheet> Spawned;
 
         private float meltAt;
         private float meltStart = -1f;
         private Vector3 fullScale;
+        public Vector3 Top { get; private set; }
+        public float HalfX { get; private set; }
+        public float HalfZ { get; private set; }
+        public float Thickness { get; private set; }
+        /// <summary>Segundos que le quedan antes de empezar a derretirse (0 si ya se derrite).</summary>
+        public float SecondsLeft => meltStart >= 0f ? 0f : Mathf.Max(0f, meltAt - Time.time);
 
         /// <summary>
         /// Crea una placa con la cara de arriba en <paramref name="top"/> y semiejes <paramref name="halfX"/> x <paramref name="halfZ"/> (m).
@@ -28,6 +38,7 @@ namespace SpellSimulator.Reactions
         public static IceSheet Create(Vector3 top, float halfX, float halfZ, float thickness, float seconds)
         {
             if (halfX <= 0.01f || halfZ <= 0.01f || seconds <= 0f) return null;
+            if (Net.NetCast.IsClientOnly && !Net.NetEffectsSync.Applying) return null; // en red solo el anfitrion crea hielo; los clientes reciben el aviso
             all.RemoveAll(s => s == null);
             if (all.Count >= MaxSheets) all[0].BeginMelt();
 
@@ -50,7 +61,9 @@ namespace SpellSimulator.Reactions
 
             sheet.fullScale = Vector3.one;
             sheet.meltAt = Time.time + seconds;
+            sheet.Top = top; sheet.HalfX = halfX; sheet.HalfZ = halfZ; sheet.Thickness = thickness;
             all.Add(sheet);
+            Spawned?.Invoke(sheet);
             return sheet;
         }
 
