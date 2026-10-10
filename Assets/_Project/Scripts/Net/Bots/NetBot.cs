@@ -8,6 +8,7 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.LowLevel;
 using SpellSimulator.Canvas;
 using SpellSimulator.Casting;
+using SpellSimulator.Combat;
 using SpellSimulator.Core;
 using SpellSimulator.Player;
 using SpellSimulator.World;
@@ -103,6 +104,7 @@ namespace SpellSimulator.Net.Bots
                 else if (options.Script == BotScript.Cast) yield return CastScenario();
                 else if (options.Script == BotScript.World) yield return WorldScenario();
                 else if (options.Script == BotScript.Portal) yield return PortalScenario();
+                else if (options.Script == BotScript.Duel) yield return DuelScenario();
                 else yield return Play(options.Seconds, c == cycles);
                 if (c < cycles)
                 {
@@ -301,6 +303,38 @@ namespace SpellSimulator.Net.Bots
             Note("REACT(final) " + world.Reactive.Describe());
             Note("CANVAS " + world.Canvases.Describe());
             DumpBodies(world);
+            yield return new WaitForSecondsRealtime(0.5f);
+        }
+
+        // ---------------------------------------------------------------- guion Duel (F5)
+
+        /// <summary>Rival del duelo: espera el estado del anfitrion y anota cada cambio de fase, la vida que ve y donde reaparece.</summary>
+        private IEnumerator DuelScenario()
+        {
+            long t0 = options.StartAtMs > 0 ? options.StartAtMs : NowMs();
+            float limit = Time.realtimeSinceStartup + 80f;
+            DuelPhase lastPhase = (DuelPhase)255;
+            int lastRound = -1;
+            float minOwn = 1f, minRival = 1f;
+            while (Time.realtimeSinceStartup < limit)
+            {
+                NetDuel duel = NetDuel.Active;
+                DuelMatch m = duel != null ? duel.Match : null;
+                if (m != null)
+                {
+                    int me = duel.LocalIndex;
+                    minOwn = Mathf.Min(minOwn, duel.Life(me)); minRival = Mathf.Min(minRival, duel.Life(1 - me));
+                    if (m.Phase != lastPhase || m.RoundNumber != lastRound)
+                    {
+                        lastPhase = m.Phase; lastRound = m.RoundNumber;
+                        Note($"FASE {m.Phase} ronda={m.RoundNumber} victorias={m.Wins[0]}-{m.Wins[1]} ganadorRonda={m.RoundWinner} ganador={m.Winner}");
+                        if (m.Phase == DuelPhase.Countdown) { yield return new WaitForSecondsRealtime(1f); Transform root = PlayerRegistry.Local != null ? PlayerRegistry.Local.Root : null; if (root != null) Note($"POS {root.position.x.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)} {root.position.z.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)}"); }
+                    }
+                    if (m.Over) { yield return new WaitForSecondsRealtime(1f); break; }
+                }
+                yield return null;
+            }
+            Note($"VIDA minima propia={minOwn.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)} rival={minRival.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)}");
             yield return new WaitForSecondsRealtime(0.5f);
         }
 

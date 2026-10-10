@@ -6,6 +6,15 @@ tags: [doc, changelog]
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
 
+## 2026-10-10 — F5 del multijugador (primer lote): Duelo 1 contra 1 en red
+
+- **Reglas puras** (`Combat/DuelMatch.cs`): `DuelRules` (2 rondas para ganar, cuenta atrás 3 s, ronda 90 s, pausa 4 s, tope 5 rondas) y `DuelMatch`, máquina de estados Countdown → Round → RoundEnd → MatchEnd; gana la ronda quien deja al otro en 0 o, al acabarse el tiempo, quien tiene más vida (empate = nadie suma); `Forfeit` si el rival se va. 8 tests EditMode (444 en total).
+- **Red** (`Net/World/NetDuel.cs`, integrado en `NetWorld`): solo el anfitrión (jugador 0) corre las reglas y el daño (`Health` agregado a su jugador y al avatar del rival, jugador 1; fuera de la ronda nadie pierde vida); los clientes reciben el estado a 10 Hz (`du.state`: fase, ronda, victorias, vidas) y la orden de reaparecer (`du.tp`). HUD IMGUI con ronda, victorias, tiempo, barras de vida y carteles de cuenta atrás / ronda / final. Arena provisoria: el duelo se juega donde está parado el anfitrión y los dos reaparecen a 9 m a cada lado.
+- **Menú:** «Modo Duelo» ya no es «próximamente»: abre la hoja de Multijugador con el aviso del duelo; la sala que crea el anfitrión es un duelo y arranca cuando entra el rival.
+- **Harness:** `Run Bots Duel (local)` (16/16): un bot entra de rival; el anfitrión mata a uno por ronda (1-0, 1-1, 2-1) y se comprueba que el rival ve las 3 rondas, el 1-1, el final con ganador 0, las vidas a 0 y su reaparición en el punto correcto.
+- Regresión: EditMode 444/444 y Play Smoke en verde.
+- **Falta de F5** (ver KI-122): daño real con hechizos entre jugadores sin probar a mano (la prueba usa daño directo), arena propia con coberturas y fuente de agua, tinta validada por el servidor y corrección del elemento declarado, compensación de latencia, IA (D2), prueba a mano con dos personas.
+
 ## 2026-10-10 — F4 del multijugador: suministros, portales y mundo reactivo
 
 - **Suministros y reciclaje** (`SupplyPoint`, `RecyclingStation`): solo el anfitrión repone y recicla; lo que crean (clones de plantillas de la escena) se replica con `NetSpawnKind.Clone` + `NetTemplates` (el cliente clona la misma plantilla en la misma pose; las runas recicladas conservan su dueño). Cualquier cuerpo que se destruye (reciclaje, expiración, tope de objetos) avisa a los clientes (`OnBodyDestroyed`). Los lienzos de los cuerpos creados en juego (papel, runas) se registran en el dibujo compartido (`NetCanvasSync.RegisterDynamic`, id derivado del id del cuerpo): se puede dibujar en el papel de suministro.

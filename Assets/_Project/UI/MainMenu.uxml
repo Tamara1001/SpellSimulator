@@ -41,9 +41,8 @@
                     <ui:VisualElement class="mm-gem" picking-mode="Ignore" />
                     <ui:VisualElement class="mm-button-text" picking-mode="Ignore">
                         <ui:Label text="Modo Duelo" class="mm-label" picking-mode="Ignore" />
-                        <ui:Label text="Hechicero contra hechicero" class="mm-sub" picking-mode="Ignore" />
+                        <ui:Label text="1 contra 1 en red, al mejor de 3" class="mm-sub" picking-mode="Ignore" />
                     </ui:VisualElement>
-                    <ui:Label text="PRÓXIMAMENTE" class="mm-soon" picking-mode="Ignore" />
                 </ui:Button>
                 <ui:Button name="info" class="mm-button">
                     <ui:VisualElement class="mm-gem" picking-mode="Ignore" />

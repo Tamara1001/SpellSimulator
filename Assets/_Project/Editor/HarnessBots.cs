@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
+using SpellSimulator.Combat;
 using SpellSimulator.Core;
 using SpellSimulator.Canvas;
 using SpellSimulator.Net;
@@ -49,6 +50,9 @@ namespace SpellSimulator.EditorTools
 
         [MenuItem("SpellSimulator/Harness/Run Bots World (local)")]
         public static void RunWorld() => Start("world");
+
+        [MenuItem("SpellSimulator/Harness/Run Bots Duel (local)")]
+        public static void RunDuel() => Start("duel");
 
         [MenuItem("SpellSimulator/Harness/Run Bots Portal (local)")]
         public static void RunPortal() => Start("portal");
@@ -474,6 +478,75 @@ namespace SpellSimulator.EditorTools
             return line != null ? line.Substring(line.IndexOf(marker) + marker.Length).Trim() : "(sin informe)";
         }
 
+        // Escenario del Duelo (F5): el anfitrion hospeda un duelo, un bot entra de rival; se mata a uno por ronda (1-0, 1-1, 2-1) y se comprueba lo que ve el cliente.
+        private static IEnumerator ProbeDuel()
+        {
+            var menu = UI.MainMenu.Instance;
+            yield return 1f;
+            if (UI.MainMenu.IsActive) menu.EnterSandbox();
+            yield return 0.5f;
+            NetDuel.WantDuel = true;
+            var session = NetSession.Instance;
+            Check(session.StartDirectHost(Port), "el anfitrion abre el puerto local");
+            if (!session.IsConnected) yield break;
+            yield return 1f;
+
+            Directory.CreateDirectory(BotLogDir);
+            foreach (string old in Directory.GetFiles(BotLogDir)) { try { File.Delete(old); } catch { } }
+            LaunchScriptBot(1, 0, "duel");
+
+            float deadline = Time.realtimeSinceStartup + 40f;
+            while (Time.realtimeSinceStartup < deadline && (NetDuel.Active == null || NetDuel.Active.Match == null)) yield return 0.25f;
+            NetDuel duel = NetDuel.Active;
+            Check(duel != null && duel.Match != null, "el duelo empieza al entrar el rival");
+            if (duel == null || duel.Match == null) yield break;
+            DuelMatch m = duel.Match;
+            Vector3 hostCenter = duel.Center;
+
+            int[] kill = { 1, 0, 1 }; // jugador que cae en cada ronda: gana el anfitrion, gana el rival, gana el anfitrion
+            for (int round = 1; round <= 3; round++)
+            {
+                deadline = Time.realtimeSinceStartup + 30f;
+                while (Time.realtimeSinceStartup < deadline && !(m.Phase == DuelPhase.Round && m.RoundNumber == round)) yield return 0.1f;
+                Check(m.Phase == DuelPhase.Round && m.RoundNumber == round, "empieza la ronda " + round);
+                if (m.Phase != DuelPhase.Round) yield break;
+                yield return 1f;
+                Health victim = duel.PlayerHealth(kill[round - 1]);
+                if (victim != null) victim.Damage(1000f);
+                deadline = Time.realtimeSinceStartup + 10f;
+                while (Time.realtimeSinceStartup < deadline && m.Phase == DuelPhase.Round) yield return 0.1f;
+                Check(m.Phase != DuelPhase.Round && m.RoundWinner == 1 - kill[round - 1], "ronda " + round + ": gana " + (1 - kill[round - 1]) + " (ganador real " + m.RoundWinner + ")");
+            }
+            deadline = Time.realtimeSinceStartup + 15f;
+            while (Time.realtimeSinceStartup < deadline && !m.Over) yield return 0.25f;
+            Check(m.Over && m.Winner == 0 && m.Wins[0] == 2 && m.Wins[1] == 1, "el duelo termina 2-1 a favor del anfitrion (" + m.Wins[0] + "-" + m.Wins[1] + ", ganador " + m.Winner + ")");
+
+            deadline = Time.realtimeSinceStartup + 40f;
+            while (Time.realtimeSinceStartup < deadline && processes.Any(p => { try { return !p.HasExited; } catch { return false; } })) yield return 0.5f;
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            string report = Path.Combine(BotLogDir, "Bot1.txt");
+            string[] l = File.Exists(report) ? File.ReadAllLines(report) : new string[0];
+            int code = -1; try { code = processes[0].HasExited ? processes[0].ExitCode : -2; } catch { }
+            Check(code == 0, "el rival termina bien (codigo " + code + ")");
+            int rounds = l.Count(x => x.Contains("FASE Round "));
+            Check(rounds == 3, "el rival vio las 3 rondas (" + rounds + ")");
+            Check(l.Any(x => x.Contains("FASE MatchEnd") && x.Contains("ganador=0")), "el rival vio el final con ganador 0");
+            Check(l.Any(x => x.Contains("FASE RoundEnd") && x.Contains("victorias=1-1")), "el rival vio el 1-1");
+            string minLine = LastAfter(l, "VIDA minima ");
+            Check(minLine.Contains("propia=0,00") || minLine.Contains("propia=0.00"), "el rival vio caer su propia vida a 0 (" + minLine + ")");
+            Check(minLine.Contains("rival=0,00") || minLine.Contains("rival=0.00"), "el rival vio caer la vida del anfitrion a 0 (" + minLine + ")");
+            int near = 0, pos = 0;
+            foreach (string line in l)
+            {
+                if (!line.Contains("POS ")) continue;
+                string[] f = line.Substring(line.IndexOf("POS ") + 4).Trim().Split(' ');
+                if (f.Length < 2 || !float.TryParse(f[0].Replace(',', '.'), System.Globalization.NumberStyles.Float, inv, out float px) || !float.TryParse(f[1].Replace(',', '.'), System.Globalization.NumberStyles.Float, inv, out float pz)) continue;
+                pos++;
+                if (Mathf.Abs(px - (hostCenter.x + 9f)) < 3f && Mathf.Abs(pz - hostCenter.z) < 3f) near++;
+            }
+            Check(pos >= 3 && near == pos, "el rival reaparece en su punto al empezar cada ronda (" + near + "/" + pos + ")");
+        }
+
         // Escenario del mundo reactivo (F4): fuego del pasto, un objeto que arde y se moja, suministros y un papel dibujado; todos tienen que ver lo mismo.
         private static IEnumerator ProbeWorld()
         {
@@ -641,6 +714,7 @@ namespace SpellSimulator.EditorTools
         private static IEnumerator Probe(string mode)
         {
             if (!File.Exists(BotBuild.ExePath)) { failures.Add("falta el ejecutable de los bots (menu SpellSimulator/Build/Windows (bots))"); yield break; }
+            if (mode == "duel") { var duelProbe = ProbeDuel(); while (duelProbe.MoveNext()) yield return duelProbe.Current; yield break; }
             if (mode == "world") { var worldProbe = ProbeWorld(); while (worldProbe.MoveNext()) yield return worldProbe.Current; yield break; }
             if (mode == "portal") { var portalProbe = ProbePortal(); while (portalProbe.MoveNext()) yield return portalProbe.Current; yield break; }
             if (mode == "cast") { var cast = ProbeCast(); while (cast.MoveNext()) yield return cast.Current; yield break; }

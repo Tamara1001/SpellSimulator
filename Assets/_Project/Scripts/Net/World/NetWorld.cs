@@ -70,6 +70,7 @@ namespace SpellSimulator.Net
         private PlayerInteractor interactor;
         private NetCanvasSync canvasSync;
         private NetCast castSync;
+        private NetDuel duel;
         private NetReactiveSync reactiveSync;
 
         /// <summary>Dibujo compartido (trazos de los lienzos); null si no hay sesion.</summary>
@@ -146,6 +147,8 @@ namespace SpellSimulator.Net
             castSync.Begin();
             reactiveSync = new NetReactiveSync(nm);
             reactiveSync.Begin();
+            duel = new NetDuel(nm);
+            duel.Begin();
             bool client = !nm.IsServer;
             foreach (var b in bodies)
             {
@@ -165,6 +168,7 @@ namespace SpellSimulator.Net
             if (Active == this) Active = null;
             MagicWorld.WorldReset -= OnWorldReset;
             if (reactiveSync != null) { reactiveSync.End(); reactiveSync = null; }
+            if (duel != null) { duel.End(); duel = null; }
             if (castSync != null) { castSync.End(); castSync = null; }
             if (canvasSync != null) { canvasSync.End(); canvasSync = null; }
             if (nm != null && nm.CustomMessagingManager != null)
@@ -241,6 +245,7 @@ namespace SpellSimulator.Net
             if (!began || mismatch) return;
             if (canvasSync != null) canvasSync.Tick(Time.fixedDeltaTime);
             if (reactiveSync != null) reactiveSync.Tick(Time.fixedDeltaTime);
+            if (duel != null) duel.Tick(Time.fixedDeltaTime);
             if (nm.IsServer) ServerTick(); else ClientTick();
         }
 

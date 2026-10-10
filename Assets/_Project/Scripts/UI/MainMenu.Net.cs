@@ -16,6 +16,7 @@ namespace SpellSimulator.UI
         private Label netStatus, multiplayerSub;
         private float netRevealAt = -1f, netHideAt = -1f;
         private bool netBusy;
+        private bool duelIntent; // la hoja se abrio desde "Modo Duelo": la sala que se cree es un duelo
         private bool netStarted; // el usuario apreto Crear sala / Unirse: al conectar se entra solo al juego
 
         private void BindNet()
@@ -32,7 +33,7 @@ namespace SpellSimulator.UI
             netCode = menu.Q<TextField>("net-code");
             netStatus = menu.Q<Label>("net-status");
 
-            multiplayer.clicked += OpenNet;
+            multiplayer.clicked += () => { duelIntent = false; OpenNet(); };
             netBack.clicked += CloseNet;
             netHost.clicked += HostClicked;
             netJoin.clicked += JoinClicked;
@@ -47,6 +48,8 @@ namespace SpellSimulator.UI
             foreach (var b in new[] { netHost, netJoin, netLeave, netBack, netReconnect })
                 b.RegisterCallback<PointerEnterEvent>(_ => { if (b.enabledSelf) b.Focus(); });
         }
+
+        public void OpenDuel() { duelIntent = true; OpenNet(); }
 
         public void OpenNet()
         {
@@ -119,7 +122,7 @@ namespace SpellSimulator.UI
             }
             else
             {
-                netStatus.text = "";
+                netStatus.text = duelIntent ? "Duelo 1 contra 1 al mejor de 3: creá la sala y pasale el código a tu rival." : "";
                 multiplayerSub.text = "Crear una sala o unirse con un código";
             }
         }
@@ -130,6 +133,7 @@ namespace SpellSimulator.UI
         {
             if (netBusy) return;
             SaveName();
+            NetDuel.WantDuel = duelIntent;
             NetSession s = NetSession.Instance;
             s.Changed -= RefreshNetView; s.Changed += RefreshNetView;
             netStarted = true;

@@ -139,7 +139,7 @@ namespace SpellSimulator.UI
             creditsBack.clicked += CloseCredits;
             BindNet();
             menu.Q("credits-backdrop").RegisterCallback<ClickEvent>(_ => CloseCredits());
-            duel.SetEnabled(false);
+            duel.clicked += OpenDuel;
 
             order.Clear();
             order.Add(sandbox);
