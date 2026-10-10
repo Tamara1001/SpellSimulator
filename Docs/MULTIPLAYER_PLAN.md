@@ -630,7 +630,7 @@ Qué se hace:
 
 **A mano:** 30 min de coop con 3–4 personas (sesión de juego para la asignatura).
 
-### F5 — PvP/Duelo y balance (12–18 días) — PRIMER LOTE HECHO (2026-10-10: reglas, red, HUD y bots; falta arena, tinta del servidor e IA)
+### F5 — PvP/Duelo y balance (12–18 días) — HECHA EN DOS LOTES (2026-10-10: reglas, red, HUD, arena, tinta del servidor y re-lectura; falta IA, coberturas destructibles y balance a mano)
 
 **Depende de:** F4 (y D1/D2 del ROADMAP, que se pueden hacer en paralelo en local desde F0).
 

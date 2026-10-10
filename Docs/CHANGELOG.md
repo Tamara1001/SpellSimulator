@@ -6,6 +6,14 @@ tags: [doc, changelog]
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
 
+## 2026-10-10 — F5 del multijugador (segundo lote): arena propia, tinta y lectura del servidor
+
+- **Arena** (`Net/World/DuelArena.cs`): plataforma cuadrada de 40 m en el cielo (centro 0, 100, 0; dentro del límite de 150 m de `Respawnable`), con muros del perímetro, 4 pilares, 6 muros bajos de cobertura simétricos y una fuente de agua (`WaterVolume` reutilizando el aspecto del lago). Se arma en cada máquina con las mismas medidas y se desarma al terminar; cada jugador vuelve a donde estaba. Como allá no hay mesas, el anfitrión crea 3 papeles limpios por lado en cada ronda (clones de la plantilla de `SupplyPoint`, replicados a los clientes y destruidos al terminar).
+- **Tinta del servidor** (`Combat/DuelInk.cs`: `InkLedger` + `DuelInk.CanvasCost`, 4 tests): en el duelo cada jugador tiene un saldo (100, recarga 3/s, `DuelRules`) que el servidor descuenta al aceptar un hechizo según el peso de los trazos del lienzo; si no alcanza o no es fase de ronda, el hechizo no se ejecuta (también para el anfitrión: `SpellOutputController` consulta `NetCast.DeniedForHost`). La barra azul del HUD muestra el saldo autoritativo (`du.state`).
+- **Re-lectura obligatoria en el duelo** (`NetCast.OnPropose`): el servidor ignora el hechizo propuesto, vuelve a leer el lienzo (`SpellCaster.Compile`) y ejecuta SU lectura; cuenta cuántas propuestas corrigió.
+- **Harness:** `Run Bots Duel Ink (local)` (8/8): un rival tramposo dibuja tierra y propone fuego 25 veces; el servidor corrigió las 10 aceptadas (ejecutó tierra) y cortó 15 por falta de tinta. `Run Bots Duel (local)` sigue en 16/16 con la arena; coop (`Run Bots Cast`) 23/23; EditMode 448/448; Play Smoke en verde.
+- **Falta** (KI-122): coberturas destructibles, daño real con hechizos probado a mano, tinta de los trazos fuera del duelo (coop), IA (D2), compensación de latencia, balance con partidas reales.
+
 ## 2026-10-10 — F5 del multijugador (primer lote): Duelo 1 contra 1 en red
 
 - **Reglas puras** (`Combat/DuelMatch.cs`): `DuelRules` (2 rondas para ganar, cuenta atrás 3 s, ronda 90 s, pausa 4 s, tope 5 rondas) y `DuelMatch`, máquina de estados Countdown → Round → RoundEnd → MatchEnd; gana la ronda quien deja al otro en 0 o, al acabarse el tiempo, quien tiene más vida (empate = nadie suma); `Forfeit` si el rival se va. 8 tests EditMode (444 en total).

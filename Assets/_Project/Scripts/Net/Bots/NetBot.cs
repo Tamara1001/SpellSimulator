@@ -105,6 +105,7 @@ namespace SpellSimulator.Net.Bots
                 else if (options.Script == BotScript.World) yield return WorldScenario();
                 else if (options.Script == BotScript.Portal) yield return PortalScenario();
                 else if (options.Script == BotScript.Duel) yield return DuelScenario();
+                else if (options.Script == BotScript.DuelInk) yield return DuelInkScenario();
                 else yield return Play(options.Seconds, c == cycles);
                 if (c < cycles)
                 {
@@ -336,6 +337,46 @@ namespace SpellSimulator.Net.Bots
             }
             Note($"VIDA minima propia={minOwn.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)} rival={minRival.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)}");
             yield return new WaitForSecondsRealtime(0.5f);
+        }
+
+        /// <summary>
+        /// Rival tramposo del duelo: dibuja un sello de TIERRA y, en plena ronda, le propone al anfitrion un hechizo que dice ser de FUEGO, una y otra vez
+        /// hasta que se le acabe la tinta del servidor. El anfitrion tiene que ejecutar siempre la lectura propia (tierra) y cortar cuando no hay tinta.
+        /// </summary>
+        private IEnumerator DuelInkScenario()
+        {
+            NetWorld world = NetWorld.Active;
+            SpellCaster spellCaster = FindFirstObjectByType<SpellCaster>();
+            if (world == null || world.Canvases == null || spellCaster == null || spellCaster.Glyphs == null || world.Casts == null) { failures.Add("sin NetWorld/lienzos/diccionario"); yield break; }
+            float limit = Time.realtimeSinceStartup + 40f;
+            while (Time.realtimeSinceStartup < limit && !(NetDuel.Active != null && NetDuel.Active.Match != null && NetDuel.Active.Match.Phase == DuelPhase.Round)) yield return null;
+            yield return new WaitForSecondsRealtime(1f); // que lleguen los papeles de la arena
+            DrawingCanvas paper = null;
+            float best = float.MaxValue;
+            Transform me = PlayerRegistry.Local != null ? PlayerRegistry.Local.Root : null;
+            foreach (var body in world.Bodies)
+            {
+                if (body == null || !body.IsDynamic || !body.TryGetComponent(out DrawingCanvas dc) || me == null) continue;
+                float d = Vector3.Distance(dc.transform.position, me.position);
+                if (d < best) { best = d; paper = dc; }
+            }
+            if (paper == null) { failures.Add("no hay papeles en la arena"); yield break; }
+            Note($"PAPEL {paper.name} a {best.ToString("F1", System.Globalization.CultureInfo.InvariantCulture)} m");
+            DrawSeal(paper, spellCaster.Glyphs, "earth");
+            yield return new WaitForSecondsRealtime(1.5f); // que los trazos lleguen al anfitrion
+            if (!spellCaster.Compile(paper, out Compiler.SpellIR real, out Vector2 uv)) { failures.Add("el bot no pudo leer su propio sello"); yield break; }
+            Note($"LECTURA propia {real.element} {real.sigilId}");
+            Compiler.SpellIR forged = real;
+            forged.element = Compiler.ElementType.Fire;
+            int sent = 0;
+            while (sent < 25 && NetDuel.Active != null && NetDuel.Active.Match != null && NetDuel.Active.Match.Phase == DuelPhase.Round)
+            {
+                world.Casts.ProposeForTest(forged, paper, uv);
+                sent++;
+                yield return new WaitForSecondsRealtime(0.3f);
+            }
+            Note($"PROPUESTAS enviadas={sent} tintaVista={(NetDuel.Active != null ? NetDuel.Active.InkFraction(NetDuel.Active.LocalIndex).ToString("F2", System.Globalization.CultureInfo.InvariantCulture) : "?")}");
+            yield return new WaitForSecondsRealtime(1f);
         }
 
         // ---------------------------------------------------------------- guion Portal (F4)

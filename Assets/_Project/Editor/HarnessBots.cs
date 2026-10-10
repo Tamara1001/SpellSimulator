@@ -54,6 +54,9 @@ namespace SpellSimulator.EditorTools
         [MenuItem("SpellSimulator/Harness/Run Bots Duel (local)")]
         public static void RunDuel() => Start("duel");
 
+        [MenuItem("SpellSimulator/Harness/Run Bots Duel Ink (local)")]
+        public static void RunDuelInk() => Start("duelink");
+
         [MenuItem("SpellSimulator/Harness/Run Bots Portal (local)")]
         public static void RunPortal() => Start("portal");
 
@@ -478,6 +481,43 @@ namespace SpellSimulator.EditorTools
             return line != null ? line.Substring(line.IndexOf(marker) + marker.Length).Trim() : "(sin informe)";
         }
 
+        // Tinta del servidor y re-lectura (F5): un rival tramposo propone fuego sobre un sello de tierra hasta quedarse sin tinta.
+        private static IEnumerator ProbeDuelInk()
+        {
+            var menu = UI.MainMenu.Instance;
+            yield return 1f;
+            if (UI.MainMenu.IsActive) menu.EnterSandbox();
+            yield return 0.5f;
+            NetDuel.WantDuel = true;
+            var session = NetSession.Instance;
+            Check(session.StartDirectHost(Port), "el anfitrion abre el puerto local");
+            if (!session.IsConnected) yield break;
+            yield return 1f;
+            Directory.CreateDirectory(BotLogDir);
+            foreach (string old in Directory.GetFiles(BotLogDir)) { try { File.Delete(old); } catch { } }
+            LaunchScriptBot(1, 0, "duelink");
+
+            float deadline = Time.realtimeSinceStartup + 40f;
+            while (Time.realtimeSinceStartup < deadline && (NetDuel.Active == null || NetDuel.Active.Match == null)) yield return 0.25f;
+            Check(NetDuel.Active != null && NetDuel.Active.Match != null, "el duelo empieza al entrar el rival");
+            NetWorld world = NetWorld.Active;
+            if (world == null || world.Casts == null) yield break;
+
+            deadline = Time.realtimeSinceStartup + 60f;
+            while (Time.realtimeSinceStartup < deadline && processes.Any(p => { try { return !p.HasExited; } catch { return false; } })) yield return 0.5f;
+            NetCast cast = world.Casts;
+            notes.Add($"aceptadas={cast.ProposalsAccepted} corregidas={cast.ProposalsCorrected} sinTinta={cast.ProposalsNoInk} rechazadas={cast.ProposalsRejected} ultimoElemento={cast.LastExecutedElement}");
+            Check(cast.ProposalsAccepted >= 1, "el anfitrion acepto al menos un hechizo del rival (" + cast.ProposalsAccepted + ")");
+            Check(cast.ProposalsCorrected == cast.ProposalsAccepted && cast.ProposalsAccepted >= 1, "todas las propuestas falsas se corrigieron con la lectura del servidor (" + cast.ProposalsCorrected + "/" + cast.ProposalsAccepted + ")");
+            Check(cast.LastExecutedElement == SpellSimulator.Compiler.ElementType.Earth, "se ejecuto tierra y no el fuego declarado (" + cast.LastExecutedElement + ")");
+            Check(cast.ProposalsNoInk >= 1, "el servidor corto por falta de tinta (" + cast.ProposalsNoInk + " rechazadas)");
+            Check(cast.ProposalsAccepted <= 12, "la tinta limito los hechizos (" + cast.ProposalsAccepted + " de 25)");
+            string[] l = File.Exists(Path.Combine(BotLogDir, "Bot1.txt")) ? File.ReadAllLines(Path.Combine(BotLogDir, "Bot1.txt")) : new string[0];
+            int code = -1; try { code = processes[0].HasExited ? processes[0].ExitCode : -2; } catch { }
+            Check(code == 0, "el rival termina bien (codigo " + code + ")");
+            notes.Add("rival: " + LastAfter(l, "PROPUESTAS ") + " | " + LastAfter(l, "LECTURA propia "));
+        }
+
         // Escenario del Duelo (F5): el anfitrion hospeda un duelo, un bot entra de rival; se mata a uno por ronda (1-0, 1-1, 2-1) y se comprueba lo que ve el cliente.
         private static IEnumerator ProbeDuel()
         {
@@ -542,7 +582,7 @@ namespace SpellSimulator.EditorTools
                 string[] f = line.Substring(line.IndexOf("POS ") + 4).Trim().Split(' ');
                 if (f.Length < 2 || !float.TryParse(f[0].Replace(',', '.'), System.Globalization.NumberStyles.Float, inv, out float px) || !float.TryParse(f[1].Replace(',', '.'), System.Globalization.NumberStyles.Float, inv, out float pz)) continue;
                 pos++;
-                if (Mathf.Abs(px - (hostCenter.x + 9f)) < 3f && Mathf.Abs(pz - hostCenter.z) < 3f) near++;
+                if (Mathf.Abs(px - (hostCenter.x + 16f)) < 3f && Mathf.Abs(pz - hostCenter.z) < 3f) near++;
             }
             Check(pos >= 3 && near == pos, "el rival reaparece en su punto al empezar cada ronda (" + near + "/" + pos + ")");
         }
@@ -714,6 +754,7 @@ namespace SpellSimulator.EditorTools
         private static IEnumerator Probe(string mode)
         {
             if (!File.Exists(BotBuild.ExePath)) { failures.Add("falta el ejecutable de los bots (menu SpellSimulator/Build/Windows (bots))"); yield break; }
+            if (mode == "duelink") { var inkProbe = ProbeDuelInk(); while (inkProbe.MoveNext()) yield return inkProbe.Current; yield break; }
             if (mode == "duel") { var duelProbe = ProbeDuel(); while (duelProbe.MoveNext()) yield return duelProbe.Current; yield break; }
             if (mode == "world") { var worldProbe = ProbeWorld(); while (worldProbe.MoveNext()) yield return worldProbe.Current; yield break; }
             if (mode == "portal") { var portalProbe = ProbePortal(); while (portalProbe.MoveNext()) yield return portalProbe.Current; yield break; }

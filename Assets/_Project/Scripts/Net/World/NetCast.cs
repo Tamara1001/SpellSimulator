@@ -41,6 +41,24 @@ namespace SpellSimulator.Net
         public int ProposalsAccepted { get; private set; }
         public int ProposalsRejected { get; private set; }
         public int EffectsReceived { get; private set; }
+        /// <summary>Propuestas de un duelo cuyo hechizo el servidor leyo distinto y ejecuto con su propia lectura.</summary>
+        public int ProposalsCorrected { get; private set; }
+        /// <summary>Propuestas rechazadas por falta de tinta o por no estar en ronda (duelo).</summary>
+        public int ProposalsNoInk { get; private set; }
+        public ElementType LastExecutedElement { get; private set; }
+
+        /// <summary>Anfitrion en un duelo: el cobro de tinta de su propio lanzamiento. True = el hechizo no se ejecuta.</summary>
+        public static bool DeniedForHost(DrawingCanvas canvas)
+        {
+            NetCast c = Current;
+            if (c == null || ApplyingRemote || !c.isServer || NetDuel.Active == null || !NetDuel.Active.InDuel) return false;
+            if (NetDuel.Active.TryCharge(0, canvas, out _)) return false;
+            c.ProposalsNoInk++;
+            return true;
+        }
+
+        /// <summary>Solo harness: propone al servidor un hechizo ya armado (para probar propuestas falsas).</summary>
+        public void ProposeForTest(SpellIR spell, DrawingCanvas canvas, Vector2 ringCenterUV) => Propose(spell, canvas, ringCenterUV);
 
         public NetCast(NetworkManager manager, NetCanvasSync canvasSync)
         {
@@ -128,7 +146,18 @@ namespace SpellSimulator.Net
             lastCastAt[sender] = now;
             if (output == null) return;
 
+            NetDuel duel = NetDuel.Active;
+            if (duel != null && duel.InDuel)
+            {
+                // Duelo: el servidor no confia en el cliente. Re-lee el lienzo (que el ya tiene) y ejecuta SU lectura; y cobra la tinta de sus trazos.
+                if (!duel.TryCharge(NetDuel.PlayerIndexOf(sender), canvas, out _)) { ProposalsNoInk++; return; }
+                if (caster == null || !caster.Compile(canvas, out SpellIR own, out Vector2 ownUv)) { ProposalsRejected++; return; }
+                if (own.element != spell.element || own.sigilId != spell.sigilId) ProposalsCorrected++;
+                spell = own; uv = ownUv;
+            }
+
             ProposalsAccepted++;
+            LastExecutedElement = spell.element;
             ApplyingRemote = true;
             try { output.SpawnSpellEffect(spell, canvas, uv, p); }
             finally { ApplyingRemote = false; }

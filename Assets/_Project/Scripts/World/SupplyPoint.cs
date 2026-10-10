@@ -62,6 +62,17 @@ namespace SpellSimulator.World
 
         private string SupplyKey => string.IsNullOrEmpty(supplyId) ? (template != null ? template.name : name) : supplyId;
 
+        /// <summary>Plantilla que clona este punto (el Duelo arma sus papeles con la misma).</summary>
+        public GameObject Template => template;
+
+        /// <summary>Primera plantilla cuyo nombre empieza con <paramref name="prefix"/> (por ejemplo "PaperTemplate"); null si no hay.</summary>
+        public static GameObject FindTemplate(string prefix)
+        {
+            for (int i = 0; i < all.Count; i++)
+                if (all[i] != null && all[i].template != null && all[i].template.name.StartsWith(prefix)) return all[i].template;
+            return null;
+        }
+
         private static readonly List<SupplyPoint> all = new List<SupplyPoint>(8);
 
         /// <summary>Red: al empezar la sesion compartida, el anfitrion adopta las copias que ya existian (las crea Update antes de que haya red) y un cliente descarta las suyas.</summary>

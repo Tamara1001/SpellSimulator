@@ -11,8 +11,11 @@ namespace SpellSimulator.Combat
         public float roundSeconds;
         public float roundEndSeconds;
         public int maxRounds;
+        public float inkMax;
+        public float inkRegenPerSecond;
+        public float inkPerMeter;
 
-        public static DuelRules Default => new DuelRules { roundsToWin = 2, countdownSeconds = 3f, roundSeconds = 90f, roundEndSeconds = 4f, maxRounds = 5 };
+        public static DuelRules Default => new DuelRules { roundsToWin = 2, countdownSeconds = 3f, roundSeconds = 90f, roundEndSeconds = 4f, maxRounds = 5, inkMax = 100f, inkRegenPerSecond = 3f, inkPerMeter = 8f };
     }
 
     public enum DuelPhase : byte { Countdown = 0, Round = 1, RoundEnd = 2, MatchEnd = 3 }

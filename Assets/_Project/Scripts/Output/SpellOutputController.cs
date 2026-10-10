@@ -37,6 +37,7 @@ namespace SpellSimulator.Output
         public SpellManifestation SpawnSpellEffect(SpellIR spell, DrawingCanvas canvas, Vector2 ringCenterUV, IPlayerContext caster)
         {
             if (!spell.valid || !spell.active) return null;
+            if (Net.NetCast.DeniedForHost(canvas)) return null; // duelo: sin tinta o fuera de ronda
             // En red: un cliente muestra el efecto y se lo propone al anfitrion (sin cuerpos propios); el anfitrion lo anuncia a los demas.
             bool visualOnly = Net.NetCast.Intercept(spell, canvas, ringCenterUV, caster);
 

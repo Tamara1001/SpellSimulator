@@ -4,7 +4,7 @@ using System.Globalization;
 namespace SpellSimulator.Net.Bots
 {
     /// <summary>Que hace el bot una vez dentro de la sala.</summary>
-    public enum BotScript { Walk, Churn, Grab, Draw, Cast, World, Portal, Duel }
+    public enum BotScript { Walk, Churn, Grab, Draw, Cast, World, Portal, Duel, DuelInk }
 
     /// <summary>
     /// Opciones de un bot de pruebas, leidas de la linea de comandos del ejecutable (logica pura, con tests).
@@ -76,6 +76,7 @@ namespace SpellSimulator.Net.Bots
                 case "world": return BotScript.World;
                 case "portal": return BotScript.Portal;
                 case "duel": return BotScript.Duel;
+                case "duelink": return BotScript.DuelInk;
                 default: return BotScript.Walk;
             }
         }
