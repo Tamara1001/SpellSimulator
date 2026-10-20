@@ -24,7 +24,7 @@ Idioma del proyecto: **español** (docs, commits, logs, comentarios). Identifica
 ## Reglas duras
 
 - **Sólo se edita código propio en `Assets/_Project/`.** No tocar `Assets/Samples/`, `Assets/TextMesh Pro/`,
-  `Assets/XR*/`, `Assets/TutorialInfo/`, `Packages/` ni `Library/` salvo pedido explícito.
+  `Assets/XR*/`, `Packages/` ni `Library/` salvo pedido explícito.
 - **Nunca editar a mano `.unity`, `.prefab`, `.asset` ni `.meta`.** Cambios de escena/prefab/settings se hacen
   vía Unity MCP (`Unity_ManageGameObject`, `Unity_RunCommand`, etc.) o se le piden a Tamara.
   Al crear/mover/borrar un `.cs` fuera del Editor, mover también su `.meta` (el GUID mantiene las referencias).

@@ -123,7 +123,7 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 ---
 
 ## Limpieza transversal
-- [ ] Decidir `_Recovery/0.unity` y `DebugCanvasCapture.png` (KI-024).
+- [x] Decidir `_Recovery/0.unity` y `DebugCanvasCapture.png` (KI-024): borrados.
 - [ ] Aprovechar las cabezas de pose del modelo (KI-025).
 
 ---

@@ -1,10 +1,26 @@
 # 🪄 SpellSimulator — Simulador de Ejecución de Hechizos
 
-> **¿Vas a continuar el proyecto?** Empezá por [`Docs/ONBOARDING.md`](Docs/ONBOARDING.md) (instalación, primer arranque, verificación y builds) y [`Docs/STATUS.md`](Docs/STATUS.md) (estado actual). Reglas para agentes: [`CLAUDE.md`](CLAUDE.md).
-> Estado: modo **Libre** jugable en PC (menú principal, torre, pradera, grimorio, hechizos, VFX); build **WebGL** para itch.io; **Quest** pendiente (M7).
+Sandbox de hechicería en **Unity 6** donde dibujás círculos y runas en un lienzo, una red neuronal local reconoce los glifos, un compilador los convierte en un hechizo y el mundo reacciona con físicas: el fuego quema la madera, el viento arrastra objetos y la tierra levanta muros. Funciona en PC (mouse y teclado), en el navegador (WebGL), con **multijugador en red** (cooperativo y duelo 1 contra 1) y está diseñado para **VR (Quest)**.
 
-> Evaluación Final — Asignatura: **Simuladores**  
-> Motor: **Unity 3D (URP)** | IA: **Unity Sentis (ONNX)** | Target: **PC → Oculus Quest (VR)**
+> Proyecto de Tamara D'Angelo y Alejo Warner. Es una **versión en Unity 3D / VR, con mundo físico y multijugador, del proyecto fan [wha-spell-simulator](https://github.com/cosykid/wha-spell-simulator)** de cosykid, inspirado en el manga *Witch Hat Atelier*. Ver [Créditos](#-créditos-y-origen).
+
+> **¿Vas a continuar el proyecto?** Empezá por [`Docs/ONBOARDING.md`](Docs/ONBOARDING.md) (instalación, primer arranque, verificación y builds) y [`Docs/STATUS.md`](Docs/STATUS.md) (estado actual).
+> Estado: modo **Libre** jugable en PC (menú principal, torre, pradera, grimorio, hechizos, VFX); build **WebGL** para itch.io; multijugador por Relay (F0–F5); **Quest** pendiente (M7).
+
+## De un vistazo
+- **Alcance:** unas 52.000 líneas de C# (374 scripts) en más de 100 commits, con documentación de arquitectura, decisiones (ADRs), changelog y problemas conocidos en [`Docs/`](Docs/Home.md).
+- **Lo que se hizo en este repo (Unity):**
+  - Lienzo de dibujo en GPU con `RenderTexture` e interacción FPS pensada para PC y VR.
+  - Rasterizado de trazos hacia el tensor del modelo, con inferencia local en Unity Sentis (GPU en PC y Quest, CPU en WebGL).
+  - Compilador de hechizos y mundo reactivo con físicas: fuego que se propaga, viento, tierra, agua, runas con desgaste y fusión, portales y reciclaje de objetos.
+  - Inventario, tinta, grimorio y sellos, todo diegético, sin menús 2D.
+  - Multijugador con Netcode for GameObjects y Relay: mundo compartido, dibujo y hechizos replicados, y duelo 1v1 al mejor de 3.
+- **Calidad:** 473 tests de EditMode, smoke tests de Play, matriz de lienzos (425 chequeos), pruebas con entrada real y bots de red con latencia simulada. Se corren desde el menú `SpellSimulator > Harness`.
+- **Origen de la IA de reconocimiento:** el modelo de glifos (CNN destilada exportada a ONNX), el diccionario de runas y la lógica del parser y del compilador vienen del proyecto de cosykid y se portaron a C#. El detalle de qué es fiel y qué se reinterpretó está en [`Docs/REFERENCE.md`](Docs/REFERENCE.md).
+- **Uso de IA en el desarrollo:** el proyecto se desarrolló con asistencia de Claude Code (ver [`CLAUDE.md`](CLAUDE.md) y [`AGENTS.md`](AGENTS.md)), con tests y documentación obligatorios por cambio.
+
+> Proyecto de la asignatura **Simuladores** (Evaluación Final).
+> Motor: **Unity 3D (URP)** | IA: **Unity Sentis (ONNX)** | Target: **PC y WebGL → Oculus Quest (VR)**
 
 ---
 
@@ -74,7 +90,7 @@ El sistema está dividido en **5 módulos desacoplados**. Cada módulo expone un
 
 ### Módulo 3 — Motor de Inferencia (Sentis)
 
-**Responsabilidad:** Clasificar la geometría dibujada usando el modelo ResNet18 local.
+**Responsabilidad:** Clasificar la geometría dibujada usando el modelo local de reconocimiento (GlyphStudent, ver [Créditos](#-créditos-y-origen)).
 
 1. Captura la `RenderTexture` del Canvas al finalizar el trazo.
 2. Convierte la imagen a `Tensor` en el formato esperado por el modelo.
@@ -160,7 +176,17 @@ bugs y deuda técnica en [`Docs/KNOWN_ISSUES.md`](Docs/KNOWN_ISSUES.md).
 
 ---
 
+## 🙏 Créditos y origen
+
+- **Tamara D'Angelo** ([@Tamara1001](https://github.com/Tamara1001)) y **Alejo Warner**: desarrollo del proyecto en Unity.
+- **[cosykid/wha-spell-simulator](https://github.com/cosykid/wha-spell-simulator)** (GPL-3.0): proyecto fan en el que se basa este. De ahí provienen el modelo de reconocimiento de glifos (`Assets/_Project/Data/glyph-recognizer.onnx`), el diccionario de sigilos y signos, y la lógica del parser y del compilador de hechizos, que acá se portó a C#. Gracias a su autor por publicarlo.
+- **[Kenney](https://kenney.nl)**: efectos de sonido (RPG Audio, Impact Sounds, Interface Sounds), licencia CC0.
+- *Witch Hat Atelier* y sus nombres, símbolos y marcas pertenecen a sus titulares. Este proyecto es **no oficial, hecho por fans**, con fines educativos, y no está afiliado, respaldado ni patrocinado por sus creadores ni editores.
+
+---
+
 ## 📄 Licencia
 
-Proyecto académico — Evaluación Final, Asignatura Simuladores.  
-No distribuir sin autorización del autor.
+Este proyecto es una obra derivada de [wha-spell-simulator](https://github.com/cosykid/wha-spell-simulator) y se distribuye bajo la **GNU General Public License v3.0**. Ver [`LICENSE`](LICENSE).
+
+Los audios de Kenney mantienen su licencia CC0 (con su `License.txt` en cada carpeta). El manga *Witch Hat Atelier* y su contenido no están incluidos ni licenciados por este repositorio.

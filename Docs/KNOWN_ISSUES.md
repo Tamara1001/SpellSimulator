@@ -42,8 +42,8 @@ El límite de 6 hechizos activos es provisorio. Medir en el dispositivo (M3/M7).
 previews, no para simular resultados.
 
 ### KI-024
-🟢 `abierto` — `Assets/_Recovery/0.unity` (escena de recuperación tras un crash) y `_Project/DebugCanvasCapture.png`
-siguen en el repo. No se borraron porque pueden tener trabajo tuyo: revisar y decidir.
+🟢 `resuelto 2026-10-20` — `Assets/_Recovery/0.unity` (escena de recuperación tras un crash) y `_Project/DebugCanvasCapture.png`
+se borraron al preparar el repo para publicarlo.
 
 ### KI-007
 🟢 `abierto` — El cast aloca (listas, `float[]` por predicción, `StringBuilder` de diagnóstico, `Texture2D` de debug).

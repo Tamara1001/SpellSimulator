@@ -53,8 +53,8 @@ SpellSimulator/
 │   │   └── Tests/Fixtures/       #   Sellos reales grabados (SealRecord .json) para SealFixtureTests
 │   ├── Settings/                 # URP assets (PC_RPAsset, renderers, volume profiles)
 │   ├── XR/, XRI/                 # settings de OpenXR / XR Interaction Toolkit (generados)
-│   ├── Samples/                  # samples importados (XRI Starter Assets, VFX, SRP Core) — no editar
-│   ├── TextMesh Pro/, TutorialInfo/, _Recovery/
+│   ├── Samples/                  # samples importados (XRI Starter Assets; los usa el prefab Player) — no editar
+│   ├── TextMesh Pro/
 │   └── InputSystem_Actions.inputactions  # default de Unity, NO usado (input por código)
 ├── Packages/manifest.json
 └── ProjectSettings/
