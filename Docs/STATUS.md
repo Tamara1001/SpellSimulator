@@ -29,8 +29,8 @@ si cambian, tocar los tres (pendiente: generar los textos desde un solo dato).
 Diferidos: KI-106..109, 114, 117, 118 | Volumenes de musica/efectos sin cablear (KI-094) | UI y grimorio solo PC, no VR (KI-095, KI-054) | Quest sin medir (KI-049, KI-085) |
 efectos de 6 glifos | fuente serif (KI-093).
 
-## Reglas de trabajo baratas (aprendidas)
+## Reglas de trabajo (aprendidas)
 1. Un tema por pedido; los rediseños empiezan con un plan de media pagina aprobado.
 2. Antes de implementar, correr los tests; despues, `HarnessPlaySmoke`. Un chequeo nuevo por cada sistema nuevo.
-3. Delegar a agentes solo con especificacion cerrada y archivos propios; los agentes Opus cuestan ~250k tokens cada uno.
+3. Delegar tareas a asistentes de IA solo con especificacion cerrada y archivos propios; revisar siempre el resultado con los tests.
 4. Docs obligatorios por commit: CHANGELOG y, si aplica, KNOWN_ISSUES. El resto, solo si cambia lo que describe.

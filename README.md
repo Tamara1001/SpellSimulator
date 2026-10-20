@@ -2,7 +2,9 @@
 
 Sandbox de hechicería en **Unity 6** donde dibujás círculos y runas en un lienzo, una red neuronal local reconoce los glifos, un compilador los convierte en un hechizo y el mundo reacciona con físicas: el fuego quema la madera, el viento arrastra objetos y la tierra levanta muros. Funciona en PC (mouse y teclado), en el navegador (WebGL), con **multijugador en red** (cooperativo y duelo 1 contra 1) y está diseñado para **VR (Quest)**.
 
-> Proyecto de Tamara D'Angelo y Alejo Warner. Es una **versión en Unity 3D / VR, con mundo físico y multijugador, del proyecto fan [wha-spell-simulator](https://github.com/cosykid/wha-spell-simulator)** de cosykid, inspirado en el manga *Witch Hat Atelier*. Ver [Créditos](#-créditos-y-origen).
+**▶ [Jugar en el navegador (itch.io)](https://tamara1001.itch.io/spellsimulator)**
+
+> Proyecto de Tamara D'Angelo y Alejo Warner. Está **basado en [wha-spell-simulator](https://github.com/cosykid/wha-spell-simulator)** ([demo](https://wha-spell-simulator.vercel.app/)), el proyecto fan de *Witch Hat Atelier* de cosykid (Langkee Hong), licenciado bajo GPL v3. Esta versión lo lleva a **Unity 3D / VR, con mundo físico y multijugador**. Ver [`NOTICE.md`](NOTICE.md) y [Créditos](#-créditos-y-origen).
 
 > **¿Vas a continuar el proyecto?** Empezá por [`Docs/ONBOARDING.md`](Docs/ONBOARDING.md) (instalación, primer arranque, verificación y builds) y [`Docs/STATUS.md`](Docs/STATUS.md) (estado actual).
 > Estado: modo **Libre** jugable en PC (menú principal, torre, pradera, grimorio, hechizos, VFX); build **WebGL** para itch.io; multijugador por Relay (F0–F5); **Quest** pendiente (M7).
@@ -179,7 +181,7 @@ bugs y deuda técnica en [`Docs/KNOWN_ISSUES.md`](Docs/KNOWN_ISSUES.md).
 ## 🙏 Créditos y origen
 
 - **Tamara D'Angelo** ([@Tamara1001](https://github.com/Tamara1001)) y **Alejo Warner**: desarrollo del proyecto en Unity.
-- **[cosykid/wha-spell-simulator](https://github.com/cosykid/wha-spell-simulator)** (GPL-3.0): proyecto fan en el que se basa este. De ahí provienen el modelo de reconocimiento de glifos (`Assets/_Project/Data/glyph-recognizer.onnx`), el diccionario de sigilos y signos, y la lógica del parser y del compilador de hechizos, que acá se portó a C#. Gracias a su autor por publicarlo.
+- **[cosykid/wha-spell-simulator](https://github.com/cosykid/wha-spell-simulator)** de cosykid (Langkee Hong), GPL-3.0 ([demo en línea](https://wha-spell-simulator.vercel.app/)): proyecto fan en el que se basa este. De ahí provienen el modelo de reconocimiento de glifos (`Assets/_Project/Data/glyph-recognizer.onnx`), el diccionario de sigilos y signos, y la lógica del parser y del compilador de hechizos, que acá se portó a C#. Gracias a su autor por publicarlo.
 - **[Kenney](https://kenney.nl)**: efectos de sonido (RPG Audio, Impact Sounds, Interface Sounds), licencia CC0.
 - *Witch Hat Atelier* y sus nombres, símbolos y marcas pertenecen a sus titulares. Este proyecto es **no oficial, hecho por fans**, con fines educativos, y no está afiliado, respaldado ni patrocinado por sus creadores ni editores.
 
@@ -187,6 +189,8 @@ bugs y deuda técnica en [`Docs/KNOWN_ISSUES.md`](Docs/KNOWN_ISSUES.md).
 
 ## 📄 Licencia
 
-Este proyecto es una obra derivada de [wha-spell-simulator](https://github.com/cosykid/wha-spell-simulator) y se distribuye bajo la **GNU General Public License v3.0**. Ver [`LICENSE`](LICENSE).
+Este proyecto es una obra derivada de [wha-spell-simulator](https://github.com/cosykid/wha-spell-simulator) (cosykid, GPL v3) y se distribuye bajo la misma **GNU General Public License v3.0**. Ver [`LICENSE`](LICENSE) y [`NOTICE.md`](NOTICE.md).
+
+Copyright (C) 2026 Tamara D'Angelo y Alejo Warner, sobre los aportes propios de este repositorio. Podés usar, estudiar, modificar y compartir el código, pero cualquier obra derivada tiene que seguir siendo GPL v3, conservar los créditos de este proyecto y del original, y publicar su código fuente.
 
 Los audios de Kenney mantienen su licencia CC0 (con su `License.txt` en cada carpeta). El manga *Witch Hat Atelier* y su contenido no están incluidos ni licenciados por este repositorio.
