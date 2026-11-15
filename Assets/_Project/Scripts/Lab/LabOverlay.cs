@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 using SpellSimulator.Canvas;
@@ -6,6 +7,7 @@ using SpellSimulator.Compiler;
 using SpellSimulator.Output;
 using SpellSimulator.Player;
 using SpellSimulator.Reactions;
+using SpellSimulator.Rendering;
 using SpellSimulator.World;
 
 namespace SpellSimulator.Lab
@@ -44,6 +46,17 @@ namespace SpellSimulator.Lab
         private const float WindZoneArrowHeight = 1f;
         private const float PlatePadding = 0.05f;
         private const float PcOutlineWidth = 0.18f;
+        /// <summary>Etiquetas nuevas que un refresco puede encender; el resto se difiere al siguiente tick (evita 32 ForceMeshUpdate de golpe).</summary>
+        private const int MaxNewLabelsPerRefresh = 8;
+        /// <summary>Etiquetas que se precalientan por frame en el warmup de Start.</summary>
+        private const int WarmupLabelsPerFrame = 4;
+        /// <summary>
+        /// Texto del precalentamiento: todos los caracteres que usa el overlay (letras, digitos, coma, punto, %, /, -, espacio y
+        /// saltos) mas las etiquetas rich text que usa. Todo es ASCII a proposito: asi no se cae a la fuente de respaldo dinamica
+        /// (° y × no se usan; si se agregan, hay que incluirlos aca y en el atlas de la fuente).
+        /// TODO: asignar el campo font a una fuente de atlas estatico con estos caracteres (hoy usa la de TMP por defecto).
+        /// </summary>
+        private const string WarmupText = "Hechizo Fuego Agua Viento Tierra Luz\nfuerza alcance dur. calidad gen. contagio no contagia fuego modificado\n0123456789 , . % - / m/s kg s\n<size=80%>0123456789</size><size=70%>ABC</size>";
 
         // Defaults del fuego (constantes privadas de Reactions/GrassFire.cs: DefaultSpreadChance, DefaultGenerationDecay,
         // DefaultMaxGenerations). Si difieren de lo actual, la etiqueta avisa «fuego modificado».
@@ -157,6 +170,8 @@ namespace SpellSimulator.Lab
         private Camera cam;
         private float nextRefresh;
         private bool anyShown;
+        private bool started, warming, warmDone;
+        private int newLabelsThisRefresh;
 
         private void Awake()
         {
@@ -235,8 +250,84 @@ namespace SpellSimulator.Lab
             }
         }
 
+        private void Start()
+        {
+            started = true;
+            // Primer dibujo de TMP SDF / Sprites/Default / lineas: compila shaders y arma pipelines. Se hace aca, repartido en frames.
+            ShaderWarmup.WarmCommon();
+            if (!warmDone) StartCoroutine(WarmupRoutine());
+        }
+
+        /// <summary>
+        /// Enciende cada etiqueta y flecha un frame (minuscula, alfa casi 0, frente a la camara) para que el primer dibujo real
+        /// no ocurra al ponerse las lentes. Reparte <see cref="WarmupLabelsPerFrame"/> etiquetas por frame.
+        /// </summary>
+        private IEnumerator WarmupRoutine()
+        {
+            warming = true;
+            // Esperar camara (hasta ~2 s); sin ella se calienta igual, en el origen.
+            for (int i = 0; i < 120 && Camera.main == null; i++) yield return null;
+            Camera warmCam = Camera.main;
+            Vector3 at = warmCam != null ? warmCam.transform.position + warmCam.transform.forward * 2f : Vector3.zero;
+            Quaternion rot = warmCam != null ? warmCam.transform.rotation : Quaternion.identity;
+            var nearlyInvisible = new Color(1f, 1f, 1f, 0.004f);
+
+            for (int start = 0; start < LabelCount; start += WarmupLabelsPerFrame)
+            {
+                int end = Mathf.Min(start + WarmupLabelsPerFrame, LabelCount);
+                for (int i = start; i < end; i++)
+                {
+                    var text = labels[i];
+                    var t = labelTransforms[i];
+                    t.SetPositionAndRotation(at, rot);
+                    t.localScale = new Vector3(0.001f, 0.001f, 0.001f);
+                    text.color = nearlyInvisible;
+                    text.text = WarmupText;
+                    text.ForceMeshUpdate();
+                    t.gameObject.SetActive(true);
+                }
+                if (start == 0) WarmArrows(true, at);
+                yield return null;
+                for (int i = start; i < end; i++)
+                {
+                    labels[i].gameObject.SetActive(false);
+                    labels[i].text = string.Empty;
+                    labels[i].color = Color.white;
+                    slotColor[i] = Color.white;
+                    slotTextLength[i] = -1; // fuerza SetCharArray en el primer uso real
+                }
+                if (start == 0) WarmArrows(false, at);
+            }
+            warming = false;
+            warmDone = true;
+            nextRefresh = 0f;
+        }
+
+        private void WarmArrows(bool on, Vector3 at)
+        {
+            for (int i = 0; i < ArrowCount; i++)
+            {
+                var line = arrows[i];
+                if (line == null) continue;
+                if (on)
+                {
+                    for (int p = 0; p < arrowPoints.Length; p++) arrowPoints[p] = at + new Vector3(0.0005f * p, 0f, 0f);
+                    line.SetPositions(arrowPoints);
+                    line.widthMultiplier = 0.0005f;
+                    line.startColor = line.endColor = new Color(1f, 1f, 1f, 0.004f);
+                    line.gameObject.SetActive(true);
+                }
+                else
+                {
+                    line.gameObject.SetActive(false);
+                    line.startColor = line.endColor = windColor;
+                }
+            }
+        }
+
         private void OnEnable()
         {
+            if (started && !warmDone && !warming) StartCoroutine(WarmupRoutine());
             if (caster != null) caster.SpellCompiled += OnSpellCompiled;
             else UnityEngine.Debug.LogWarning("[Laboratorio] LabOverlay sin SpellCaster asignado: no etiqueta hechizos.");
             VisibleChanged += OnVisibleChanged;
@@ -250,6 +341,19 @@ namespace SpellSimulator.Lab
             VisibleChanged -= OnVisibleChanged;
             MagicWorld.WorldReset -= OnWorldReset;
             HideAll();
+            if (warming)
+            {
+                // La corrutina se detiene con el componente: se apaga lo que dejo encendido y se reintenta al reactivar.
+                warming = false;
+                for (int i = 0; i < LabelCount; i++)
+                {
+                    labels[i].gameObject.SetActive(false);
+                    labels[i].color = Color.white;
+                    slotColor[i] = Color.white;
+                    slotTextLength[i] = -1;
+                }
+                WarmArrows(false, Vector3.zero);
+            }
         }
 
         private void OnDestroy()
@@ -305,7 +409,7 @@ namespace SpellSimulator.Lab
 
         private void LateUpdate()
         {
-            if (!visible) return;
+            if (!visible || warming) return;
             if (cam == null)
             {
                 cam = Camera.main;
@@ -354,6 +458,7 @@ namespace SpellSimulator.Lab
         private void Refresh(Vector3 camPos)
         {
             int used = 0;
+            newLabelsThisRefresh = 0;
             used = RefreshArrows(camPos, used);
             used = RefreshSpells(camPos, used);
 
@@ -566,6 +671,12 @@ namespace SpellSimulator.Lab
         /// </summary>
         private void CommitSlot(int slot, SlotKind kind, Vector3 anchor, float height, Color color, Movable movable, DrawingCanvas canvas)
         {
+            // Tope de etiquetas nuevas por refresco: las que no entran quedan apagadas y se encienden en el proximo tick.
+            if (!labels[slot].gameObject.activeSelf)
+            {
+                if (newLabelsThisRefresh >= MaxNewLabelsPerRefresh) return;
+                newLabelsThisRefresh++;
+            }
             slotKind[slot] = kind;
             slotAnchor[slot] = anchor;
             slotHeight[slot] = height;

@@ -30,23 +30,24 @@ namespace SpellSimulator.EditorTools.Map
         // Reaparicion (s). Ninguna estructura regala oro: solo el relicario del santuario, lento.
         private const float PaperCooldown = 25f, StoneCooldown = 45f, MetalCooldown = 90f, GoldCooldown = 600f;
 
-        private static readonly Color WoodA = new Color(0.45f, 0.3f, 0.19f);
-        private static readonly Color WoodB = new Color(0.33f, 0.21f, 0.13f);
-        private static readonly Color Plank = new Color(0.58f, 0.41f, 0.26f);
-        private static readonly Color StoneA = new Color(0.68f, 0.64f, 0.57f);
-        private static readonly Color StoneB = new Color(0.52f, 0.49f, 0.44f);
+        // Paleta compartida con MapLab (internal): madera, piedra, revoque, tela y laton.
+        internal static readonly Color WoodA = new Color(0.45f, 0.3f, 0.19f);
+        internal static readonly Color WoodB = new Color(0.33f, 0.21f, 0.13f);
+        internal static readonly Color Plank = new Color(0.58f, 0.41f, 0.26f);
+        internal static readonly Color StoneA = new Color(0.68f, 0.64f, 0.57f);
+        internal static readonly Color StoneB = new Color(0.52f, 0.49f, 0.44f);
         private static readonly Color Rock = new Color(0.58f, 0.55f, 0.52f);
-        private static readonly Color Moss = new Color(0.36f, 0.55f, 0.27f);
+        internal static readonly Color Moss = new Color(0.36f, 0.55f, 0.27f);
         private static readonly Color CaveWall = new Color(0.3f, 0.28f, 0.28f);
         private static readonly Color CaveFloor = new Color(0.36f, 0.33f, 0.3f);
-        private static readonly Color Plaster = new Color(0.88f, 0.82f, 0.7f);
+        internal static readonly Color Plaster = new Color(0.88f, 0.82f, 0.7f);
         private static readonly Color Roof = new Color(0.66f, 0.27f, 0.2f);
         private static readonly Color RoofDark = new Color(0.5f, 0.19f, 0.15f);
-        private static readonly Color Shutter = new Color(0.27f, 0.45f, 0.5f);
-        private static readonly Color Cloth = new Color(0.75f, 0.2f, 0.16f);
-        private static readonly Color ClothLight = new Color(0.95f, 0.9f, 0.78f);
-        private static readonly Color Iron = new Color(0.2f, 0.19f, 0.2f);
-        private static readonly Color Brass = new Color(0.8f, 0.62f, 0.28f);
+        internal static readonly Color Shutter = new Color(0.27f, 0.45f, 0.5f);
+        internal static readonly Color Cloth = new Color(0.75f, 0.2f, 0.16f);
+        internal static readonly Color ClothLight = new Color(0.95f, 0.9f, 0.78f);
+        internal static readonly Color Iron = new Color(0.2f, 0.19f, 0.2f);
+        internal static readonly Color Brass = new Color(0.8f, 0.62f, 0.28f);
         private static readonly Color Keystone = new Color(0.42f, 0.38f, 0.55f);
         private static readonly Color Inlay = new Color(0.32f, 0.36f, 0.62f);
         private static readonly Color Crystal = new Color(0.55f, 0.85f, 0.95f);
@@ -55,12 +56,13 @@ namespace SpellSimulator.EditorTools.Map
 
         /// <summary>Mesas del campo (estampas, herramientas, artilugios): se dejan libres.</summary>
         private static readonly Vector2 StampArea = new Vector2(28f, -16.5f);
-        /// <summary>
-        /// Mesa del Laboratorio (MapLab: mesa de estampas + 5,5 m al este) y su radio libre. Con 4 m no cambia ningun sitio
-        /// actual (el mas cercano, el circulo de piedras, busca a >= 9,9 m de aca); solo evita que una estructura futura la pise.
-        /// </summary>
-        private static readonly Vector2 LabArea = new Vector2(35.5f, -16.5f);
-        private const float LabAreaRadius = 4f;
+
+        /// <summary>Laboratorio v2 (Docs/LABORATORIO_V2_PLAN.md, «Área»): sitio preferido, radio del sitio y de la plataforma de lajas.</summary>
+        private static readonly Vector2 LaboratoryPreferred = new Vector2(47f, -27f);
+        private const float LaboratoryRadius = 8f;
+        public const float LaboratoryPlatformRadius = 5.2f;
+        /// <summary>Pista delante de la plataforma (largo y ancho, m) que tiene que quedar despejada al elegir el frente.</summary>
+        public const float LaboratoryTrackStart = 5.4f, LaboratoryTrackLength = 12f, LaboratoryTrackWidth = 10f;
 
         private static Material lit;
         private static Transform map;
@@ -75,6 +77,8 @@ namespace SpellSimulator.EditorTools.Map
             public float Radius;
             /// <summary>Tiene piso propio (cabana, cueva): el pasto no crece adentro.</summary>
             public bool Floor;
+            /// <summary>Radio del piso propio (0 = <see cref="Radius"/>): el laboratorio solo tapa el pasto bajo la plataforma.</summary>
+            public float FloorRadius;
         }
 
         private static Dictionary<string, Site> sites;
@@ -85,10 +89,10 @@ namespace SpellSimulator.EditorTools.Map
             if (sites != null) return sites;
             var result = new Dictionary<string, Site>();
             var taken = new List<Site>();
-            void Add(string name, Vector2 pos, Vector2 lookAt, float radius, bool floor)
+            void Add(string name, Vector2 pos, Vector2 lookAt, float radius, bool floor, float floorRadius = 0f)
             {
                 Vector2 front = lookAt - pos;
-                var s = new Site { Pos = pos, Front = front.sqrMagnitude > 1e-4f ? front.normalized : Vector2.up, Radius = radius, Floor = floor };
+                var s = new Site { Pos = pos, Front = front.sqrMagnitude > 1e-4f ? front.normalized : Vector2.up, Radius = radius, Floor = floor, FloorRadius = floorRadius };
                 result[name] = s;
                 taken.Add(s);
             }
@@ -123,6 +127,10 @@ namespace SpellSimulator.EditorTools.Map
             Add("EarthWorkshop", Find(new Vector2(40f, 30f), 10f, 6f, 1.0f, false, taken), ValleyShape.FieldCenter, 6f, false);
             Add("WaterLab", FindLakeside(5f, taken), ValleyShape.LakeCenter, 5f, false);
 
+            // Laboratorio v2 (al final: no mueve nada). El frente apunta a la pista mas despejada; el pasto no atraviesa la plataforma.
+            Vector2 lab = Find(LaboratoryPreferred, 8f, LaboratoryRadius, 1.5f, false, taken);
+            Add("Laboratory", lab, lab + LaboratoryFront(lab, taken), LaboratoryRadius, true, LaboratoryPlatformRadius);
+
             sites = result;
             return sites;
         }
@@ -132,8 +140,65 @@ namespace SpellSimulator.EditorTools.Map
         {
             var p = new Vector2(x, z);
             foreach (var s in Sites().Values)
-                if (s.Floor && Vector2.Distance(p, s.Pos) < s.Radius) return true;
+                if (s.Floor && Vector2.Distance(p, s.Pos) < (s.FloorRadius > 0f ? s.FloorRadius : s.Radius)) return true;
             return false;
+        }
+
+        /// <summary>Centro y frente (unitario, en XZ) de un sitio. Lo usa MapBuilder para el Laboratorio (MapLab).</summary>
+        public static bool TryGetSite(string name, out Vector2 position, out Vector2 front)
+        {
+            if (Sites().TryGetValue(name, out Site s))
+            {
+                position = s.Pos;
+                front = s.Front;
+                return true;
+            }
+            position = Vector2.zero;
+            front = Vector2.up;
+            return false;
+        }
+
+        /// <summary>
+        /// Frente del laboratorio: de 24 direcciones, la que deja mas despejada la pista (12 x 10 m delante de la plataforma):
+        /// sin caminos, agua, campo, mesas de estampas, otras estructuras ni desniveles grandes. Empate: la que mira al campo.
+        /// </summary>
+        private static Vector2 LaboratoryFront(Vector2 pos, List<Site> taken)
+        {
+            Vector2 toField = (ValleyShape.FieldCenter - pos).normalized;
+            Vector2 best = toField;
+            int bestScore = -1;
+            float bestDot = -2f;
+            float h0 = ValleyShape.Height(pos.x, pos.y);
+            for (int k = 0; k < 24; k++)
+            {
+                float a = k * 15f * Mathf.Deg2Rad;
+                var dir = new Vector2(Mathf.Sin(a), Mathf.Cos(a));
+                var side = new Vector2(dir.y, -dir.x);
+                int score = 0;
+                for (float d = LaboratoryTrackStart; d <= LaboratoryTrackStart + LaboratoryTrackLength + 0.01f; d += 2f)
+                    for (float s = -0.5f; s <= 0.51f; s += 0.25f)
+                        if (TrackClear(pos + dir * d + side * (s * LaboratoryTrackWidth), h0, taken)) score++;
+                float dot = Vector2.Dot(dir, toField);
+                if (score < bestScore || (score == bestScore && dot <= bestDot)) continue;
+                bestScore = score;
+                bestDot = dot;
+                best = dir;
+            }
+            return best;
+        }
+
+        private static bool TrackClear(Vector2 p, float h0, List<Site> taken)
+        {
+            if (p.magnitude > 63f) return false;
+            if (Vector2.Distance(p, ValleyShape.FieldCenter) < ValleyShape.FieldRadius + 2f) return false;
+            if (Vector2.Distance(p, StampArea) < 5f) return false;
+            if (ValleyShape.LakeFactor(p.x, p.y) < 2f) return false;
+            if (ValleyShape.RiverDistance(p.x, p.y) < ValleyShape.RiverHalfWidth + 2f) return false;
+            if (ValleyShape.PathDistance(p.x, p.y) < ValleyShape.PathWidth + 0.5f) return false;
+            if (Mathf.Abs(ValleyShape.Height(p.x, p.y) - h0) > 2f) return false;
+            foreach (var t in taken)
+                if (Vector2.Distance(p, t.Pos) < t.Radius + 1f) return false;
+            return true;
         }
 
         private static Vector2 Polar(float angleDeg, float radius) =>
@@ -188,7 +253,6 @@ namespace SpellSimulator.EditorTools.Map
             if (Vector2.Distance(p, ValleyShape.TowerCenter) < ValleyShape.HillRadius + 1f + radius) return false;
             if (Vector2.Distance(p, ValleyShape.FieldCenter) < ValleyShape.FieldRadius + 4f + radius) return false;
             if (Vector2.Distance(p, StampArea) < 5f + radius) return false;
-            if (Vector2.Distance(p, LabArea) < LabAreaRadius + radius) return false;
             if (Vector2.Distance(p, ValleyShape.Spawn) < 8f + radius) return false;
             if (ValleyShape.LakeFactor(p.x, p.y) < 2.5f) return false;
             if (ValleyShape.RiverDistance(p.x, p.y) < ValleyShape.RiverHalfWidth + 4f + radius) return false;

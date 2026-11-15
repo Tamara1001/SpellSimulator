@@ -83,12 +83,17 @@ namespace SpellSimulator.Lab
             Assign(id, LabParameterMath.Step(values[(int)id], def, dir), true);
         }
 
-        /// <summary>Boton «valores por defecto»: todo vuelve al catalogo (un evento por variable que cambie) y el fuego a sus defaults.</summary>
+        /// <summary>
+        /// Boton «valores por defecto»: todo vuelve al catalogo (un evento por variable que cambie), el fuego a sus defaults y,
+        /// si hay banco de sellos, el sello a su receta inicial (<see cref="LabSealBench.ResetSpec"/>).
+        /// </summary>
         public void ResetAll()
         {
             for (int i = 0; i < values.Length; i++) Assign((LabVariableId)i, LabCatalog.Defs[i].Default, false);
             // Siempre, aunque los valores ya fueran los defaults: la grilla pudo cambiar por otro lado.
             ApplyFire();
+            LabSealBench bench = LabSealBench.Current;
+            if (bench != null) bench.ResetSpec();
         }
 
         // ---------------------------------------------------------------- interno

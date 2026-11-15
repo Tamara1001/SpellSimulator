@@ -92,8 +92,9 @@ namespace SpellSimulator.EditorTools
         }
 
         /// <summary>
-        /// La mesa del Laboratorio (Map/Lab y todo lo que empieza con «Lab») no arde: el parche de fuego se materializa cerca y
-        /// la mesa tiene que sobrevivir a los experimentos (LABORATORIO_PLAN riesgo 12). «Label» no cuenta.
+        /// El Laboratorio v2 (Map/Lab: plataforma, toldo, banco, papel de prueba, manga, fogon; y todo lo que empieza con «Lab»)
+        /// no arde: el parche de fuego se materializa en la pista y el banco tiene que sobrevivir a los experimentos
+        /// (LABORATORIO_PLAN riesgo 12). «Label» no cuenta.
         /// </summary>
         private static bool IsLab(Transform t)
         {

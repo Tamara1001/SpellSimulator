@@ -17,7 +17,7 @@ namespace SpellSimulator.Lab
         private Renderer highlight;
 
         private string prompt;
-        private LabStepPlate.HoverTint tint;
+        private LabControl.HoverTint tint;
 
         private void Awake()
         {

@@ -25,6 +25,7 @@ namespace SpellSimulator.Player
 
         private PlayerInputReader inputReader;
         private ObjectMover objectMover;
+        private PlayerInteractor interactor;
         private Camera mainCamera;
         private float baseFov;
         private float currentFov;
@@ -34,6 +35,7 @@ namespace SpellSimulator.Player
         {
             inputReader = GetComponent<PlayerInputReader>();
             objectMover = GetComponent<ObjectMover>();
+            interactor = GetComponent<PlayerInteractor>();
             mainCamera = Camera.main;
             if (mainCamera != null)
             {
@@ -51,6 +53,8 @@ namespace SpellSimulator.Player
             if (cameraTransform == null || !PlatformDetector.IsLookCaptured) return;
             // Clic derecho + G: el mouse rota el objeto sostenido y la vista queda quieta.
             if (objectMover != null && objectMover.IsRotating) return;
+            // Manipulando una perilla o deslizador: el mouse mueve el control y la vista queda quieta.
+            if (interactor != null && interactor.IsManipulating) return;
 
             float sensitivity = inputReader.IsUsingTool ? lookSensitivity * drawingSensitivityMultiplier : lookSensitivity;
             // Con zoom la sensibilidad baja en la misma proporcion que el campo de vision (mas precision).

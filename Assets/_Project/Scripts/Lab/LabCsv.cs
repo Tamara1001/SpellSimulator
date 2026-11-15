@@ -29,11 +29,21 @@ namespace SpellSimulator.Lab
         public readonly int ExperimentId;
         /// <summary>notas: texto libre (p. ej. "superpuesto").</summary>
         public readonly string Notes;
+        /// <summary>spec_sello: sello del banco en una linea (LabSealBenchMath.Serialize); vacio fuera del banco.</summary>
+        public readonly string SealSpec;
+        /// <summary>receta: receta base del banco de sellos.</summary>
+        public readonly string Recipe;
+        /// <summary>semilla: semilla del temblor del banco (null = vacio).</summary>
+        public readonly int? Seed;
 
         public LabLogRow(DateTime timestamp, float sessionSeconds, string eventName, string variable = null,
             float? previous = null, float? current = null, string result = null, float? measuredValue = null,
-            string unit = null, int experimentId = 0, string notes = null)
+            string unit = null, int experimentId = 0, string notes = null, string sealSpec = null, string recipe = null,
+            int? seed = null)
         {
+            SealSpec = sealSpec;
+            Recipe = recipe;
+            Seed = seed;
             Timestamp = timestamp;
             SessionSeconds = sessionSeconds;
             Event = eventName;
@@ -66,8 +76,14 @@ namespace SpellSimulator.Lab
         /// <summary>Formato del tiempo de sesion en segundos.</summary>
         public const string SessionTimeFormat = "0.00";
 
-        /// <summary>Encabezado del CSV (11 columnas, separadas por <see cref="Separator"/>).</summary>
-        public const string Header = "fecha_hora;t_sesion_s;evento;variable;anterior;nuevo;resultado;valor_medido;unidad;id_experimento;notas";
+        /// <summary>
+        /// Encabezado del CSV (14 columnas, separadas por <see cref="Separator"/>). Las tres ultimas (banco de sellos del
+        /// Laboratorio v2) se agregaron al final para no correr las columnas de los registros viejos.
+        /// </summary>
+        public const string Header = "fecha_hora;t_sesion_s;evento;variable;anterior;nuevo;resultado;valor_medido;unidad;id_experimento;notas;spec_sello;receta;semilla";
+
+        /// <summary>Cantidad de columnas de <see cref="Header"/>.</summary>
+        public const int ColumnCount = 14;
 
         /// <summary>Formato numerico con coma decimal y sin separador de miles, independiente de la cultura del sistema.</summary>
         public static readonly NumberFormatInfo NumberFormat = CreateNumberFormat();
@@ -75,7 +91,7 @@ namespace SpellSimulator.Lab
         /// <summary>Arma una linea del CSV (sin salto de linea final) con las columnas de <see cref="Header"/>.</summary>
         public static string FormatRow(in LabLogRow row)
         {
-            var sb = new StringBuilder(128);
+            var sb = new StringBuilder(256);
             sb.Append(row.Timestamp.ToString(DateFormat, CultureInfo.InvariantCulture)).Append(Separator);
             sb.Append(FormatNumber(row.SessionSeconds, SessionTimeFormat)).Append(Separator);
             sb.Append(Escape(row.Event)).Append(Separator);
@@ -87,7 +103,10 @@ namespace SpellSimulator.Lab
             sb.Append(Escape(row.Unit)).Append(Separator);
             if (row.ExperimentId > 0) sb.Append(row.ExperimentId.ToString(CultureInfo.InvariantCulture));
             sb.Append(Separator);
-            sb.Append(Escape(row.Notes));
+            sb.Append(Escape(row.Notes)).Append(Separator);
+            sb.Append(Escape(row.SealSpec)).Append(Separator);
+            sb.Append(Escape(row.Recipe)).Append(Separator);
+            if (row.Seed.HasValue) sb.Append(row.Seed.Value.ToString(CultureInfo.InvariantCulture));
             return sb.ToString();
         }
 

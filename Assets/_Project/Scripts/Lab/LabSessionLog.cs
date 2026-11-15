@@ -13,9 +13,11 @@ namespace SpellSimulator.Lab
     /// <summary>
     /// Registro de la sesion del laboratorio (consigna de Simuladores: cada cambio y su resultado). Escucha las perillas
     /// (<see cref="LabParameters.ValueChanged"/>, agrupadas), lo materializado (<see cref="LabSpawner.Materialized"/>), los hechizos
-    /// (SpellCaster.SpellCompiled), las mediciones (<see cref="LabMeasurements.Measured"/>) y el reinicio, y escribe una fila por
-    /// evento con <see cref="LabCsvWriter"/>. Columna evento: perilla, materializar, hechizo, medicion, reinicio. Cada medicion
-    /// lleva el id_experimento de la fila que la origino. En sesiones de red no escribe nada (riesgo 11).
+    /// (SpellCaster.SpellCompiled), las mediciones (<see cref="LabMeasurements.Measured"/>), el banco de sellos
+    /// (<see cref="LabSealBench.VarChanged"/>, agrupado igual que las perillas) y el reinicio, y escribe una fila por evento con
+    /// <see cref="LabCsvWriter"/>. Columna evento: perilla, sello, materializar, hechizo, medicion, reinicio. Los hechizos del
+    /// lienzo del banco se registran aunque no sean validos y llevan spec_sello, receta y semilla. Cada medicion lleva el
+    /// id_experimento de la fila que la origino. En sesiones de red no escribe nada (riesgo 11).
     /// Sin Update: el agrupado de perillas usa una corrutina que solo corre mientras hay un cambio pendiente.
     /// </summary>
     public class LabSessionLog : MonoBehaviour
@@ -32,6 +34,7 @@ namespace SpellSimulator.Lab
         public const float ResolveInterval = 1f;
 
         public const string EventKnob = "perilla";
+        public const string EventSeal = "sello";
         public const string EventMaterialize = "materializar";
         public const string EventSpell = "hechizo";
         public const string EventMeasurement = "medicion";
@@ -57,15 +60,18 @@ namespace SpellSimulator.Lab
 
         private LabParameters subscribedParameters;
         private LabSpawner subscribedSpawner;
+        private LabSealBench subscribedBench;
         private Coroutine knobRoutine;
         private WaitForSecondsRealtime resolveWait;
 
         // Ultimos valores conocidos de cada variable (para anotar con que valores se materializo algo).
         private readonly float[] knownValues = new float[LabCatalog.Count];
 
-        // Perilla pendiente de escribir (agrupado de pasos seguidos de la misma variable).
+        // Perilla (o variable del banco) pendiente de escribir (agrupado de pasos seguidos de la misma variable).
         private bool knobPending;
+        private bool knobIsSeal;
         private LabVariableId knobId;
+        private LabSealVarId sealVarId;
         private float knobFirstPrevious;
         private float knobLast;
         private float knobDeadline;
@@ -100,8 +106,10 @@ namespace SpellSimulator.Lab
             MagicWorld.WorldReset -= OnWorldReset;
             if (!ReferenceEquals(subscribedParameters, null)) subscribedParameters.ValueChanged -= OnValueChanged;
             if (!ReferenceEquals(subscribedSpawner, null)) subscribedSpawner.Materialized -= OnMaterialized;
+            if (!ReferenceEquals(subscribedBench, null)) subscribedBench.VarChanged -= OnSealVarChanged;
             subscribedParameters = null;
             subscribedSpawner = null;
+            subscribedBench = null;
 
             writer?.Dispose();
             writer = null;
@@ -135,6 +143,14 @@ namespace SpellSimulator.Lab
                 subscribedSpawner = spawner != null ? spawner : null;
                 if (!ReferenceEquals(subscribedSpawner, null)) subscribedSpawner.Materialized += OnMaterialized;
             }
+
+            LabSealBench bench = LabSealBench.Current;
+            if (!ReferenceEquals(bench, subscribedBench))
+            {
+                if (!ReferenceEquals(subscribedBench, null)) subscribedBench.VarChanged -= OnSealVarChanged;
+                subscribedBench = bench != null ? bench : null;
+                if (!ReferenceEquals(subscribedBench, null)) subscribedBench.VarChanged += OnSealVarChanged;
+            }
         }
 
         // ---------------------------------------------------------------- perillas (agrupadas)
@@ -146,13 +162,36 @@ namespace SpellSimulator.Lab
             if (NetSession.Exists) return;
 
             // Otra variable: la anterior se cierra ya (el boton "por defecto" emite una por variable: una fila cada una).
-            if (knobPending && knobId != id) FlushKnob();
+            if (knobPending && (knobIsSeal || knobId != id)) FlushKnob();
             if (!knobPending)
             {
                 knobPending = true;
+                knobIsSeal = false;
                 knobId = id;
                 knobFirstPrevious = previous;
             }
+            TouchKnob(current);
+        }
+
+        /// <summary>Variable del banco de sellos. Al cargar una receta solo se escribe la fila de la receta (las demas son consecuencia).</summary>
+        private void OnSealVarChanged(LabSealVarId id, float previous, float current)
+        {
+            if (NetSession.Exists) return;
+            if (!ReferenceEquals(subscribedBench, null) && subscribedBench.ApplyingRecipe && id != LabSealVarId.BaseRecipe) return;
+
+            if (knobPending && (!knobIsSeal || sealVarId != id)) FlushKnob();
+            if (!knobPending)
+            {
+                knobPending = true;
+                knobIsSeal = true;
+                sealVarId = id;
+                knobFirstPrevious = previous;
+            }
+            TouchKnob(current);
+        }
+
+        private void TouchKnob(float current)
+        {
             knobLast = current;
             knobDeadline = Time.unscaledTime + KnobGroupSeconds;
             if (knobRoutine == null && isActiveAndEnabled) knobRoutine = StartCoroutine(KnobTimer());
@@ -170,6 +209,11 @@ namespace SpellSimulator.Lab
             knobPending = false;
             // Subio y volvio al mismo valor: no hubo cambio que registrar.
             if (Mathf.Approximately(knobFirstPrevious, knobLast)) return;
+            if (knobIsSeal)
+            {
+                FlushSealVar();
+                return;
+            }
 
             int index = (int)knobId;
             bool known = index >= 0 && index < LabCatalog.Count;
@@ -178,6 +222,26 @@ namespace SpellSimulator.Lab
             int experiment = LabMeasurements.NextExperimentId();
             Write(new LabLogRow(DateTime.Now, SessionSeconds, EventKnob, label, knobFirstPrevious, knobLast,
                 unit: string.IsNullOrEmpty(unit) ? null : unit, experimentId: experiment));
+        }
+
+        private void FlushSealVar()
+        {
+            LabSealVarDef def = LabSealCatalog.Get(sealVarId);
+            LabSealBench bench = subscribedBench;
+            string notes = null, specText = null, recipe = null;
+            int? seed = null;
+            if (bench != null)
+            {
+                notes = bench.FormatVar(sealVarId, knobFirstPrevious) + " → " + bench.FormatVar(sealVarId, knobLast);
+                LabSealSpec spec = bench.Spec;
+                specText = LabSealBenchMath.Serialize(spec);
+                recipe = spec.recipeId;
+                seed = spec.seed;
+            }
+            int experiment = LabMeasurements.NextExperimentId();
+            Write(new LabLogRow(DateTime.Now, SessionSeconds, EventSeal, def.Label, knobFirstPrevious, knobLast,
+                unit: string.IsNullOrEmpty(def.Unit) ? null : def.Unit, experimentId: experiment, notes: notes,
+                sealSpec: specText, recipe: recipe, seed: seed));
         }
 
         private void FlushPendingKnob()
@@ -216,7 +280,7 @@ namespace SpellSimulator.Lab
                         + "; generaciones máx. " + LabCsv.FormatNumber(Known(LabVariableId.FireMaxGenerations));
                     break;
                 case LabSpawnKind.Fountain:
-                    value = Known(LabVariableId.WaterFlow);
+                    value = 1f; // caudal fijo: la variable se elimino en el Laboratorio v2
                     unit = "x";
                     break;
             }
@@ -228,17 +292,37 @@ namespace SpellSimulator.Lab
         {
             // Siempre primero: reparte el mismo id que LabMeasurements para este cast, en cualquier orden de suscripcion.
             int experiment = LabMeasurements.ExperimentIdForCast(ref castLastFrame, ref castIndexInFrame);
-            if (NetSession.Exists || !spell.valid) return;
+            if (NetSession.Exists) return;
+            // Los lanzamientos del banco se registran siempre (un sello que no compila tambien es un resultado del experimento).
+            LabSealBench bench = LabSealBench.Current;
+            bool fromBench = bench != null && canvas != null && bench.Canvas == canvas;
+            if (!spell.valid && !fromBench) return;
             FlushPendingKnob();
 
-            string notes = "fuerza " + LabCsv.FormatNumber(spell.force)
-                + "; alcance " + LabCsv.FormatNumber(spell.range)
-                + "; calidad " + LabCsv.FormatNumber(spell.quality)
-                + "; tinta x" + LabCsv.FormatNumber(spell.inkPower)
-                + "; radio del sello " + LabCsv.FormatNumber(spell.sealRadius) + " m";
-            if (!string.IsNullOrEmpty(spell.sigilId)) notes = "sigilo " + spell.sigilId + "; " + notes;
-            Write(new LabLogRow(DateTime.Now, SessionSeconds, EventSpell, ElementLabel(spell.element),
-                result: spell.active ? "lanzado" : "sin activar", experimentId: experiment, notes: notes));
+            string notes;
+            if (spell.valid)
+            {
+                notes = "fuerza " + LabCsv.FormatNumber(spell.force)
+                    + "; alcance " + LabCsv.FormatNumber(spell.range)
+                    + "; calidad " + LabCsv.FormatNumber(spell.quality)
+                    + "; tinta x" + LabCsv.FormatNumber(spell.inkPower)
+                    + "; radio del sello " + LabCsv.FormatNumber(spell.sealRadius) + " m";
+                if (!string.IsNullOrEmpty(spell.sigilId)) notes = "sigilo " + spell.sigilId + "; " + notes;
+            }
+            else notes = string.IsNullOrEmpty(spell.status) ? null : spell.status;
+
+            string result = !spell.valid ? "no válido" : spell.active ? "lanzado" : "sin activar";
+            string specText = null, recipe = null;
+            int? seed = null;
+            if (fromBench)
+            {
+                LabSealSpec spec = bench.Spec;
+                specText = LabSealBenchMath.Serialize(spec);
+                recipe = spec.recipeId;
+                seed = spec.seed;
+            }
+            Write(new LabLogRow(DateTime.Now, SessionSeconds, EventSpell, spell.valid ? ElementLabel(spell.element) : "sin elemento",
+                result: result, experimentId: experiment, notes: notes, sealSpec: specText, recipe: recipe, seed: seed));
         }
 
         private void OnMeasured(LabMeasurement m)

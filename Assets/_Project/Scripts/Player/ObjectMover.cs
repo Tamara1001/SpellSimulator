@@ -30,6 +30,7 @@ namespace SpellSimulator.Player
         private static readonly RaycastHit[] pickHits = new RaycastHit[16];
 
         private PlayerInputReader inputReader;
+        private PlayerInteractor interactor;
         private Camera cam;
         private Rigidbody playerBody;
 
@@ -59,6 +60,7 @@ namespace SpellSimulator.Player
         private void Awake()
         {
             inputReader = GetComponent<PlayerInputReader>();
+            interactor = GetComponent<PlayerInteractor>();
             cam = Camera.main;
             playerBody = GetComponent<Rigidbody>();
         }
@@ -82,7 +84,8 @@ namespace SpellSimulator.Player
             }
 
             float scroll = inputReader.Scroll;
-            if (scroll != 0f)
+            // La rueda sobre una perilla o deslizador es del control: no cambia la distancia.
+            if (scroll != 0f && !(interactor != null && interactor.WheelOwnedByManipulable))
             {
                 float step = Mathf.Sign(scroll);
                 if (inputReader.IsRunning)

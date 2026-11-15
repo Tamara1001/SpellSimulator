@@ -128,7 +128,7 @@ namespace SpellSimulator.Lab
                 LabSpawnKind.Wind => SpawnWind(),
                 LabSpawnKind.Fire => SpawnFire(),
                 // TODO (fase 3, LABORATORIO_PLAN seccion 4): LabFountain con WaterSpell.ConfigureDrops(ps, inkPower,
-                // LabParameters.Get(WaterFlow), ignore) en fountainAnchor, tope 1 (retirar la mas vieja). Hasta entonces no hace nada.
+                // caudal fijo, ignore) en fountainAnchor, tope 1 (retirar la mas vieja). Hasta entonces no hace nada.
                 LabSpawnKind.Fountain => null,
                 _ => null
             };

@@ -32,7 +32,7 @@ namespace SpellSimulator.EditorTools
         private static int errorLogs;
 
         // Bloque del Laboratorio (varios frames) y su registro CSV redirigido a Logs/.
-        private const float LabTimeoutSeconds = 30f;
+        private const float LabTimeoutSeconds = 60f;
         private static readonly string LabLogPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "harness-lab-registro.csv"));
         private static IEnumerator labRoutine;
         private static float labDeadline;
@@ -354,9 +354,11 @@ namespace SpellSimulator.EditorTools
         }
 
         /// <summary>
-        /// Bloque «Laboratorio» (Docs/LABORATORIO_PLAN.md, fases 2a y 2b): perilla, caja de 25 y de 600 kg, zona de viento,
-        /// reinicio (borra lo materializado y conserva los valores), tuning del fuego y «por defecto», registro CSV redirigido a
-        /// Logs/ y alternar el overlay de las lentes. Corre a lo largo de varios ticks: cada <c>yield return null</c> espera uno.
+        /// Bloque «Laboratorio» (Docs/LABORATORIO_PLAN.md fases 2a/2b y LABORATORIO_V2_PLAN.md): paso de masa, caja de 25 y de
+        /// 600 kg, zona de viento, reinicio (borra lo materializado y conserva los valores), tuning del fuego y «por defecto»,
+        /// overlay de las lentes; v2: banco de sellos (SetVar/GetVar, cada receta lanzada con temblor 0, gust obligatoria),
+        /// controles enlazados, un LabControl que mueve su variable, LabWindVisual con zona; registro CSV redirigido a Logs/
+        /// (con la fila «sello»). Corre a lo largo de varios ticks: cada <c>yield return null</c> espera uno.
         /// </summary>
         private static IEnumerator LabChecks()
         {
@@ -446,6 +448,89 @@ namespace SpellSimulator.EditorTools
             LabOverlay.Visible = false;
             Check(toggled && !LabOverlay.Visible, "laboratorio: las lentes prenden y apagan el overlay");
 
+            // --- Laboratorio v2: banco de sellos, controles enlazados y viento visible.
+            var bench = LabSealBench.Current;
+            Check(bench != null && bench.Canvas != null && GameObject.Find("LabBench") != null, "laboratorio v2: banco de sellos (LabBench) con lienzo de prueba");
+            if (bench != null && bench.Canvas != null)
+            {
+                // SetVar cambia GetVar (y deja una fila «sello» en el registro, agrupada como las perillas).
+                float fill = bench.GetVar(LabSealVarId.RingFill);
+                float fillTarget = fill > 0.6f ? 0.5f : 0.7f;
+                bench.SetVar(LabSealVarId.RingFill, fillTarget);
+                Check(Mathf.Abs(bench.GetVar(LabSealVarId.RingFill) - fillTarget) < 1e-3f, "laboratorio v2: SetVar cambia GetVar (llenado del anillo)");
+                for (float end = Time.realtimeSinceStartup + LabSessionLog.KnobGroupSeconds + 0.3f; Time.realtimeSinceStartup < end;) yield return null;
+
+                // Cada receta con temblor 0: Launch() compila valido y con el elemento de su sigilo. Solo gust es obligatoria
+                // (riesgo 1: el ONNX puede no leer bien trazos sinteticos); el resto se cuenta y se reporta.
+                var smokeCaster = Object.FindFirstObjectByType<SpellSimulator.Casting.SpellCaster>();
+                var glyphs = smokeCaster != null ? smokeCaster.Glyphs : null;
+                var recipes = new List<string>(bench.RecipeIds);
+                int total = 0, valid = 0, matching = 0;
+                bool gustSeen = false, gustOk = false;
+                var missed = new StringBuilder();
+                foreach (string id in recipes)
+                {
+                    if (id == LabSealBenchMath.FreeRecipeId) continue;
+                    bench.ApplyRecipe(id);
+                    bench.SetVar(LabSealVarId.Tremor, 0f);
+                    bench.Launch();
+                    total++;
+                    var expected = ExpectedElement(glyphs, bench.Spec.sigilId);
+                    bool ok = bench.LastCastValid && (expected == SpellSimulator.Compiler.ElementType.None || bench.LastElement == expected);
+                    if (bench.LastCastValid) valid++;
+                    if (ok) matching++;
+                    else missed.Append(id).Append(' ');
+                    if (id == "gust")
+                    {
+                        gustSeen = true;
+                        gustOk = ok;
+                    }
+                    yield return null;
+                }
+                Check(gustSeen && gustOk, "laboratorio v2: la receta gust (temblor 0) compila valida y de viento");
+                string recipeReport = $"laboratorio v2: {matching}/{total} recetas compilan con su elemento ({valid} validas)" +
+                                      (missed.Length > 0 ? " [fallan: " + missed.ToString().Trim() + "]" : "");
+                passed.Append(recipeReport).Append("; ");
+                Debug.Log("[PlaySmoke] " + recipeReport);
+                bench.ResetSpec();
+                world.ResetWorld();   // borra lo que dejaron los hechizos de prueba en la pista
+                int recipesFrame = Time.frameCount;
+                while (Time.frameCount < recipesFrame + 2) yield return null;
+            }
+
+            // Controles: todos enlazados y uno (velocidad del viento) cambia su variable por su delegado set (rueda = un paso).
+            var bindings = Object.FindObjectsByType<LabControlBinding>(FindObjectsSortMode.None);
+            int bound = 0;
+            LabControlBinding speedBinding = null;
+            foreach (var binding in bindings)
+            {
+                if (binding.Bound) bound++;
+                if (binding.Source == LabControlSource.Environment && binding.Variable == (int)LabVariableId.WindSpeed) speedBinding = binding;
+            }
+            Check(bindings.Length >= 24 && bound == bindings.Length, $"laboratorio v2: {bound}/{bindings.Length} controles enlazados");
+            bool controlMoved = false;
+            if (speedBinding != null && speedBinding.Bound)
+            {
+                float speedBefore = parameters.Get(LabVariableId.WindSpeed);
+                LabControl control = speedBinding.Control;
+                control.BeginManipulation(default);
+                control.UpdateManipulation(new SpellSimulator.Interfaces.ManipulationInput(Vector2.zero, Vector3.zero, 0f, Vector3.zero,
+                    Vector3.forward, Vector3.right, 1f, false));
+                control.EndManipulation();
+                controlMoved = parameters.Get(LabVariableId.WindSpeed) > speedBefore + 0.5f;
+            }
+            Check(controlMoved, "laboratorio v2: un LabControl (velocidad del viento) cambia su variable");
+
+            // Viento visible: tras materializar, LabWindVisual sigue la zona (enfriamiento de 1 s por boton, tiempo de juego).
+            var windVisual = Object.FindFirstObjectByType<LabWindVisual>();
+            float windAt = Time.time;
+            for (float end = Time.realtimeSinceStartup + 5f; Time.time - windAt < 1.2f && Time.realtimeSinceStartup < end;) yield return null;
+            var visibleWind = spawner.Materialize(LabSpawnKind.Wind);
+            int windFrame = Time.frameCount;
+            while (Time.frameCount < windFrame + 3) yield return null;
+            Check(windVisual != null && visibleWind != null && windVisual.HasZone, "laboratorio v2: LabWindVisual sigue la zona de viento materializada");
+            spawner.ClearAll();
+
             // --- Registro: se cierra (escribe la perilla pendiente y libera el archivo) y se cuentan las filas.
             for (float end = Time.realtimeSinceStartup + LabSessionLog.KnobGroupSeconds + 0.3f; Time.realtimeSinceStartup < end;) yield return null;
             logGo.SetActive(false);
@@ -454,10 +539,21 @@ namespace SpellSimulator.EditorTools
             string all = string.Join("\n", lines);
             Check(rows >= 4 && all.Contains(LabSessionLog.EventKnob) && all.Contains(LabSessionLog.EventMaterialize) && all.Contains(LabSessionLog.EventReset),
                 $"laboratorio: el registro CSV en Logs/ tiene {rows} filas (perilla, materializar y reinicio)");
+            // Columna «evento» exacta (el encabezado tiene «spec_sello»).
+            string sealCell = LabCsv.Separator + LabSessionLog.EventSeal + LabCsv.Separator;
+            Check(all.Contains(sealCell), "laboratorio v2: el registro CSV tiene el evento «sello»");
 
             Object.Destroy(logGo);
             spawner.ClearAll();
             parameters.ResetAll();
+        }
+
+        /// <summary>Elemento que deberia dar un sigilo (su entrada del diccionario); None si no se puede saber.</summary>
+        private static SpellSimulator.Compiler.ElementType ExpectedElement(SpellSimulator.Glyphs.GlyphDictionary glyphs, string sigilId)
+        {
+            if (glyphs == null || string.IsNullOrEmpty(sigilId)) return SpellSimulator.Compiler.ElementType.None;
+            var entry = glyphs.Get(sigilId);
+            return entry != null ? SpellSimulator.Compiler.SpellIR.ParseElement(entry.Element) : SpellSimulator.Compiler.ElementType.None;
         }
 
         /// <summary>Un punto sobre la cara este de la pared de la torre (centro de las bounds de TowerWall, corrido al borde exterior).</summary>

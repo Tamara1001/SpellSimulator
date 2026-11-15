@@ -15,6 +15,7 @@ namespace SpellSimulator.Player
         private IInteractable currentHovered;
         private IPressable hoveredPressable;
         private IFlippable hoveredFlippable;
+        private IManipulable hoveredManipulable;
         private IInkSource hoveredInkSource;
         private float hoverDistance;
 
@@ -25,7 +26,8 @@ namespace SpellSimulator.Player
         /// <summary>True si lo que se mira se puede agarrar o apretar con E (la HUD muestra el simbolo [E]).</summary>
         public bool HoverInteractable => (hoveredPressable != null && !hoveredPressable.PressWithClick) || (hoveredPressable == null && currentHovered != null);
         /// <summary>Lo que se esta mirando y se puede agarrar o apretar (null si nada).</summary>
-        public GameObject HoveredObject => currentHovered is MonoBehaviour mb ? mb.gameObject : hoveredPressable is MonoBehaviour pb ? pb.gameObject : null;
+        public GameObject HoveredObject => currentHovered is MonoBehaviour mb ? mb.gameObject : hoveredPressable is MonoBehaviour pb ? pb.gameObject
+            : hoveredManipulable is MonoBehaviour mm ? mm.gameObject : null;
 
         /// <summary>Pistas junto a la mira ("E: Agarrar | V: Vista completa | R: Recargar tinta"), vacio si no hay nada que hacer.</summary>
         public string HoverHints { get; private set; } = "";
@@ -61,6 +63,9 @@ namespace SpellSimulator.Player
 
         private string ComputeHoverHints()
         {
+            // Perilla, deslizador o selector: su propia ayuda (cadena cacheada, sin armar nada por frame).
+            IManipulable manipulable = activeManipulable ?? hoveredManipulable;
+            if (manipulable != null) return manipulable.HelpText ?? "";
             if (hoveredPressable != null)
             {
                 if (hoveredPressable.PressWithClick) return "";
@@ -130,7 +135,9 @@ namespace SpellSimulator.Player
             currentHovered = null;
             hoveredPressable = null;
             hoveredFlippable = null;
+            hoveredManipulable = null;
             hoveredInkSource = null;
+            StopManipulation();
             HoverHints = "";
         }
 
@@ -149,15 +156,18 @@ namespace SpellSimulator.Player
             hoveredPressable = null;
             hoveredInkSource = null;
             hoveredFlippable = null;
+            hoveredManipulable = null;
             viewCanvas = null;
             viewSurface = false;
             if (PickHit(origin.position, direction, out RaycastHit hit))
             {
                 end = hit.point;
+                hoverHit = hit;
                 hoverDistance = hit.distance;
                 hoveredInkSource = hit.collider.GetComponentInParent<IInkSource>();
                 hoveredPressable = hit.collider.GetComponentInParent<IPressable>();
                 hoveredFlippable = hit.collider.GetComponentInParent<IFlippable>();
+                hoveredManipulable = hit.collider.GetComponentInParent<IManipulable>();
                 var interactable = hit.collider.GetComponentInParent<IInteractable>();
                 if (interactable != null) currentHovered = interactable;
                 FindViewTarget(hit);
@@ -188,7 +198,7 @@ namespace SpellSimulator.Player
                 if (hit.distance >= bestDistance) continue;
                 Collider c = hit.collider;
                 if (c.transform.IsChildOf(transform)) continue;
-                bool pressable = c.GetComponentInParent<IPressable>() != null;
+                bool pressable = c.GetComponentInParent<IPressable>() != null || c.GetComponentInParent<IManipulable>() != null;
                 bool held = IsInMyHands(c.transform);
                 if (held && !pressable) continue;
                 if (c.isTrigger && !pressable && c.GetComponentInParent<IInteractable>() == null &&

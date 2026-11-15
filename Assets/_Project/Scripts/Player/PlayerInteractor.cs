@@ -173,6 +173,7 @@ namespace SpellSimulator.Player
             HandleInteraction();
             HandlePin();
             HandleClickPress();
+            HandleManipulation();
             HandleThrow();
             HandleFlip();
             HandleWheel();
@@ -195,7 +196,7 @@ namespace SpellSimulator.Player
 
         private void HandleInteraction()
         {
-            if (!inputReader.IsInteracting) return;
+            if (!inputReader.IsInteracting || IsManipulating) return;
 
             // Otra E deja en el aire lo que se arrastra (para soltarlo en el piso: Q lo arroja).
             if (IsDragging) { Release(LocalOwnerId, true); return; }
@@ -296,6 +297,8 @@ namespace SpellSimulator.Player
             if (scroll == 0f) return;
             var book = Learning.Grimoire.Instance;
             if (book != null && book.IsOpen) return;
+            // La rueda sobre una perilla o deslizador es del control (HandleManipulation): no cambia el grosor.
+            if (WheelOwnedByManipulable) return;
             int step = scroll > 0f ? 1 : -1;
 
             // Arrastrando cualquier cosa (tambien un cuaderno) la rueda es del movedor (distancia), salvo en vista completa,

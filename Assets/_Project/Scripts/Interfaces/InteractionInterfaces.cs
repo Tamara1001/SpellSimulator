@@ -154,3 +154,52 @@ namespace SpellSimulator.Interfaces
         void ResetToInitial();
     }
 }
+
+
+namespace SpellSimulator.Interfaces
+{
+    /// <summary>Entrada de un frame para un <see cref="IManipulable"/>. Struct de solo lectura: no aloca.</summary>
+    public readonly struct ManipulationInput
+    {
+        /// <summary>PC: delta del mouse de este frame (unidades crudas). En VR es cero.</summary>
+        public readonly UnityEngine.Vector2 PointerDelta;
+        /// <summary>VR: posicion de la mano (controlador) en el mundo. En PC, la de la camara.</summary>
+        public readonly UnityEngine.Vector3 HandPosition;
+        /// <summary>VR: giro de la muñeca en grados, alrededor del rayo (-180..180; desenrollar con LabControlMath.UnwrapAngle).</summary>
+        public readonly float WristRoll;
+        public readonly UnityEngine.Vector3 RayOrigin;
+        public readonly UnityEngine.Vector3 RayDirection;
+        /// <summary>Eje derecho de la camara (para orientar el arrastre horizontal del mouse en PC).</summary>
+        public readonly UnityEngine.Vector3 CameraRight;
+        /// <summary>Rueda del mouse de este frame (0 si no giro).</summary>
+        public readonly float Wheel;
+        public readonly bool IsVR;
+
+        public ManipulationInput(UnityEngine.Vector2 pointerDelta, UnityEngine.Vector3 handPosition, float wristRoll,
+            UnityEngine.Vector3 rayOrigin, UnityEngine.Vector3 rayDirection, UnityEngine.Vector3 cameraRight, float wheel, bool isVR)
+        {
+            PointerDelta = pointerDelta;
+            HandPosition = handPosition;
+            WristRoll = wristRoll;
+            RayOrigin = rayOrigin;
+            RayDirection = rayDirection;
+            CameraRight = cameraRight;
+            Wheel = wheel;
+            IsVR = isVR;
+        }
+    }
+
+    /// <summary>
+    /// Control que se captura con clic/gatillo (grip en VR) y se manipula mientras se mantiene: perillas, deslizadores,
+    /// selectores. El interactor congela la vista en PC, marca el clic como consumido y llama a Update cada frame.
+    /// Un giro de rueda sobre el control (sin captura) se entrega como Begin + Update(Wheel != 0) + End en el mismo frame.
+    /// </summary>
+    public interface IManipulable
+    {
+        void BeginManipulation(UnityEngine.RaycastHit hit);
+        void UpdateManipulation(in ManipulationInput input);
+        void EndManipulation();
+        /// <summary>Pista junto a la mira. Debe ser una cadena cacheada (se compara por referencia).</summary>
+        string HelpText { get; }
+    }
+}

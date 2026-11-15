@@ -58,7 +58,9 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 stampTable = Ground(ValleyShape.FieldCenter.x + 2f, ValleyShape.FieldCenter.y - 10.5f);
             MapDetails.Stamps(map, lit, stampTable, TowerOrigin() + new Vector3(0.5f, 0.9f, 0.3f));
             MapContraptions.Build(map, lit, stampTable + new Vector3(-5f, 0f, 0f));
-            MapLab.Build(map, lit, stampTable);   // mesa del Laboratorio, 5,5 m al este de la de estampas
+            // Laboratorio v2 en su sitio de MapStructures (pradera sureste), de cara a la pista.
+            if (MapStructures.TryGetSite("Laboratory", out Vector2 labSite, out Vector2 labFront)) MapLab.Build(map, lit, labSite, labFront);
+            else Debug.LogWarning("[Mapa] falta el sitio «Laboratory» en MapStructures: no se genera el laboratorio.");
             MapDetails.PostProcess();
             ToolModels.Apply(lit);
             FieldPortableInkwell();

@@ -5,6 +5,16 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-15 — Laboratorio v2: simulador de sellos, controles agarrables, viento y área nueva
+
+- Tamara probó el v1: gafas con lag, mesa chica y fea, mal ubicada, variables poco útiles, solo −/+ y viento pobre. Plan en `LABORATORIO_V2_PLAN.md`.
+- Variables = las que se controlan dibujando: `LabSealSpec` + `LabSealSynth` (trazos sintéticos reproducibles por semilla) + `LabSealBench` (lienzo de prueba, `Launch()` por `SpellCaster.Cast`). 18 variables (receta, sigilo, papel, anillo, hueco, signos, ángulo, largo, asimetría, temblor, tinta, cara, inclinación, pluma). Se conservan masa, viento y fuego como entorno; se quitan caudal de agua y multiplicador de fuerza.
+- Controles: `IManipulable` + `LabControl` (perilla, deslizador, selector con muescas) arrastrables con mouse y con muñeca/mano en VR; `LabDial` y `LabStepPlate` eliminados. `LabControlBinding` los enlaza a las variables.
+- Lag de gafas: precalentado de etiquetas/líneas y shaders (`ShaderWarmup`), máx. 8 etiquetas nuevas por refresco.
+- Viento: `LabWindVisual` + `WindVisualMath` (estelas, hojas, polvo, chevrones, manga con banderines).
+- Área nueva en la pradera sureste (~(47, −27)): plataforma, toldo, banco en U con consolas de sello y de entorno, pista con estacas, manga y fogón. `MapStructures` agrega el sitio «Laboratory» al final.
+- Verificado: compila, 534 tests EditMode y `HarnessPlaySmoke` en PASS (19/19 recetas compilan con su elemento, 24/24 controles enlazados). Sin probar a mano ni en VR.
+
 ## 2026-11-15 — Laboratorio: mesa de variables, lentes de tinta y registro CSV (fases 0, 1, 2a y 2b)
 
 - Módulo nuevo `Scripts/Lab/` (namespace `SpellSimulator.Lab`; nadie depende de él): `LabParameters` (valores de la mesa, `ValueChanged`, «por defecto»), `LabDial` + `LabStepPlate` (perillas con placas −/+ apuntando y con clic o gatillo), `LabMaterializeButton` + `LabSpawner` (caja con la masa elegida, zona de viento `LabWindZone`, parche de fuego), `LabResetButton`, `InkLenses` + `LabOverlay` (las lentes muestran en el mundo masa, velocidad, viento, generación del fuego y parámetros del hechizo), `LabMeasurements` (distancia de la caja, área quemada, alcance y duración del hechizo), `LabSessionLog` + `LabCsvWriter` (registro CSV de la sesión), `LabCounters`; lógica pura `LabVariableDef`/`LabCatalog`, `LabParameterMath`, `LabCsv`, `LabMetricsMath`, `LabOverlayMath` con 4 archivos de test.

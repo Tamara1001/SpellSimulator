@@ -15,7 +15,7 @@ namespace SpellSimulator.Lab
         [SerializeField, Tooltip("Renderer que se resalta al apuntar (vacio = el primero en los hijos).")]
         private Renderer highlight;
 
-        private LabStepPlate.HoverTint tint;
+        private LabControl.HoverTint tint;
 
         private void Awake()
         {

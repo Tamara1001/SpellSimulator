@@ -10,7 +10,7 @@ namespace SpellSimulator.Tests
         [Test]
         public void Catalogo_IndexadoPorIdYConLosDefaultsDeLaTabla()
         {
-            Assert.AreEqual(8, LabCatalog.Count);
+            Assert.AreEqual(6, LabCatalog.Count);
             for (int i = 0; i < LabCatalog.Count; i++) Assert.AreEqual((LabVariableId)i, LabCatalog.Defs[i].Id);
 
             AssertDef(LabVariableId.Mass, 1f, 600f, 10f);
@@ -19,8 +19,6 @@ namespace SpellSimulator.Tests
             AssertDef(LabVariableId.FireSeedRadius, 0.5f, 4f, 1f, 0.5f);
             AssertDef(LabVariableId.FireDecay, 0.5f, 0.95f, 0.78f, 0.05f);
             AssertDef(LabVariableId.FireMaxGenerations, 0f, 12f, 6f, 1f);
-            AssertDef(LabVariableId.WaterFlow, 0.5f, 3f, 1f, 0.25f);
-            AssertDef(LabVariableId.PowerScale, 0.5f, 2f, 1f, 0.25f);
 
             CollectionAssert.AreEqual(new[] { 1f, 2f, 5f, 10f, 25f, 50f, 100f, 200f, 400f, 600f }, Def(LabVariableId.Mass).Steps);
             Assert.IsTrue(Def(LabVariableId.Mass).HasSteps);
@@ -97,10 +95,6 @@ namespace SpellSimulator.Tests
             for (int i = 0; i < 9; i++) v = LabParameterMath.Step(v, decay, -1);
             Assert.AreEqual(0.5f, v);
 
-            var flow = Def(LabVariableId.WaterFlow);
-            float f = flow.Min;
-            for (int i = 0; i < 10; i++) f = LabParameterMath.Step(f, flow, 1);
-            Assert.AreEqual(3f, f);
         }
 
         [Test]
@@ -142,7 +136,6 @@ namespace SpellSimulator.Tests
             Assert.AreEqual("1,5 m", LabParameterMath.Format(1.5f, Def(LabVariableId.FireSeedRadius)));
             Assert.AreEqual("0,78", LabParameterMath.Format(0.78f, Def(LabVariableId.FireDecay)));
             Assert.AreEqual("6", LabParameterMath.Format(6f, Def(LabVariableId.FireMaxGenerations)));
-            Assert.AreEqual("1,25x", LabParameterMath.Format(1.25f, Def(LabVariableId.WaterFlow)));
         }
 
         private static void AssertDef(LabVariableId id, float min, float max, float defaultValue, float step = -1f)
