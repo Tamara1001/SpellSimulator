@@ -55,6 +55,12 @@ namespace SpellSimulator.EditorTools.Map
 
         /// <summary>Mesas del campo (estampas, herramientas, artilugios): se dejan libres.</summary>
         private static readonly Vector2 StampArea = new Vector2(28f, -16.5f);
+        /// <summary>
+        /// Mesa del Laboratorio (MapLab: mesa de estampas + 5,5 m al este) y su radio libre. Con 4 m no cambia ningun sitio
+        /// actual (el mas cercano, el circulo de piedras, busca a >= 9,9 m de aca); solo evita que una estructura futura la pise.
+        /// </summary>
+        private static readonly Vector2 LabArea = new Vector2(35.5f, -16.5f);
+        private const float LabAreaRadius = 4f;
 
         private static Material lit;
         private static Transform map;
@@ -182,6 +188,7 @@ namespace SpellSimulator.EditorTools.Map
             if (Vector2.Distance(p, ValleyShape.TowerCenter) < ValleyShape.HillRadius + 1f + radius) return false;
             if (Vector2.Distance(p, ValleyShape.FieldCenter) < ValleyShape.FieldRadius + 4f + radius) return false;
             if (Vector2.Distance(p, StampArea) < 5f + radius) return false;
+            if (Vector2.Distance(p, LabArea) < LabAreaRadius + radius) return false;
             if (Vector2.Distance(p, ValleyShape.Spawn) < 8f + radius) return false;
             if (ValleyShape.LakeFactor(p.x, p.y) < 2.5f) return false;
             if (ValleyShape.RiverDistance(p.x, p.y) < ValleyShape.RiverHalfWidth + 4f + radius) return false;

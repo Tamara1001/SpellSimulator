@@ -213,6 +213,13 @@ namespace SpellSimulator.Reactions
         /// <summary>Celdas ya quemadas (no vuelven a arder hasta el reinicio).</summary>
         public int BurntCells => burntCells;
 
+        /// <summary>Probabilidad base de propagacion por vecino y pasada (ver spreadChance).</summary>
+        public float SpreadChance => spreadChance;
+        /// <summary>Factor por generacion de la probabilidad de propagar (ver generationDecay).</summary>
+        public float GenerationDecay => generationDecay;
+        /// <summary>Generacion maxima que todavia propaga (ver maxGenerations).</summary>
+        public int MaxGenerations => maxGenerations;
+
         // ---------------------------------------------------------------- ciclo de vida
 
         private void Awake()
@@ -356,6 +363,51 @@ namespace SpellSimulator.Reactions
             maxGenerations = DefaultMaxGenerations;
             RebuildDecayTable();
         }
+
+        // Rangos de SetTuning (laboratorio, LABORATORIO_PLAN 5 riesgo 5): acotados para que el fuego global no queme toda la pradera.
+        private const float MinTuningDecay = 0.5f, MaxTuningDecay = 0.95f;
+        private const int MaxTuningGenerations = 12;
+
+        /// <summary>
+        /// Ajusta en vivo la propagacion (laboratorio). Limita spread a 0..1, decay a 0.5..0.95 y maxGen a 0..12 y rehace la
+        /// tabla de potencias. No toca burnSeconds ni heatPerSecond. SetTuning con los defaults deja el mismo estado que
+        /// ApplyDefaults (los defaults estan dentro de los rangos).
+        /// </summary>
+        public void SetTuning(float spread, float decay, int maxGen)
+        {
+            spreadChance = Mathf.Clamp01(spread);
+            generationDecay = Mathf.Clamp(decay, MinTuningDecay, MaxTuningDecay);
+            maxGenerations = Mathf.Clamp(maxGen, 0, MaxTuningGenerations);
+            RebuildDecayTable();
+        }
+
+        /// <summary>
+        /// Copia hasta pos.Length celdas ardiendo cuyo centro (XZ) esta a menos de radius de near: posicion en el mundo del
+        /// centro de la celda (sobre el suelo) y su generacion. Escribe en los buffers del que llama (sin allocations) y
+        /// devuelve cuantas escribio. gen debe tener al menos pos.Length elementos (si es mas corto se usa su largo).
+        /// </summary>
+        public int SampleBurning(Vector3 near, float radius, Vector3[] pos, byte[] gen)
+        {
+            if (pos == null || gen == null || state == null || burningCells == 0) return 0;
+            int cap = Mathf.Min(pos.Length, gen.Length);
+            float r2 = radius * radius;
+            int written = 0;
+            for (int r = 0; r < listCount && written < cap; r++)
+            {
+                int c = burning[r];
+                // La lista puede tener entradas viejas (apagadas) hasta la proxima compactacion.
+                if (state[c] != Burning) continue;
+                int cx = c % GridSize, cz = c / GridSize;
+                if (CenterDistanceSq(cx, cz, near) > r2) continue;
+                pos[written] = new Vector3(CellCenterX(cx), groundY[c], CellCenterZ(cz));
+                gen[written] = generation[c];
+                written++;
+            }
+            return written;
+        }
+
+        /// <summary>True si el punto (XZ) no es inflamable: lago, rio, camino o fuera del area jugable (+4 m). Misma regla que la grilla.</summary>
+        public static bool IsFireproofAt(Vector3 worldPos) => IsFireproof(worldPos.x, worldPos.z);
 
         /// <summary>Reinicio: el pasto vuelve a estar sano (las no inflamables siguen asi), sin llamas.</summary>
         public void ResetAll()
@@ -644,7 +696,7 @@ namespace SpellSimulator.Reactions
             return ValleyShape.PathDistance(x, z) < ValleyShape.PathWidth;
         }
 
-        /// <summary>Recalcula la tabla de potencias generationDecay^g (g = 0..DecayTableSize-1). Se llama en Awake y ApplyDefaults.</summary>
+        /// <summary>Recalcula la tabla de potencias generationDecay^g (g = 0..DecayTableSize-1). Se llama en Awake, ApplyDefaults y SetTuning.</summary>
         private void RebuildDecayTable()
         {
             if (decayPowers == null) decayPowers = new float[DecayTableSize];

@@ -58,6 +58,11 @@ namespace SpellSimulator.Player
 
         private bool wasClicking;
         private bool wasUsingTool;
+        /// <summary>
+        /// El clic (o gatillo en VR) en curso lo consumio un IPressable con PressWithClick: hasta soltarlo, la herramienta de la
+        /// mano no recibe OnUseStart/Hold/End (si no, el lapiz tambien "usaba" al apretar un boton del grimorio o una placa).
+        /// </summary>
+        private bool clickConsumedByPressable;
         private LineRenderer vrPointerLine;
 
         // Estado del inventario (barra, manos, cinturon). Lo de la mano principal que se USA se cachea aca (componente de escena).
@@ -246,6 +251,8 @@ namespace SpellSimulator.Player
             wasClicking = clicking;
             if (!pressed || FocusMode.Active || hoveredPressable == null || !hoveredPressable.PressWithClick) return;
             hoveredPressable.Press();
+            // Corre antes que HandleUsage en el mismo frame: marca el clic para que la herramienta no lo use.
+            clickConsumedByPressable = true;
         }
 
         /// <summary>Q: arroja lo arrastrado, lo de la mano secundaria (VR) o lo de la mano principal.</summary>
@@ -314,7 +321,9 @@ namespace SpellSimulator.Player
 
         private void HandleUsage()
         {
-            bool using_ = inputReader.IsUsingTool;
+            // Al soltar el clic se libera la marca; mientras dure, el clic fue de un IPressable y no de la herramienta.
+            if (!inputReader.IsUsingTool) clickConsumedByPressable = false;
+            bool using_ = inputReader.IsUsingTool && !clickConsumedByPressable;
             if (mainUsable != null)
             {
                 if (using_ && !wasUsingTool) mainUsable.OnUseStart();

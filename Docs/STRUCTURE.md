@@ -21,7 +21,7 @@ SpellSimulator/
 │   │   │   ├── PostProcess.asset #   VolumeProfile (bloom, tonemapping, color, viñeta) de Pradera
 │   │   │   └── GlyphDictionary.asset
 │   │   ├── Editor/               #   SpellSimulator.Editor.asmdef — harness, sync del diccionario, chequeos
-│   │   │   └── Map/              #   MapBuilder, TowerBuilder, MapDetails, LowPolyMesh (generador del mapa)
+│   │   │   └── Map/              #   MapBuilder, TowerBuilder, MapDetails, MapLab (mesa del Laboratorio), LowPolyMesh (generador del mapa)
 │   │   ├── Materials/            #   Canvas, BrushMaterial, Pen, Eraser, Rag, Inkwell, Crate, VRPointer, SpellParticle(.shader) + Additive/Alpha, StylizedWater(.shader) + Water, GroundMark(.shader) + GroundMark, StylizedLit(.shader) + Stylized, Waterfall(.shader) + Waterfall, Sky, Stone, Cloth, Binarize(.shader)
 │   │   ├── Prefabs/
 │   │   │   ├── Objects/          #   PaperCanvas, Pen, Eraser, Tool
@@ -43,6 +43,7 @@ SpellSimulator/
 │   │   │   ├── Glyphs/           #   GlyphDictionary, GlyphEntry, GlyphDictionaryAsset
 │   │   │   ├── Input/Tools/      #   IDrawingTool, PenTool, EraserTool, RagTool
 │   │   │   ├── Interfaces/       #   IInteractable, IUsable, HandType
+│   │   │   ├── Lab/              #   Laboratorio: LabCatalog/LabVariableDef, LabParameterMath, LabCsv, LabMetricsMath, LabOverlayMath (puros); LabParameters, LabDial, LabStepPlate, LabMaterializeButton, LabResetButton, LabSpawner, LabWindZone, LabMeasurements, LabSessionLog, LabCsvWriter, LabCounters, LabOverlay, InkLenses
 │   │   │   ├── Output/           #   SpellOutputController, SpellManifestation, MagicField, ElementLook, SealFrame, SealFeedback; Bodies/EarthShapes (muros, puentes, estacas), RockSpell, RockMath
 │   │   │   ├── Parsing/          #   RingDetector, StrokeGrouper, SymbolCandidate, SealParser
 │   │   │   ├── Player/           #   PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor, ObjectMover, FocusMode, InkSupply, Haptics

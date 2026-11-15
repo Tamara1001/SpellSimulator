@@ -1,9 +1,11 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using UnityEditor;
 using UnityEngine;
 using SpellSimulator.Canvas;
+using SpellSimulator.Lab;
 using SpellSimulator.Learning;
 using SpellSimulator.Player;
 using SpellSimulator.Reactions;
@@ -13,9 +15,9 @@ namespace SpellSimulator.EditorTools
 {
     /// <summary>
     /// Test de humo de Play Mode (un solo comando, sin mouse ni teclado): entra a Play en la escena abierta (Pradera),
-    /// recorre lo esencial del juego (inventario de dos manos, cuaderno, grimorio, reinicio del mundo, fuego, ausencia de
-    /// errores en consola) y escribe el resultado en Logs/harness-playsmoke.txt ("RUNNING", "PASS ..." o "FAIL ...").
-    /// Uso por MCP: HarnessPlaySmoke.Run(); despues leer el archivo hasta que no diga RUNNING (~15 s).
+    /// recorre lo esencial del juego (inventario de dos manos, cuaderno, grimorio, reinicio del mundo, fuego, Laboratorio,
+    /// ausencia de errores en consola) y escribe el resultado en Logs/harness-playsmoke.txt ("RUNNING", "PASS ..." o "FAIL ...").
+    /// Uso por MCP: HarnessPlaySmoke.Run(); despues leer el archivo hasta que no diga RUNNING (~20 s: el bloque del Laboratorio espera varios frames).
     /// Vive en el asmdef de Editor pero corre dentro del Play del editor (sobrevive a la recarga de dominio via SessionState).
     /// </summary>
     public static class HarnessPlaySmoke
@@ -28,6 +30,12 @@ namespace SpellSimulator.EditorTools
         private static readonly List<string> failures = new List<string>();
         private static readonly StringBuilder passed = new StringBuilder();
         private static int errorLogs;
+
+        // Bloque del Laboratorio (varios frames) y su registro CSV redirigido a Logs/.
+        private const float LabTimeoutSeconds = 30f;
+        private static readonly string LabLogPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "harness-lab-registro.csv"));
+        private static IEnumerator labRoutine;
+        private static float labDeadline;
 
         [MenuItem("SpellSimulator/Harness/Run Play Smoke")]
         public static void Run()
@@ -45,6 +53,11 @@ namespace SpellSimulator.EditorTools
 
         private static void Tick()
         {
+            if (labRoutine != null)
+            {
+                StepLab();
+                return;
+            }
             if (!SessionState.GetBool(FlagKey, false) || !EditorApplication.isPlaying) return;
             int start = SessionState.GetInt(StartFrameKey, -1);
             if (start < 0)
@@ -61,6 +74,42 @@ namespace SpellSimulator.EditorTools
             passed.Clear();
             try { Checks(); }
             catch (System.Exception e) { failures.Add("excepcion en el test: " + e.Message); }
+            // El bloque del Laboratorio necesita varios frames (enfriamientos, agrupado del registro, Destroy diferido): sigue
+            // en los proximos ticks y recien despues se escribe el resultado.
+            labRoutine = LabChecks();
+            labDeadline = Time.realtimeSinceStartup + LabTimeoutSeconds;
+        }
+
+        /// <summary>Avanza el bloque del Laboratorio un tick; al terminar (o al agotarse el tiempo) escribe el resultado.</summary>
+        private static void StepLab()
+        {
+            bool more;
+            if (!EditorApplication.isPlaying)
+            {
+                failures.Add("laboratorio: se salio de Play antes de terminar");
+                more = false;
+            }
+            else
+            {
+                try { more = labRoutine.MoveNext(); }
+                catch (System.Exception e)
+                {
+                    failures.Add("excepcion en el laboratorio: " + e.Message);
+                    more = false;
+                }
+                if (more && Time.realtimeSinceStartup > labDeadline)
+                {
+                    failures.Add("laboratorio: tiempo agotado");
+                    more = false;
+                }
+            }
+            if (more) return;
+            labRoutine = null;
+            Finish();
+        }
+
+        private static void Finish()
+        {
             Application.logMessageReceived -= OnLog;
             if (errorLogs > 0) failures.Add($"{errorLogs} errores/excepciones en la consola durante la prueba");
 
@@ -85,6 +134,11 @@ namespace SpellSimulator.EditorTools
 
         private static void Checks()
         {
+            // El registro del Laboratorio de la escena no escribe en persistentDataPath durante la prueba (los reinicios de abajo
+            // agregarian filas): el bloque del Laboratorio usa uno propio redirigido a Logs/.
+            var sceneLabLog = Object.FindFirstObjectByType<LabSessionLog>();
+            if (sceneLabLog != null) sceneLabLog.enabled = false;
+
             // --- Menu principal: arranca en pantalla con la entrada cerrada; Sandbox entrega el control (el resto del
             // test asume juego activo).
             var menu = SpellSimulator.UI.MainMenu.Instance;
@@ -297,6 +351,113 @@ namespace SpellSimulator.EditorTools
             Check(safe == 0, "Wall Breaker no corta cerca de un portal");
             MeshBreaker.RestoreAll();
             foreach (var piece in Object.FindObjectsByType<SpellSimulator.Output.SolidPiece>(FindObjectsSortMode.None)) Object.Destroy(piece.gameObject);
+        }
+
+        /// <summary>
+        /// Bloque «Laboratorio» (Docs/LABORATORIO_PLAN.md, fases 2a y 2b): perilla, caja de 25 y de 600 kg, zona de viento,
+        /// reinicio (borra lo materializado y conserva los valores), tuning del fuego y «por defecto», registro CSV redirigido a
+        /// Logs/ y alternar el overlay de las lentes. Corre a lo largo de varios ticks: cada <c>yield return null</c> espera uno.
+        /// </summary>
+        private static IEnumerator LabChecks()
+        {
+            var parameters = LabParameters.Current;
+            var spawner = LabSpawner.Current;
+            var world = Object.FindFirstObjectByType<MagicWorld>();
+            var grass = GrassFire.Current;
+            Check(parameters != null && spawner != null && world != null, "laboratorio: LabParameters, LabSpawner y MagicWorld en la escena");
+            if (parameters == null || spawner == null || world == null) yield break;
+            spawner.ClearAll();
+            parameters.ResetAll();
+
+            // Registro propio en Logs/: overridePath se lee en Awake, por eso el componente se agrega con el objeto inactivo.
+            if (File.Exists(LabLogPath)) File.Delete(LabLogPath);
+            var logGo = new GameObject("HarnessLabLog");
+            logGo.SetActive(false);
+            var log = logGo.AddComponent<LabSessionLog>();
+            var logSo = new SerializedObject(log);
+            logSo.FindProperty("overridePath").stringValue = LabLogPath;
+            logSo.ApplyModifiedPropertiesWithoutUndo();
+            logGo.SetActive(true);
+            yield return null;
+
+            // --- Perilla: un paso de masa (default 10 -> 25 kg).
+            float before = parameters.Get(LabVariableId.Mass);
+            parameters.Step(LabVariableId.Mass, 1);
+            Check(Mathf.Approximately(before, 10f) && Mathf.Approximately(parameters.Get(LabVariableId.Mass), 25f),
+                "laboratorio: la perilla de masa sube un paso (10 -> 25 kg)");
+            // El registro agrupa los pasos: la fila de la perilla sale 0,6 s despues del ultimo.
+            for (float end = Time.realtimeSinceStartup + LabSessionLog.KnobGroupSeconds + 0.3f; Time.realtimeSinceStartup < end;) yield return null;
+
+            // --- Materializar: caja con la masa de la perilla y zona de viento.
+            var light = spawner.Materialize(LabSpawnKind.Box);
+            var lightBody = light != null ? light.GetComponent<Rigidbody>() : null;
+            Check(lightBody != null && Mathf.Approximately(lightBody.mass, 25f), "laboratorio: materializar crea una caja con Rigidbody.mass = 25");
+            var wind = spawner.Materialize(LabSpawnKind.Wind);
+            Check(wind != null && wind.GetComponent<LabWindZone>() != null, "laboratorio: materializar viento crea una LabWindZone");
+
+            // Caja de 600 kg (masa maxima = Movable.maxMass), despues del enfriamiento de 1 s por boton (tiempo de juego).
+            parameters.Set(LabVariableId.Mass, 600f);
+            float pressedAt = Time.time;
+            for (float end = Time.realtimeSinceStartup + 5f; Time.time - pressedAt < 1.2f && Time.realtimeSinceStartup < end;) yield return null;
+            var heavy = spawner.Materialize(LabSpawnKind.Box);
+            var heavyBody = heavy != null ? heavy.GetComponent<Rigidbody>() : null;
+            Check(heavyBody != null && Mathf.Approximately(heavyBody.mass, 600f), "laboratorio: caja de 600 kg con Rigidbody.mass = 600");
+
+            // --- Reinicio del mundo: borra lo materializado (Destroy, al final del frame) y conserva los valores de la mesa.
+            world.ResetWorld();
+            int resetFrame = Time.frameCount;
+            while (Time.frameCount < resetFrame + 2) yield return null;
+            Check(light == null && heavy == null && wind == null && Mathf.Approximately(parameters.Get(LabVariableId.Mass), 600f),
+                "laboratorio: el reinicio borra lo materializado y conserva los valores");
+
+            // --- Fuego: SetTuning se aplica en vivo y «por defecto» (ResetAll) lo restaura.
+            if (grass != null)
+            {
+                parameters.Set(LabVariableId.FireDecay, 0.9f);
+                parameters.Set(LabVariableId.FireMaxGenerations, 10f);
+                bool applied = Mathf.Abs(grass.GenerationDecay - 0.9f) < 1e-3f && grass.MaxGenerations == 10;
+                parameters.ResetAll();
+                float defaultDecay = LabCatalog.Get(LabVariableId.FireDecay).Default;
+                int defaultGenerations = Mathf.RoundToInt(LabCatalog.Get(LabVariableId.FireMaxGenerations).Default);
+                bool restored = Mathf.Abs(grass.GenerationDecay - defaultDecay) < 1e-3f && grass.MaxGenerations == defaultGenerations
+                    && Mathf.Approximately(parameters.Get(LabVariableId.Mass), 10f);
+                Check(applied, "laboratorio: SetTuning del fuego aplicado (debilitamiento 0,90 y 10 generaciones)");
+                Check(restored, "laboratorio: «por defecto» restaura el fuego (0,78 y 6) y la masa");
+            }
+            else failures.Add("laboratorio: falta GrassFire para el tuning del fuego");
+
+            // --- Lentes: el overlay se prende y se apaga sin excepciones (los errores de su LateUpdate los cuenta OnLog).
+            bool toggled;
+            try
+            {
+                LabOverlay.Visible = true;
+                bool on = LabOverlay.Visible;
+                LabOverlay.Visible = false;
+                bool off = !LabOverlay.Visible;
+                LabOverlay.Visible = true;
+                toggled = on && off && LabOverlay.Visible;
+            }
+            catch (System.Exception e)
+            {
+                failures.Add("laboratorio: el overlay lanzo " + e.GetType().Name + ": " + e.Message);
+                toggled = false;
+            }
+            for (float end = Time.realtimeSinceStartup + 0.5f; Time.realtimeSinceStartup < end;) yield return null;
+            LabOverlay.Visible = false;
+            Check(toggled && !LabOverlay.Visible, "laboratorio: las lentes prenden y apagan el overlay");
+
+            // --- Registro: se cierra (escribe la perilla pendiente y libera el archivo) y se cuentan las filas.
+            for (float end = Time.realtimeSinceStartup + LabSessionLog.KnobGroupSeconds + 0.3f; Time.realtimeSinceStartup < end;) yield return null;
+            logGo.SetActive(false);
+            string[] lines = File.Exists(LabLogPath) ? File.ReadAllLines(LabLogPath) : new string[0];
+            int rows = Mathf.Max(0, lines.Length - 1);
+            string all = string.Join("\n", lines);
+            Check(rows >= 4 && all.Contains(LabSessionLog.EventKnob) && all.Contains(LabSessionLog.EventMaterialize) && all.Contains(LabSessionLog.EventReset),
+                $"laboratorio: el registro CSV en Logs/ tiene {rows} filas (perilla, materializar y reinicio)");
+
+            Object.Destroy(logGo);
+            spawner.ClearAll();
+            parameters.ResetAll();
         }
 
         /// <summary>Un punto sobre la cara este de la pared de la torre (centro de las bounds de TowerWall, corrido al borde exterior).</summary>

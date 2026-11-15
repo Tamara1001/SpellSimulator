@@ -138,6 +138,20 @@ cargan desde la página de un glifo del grimorio (5 usos por carga). Un **sigilo
 el sello queda preparado y se lanza al cerrarlo con la pluma (el tamaño de la estampa es el tamaño del sello y su
 potencia). Un **signo** se estampa del tamaño del anillo que ya hay en el papel, apuntando a su centro.
 
+## Laboratorio y lentes de tinta
+Mesa al este de la mesa de estampas para experimentar con variables (consigna de *Simuladores*). Seis **perillas**: masa
+de la caja (1-600 kg, escala logarítmica), dirección y velocidad del viento, radio de semilla, debilitamiento y
+generaciones máximas del fuego. Cada una tiene una palanca, una lectura y dos placas **− / +** que se aprietan apuntando
+(clic en PC, gatillo en VR, como los botones del grimorio). Tres botones **materializan** el experimento delante de la
+mesa: una caja de 0,6 m con la masa elegida, una zona de viento de 4×3×4 m (30 s) y un parche de fuego sobre el pasto a
+~10 m. **«Valores por defecto»** vuelve todo a los valores del juego. El reinicio del mundo borra lo materializado y
+conserva los valores. Un cartel muestra las instrucciones y el último resultado medido (área quemada, distancia de la
+caja, alcance y duración del hechizo); cada cambio y su resultado quedan en un **registro CSV** de la sesión
+(`registro-sesion-AAAAMMDD-HHMM.csv`, se abre en Excel). Las **lentes de tinta** están en un soporte sobre la mesa:
+agarrarlas (E / grip) las «pone» y en el mundo aparecen etiquetas con los parámetros (masa y velocidad de los objetos,
+viento, generación del fuego, fuerza/alcance/duración de cada hechizo); otra vez sobre el soporte, se sacan. Solo en
+modo Libre. Controles: no cambian.
+
 ## Audio (M5)
 Música ambiental suave (pads + campanitas), viento y pájaros de fondo, cascada que se oye al acercarse. Cada acción
 suena: pluma/pincel al dibujar, goma, trapo, tintero, campanita de sello **preparado**, lanzamiento distinto por

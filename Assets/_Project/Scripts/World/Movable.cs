@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Interfaces;
 
@@ -31,6 +32,44 @@ namespace SpellSimulator.World
 
         public HandType PreferredHand => HandType.Both;
         public bool CanLift => rb != null && rb.mass <= maxMass;
+
+        // ---------------------------------------------------------------- registro (lo lee el laboratorio, sin GetComponent por frame)
+
+        /// <summary>Lista preasignada de los Movable activos. Alta en OnEnable, baja en OnDisable (sin allocations).</summary>
+        private static readonly List<Movable> all = new List<Movable>(64);
+
+        /// <summary>
+        /// Movables activos y habilitados. La baja conserva el orden (List.Remove): si algo puede desactivar un Movable
+        /// mientras se recorre la lista, recorrerla de atras hacia adelante.
+        /// </summary>
+        public static IReadOnlyList<Movable> All => all;
+
+        /// <summary>Rigidbody del objeto (siempre existe por RequireComponent).</summary>
+        public Rigidbody Body => rb != null ? rb : (rb = GetComponent<Rigidbody>());
+
+        /// <summary>Masa (kg) del Rigidbody; 0 si no hay.</summary>
+        public float Mass
+        {
+            get
+            {
+                var b = Body;
+                return b != null ? b.mass : 0f;
+            }
+        }
+
+        // Con Enter Play Mode sin recarga de dominio la lista estatica sobreviviria entre sesiones de Play.
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetRegistry() => all.Clear();
+
+        private void OnEnable()
+        {
+            if (!all.Contains(this)) all.Add(this);
+        }
+
+        private void OnDisable()
+        {
+            all.Remove(this);
+        }
 
         /// <summary>Masa (kg) bajo la cual se considera liviano / mediano; desde ahi es pesado (afecta resorte, velocidad y el hint).</summary>
         private const float LightMass = 5f, MediumMass = 25f;

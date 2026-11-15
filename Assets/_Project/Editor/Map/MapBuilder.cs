@@ -58,6 +58,7 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 stampTable = Ground(ValleyShape.FieldCenter.x + 2f, ValleyShape.FieldCenter.y - 10.5f);
             MapDetails.Stamps(map, lit, stampTable, TowerOrigin() + new Vector3(0.5f, 0.9f, 0.3f));
             MapContraptions.Build(map, lit, stampTable + new Vector3(-5f, 0f, 0f));
+            MapLab.Build(map, lit, stampTable);   // mesa del Laboratorio, 5,5 m al este de la de estampas
             MapDetails.PostProcess();
             ToolModels.Apply(lit);
             FieldPortableInkwell();

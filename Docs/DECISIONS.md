@@ -153,6 +153,23 @@ ARRASTRA en el mundo con `ObjectMover` (nunca se guarda). Así un lienzo agarrad
 pantalla (V), y un cuaderno pasa de página con la rueda. La rueda sin nada agarrado cambia el grosor. La HUD es UI Toolkit
 (`Scripts/UI`), temática de pergamino, con miniaturas renderizadas de cada objeto.
 
+## ADR-038 — Laboratorio: viento propio, registro CSV para Excel en español y overlay en el mundo
+**2026-11-15.** Para la consigna de *Simuladores* (parámetros modificables, ajuste en vivo y registro de cada cambio y su
+resultado) se agregó el módulo `Lab` ([[LABORATORIO_PLAN]]). Decisiones:
+- **Viento propio, no un `SpellIR` falso.** `LabWindZone` empuja con `WindMath.Drag` (el mismo modelo puro que el viento
+  de los hechizos) y alimenta `GrassFire.AddWindBias`. Fabricar un `SpellIR` rompería la regla «todo cast pasa por
+  `SpellCaster.Cast`» y metería al laboratorio en el registro, la red y los descubrimientos. Consecuencia: no es un
+  `MagicField` (no apaga velas ni lo ve el `Flutter`, KI-126).
+- **Registro CSV *append*, `;` como separador y coma decimal.** Una fila por evento con `Flush` (un crash no pierde lo
+  anterior), UTF-8 con BOM y `FileShare.ReadWrite` (Excel puede tenerlo abierto). Con `;` y coma decimal el Excel en
+  español lo abre directo con doble clic, sin asistente de importación. El tmp-reemplazo de `SpellLibraryStore` es para
+  reescribir archivos enteros y no aplica a un log.
+- **Overlay en el mundo (lentes), no el panel F3.** El panel F3 es texto en pantalla (no se ve en VR, KI-095) y solo
+  tiene strings; las etiquetas world-space leen los componentes y funcionan igual en PC y Quest (pool fijo, 5 Hz).
+- **«Valores por defecto» no llama a `GrassFire.ApplyDefaults`**: vuelve los valores al catálogo y pasa decay y
+  generaciones por `SetTuning` conservando el `spreadChance` actual (la mesa no toca lo que no muestra). El fuego no
+  tiene «borrar el más viejo»: un parche nuevo espera a que el anterior se apague (el pasto quemado no se puede borrar).
+
 ## ADR-037 — Los signos «de potencia» pasan a tener efecto propio; la tierra rompe estructuras recortando mallas
 Decisión: los signos crush, collection, billowing, repetition, weave y región (antes solo sumaban potencia) quedan en el `SpellPlan` y actúan en `MagicField` según la wiki de Witch Hat Atelier (Crush = «Wall Breaker», Collection recoge, Billowing = nube, Repetition rebobina, Weave trenza). La tierra con Crush rompe estructuras fijas recortando triángulos de su malla (`Breakable` + `MeshCut`, copia hija «Corte» con su MeshCollider) en vez de dividirlas en piezas: no hay que pre-fracturar el mapa. Por qué: era la queja principal de la prueba manual y es barato (un corte por lanzamiento). Costos: las estructuras rompibles no pueden usar batching estático (con él la malla deja de ser legible en juego) y los portales y libros quedan protegidos por radio (`Indestructible`). Ver también `MeshBreaker.ProtectedRadius`.
 

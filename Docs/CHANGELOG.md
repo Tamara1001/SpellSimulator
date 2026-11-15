@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-15 — Laboratorio: mesa de variables, lentes de tinta y registro CSV (fases 0, 1, 2a y 2b)
+
+- Módulo nuevo `Scripts/Lab/` (namespace `SpellSimulator.Lab`; nadie depende de él): `LabParameters` (valores de la mesa, `ValueChanged`, «por defecto»), `LabDial` + `LabStepPlate` (perillas con placas −/+ apuntando y con clic o gatillo), `LabMaterializeButton` + `LabSpawner` (caja con la masa elegida, zona de viento `LabWindZone`, parche de fuego), `LabResetButton`, `InkLenses` + `LabOverlay` (las lentes muestran en el mundo masa, velocidad, viento, generación del fuego y parámetros del hechizo), `LabMeasurements` (distancia de la caja, área quemada, alcance y duración del hechizo), `LabSessionLog` + `LabCsvWriter` (registro CSV de la sesión), `LabCounters`; lógica pura `LabVariableDef`/`LabCatalog`, `LabParameterMath`, `LabCsv`, `LabMetricsMath`, `LabOverlayMath` con 4 archivos de test.
+- API genérica en módulos existentes: `Movable.All/Mass/Body`, `GrassFire.SetTuning/SampleBurning/IsFireproofAt` y getters, y `PlayerInteractor` ya no «usa» la herramienta de la mano al apretar una placa con clic.
+- Generador: `Editor/Map/MapLab.cs` arma la mesa en `Map/Lab` (mesa de estampas + 5,5 m al este, mundo ~(35.5, −16.5)), con nombres estables para `MapLayout`, anclas de caja/viento delante (~(40.5, −15)) y fuego a ~10 m sobre pasto (~(45, −20)). `MapStructures` reserva la zona (`LabArea`, sin mover ningún sitio actual) y `FlammableSetup` excluye lo `Lab*`. **Hay que correr `MapBuilder.Build()`.**
+- Harness: bloque «Laboratorio» en `HarnessPlaySmoke` (perilla 10 → 25 kg, cajas de 25 y 600 kg, viento, reinicio que borra y conserva valores, `SetTuning` y «por defecto», ≥ 4 filas en `Logs/harness-lab-registro.csv`, lentes); el smoke ahora corre varios frames.
+- Docs: GAME_DESIGN, ARCHITECTURE, STRUCTURE, DECISIONS (ADR-038), KNOWN_ISSUES (KI-125 a KI-129), HARNESS, LABORATORIO_PLAN.
+
 
 ## 2026-10-09 — F1 del multijugador: menú Multijugador
 

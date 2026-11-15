@@ -91,6 +91,17 @@ namespace SpellSimulator.EditorTools
             return tree;
         }
 
+        /// <summary>
+        /// La mesa del Laboratorio (Map/Lab y todo lo que empieza con «Lab») no arde: el parche de fuego se materializa cerca y
+        /// la mesa tiene que sobrevivir a los experimentos (LABORATORIO_PLAN riesgo 12). «Label» no cuenta.
+        /// </summary>
+        private static bool IsLab(Transform t)
+        {
+            for (; t != null; t = t.parent)
+                if (t.name.StartsWith("Lab") && !t.name.StartsWith("Label")) return true;
+            return false;
+        }
+
         private static IEnumerable<GameObject> WoodenTowerObjects(Transform tower)
         {
             foreach (var r in tower.GetComponentsInChildren<MeshRenderer>(true))
@@ -104,6 +115,7 @@ namespace SpellSimulator.EditorTools
 
         private static bool AddReactive(GameObject go, MaterialProfile profile, bool movableSafe)
         {
+            if (IsLab(go.transform)) return false;
             if (go.GetComponent<ElementReactive>() != null) return false;
             if (go.GetComponentInChildren<Renderer>() == null) return false;
             var reactive = go.AddComponent<ElementReactive>();
