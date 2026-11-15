@@ -38,6 +38,18 @@ namespace SpellSimulator.World.Map
 
         public static readonly Vector2 Spawn = new Vector2(0f, -6f);
 
+        /// <summary>
+        /// Entrenamiento base (blancos, munecos, atril de papel y mesas): al sur de la torre, en el entorno de la cabaña
+        /// que queda justo delante de la puerta (Struct_Cabin_1, en (12, -40)), y lejos del Laboratorio (47, -27).
+        /// Es el punto del atril; el frente mira al sudeste, hacia la ladera (nada que apuntar: ni torre ni estructuras).
+        /// Distribucion de los objetos: <see cref="TrainingLayout"/>. FieldCenter NO cambia (lo usan torre, circulo, santuario...).
+        /// </summary>
+        public static readonly Vector2 TrainingOrigin = new Vector2(23f, -45f);
+        /// <summary>Frente (unitario, XZ) del entrenamiento: 150 grados de rumbo (x = sen, z = cos).</summary>
+        public static readonly Vector2 TrainingForward = new Vector2(0.5f, -0.8660254f);
+        /// <summary>Radio del aplanado del entrenamiento (plano hasta 70 % y suave hasta el borde).</summary>
+        public const float TrainingFlatRadius = 8f;
+
         /// <summary>Caminos de tierra: polilineas en XZ.</summary>
         public static readonly Vector2[][] Paths =
         {
@@ -63,6 +75,10 @@ namespace SpellSimulator.World.Map
             // Campo de practica: plano.
             float field = 1f - Smooth(FieldRadius * 0.7f, FieldRadius, Vector2.Distance(p, FieldCenter));
             h = Mathf.Lerp(h, 0f, field);
+
+            // Entrenamiento base: plano (5,6 m) y suave hasta 8 m.
+            float training = 1f - Smooth(TrainingFlatRadius * 0.7f, TrainingFlatRadius, Vector2.Distance(p, TrainingOrigin));
+            h = Mathf.Lerp(h, 0f, training);
 
             // Lago: cuenca eliptica.
             float lake = LakeFactor(x, z);

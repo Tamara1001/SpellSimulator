@@ -35,12 +35,15 @@ namespace SpellSimulator.Lab
         public readonly string Recipe;
         /// <summary>semilla: semilla del temblor del banco (null = vacio).</summary>
         public readonly int? Seed;
+        /// <summary>pose_papel: preset de posicion del papel del banco (0..8; null = vacio).</summary>
+        public readonly int? PaperPose;
 
         public LabLogRow(DateTime timestamp, float sessionSeconds, string eventName, string variable = null,
             float? previous = null, float? current = null, string result = null, float? measuredValue = null,
             string unit = null, int experimentId = 0, string notes = null, string sealSpec = null, string recipe = null,
-            int? seed = null)
+            int? seed = null, int? paperPose = null)
         {
+            PaperPose = paperPose;
             SealSpec = sealSpec;
             Recipe = recipe;
             Seed = seed;
@@ -77,13 +80,13 @@ namespace SpellSimulator.Lab
         public const string SessionTimeFormat = "0.00";
 
         /// <summary>
-        /// Encabezado del CSV (14 columnas, separadas por <see cref="Separator"/>). Las tres ultimas (banco de sellos del
-        /// Laboratorio v2) se agregaron al final para no correr las columnas de los registros viejos.
+        /// Encabezado del CSV (15 columnas, separadas por <see cref="Separator"/>). Las ultimas cuatro (banco de sellos: tres del
+        /// Laboratorio v2 y pose_papel del v3) se agregaron al final para no correr las columnas de los registros viejos.
         /// </summary>
-        public const string Header = "fecha_hora;t_sesion_s;evento;variable;anterior;nuevo;resultado;valor_medido;unidad;id_experimento;notas;spec_sello;receta;semilla";
+        public const string Header = "fecha_hora;t_sesion_s;evento;variable;anterior;nuevo;resultado;valor_medido;unidad;id_experimento;notas;spec_sello;receta;semilla;pose_papel";
 
         /// <summary>Cantidad de columnas de <see cref="Header"/>.</summary>
-        public const int ColumnCount = 14;
+        public const int ColumnCount = 15;
 
         /// <summary>Formato numerico con coma decimal y sin separador de miles, independiente de la cultura del sistema.</summary>
         public static readonly NumberFormatInfo NumberFormat = CreateNumberFormat();
@@ -107,6 +110,8 @@ namespace SpellSimulator.Lab
             sb.Append(Escape(row.SealSpec)).Append(Separator);
             sb.Append(Escape(row.Recipe)).Append(Separator);
             if (row.Seed.HasValue) sb.Append(row.Seed.Value.ToString(CultureInfo.InvariantCulture));
+            sb.Append(Separator);
+            if (row.PaperPose.HasValue) sb.Append(row.PaperPose.Value.ToString(CultureInfo.InvariantCulture));
             return sb.ToString();
         }
 

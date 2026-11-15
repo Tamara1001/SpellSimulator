@@ -54,8 +54,15 @@ namespace SpellSimulator.EditorTools.Map
         private static readonly Color Cushion = new Color(0.55f, 0.16f, 0.2f);
         private static readonly Color PortalDark = new Color(0.09f, 0.07f, 0.16f);
 
-        /// <summary>Mesas del campo (estampas, herramientas, artilugios): se dejan libres.</summary>
+        /// <summary>
+        /// Mesas del campo VIEJO (estampas, herramientas, artilugios): se dejan libres. Se mantiene a proposito en su lugar de
+        /// siempre: moverlo cambiaria los sitios de las demas estructuras y el frente del laboratorio (Docs/LABORATORIO_V3_PLAN.md, riesgo 1).
+        /// El entrenamiento nuevo se protege aparte con <see cref="TrainingKeepOut"/>.
+        /// </summary>
         private static readonly Vector2 StampArea = new Vector2(28f, -16.5f);
+
+        /// <summary>Radio (m) alrededor de <see cref="ValleyShape.TrainingOrigin"/> que la pista del laboratorio no puede pisar.</summary>
+        public const float TrainingKeepOut = 12f;
 
         /// <summary>Laboratorio v2 (Docs/LABORATORIO_V2_PLAN.md, «Área»): sitio preferido, radio del sitio y de la plataforma de lajas.</summary>
         private static readonly Vector2 LaboratoryPreferred = new Vector2(47f, -27f);
@@ -192,6 +199,7 @@ namespace SpellSimulator.EditorTools.Map
             if (p.magnitude > 63f) return false;
             if (Vector2.Distance(p, ValleyShape.FieldCenter) < ValleyShape.FieldRadius + 2f) return false;
             if (Vector2.Distance(p, StampArea) < 5f) return false;
+            if (Vector2.Distance(p, ValleyShape.TrainingOrigin) < TrainingKeepOut) return false;
             if (ValleyShape.LakeFactor(p.x, p.y) < 2f) return false;
             if (ValleyShape.RiverDistance(p.x, p.y) < ValleyShape.RiverHalfWidth + 2f) return false;
             if (ValleyShape.PathDistance(p.x, p.y) < ValleyShape.PathWidth + 0.5f) return false;
@@ -305,6 +313,8 @@ namespace SpellSimulator.EditorTools.Map
 
             var root = new GameObject(RootName).transform;
             root.SetParent(mapRoot, false);
+            // Entrenamiento base: pinos y rocas fuera del area (el azar de los pinos no cambia: CanPlantTree queda igual).
+            ClearVegetation(MapBuilder.Ground(ValleyShape.TrainingOrigin.x, ValleyShape.TrainingOrigin.y), TrainingKeepOut);
             var s = Sites();
             Watchtower(root, s["Watchtower"]);
             Cabin(root, s["Cabin_1"], 1, "spells-wind-water", "Cabaña del sur");

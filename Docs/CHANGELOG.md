@@ -5,6 +5,16 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-15 — Laboratorio v3: texto legible, posiciones del papel, entrenamiento reubicado y mapa en la torre
+
+- Tamara probó el v2: textos ilegibles (z-fighting entre rótulo y franja de color), papel solo hacia un lado, confuso de usar, laboratorio pegado al entrenamiento base. Plan en `LABORATORIO_V3_PLAN.md`.
+- Texto: nada coplanar (`LabPanelLayout`: texto 6 mm sobre la superficie, plaquita crema + ventanita oscura, tamaños fijos, rótulos ≤ 10 caracteres, 0,30 m entre controles, panel a 35°).
+- Papel: variable `PaperPose` con 9 posiciones (atril hacia la pista/el jugador/arriba, piso, pista hacia izquierda/derecha/banco/piso, libre) vía `LabSealBenchMath.PaperPose`; el atril muestra un espejo con flecha cuando el papel está en otro lado.
+- Uso: variables en 4 grupos numerados con ayuda en el mundo (`LabHelpStrip`), pizarra «Vas a lanzar» (`LabSealSummary`), banda de resultado, botón LANZAR grande, muescas de rango/default y reinicio por grupo. Se conservan todas las variables.
+- Entrenamiento base reubicado junto a la cabaña de enfrente de la puerta de la torre (`ValleyShape.TrainingOrigin` (23, −45), `TrainingLayout`); `MapLayout.DropEntries` descarta la pose vieja del papel gigante.
+- Mapa de zonas como cuadro en la pared de la torre (`TowerMap`, `MapZoneMarker`, `MapProjection`, `Data/WorldZones.json`).
+- Verificado: compila, 569 tests EditMode y `HarnessPlaySmoke` en PASS (9/9 poses lanzan válido, 14 marcadores = zonas, entrenamiento a más de 12 m del banco). Sin probar a mano ni en VR.
+
 ## 2026-11-15 — Laboratorio v2: simulador de sellos, controles agarrables, viento y área nueva
 
 - Tamara probó el v1: gafas con lag, mesa chica y fea, mal ubicada, variables poco útiles, solo −/+ y viento pobre. Plan en `LABORATORIO_V2_PLAN.md`.

@@ -79,6 +79,26 @@ namespace SpellSimulator.EditorTools.Map
             return applied;
         }
 
+        /// <summary>
+        /// Descarta de Data/MapOverrides.json las entradas dadas (por camino jerarquico) cuando <paramref name="shouldDrop"/>
+        /// las acepta (null = siempre). Para cuando un objeto se muda por codigo y su pose guardada quedo vieja. Idempotente:
+        /// si la entrada ya no esta, no hace nada. Se llama despues de CaptureManualEdits y antes de ApplyAndRecord. Avisa en el log.
+        /// </summary>
+        public static int DropEntries(System.Func<Entry, bool> shouldDrop, string reason, params string[] paths)
+        {
+            var overrides = Load(OverridesPath, absolute: false);
+            int dropped = 0;
+            foreach (string path in paths)
+            {
+                if (!overrides.TryGetValue(path, out var entry) || (shouldDrop != null && !shouldDrop(entry))) continue;
+                overrides.Remove(path);
+                dropped++;
+                Debug.LogWarning($"[MapLayout] override descartado de {path} ({reason}): estaba en {entry.position}.");
+            }
+            if (dropped > 0) Save(OverridesPath, overrides, absolute: false);
+            return dropped;
+        }
+
         // ---------------------------------------------------------------- menus
 
         [MenuItem("SpellSimulator/Map/Capturar mi layout manual")]

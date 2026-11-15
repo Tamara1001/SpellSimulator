@@ -3,6 +3,7 @@ using UnityEngine;
 using SpellSimulator.EditorTools.Map;
 using SpellSimulator.Reactions;
 using SpellSimulator.World;
+using SpellSimulator.World.Map;
 
 namespace SpellSimulator.EditorTools
 {
@@ -59,15 +60,15 @@ namespace SpellSimulator.EditorTools
         public static void BuildFieldProps(Transform map, Material material, Vector3 stampTable)
         {
             var root = Root("Props_Field");
-            Prop(root, material, "Candle_Field_A", Kind.Candle, stampTable + new Vector3(-1.0f, 0.83f, 0.1f), 0f);
-            Prop(root, material, "Candle_Field_B", Kind.Candle, stampTable + new Vector3(1.0f, 0.83f, -0.1f), 0f);
-            Prop(root, material, "Book_Field_A", Kind.Book, stampTable + new Vector3(0.75f, 0.83f, 0.12f), 25f);
-            Prop(root, material, "Book_Field_B", Kind.Book, stampTable + new Vector3(-0.75f, 0.83f, -0.1f), -15f);
-            Prop(root, material, "Pot_Field_A", Kind.Pot, stampTable + new Vector3(1.15f, 0.83f, 0.15f), 0f);
-            Prop(root, material, "Stool_Field_A", Kind.Stool, stampTable + new Vector3(-0.6f, 0f, -1.1f), 20f, true);
-            Prop(root, material, "Stool_Field_B", Kind.Stool, stampTable + new Vector3(0.7f, 0f, -1.0f), -30f, true);
-            Prop(root, material, "Barrel_Field_A", Kind.Barrel, stampTable + new Vector3(2.2f, 0f, 0.3f), 0f, true);
-            Prop(root, material, "Bench_Field_A", Kind.Bench, stampTable + new Vector3(0f, 0f, 1.3f), 0f, true);
+            Prop(root, material, "Candle_Field_A", Kind.Candle, stampTable + TrainingLayout.Offset(new Vector3(-1.0f, 0.83f, 0.1f)), 0f + TrainingLayout.YawDegrees);
+            Prop(root, material, "Candle_Field_B", Kind.Candle, stampTable + TrainingLayout.Offset(new Vector3(1.0f, 0.83f, -0.1f)), 0f + TrainingLayout.YawDegrees);
+            Prop(root, material, "Book_Field_A", Kind.Book, stampTable + TrainingLayout.Offset(new Vector3(0.75f, 0.83f, 0.12f)), 25f + TrainingLayout.YawDegrees);
+            Prop(root, material, "Book_Field_B", Kind.Book, stampTable + TrainingLayout.Offset(new Vector3(-0.75f, 0.83f, -0.1f)), -15f + TrainingLayout.YawDegrees);
+            Prop(root, material, "Pot_Field_A", Kind.Pot, stampTable + TrainingLayout.Offset(new Vector3(1.15f, 0.83f, 0.15f)), 0f + TrainingLayout.YawDegrees);
+            Prop(root, material, "Stool_Field_A", Kind.Stool, stampTable + TrainingLayout.Offset(new Vector3(-0.6f, 0f, -1.1f)), 20f + TrainingLayout.YawDegrees, true);
+            Prop(root, material, "Stool_Field_B", Kind.Stool, stampTable + TrainingLayout.Offset(new Vector3(0.7f, 0f, -1.0f)), -30f + TrainingLayout.YawDegrees, true);
+            Prop(root, material, "Barrel_Field_A", Kind.Barrel, stampTable + TrainingLayout.Offset(new Vector3(2.2f, 0f, 0.3f)), 0f + TrainingLayout.YawDegrees, true);
+            Prop(root, material, "Bench_Field_A", Kind.Bench, stampTable + TrainingLayout.Offset(new Vector3(0f, 0f, 1.3f)), 0f + TrainingLayout.YawDegrees, true);
         }
 
         public static Transform Root(string name)

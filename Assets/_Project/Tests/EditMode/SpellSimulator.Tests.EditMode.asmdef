@@ -3,6 +3,7 @@
     "rootNamespace": "SpellSimulator.Tests",
     "references": [
         "SpellSimulator.Runtime",
+        "SpellSimulator.Editor",
         "Unity.InferenceEngine",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"

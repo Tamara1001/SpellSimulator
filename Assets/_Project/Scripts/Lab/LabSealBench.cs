@@ -32,6 +32,12 @@ namespace SpellSimulator.Lab
         private SpellCaster caster;
         [SerializeField, Tooltip("Blanco del disparo (p. ej. el centro de la pista). Null = el papel conserva su orientacion.")]
         private Transform aim;
+        [SerializeField, Tooltip("Frente de la pista (opcional): marco del laboratorio con +Z a lo largo de la pista, +Y arriba. Sin esto los presets de posicion del papel no se aplican (queda el comportamiento del v2).")]
+        private Transform trackOrigin;
+        [SerializeField, Tooltip("Raiz del papel que se mueve entre el atril y la pista (opcional; vacio = el transform del lienzo). Debe compartir ejes con el lienzo.")]
+        private Transform paperRoot;
+        [SerializeField, Tooltip("Z (m) del inicio de la pista en el marco de Track Origin (los presets de la pista se miden desde ahi).")]
+        private float trackStart;
 
         [Header("Recetas")]
         [SerializeField, Tooltip("Hechizos (Data/Spells/*.json). Vacio = SpellCatalog.Shared (lo carga el grimorio); en el Editor, la carpeta.")]
@@ -81,8 +87,23 @@ namespace SpellSimulator.Lab
         private float nextPreviewTime;
         private bool warnedRecording;
         private SpellCatalog triedShared;
+        private Vector3 easelLocalPosition;
+        private bool easelPositionKnown;
+        private Vector3 paperEmission = Vector3.forward;
 
         // ---------------------------------------------------------------- API
+
+        /// <summary>True si el papel real esta en el atril (vista previa); si no, el atril debe mostrar un espejo (<see cref="PaperTexture"/>) y una flecha de emision.</summary>
+        public bool PaperAtEasel { get; private set; } = true;
+        /// <summary>Textura del lienzo de prueba (para pintar el espejo del atril cuando el papel esta en la pista). Null sin lienzo.</summary>
+        public RenderTexture PaperTexture => canvas != null ? canvas.GetRenderTexture() : null;
+        /// <summary>Transform que se mueve entre el atril y la pista (paperRoot o el lienzo); null sin lienzo.</summary>
+        public Transform PaperTransform => paperRoot != null ? paperRoot : (canvas != null ? canvas.transform : null);
+        /// <summary>Direccion de emision del hechizo en el mundo, segun la ultima pose aplicada (para la flecha de emision).</summary>
+        public Vector3 PaperEmissionWorld => paperEmission;
+        /// <summary>Resultado del ultimo lanzamiento (HasResult = false antes del primero): valido, elemento, calidad en % y motivo (spell.status).</summary>
+        public LabSealResult UltimoResultado =>
+            new LabSealResult(LaunchCount > 0, LastCastValid, LastElement, LastQuality * 100f, LaunchCount > 0 ? LastSpell.status : null);
 
         /// <summary>Sello actual (ya recortado a rango).</summary>
         public LabSealSpec Spec => spec;
@@ -195,6 +216,37 @@ namespace SpellSimulator.Lab
             EmitChanges();
         }
 
+        /// <summary>
+        /// Devuelve las variables dadas a su valor de arranque (el sello por defecto con la receta inicial); el resto no cambia.
+        /// Si la lista incluye la receta base, se recarga la receta inicial (sigilo y signos) y se emite como receta. Un
+        /// <see cref="VarChanged"/> por variable que cambie.
+        /// </summary>
+        public void ResetVars(IReadOnlyList<LabSealVarId> ids)
+        {
+            if (ids == null || ids.Count == 0) return;
+            EnsureRecipes();
+            EnsureGlyphs();
+            for (int i = 0; i < scratchValues.Length; i++) scratchValues[i] = LabSealBenchMath.Get(spec, (LabSealVarId)i, recipeIds, sigilIds, signIds);
+
+            bool recipe = false;
+            for (int i = 0; i < ids.Count; i++) if (ids[i] == LabSealVarId.BaseRecipe) recipe = true;
+
+            LabSealSpec baseline = LabSealSpec.Default();
+            int index = recipeIds.IndexOf(string.IsNullOrEmpty(initialRecipe) ? baseline.recipeId : initialRecipe);
+            if (index >= 0) baseline = LabSealBenchMath.FromRecipe(baseline, recipeDefs[index], out _);
+
+            if (recipe && index >= 0)
+            {
+                spec = LabSealBenchMath.FromRecipe(spec, recipeDefs[index], out bool exact);
+                RecipeExact = exact;
+            }
+            spec = LabSealBenchMath.ResetVars(spec, baseline, ids, recipeIds, sigilIds, signIds);
+            EmitChanges(recipe);
+        }
+
+        /// <summary>Reset de un grupo de consola (1..<see cref="LabSealCatalog.GroupCount"/>): <see cref="ResetVars"/> con sus variables.</summary>
+        public void ResetGroup(int group) => ResetVars(LabSealCatalog.IdsOfGroup(group));
+
         /// <summary>Semilla del temblor (misma semilla + mismo sello = mismos trazos).</summary>
         public int Seed => spec.seed;
 
@@ -295,6 +347,8 @@ namespace SpellSimulator.Lab
                 Vector2 world = canvas.WorldSize;
                 baseLocalScale = scale;
                 baseWorldSize = world;
+                easelLocalPosition = PaperTransform.localPosition;
+                easelPositionKnown = true;
             }
             // Sin eventos: el estado inicial no es un cambio que registrar.
             EnsureRecipes();
@@ -326,11 +380,12 @@ namespace SpellSimulator.Lab
             if (autoPreview) previewDirty = true;
         }
 
-        private void EmitChanges()
+        /// <param name="asRecipe">True: el registro escribe solo la fila de la receta (cargar receta / sello por defecto). False: una fila por variable (reset de grupo).</param>
+        private void EmitChanges(bool asRecipe = true)
         {
             MarkPreview();
             if (VarChanged == null) return;
-            ApplyingRecipe = true;
+            ApplyingRecipe = asRecipe;
             try
             {
                 // La receta primero: el registro escribe esa fila y omite las demas mientras ApplyingRecipe.
@@ -385,6 +440,23 @@ namespace SpellSimulator.Lab
                 t.localScale = new Vector3(baseLocalScale.x * spec.paperSize / baseWorldSize.x,
                     baseLocalScale.y * spec.paperSize / baseWorldSize.y, baseLocalScale.z);
 
+            Transform root = PaperTransform;
+            // Presets 0-7 (Laboratorio v3): pose en el marco de la pista. Sin trackOrigin o en «Libre» (8): comportamiento del v2.
+            if (trackOrigin != null && spec.paperPose != LabSealSpec.FreePaperPose)
+            {
+                LabPaperPose pose = LabSealBenchMath.PaperPose(spec.paperPose, spec.paperFace, spec.paperTiltDeg, trackStart);
+                if (pose.AtEasel) RestoreEasel(root);
+                else root.position = trackOrigin.TransformPoint(pose.Position);
+                PaperAtEasel = pose.AtEasel;
+                root.rotation = LabSealBenchMath.FaceRotation(canvas.SurfaceNormalLocal,
+                    trackOrigin.TransformDirection(pose.ViewNormal), trackOrigin.TransformDirection(pose.Up));
+                paperEmission = trackOrigin.TransformDirection(pose.Emission);
+                canvas.SetInkSign(pose.InkSign);
+                return;
+            }
+
+            RestoreEasel(root);
+            PaperAtEasel = true;
             if (aim != null)
             {
                 Vector3 emission = LabSealBenchMath.EmissionDirection(t.position, aim.position, spec.paperTiltDeg, -canvas.FaceNormal, out Vector3 upHint);
@@ -393,6 +465,13 @@ namespace SpellSimulator.Lab
             }
             // EmissionNormal (InkSide) = FaceNormal * InkSign: cara +1 -> sale hacia el blanco, -1 -> hacia el jugador.
             canvas.SetInkSign(-spec.paperFace);
+            paperEmission = canvas.FaceNormal * canvas.InkSign;
+        }
+
+        /// <summary>Devuelve el papel a su lugar del atril (solo si antes salio de ahi).</summary>
+        private void RestoreEasel(Transform root)
+        {
+            if (!PaperAtEasel && easelPositionKnown) root.localPosition = easelLocalPosition;
         }
 
         private bool SuppressRecording(out bool previous)

@@ -61,7 +61,7 @@ namespace SpellSimulator.Lab
         private float lastClickTime = -10f;
 
         // Estado de la manipulacion en curso.
-        private bool active;
+        private bool active, hovered;
         private float startValue, dragValue;
         private float startRoll, unwrappedRoll;
         private Vector3 startHand;
@@ -145,10 +145,19 @@ namespace SpellSimulator.Lab
         private void OnDisable()
         {
             active = false;
+            hovered = false;
             tint.Set(false);
+            LabHelpStrip.Unfocus(this);
         }
 
-        public void SetHovered(bool on) => tint.Set(on);
+        /// <summary>Resalta la pieza y avisa a la tira de ayuda de la consola (mientras se agarra, la ayuda se queda).</summary>
+        public void SetHovered(bool on)
+        {
+            hovered = on;
+            tint.Set(on);
+            if (on) LabHelpStrip.Focus(this);
+            else if (!active) LabHelpStrip.Unfocus(this);
+        }
 
         // ---------------------------------------------------------------- IManipulable
 
@@ -161,6 +170,7 @@ namespace SpellSimulator.Lab
                 return;
             }
             active = true;
+            LabHelpStrip.Focus(this);
             startValue = Mathf.Clamp(get(), min, max);
             dragValue = startValue;
             lastNorm = Normalized(startValue);
@@ -218,7 +228,11 @@ namespace SpellSimulator.Lab
             Apply(next);
         }
 
-        public void EndManipulation() => active = false;
+        public void EndManipulation()
+        {
+            active = false;
+            if (!hovered) LabHelpStrip.Unfocus(this);
+        }
 
         // ---------------------------------------------------------------- calculo
 

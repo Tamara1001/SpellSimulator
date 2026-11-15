@@ -229,7 +229,7 @@ namespace SpellSimulator.Lab
             LabSealVarDef def = LabSealCatalog.Get(sealVarId);
             LabSealBench bench = subscribedBench;
             string notes = null, specText = null, recipe = null;
-            int? seed = null;
+            int? seed = null, pose = null;
             if (bench != null)
             {
                 notes = bench.FormatVar(sealVarId, knobFirstPrevious) + " → " + bench.FormatVar(sealVarId, knobLast);
@@ -237,11 +237,12 @@ namespace SpellSimulator.Lab
                 specText = LabSealBenchMath.Serialize(spec);
                 recipe = spec.recipeId;
                 seed = spec.seed;
+                pose = spec.paperPose;
             }
             int experiment = LabMeasurements.NextExperimentId();
             Write(new LabLogRow(DateTime.Now, SessionSeconds, EventSeal, def.Label, knobFirstPrevious, knobLast,
                 unit: string.IsNullOrEmpty(def.Unit) ? null : def.Unit, experimentId: experiment, notes: notes,
-                sealSpec: specText, recipe: recipe, seed: seed));
+                sealSpec: specText, recipe: recipe, seed: seed, paperPose: pose));
         }
 
         private void FlushPendingKnob()
@@ -313,16 +314,17 @@ namespace SpellSimulator.Lab
 
             string result = !spell.valid ? "no válido" : spell.active ? "lanzado" : "sin activar";
             string specText = null, recipe = null;
-            int? seed = null;
+            int? seed = null, pose = null;
             if (fromBench)
             {
                 LabSealSpec spec = bench.Spec;
                 specText = LabSealBenchMath.Serialize(spec);
                 recipe = spec.recipeId;
                 seed = spec.seed;
+                pose = spec.paperPose;
             }
             Write(new LabLogRow(DateTime.Now, SessionSeconds, EventSpell, spell.valid ? ElementLabel(spell.element) : "sin elemento",
-                result: result, experimentId: experiment, notes: notes, sealSpec: specText, recipe: recipe, seed: seed));
+                result: result, experimentId: experiment, notes: notes, sealSpec: specText, recipe: recipe, seed: seed, paperPose: pose));
         }
 
         private void OnMeasured(LabMeasurement m)

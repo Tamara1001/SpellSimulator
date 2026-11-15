@@ -33,6 +33,10 @@ namespace SpellSimulator.Lab
         public const float MaxTremor = 0.05f;
         public const float MaxPaperTiltDeg = 90f;
         public const int PenWidthCount = 4;
+        /// <summary>Presets de posicion del papel (0..8, ver LabSealBenchMath.PaperPose); 8 = libre (usa cara e inclinacion).</summary>
+        public const int PaperPoseCount = 9;
+        public const int DefaultPaperPose = 0;
+        public const int FreePaperPose = 8;
 
         public string recipeId;
         public string sigilId;
@@ -56,6 +60,8 @@ namespace SpellSimulator.Lab
         public float paperTiltDeg;
         /// <summary>Indice de grosor de pluma (0..3).</summary>
         public int penWidthIndex;
+        /// <summary>Preset de posicion del papel (0..8). En 0..7 la cara invierte la emision y la inclinacion se ignora.</summary>
+        public int paperPose;
         public int seed;
 
         /// <summary>Sello por defecto: sin signos, anillo cerrado, tinta normal.</summary>
@@ -81,6 +87,7 @@ namespace SpellSimulator.Lab
                 paperFace = 1,
                 paperTiltDeg = 0f,
                 penWidthIndex = 0,
+                paperPose = DefaultPaperPose,
                 seed = 1
             };
         }
@@ -104,6 +111,7 @@ namespace SpellSimulator.Lab
             s.paperFace = s.paperFace < 0 ? -1 : 1;
             s.paperTiltDeg = Mathf.Clamp(s.paperTiltDeg, 0f, MaxPaperTiltDeg);
             s.penWidthIndex = Mathf.Clamp(s.penWidthIndex, 0, PenWidthCount - 1);
+            s.paperPose = Mathf.Clamp(s.paperPose, 0, PaperPoseCount - 1);
             return s;
         }
 

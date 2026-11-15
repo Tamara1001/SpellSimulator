@@ -5,6 +5,7 @@ using SpellSimulator.Canvas;
 using SpellSimulator.Casting;
 using SpellSimulator.Reactions;
 using SpellSimulator.World;
+using SpellSimulator.World.Map;
 
 namespace SpellSimulator.EditorTools.Map
 {
@@ -49,16 +50,16 @@ namespace SpellSimulator.EditorTools.Map
             var stoneProfile = AssetDatabase.LoadAssetAtPath<MaterialProfile>("Assets/_Project/Data/Materials/Piedra.asset");
 
             // Campo: dos piedras de impacto (mediana y chica), una de metal y la placa de presion con su pesa.
-            Slab(template, material, caster, stoneProfile, RuneKind.Stone, "ImpactStone_M", origin + new Vector3(-0.6f, 0.2f, 0f), 0.34f, 0.07f, false, SealTrigger.Mode.Impact, 3f);
-            Slab(template, material, caster, stoneProfile, RuneKind.Stone, "ImpactStone_S", origin + new Vector3(0.15f, 0.2f, 0f), 0.2f, 0.06f, false, SealTrigger.Mode.Impact, 3f);
-            Slab(template, material, caster, stoneProfile, RuneKind.Metal, "ImpactMetal_M", origin + new Vector3(-0.6f, 0.2f, -0.8f), 0.3f, 0.085f, false, SealTrigger.Mode.Impact, 3f);
-            Slab(template, material, caster, stoneProfile, RuneKind.Stone, "PressurePlate", origin + new Vector3(0f, 0.1f, 2.2f), 0.9f, 0.1f, true, SealTrigger.Mode.Pressure, 1.5f);
+            Slab(template, material, caster, stoneProfile, RuneKind.Stone, "ImpactStone_M", origin + TrainingLayout.Offset(new Vector3(-0.6f, 0.2f, 0f)), 0.34f, 0.07f, false, SealTrigger.Mode.Impact, 3f);
+            Slab(template, material, caster, stoneProfile, RuneKind.Stone, "ImpactStone_S", origin + TrainingLayout.Offset(new Vector3(0.15f, 0.2f, 0f)), 0.2f, 0.06f, false, SealTrigger.Mode.Impact, 3f);
+            Slab(template, material, caster, stoneProfile, RuneKind.Metal, "ImpactMetal_M", origin + TrainingLayout.Offset(new Vector3(-0.6f, 0.2f, -0.8f)), 0.3f, 0.085f, false, SealTrigger.Mode.Impact, 3f);
+            Slab(template, material, caster, stoneProfile, RuneKind.Stone, "PressurePlate", origin + TrainingLayout.Offset(new Vector3(0f, 0.1f, 2.2f)), 0.9f, 0.1f, true, SealTrigger.Mode.Pressure, 1.5f);
             var plate = GameObject.Find("PressurePlate");
             if (plate != null) plate.GetComponent<SealTrigger>().SetPermanent(5, 3f);
             // Dos piedras comunes juntas (donde estaban las mitades): armadas y en contacto se fusionan en un hechizo.
-            Slab(template, material, caster, stoneProfile, RuneKind.Stone, "ImpactStone_J1", origin + new Vector3(-1.1f, 0.2f, -1.5f), 0.26f, 0.06f, false, SealTrigger.Mode.Impact, 3f);
-            Slab(template, material, caster, stoneProfile, RuneKind.Stone, "ImpactStone_J2", origin + new Vector3(-0.75f, 0.2f, -1.5f), 0.2f, 0.06f, false, SealTrigger.Mode.Impact, 3f);
-            Weight(map, material, stoneProfile, origin + new Vector3(1.0f, 0.3f, 0f));
+            Slab(template, material, caster, stoneProfile, RuneKind.Stone, "ImpactStone_J1", origin + TrainingLayout.Offset(new Vector3(-1.1f, 0.2f, -1.5f)), 0.26f, 0.06f, false, SealTrigger.Mode.Impact, 3f);
+            Slab(template, material, caster, stoneProfile, RuneKind.Stone, "ImpactStone_J2", origin + TrainingLayout.Offset(new Vector3(-0.75f, 0.2f, -1.5f)), 0.2f, 0.06f, false, SealTrigger.Mode.Impact, 3f);
+            Weight(map, material, stoneProfile, origin + TrainingLayout.Offset(new Vector3(1.0f, 0.3f, 0f)));
 
             // Oro (rara): en el estudio (primer piso), sobre un pedestal frente al estante de 285 grados, en el area
             // central libre (radio 2.2 < 2.6: fuera del anillo de rampas y del hueco de la rampa de abajo).

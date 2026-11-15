@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using ValleyShape = SpellSimulator.World.Map.ValleyShape;
+using TrainingLayout = SpellSimulator.World.Map.TrainingLayout;
 
 namespace SpellSimulator.EditorTools.Map
 {
@@ -53,8 +54,10 @@ namespace SpellSimulator.EditorTools.Map
             var taken = new List<Vector3>();
             int index = 0;
 
-            Vector2 lake = ValleyShape.LakeCenter, tower = ValleyShape.TowerCenter, field = new Vector2(fieldOrigin.x, fieldOrigin.z);
-            KeepOut = new[] { (field, 16f), (tower, 15f), (ValleyShape.Spawn, 6f) };
+            // Las rutas a los senderos siguen apuntando al punto del campo viejo (Practice/*_Path8 y _Path9 tienen overrides manuales);
+            // el entrenamiento nuevo se agrega a las zonas prohibidas (el viejo se mantiene: no mueve las zonas existentes).
+            Vector2 lake = ValleyShape.LakeCenter, tower = ValleyShape.TowerCenter, field = TrainingLayout.LegacyFieldPoint;
+            KeepOut = new[] { (field, 16f), (tower, 15f), (ValleyShape.Spawn, 6f), (ValleyShape.TrainingOrigin, 16f) };
 
             // Orilla del lago: se prueba cada angulo alejandose del agua hasta encontrar piso firme y libre de arboles.
             foreach (var spot in LakeSpots)
@@ -90,7 +93,7 @@ namespace SpellSimulator.EditorTools.Map
                     for (float d = 3.5f; d <= 7f && !found; d += 1.5f)
                     {
                         Vector2 p = point + perp * side * d;
-                        if (Vector2.Distance(p, tower) < 10f || Vector2.Distance(p, new Vector2(fieldOrigin.x, fieldOrigin.z)) < 5f) continue;
+                        if (Vector2.Distance(p, tower) < 10f || Vector2.Distance(p, field) < 5f) continue;
                         if (ValleyShape.LakeFactor(p.x, p.y) < 1.3f || !IsFirm(p, taken, trees)) continue;
                         BuildZone(root, template, material, $"Path{index}", p, -perp * side, index, spot.title, spot.hint);
                         taken.Add(new Vector3(p.x, 0f, p.y));

@@ -498,6 +498,37 @@ namespace SpellSimulator.EditorTools
                 while (Time.frameCount < recipesFrame + 2) yield return null;
             }
 
+            // --- Laboratorio v3: el papel se lanza valido desde cada pose, el mapa de la torre y el entrenamiento reubicado.
+            if (bench != null && bench.Canvas != null)
+            {
+                int posesOk = 0;
+                for (int pose = 0; pose < LabSealSpec.PaperPoseCount; pose++)
+                {
+                    bench.ResetSpec();
+                    bench.ApplyRecipe("gust");
+                    bench.SetVar(LabSealVarId.Tremor, 0f);
+                    bench.SetVar(LabSealVarId.PaperPose, pose);
+                    bench.Launch();
+                    if (bench.LastCastValid) posesOk++;
+                    yield return null;
+                }
+                string poseReport = $"laboratorio v3: {posesOk}/{LabSealSpec.PaperPoseCount} poses del papel lanzan valido";
+                passed.Append(poseReport).Append("; ");
+                Debug.Log("[PlaySmoke] " + poseReport);
+                Check(posesOk >= 1, "laboratorio v3: al menos una pose del papel lanza valido");
+                bench.ResetSpec();
+                world.ResetWorld();
+                int poseFrame = Time.frameCount;
+                while (Time.frameCount < poseFrame + 2) yield return null;
+            }
+            var towerMap = Object.FindFirstObjectByType<SpellSimulator.World.Map.TowerMap>();
+            Check(towerMap != null && towerMap.ZoneCount > 0 && towerMap.MarkerCount == towerMap.ZoneCount,
+                $"mapa de la torre: {(towerMap != null ? towerMap.MarkerCount : 0)} marcadores = zonas");
+            var trainingTarget = GameObject.Find("PaperCanvas");
+            var labBench = GameObject.Find("LabBench");
+            Check(trainingTarget != null && labBench != null && Vector3.Distance(trainingTarget.transform.position, labBench.transform.position) > 12f,
+                "entrenamiento base reubicado a mas de 12 m del banco del laboratorio");
+
             // Controles: todos enlazados y uno (velocidad del viento) cambia su variable por su delegado set (rueda = un paso).
             var bindings = Object.FindObjectsByType<LabControlBinding>(FindObjectsSortMode.None);
             int bound = 0;

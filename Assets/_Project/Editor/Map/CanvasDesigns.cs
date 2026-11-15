@@ -2,6 +2,7 @@ using UnityEditor;
 using UnityEngine;
 using SpellSimulator.Canvas;
 using SpellSimulator.World;
+using SpellSimulator.World.Map;
 
 namespace SpellSimulator.EditorTools.Map
 {
@@ -62,18 +63,21 @@ namespace SpellSimulator.EditorTools.Map
             DraftingTable(template, material, "DraftingTable", towerOrigin + new Vector3(-1.6f, floor, -1.2f), 20f);
             Easel(template, material, "Easel_Study", towerOrigin + new Vector3(1.5f, floor, -1.0f), 250f);
 
-            // Lienzo gigante de pie en el campo, con dos soportes de madera detras para que no se caiga ni flote.
-            // La cara mira al centro del campo. El papel enorme queda en el piso, como antes.
-            Vector3 giantBase = fieldOrigin + new Vector3(-8f, 0f, 3f);
+            // Lienzo gigante de pie en el entrenamiento, con dos soportes de madera detras para que no se caiga ni flote.
+            // La cara mira a la mesa de estampas (fieldOrigin). El papel enorme queda en el piso, como antes.
+            // Posiciones relativas al atril (TrainingLayout): el entrenamiento ya no esta en el campo viejo.
+            float trainingYaw = TrainingLayout.YawDegrees;
+            Vector3 giantBase = MapBuilder.TrainingGround(TrainingLayout.GiantStand);
             Quaternion giantRotation = StandingRotation(fieldOrigin - giantBase, 0f);
             Stand(material, "Stand_GiantCanvas_Field", giantBase, giantRotation);
             // De pie sobre su soporte y quieto hasta que se lo agarre (si no, la gravedad lo tumba al arrancar).
             Grabbable(template, material, "GiantCanvas_Field", StandingPosition(giantBase, giantRotation, 2.2f),
                 giantRotation, 3f, 2.2f, Dressing.Framed).GetComponent<Rigidbody>().isKinematic = true;
-            Grabbable(template, material, "GiantPaper_Field", fieldOrigin + new Vector3(-6f, 0.15f, 5f), Quaternion.Euler(90f, 20f, 0f), 3.5f, 3.5f, Dressing.None);
+            Grabbable(template, material, "GiantPaper_Field", MapBuilder.TrainingGround(TrainingLayout.GiantPaper) + new Vector3(0f, 0.15f, 0f),
+                Quaternion.Euler(0f, trainingYaw, 0f) * Quaternion.Euler(90f, 20f, 0f), 3.5f, 3.5f, Dressing.None);
 
-            // Campo de practica: caballete con un lienzo grande.
-            Easel(template, material, "Easel_Field", fieldOrigin + new Vector3(-9f, 0f, -2f), 200f);
+            // Entrenamiento: caballete con un lienzo grande.
+            Easel(template, material, "Easel_Field", MapBuilder.TrainingGround(TrainingLayout.Easel), 200f + trainingYaw);
 
             // Zonas de practica por la pradera (lago, senderos) con lienzos, carteles y props movibles.
             PracticeZones(map, template, material, towerOrigin, fieldOrigin);

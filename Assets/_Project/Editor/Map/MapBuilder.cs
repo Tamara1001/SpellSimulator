@@ -37,6 +37,7 @@ namespace SpellSimulator.EditorTools.Map
             lit = StylizedMaterial();
 
             int manual = MapLayout.CaptureManualEdits(scene);   // lo que se movio a mano desde el ultimo Build se conserva
+            DropLegacyTrainingOverrides();
             var old = GameObject.Find("Map");
             if (old != null) Object.DestroyImmediate(old);
             var map = new GameObject("Map").transform;
@@ -55,9 +56,9 @@ namespace SpellSimulator.EditorTools.Map
             SetupLighting();
             RelocateGameplay();
             MapDetails.Papers(TowerOrigin(), lit, map);
-            Vector3 stampTable = Ground(ValleyShape.FieldCenter.x + 2f, ValleyShape.FieldCenter.y - 10.5f);
+            Vector3 stampTable = TrainingGround(TrainingLayout.StampTable);
             MapDetails.Stamps(map, lit, stampTable, TowerOrigin() + new Vector3(0.5f, 0.9f, 0.3f));
-            MapContraptions.Build(map, lit, stampTable + new Vector3(-5f, 0f, 0f));
+            MapContraptions.Build(map, lit, TrainingGround(TrainingLayout.Contraptions));
             // Laboratorio v2 en su sitio de MapStructures (pradera sureste), de cara a la pista.
             if (MapStructures.TryGetSite("Laboratory", out Vector2 labSite, out Vector2 labFront)) MapLab.Build(map, lit, labSite, labFront);
             else Debug.LogWarning("[Mapa] falta el sitio «Laboratory» en MapStructures: no se genera el laboratorio.");
@@ -65,6 +66,7 @@ namespace SpellSimulator.EditorTools.Map
             ToolModels.Apply(lit);
             FieldPortableInkwell();
             TowerProps.Build(map, lit, TowerOrigin());
+            MapTowerMap.Build(map, lit, TowerOrigin());
             MapBelt.Build(map, lit, MapBelt.AlchemyTableSpot());   // cinturon sobre la mesa de alquimia (2do piso)
             CanvasDesigns.Build(map, lit, TowerOrigin(), stampTable);
             MapStructures.Build(map, lit);   // torre de vigia, cabanas, cueva, peñascos, circulo, santuario, puesto y portales
@@ -99,6 +101,24 @@ namespace SpellSimulator.EditorTools.Map
         public static Vector3 Ground(float x, float z) => new Vector3(x, ValleyShape.Height(x, z), z);
 
         public static Vector3 TowerOrigin() => Ground(ValleyShape.TowerCenter.x, ValleyShape.TowerCenter.y);
+
+        /// <summary>Punto sobre el terreno del entrenamiento base: desplazamiento local (derecha, adelante) desde el atril (<see cref="TrainingLayout"/>).</summary>
+        public static Vector3 TrainingGround(Vector2 local)
+        {
+            Vector2 w = TrainingLayout.ToWorld(local);
+            return Ground(w.x, w.y);
+        }
+
+        /// <summary>
+        /// El entrenamiento se mudo (Docs/LABORATORIO_V3_PLAN.md, d): la pose guardada del papel gigante del campo viejo se
+        /// descarta una sola vez (solo si sigue cerca del campo viejo: si despues se lo acomoda a mano en otro lado, se respeta).
+        /// La entrada «Canvas» (la UI de pantalla) no es del entrenamiento y no se toca.
+        /// </summary>
+        private static void DropLegacyTrainingOverrides()
+        {
+            MapLayout.DropEntries(e => Vector2.Distance(new Vector2(e.position.x, e.position.z), ValleyShape.FieldCenter) < 40f,
+                "reubicacion del entrenamiento", "GiantPaper_Field");
+        }
 
         public static float Range(float min, float max) => min + (float)rng.NextDouble() * (max - min);
 
@@ -412,28 +432,29 @@ namespace SpellSimulator.EditorTools.Map
                 if (go != null) Object.DestroyImmediate(go);
             }
 
-            // Campo de practica: el papel del laboratorio mira a los blancos y muñecos, igual que antes.
-            Vector3 field = Ground(ValleyShape.FieldCenter.x, ValleyShape.FieldCenter.y);
-            Vector3 offset = new Vector3(field.x, field.y - 0.5f, field.z - 10f);
+            // Entrenamiento base (TrainingLayout): el papel del laboratorio mira a los blancos y munecos, igual que antes,
+            // pero rotado al frente del sitio nuevo. La posicion del laboratorio original es relativa al atril (0, 2).
+            Quaternion facing = Quaternion.Euler(0f, TrainingLayout.YawDegrees, 0f);
             foreach (var name in new[] { "TestProps", "PaperCanvas", "Dummy_A", "Dummy_B" })
             {
                 var go = GameObject.Find(name);
                 if (go == null || !LabPositions.TryGetValue(name, out var lab)) continue;
-                go.transform.position = lab + offset;
+                Vector2 w = TrainingLayout.ToWorld(new Vector2(lab.x, lab.z - 2f));
+                go.transform.SetPositionAndRotation(new Vector3(w.x, lab.y - 0.5f + ValleyShape.Height(w.x, w.y), w.y), facing);
             }
 
             // Mesa de herramientas al lado del atril, con lapiz, pincel, goma, trapo y tintero FIJO encima (kinematico: se
             // apoya a ras de la cubierta, 0.82 m; lo demas cae desde un poco mas arriba).
             var mapRoot = GameObject.Find("Map").transform;
-            Vector3 tableAt = Ground(field.x - 2.2f, field.z - 10.5f);
+            Vector3 tableAt = TrainingGround(TrainingLayout.ToolTable);
             fieldToolTable = tableAt;
-            TowerBuilder.Table(mapRoot, lit, "ToolTable", tableAt - mapRoot.position, 0f, 1.6f, 0.7f);
+            TowerBuilder.Table(mapRoot, lit, "ToolTable", tableAt - mapRoot.position, TrainingLayout.YawDegrees, 1.6f, 0.7f);
             float x = -0.6f;
             foreach (var name in new[] { "Pen", "Brush", "Eraser", "Rag", "Inkwell" })
             {
                 var go = GameObject.Find(name);
                 if (go == null) continue;
-                go.transform.position = tableAt + new Vector3(x, name == "Inkwell" ? 0.82f : 0.95f, 0f);
+                go.transform.position = tableAt + TrainingLayout.Offset(new Vector3(x, name == "Inkwell" ? 0.82f : 0.95f, 0f));
                 x += 0.3f;
             }
 
@@ -481,7 +502,7 @@ namespace SpellSimulator.EditorTools.Map
             if (source == null) return;
             var clone = Object.Instantiate(source);
             clone.name = name;
-            clone.transform.SetPositionAndRotation(fieldToolTable + new Vector3(0.62f, 0.85f, -0.24f), Quaternion.Euler(0f, 200f, 0f));
+            clone.transform.SetPositionAndRotation(fieldToolTable + TrainingLayout.Offset(new Vector3(0.62f, 0.85f, -0.24f)), Quaternion.Euler(0f, 200f + TrainingLayout.YawDegrees, 0f));
             ToolModels.MakeInkwell(clone, lit, Core.InkKind.Normal, true);
             var respawn = clone.GetComponent<World.Respawnable>();
             if (respawn != null) Object.DestroyImmediate(respawn);
