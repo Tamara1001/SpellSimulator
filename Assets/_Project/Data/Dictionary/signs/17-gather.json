@@ -1,0 +1,60 @@
+{
+	"id": "gather",
+	"recognitionRotationInvariant": true,
+	"displayName": "Gather",
+	"referenceSizeNorm": 0.16,
+	"allowedLayers": [
+		"middle",
+		"outer"
+	],
+	"sourceNotes": "Gather draws material from the surroundings toward the seal, more actively than Collection (Witch Hat Atelier wiki, Signs Explained).",
+	"semantic": {
+		"manifestation": "gather",
+		"directionMode": "inward",
+		"force": 0.1,
+		"focus": 0.2,
+		"spread": -0.25,
+		"range": -0.05
+	},
+	"strokeTemplate": {
+		"sourceAspectRatio": 1,
+		"strokes": [
+			[
+				{
+					"x": 0.169,
+					"y": 0.431
+				},
+				{
+					"x": 0.5,
+					"y": 0.1
+				},
+				{
+					"x": 0.5,
+					"y": 0.569
+				},
+				{
+					"x": 0.169,
+					"y": 0.9
+				}
+			],
+			[
+				{
+					"x": 0.831,
+					"y": 0.431
+				},
+				{
+					"x": 0.5,
+					"y": 0.1
+				},
+				{
+					"x": 0.5,
+					"y": 0.569
+				},
+				{
+					"x": 0.831,
+					"y": 0.9
+				}
+			]
+		]
+	}
+}

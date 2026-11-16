@@ -1,0 +1,69 @@
+{
+	"id": "entwine",
+	"recognitionRotationInvariant": true,
+	"displayName": "Entwine",
+	"referenceSizeNorm": 0.16,
+	"allowedLayers": [
+		"middle",
+		"outer"
+	],
+	"sourceNotes": "Entwine makes the spell coil around other objects (Witch Hat Atelier wiki, Signs Explained). Semi-directional.",
+	"semantic": {
+		"manifestation": "entwine",
+		"directionMode": "position",
+		"force": 0.02,
+		"focus": 0.2,
+		"spread": -0.05
+	},
+	"strokeTemplate": {
+		"sourceAspectRatio": 1,
+		"strokes": [
+			[
+				{
+					"x": 0.725,
+					"y": 0.698
+				},
+				{
+					"x": 0.725,
+					"y": 0.9
+				},
+				{
+					"x": 0.275,
+					"y": 0.898
+				},
+				{
+					"x": 0.275,
+					"y": 0.695
+				}
+			],
+			[
+				{
+					"x": 0.725,
+					"y": 0.102
+				},
+				{
+					"x": 0.725,
+					"y": 0.305
+				},
+				{
+					"x": 0.275,
+					"y": 0.302
+				},
+				{
+					"x": 0.275,
+					"y": 0.1
+				}
+			],
+			[
+				{
+					"x": 0.5,
+					"y": 0.303
+				},
+				{
+					"x": 0.5,
+					"y": 0.899
+				}
+			]
+		]
+	}
+}

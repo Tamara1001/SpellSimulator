@@ -1,0 +1,52 @@
+{
+	"id": "empower",
+	"recognitionRotationInvariant": true,
+	"displayName": "Empower",
+	"referenceSizeNorm": 0.17,
+	"allowedLayers": [
+		"middle",
+		"outer"
+	],
+	"sourceNotes": "Empower strengthens and hardens the affected material or spell (Witch Hat Atelier wiki, Signs Explained). Non-directional.",
+	"semantic": {
+		"manifestation": "empower",
+		"directionMode": "position",
+		"force": 0.12,
+		"focus": 0.1,
+		"spread": 0.0,
+		"lifetimeBias": 0.08
+	},
+	"strokeTemplate": {
+		"sourceAspectRatio": 1,
+		"strokes": [
+			[
+				{
+					"x": 0.875,
+					"y": 0.825
+				},
+				{
+					"x": 0.125,
+					"y": 0.825
+				},
+				{
+					"x": 0.5,
+					"y": 0.175
+				},
+				{
+					"x": 0.875,
+					"y": 0.825
+				}
+			],
+			[
+				{
+					"x": 0.1,
+					"y": 0.539
+				},
+				{
+					"x": 0.9,
+					"y": 0.539
+				}
+			]
+		]
+	}
+}

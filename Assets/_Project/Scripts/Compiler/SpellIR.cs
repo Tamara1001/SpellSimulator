@@ -21,6 +21,12 @@ namespace SpellSimulator.Compiler
         public const string Billowing = "billowing";
         public const string Repetition = "repetition";
         public const string Weave = "weave";
+        public const string Cool = "cool";
+        public const string Empower = "empower";
+        public const string Entwine = "entwine";
+        public const string Focus = "focus";
+        public const string Gather = "gather";
+        public const string Orb = "orb";
     }
 
     /// <summary>Una familia de manifestacion con su fuerza agregada. Point/Radius/Rigidity solo en convergence.</summary>

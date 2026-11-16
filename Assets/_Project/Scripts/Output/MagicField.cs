@@ -187,6 +187,12 @@ namespace SpellSimulator.Output
 
             if (!manifestation.InBody) return;
             float envelope = manifestation.Envelope(t);
+            if (plan.Cool > 0f) ApplyCool(envelope);
+            if (plan.Entwine > 0f) ApplyEntwine(envelope);
+            if (plan.Gather > 0f) ApplyGather(envelope);
+            if (plan.Orb > 0f) ApplyOrb(envelope);
+            if (plan.Target > 0f) ApplyTarget(envelope);
+            envelope *= 1f + 0.35f * Mathf.Min(plan.Empower, 3f); // Empower: fortalece el hechizo (mas caudal)
             if (plan.Collection > 0f) ApplyCollection(envelope);
             if (plan.Billow > 0f) ApplyBillow(envelope);
             if (plan.Has(PlanPrimitive.Jet)) ApplyJet(envelope);
@@ -255,6 +261,103 @@ namespace SpellSimulator.Output
                 if (rb.mass > 250f) continue;
                 if (rb.useGravity) rb.AddForce(-Physics.gravity * 0.85f * envelope, ForceMode.Acceleration);
                 rb.AddForce(-rb.linearVelocity * 1.8f * envelope, ForceMode.Acceleration);
+            }
+        }
+
+
+        // ---------------------------------------------------------------- signos de la wiki de WHA (cool, entwine, gather, orb, focus, empower)
+
+        /// <summary>Cool: enfria lo reactivo de la zona (calor negativo).</summary>
+        private void ApplyCool(float envelope)
+        {
+            float radius = AreaRadius(plan.Cool);
+            Vector3 center = frame.Origin + frame.Outward * radius * 0.5f;
+            var chill = new Reactions.Exposure { Heat = -1.2f * Mathf.Min(plan.Cool, 3f) };
+            var all = Reactions.ElementReactive.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                var r = all[i];
+                if (r == null || (r.WorldBounds.center - center).sqrMagnitude > radius * radius) continue;
+                r.AddExposure(chill, Time.fixedDeltaTime * envelope);
+            }
+        }
+
+        /// <summary>Entwine: lo suelto se enrosca alrededor del eje del sello (giro tangencial + leve atraccion al eje).</summary>
+        private void ApplyEntwine(float envelope)
+        {
+            float radius = AreaRadius(plan.Entwine);
+            Vector3 axisPoint = frame.Origin + frame.Outward * radius * 0.5f;
+            int n = Gather(axisPoint, radius);
+            for (int i = 0; i < n; i++)
+            {
+                var rb = bodies[i];
+                if (IsPlayerBody(rb) || rb.mass > 120f) continue;
+                Vector3 off = rb.worldCenterOfMass - axisPoint;
+                Vector3 radial = off - frame.Outward * Vector3.Dot(off, frame.Outward);
+                Vector3 tangent = Vector3.Cross(frame.Outward, radial).normalized;
+                Vector3 a = tangent * 8f - radial * 4f - rb.linearVelocity * 1.2f;
+                rb.AddForce(Vector3.ClampMagnitude(a * envelope, MaxAcceleration), ForceMode.Acceleration);
+            }
+        }
+
+        /// <summary>Gather: como Collection pero mas activo: alcance mayor y tira de cosas mas pesadas hacia el sello.</summary>
+        private void ApplyGather(float envelope)
+        {
+            float radius = AreaRadius(plan.Gather) * 1.4f;
+            Vector3 point = frame.Origin + frame.Normal * frame.Scale * 0.6f;
+            int n = Gather(point, radius);
+            for (int i = 0; i < n; i++)
+            {
+                var rb = bodies[i];
+                if (IsPlayerBody(rb) || rb.mass > 120f) continue;
+                Vector3 a = (point - rb.worldCenterOfMass).normalized * 14f - rb.linearVelocity * 2f;
+                rb.AddForce(Vector3.ClampMagnitude(a * envelope, MaxAcceleration), ForceMode.Acceleration);
+            }
+        }
+
+        /// <summary>Orb: esfera sobre el sello; lo que esta dentro se queda adentro (la pared lo devuelve) y se asienta.</summary>
+        private void ApplyOrb(float envelope)
+        {
+            float radius = frame.Scale * (1.2f + 0.5f * Mathf.Min(plan.Orb, 3f));
+            Vector3 center = frame.Origin + frame.Normal * radius;
+            int n = Gather(center, radius * 1.6f);
+            for (int i = 0; i < n; i++)
+            {
+                var rb = bodies[i];
+                if (IsPlayerBody(rb) || rb.mass > 60f) continue;
+                Vector3 off = rb.worldCenterOfMass - center;
+                float d = off.magnitude;
+                if (d > radius * 0.85f)
+                    rb.AddForce(Vector3.ClampMagnitude(-off / Mathf.Max(d, 1e-3f) * (d - radius * 0.85f) * 30f * envelope, MaxAcceleration), ForceMode.Acceleration);
+                rb.AddForce(-rb.linearVelocity * 1.5f * envelope, ForceMode.Acceleration);
+            }
+        }
+
+        /// <summary>Focus (Sights Set): lo suelto delante del sello se orienta hacia el objetivo vivo mas cercano a la linea de tiro.</summary>
+        private void ApplyTarget(float envelope)
+        {
+            float range = ConeLength * 1.5f;
+            Combat.Health best = null;
+            float bestScore = float.MaxValue;
+            var all = Combat.Health.All;
+            for (int i = 0; i < all.Count; i++)
+            {
+                var h = all[i];
+                if (h == null) continue;
+                Vector3 off = h.transform.position - frame.Origin;
+                float along = Vector3.Dot(off, frame.Outward);
+                if (along < 0f || along > range) continue;
+                float score = (off - frame.Outward * along).magnitude;
+                if (score < bestScore) { bestScore = score; best = h; }
+            }
+            if (best == null) return;
+            Vector3 aim = (best.transform.position + Vector3.up * 0.8f - frame.Origin).normalized;
+            int n = Gather(frame.Origin + aim * range * 0.4f, range * 0.5f);
+            for (int i = 0; i < n; i++)
+            {
+                var rb = bodies[i];
+                if (IsPlayerBody(rb) || rb.mass > 60f) continue;
+                Drag(rb, aim * Mathf.Max(flowSpeed, 6f), envelope * Mathf.Min(plan.Target, 2f));
             }
         }
 

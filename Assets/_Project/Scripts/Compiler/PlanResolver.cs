@@ -170,6 +170,7 @@ namespace SpellSimulator.Compiler
             var pulls = new List<SignReading>();
             float lensBudget = 0f, power = 0f;
             float crush = 0f, collection = 0f, billow = 0f, repetition = 0f, weave = 0f, directed = 0f;
+            float cool = 0f, empower = 0f, entwine = 0f, target = 0f, gather = 0f, orb = 0f;
             bool leak = false;
             var unmodeled = new SortedSet<string>();
 
@@ -194,6 +195,12 @@ namespace SpellSimulator.Compiler
                             case Manifestations.Repetition: repetition += s.Length; break;
                             case Manifestations.Weave: weave += s.Length; break;
                             case Manifestations.Directed: directed += s.Length; break;
+                            case Manifestations.Cool: cool += s.Length; break;
+                            case Manifestations.Empower: empower += s.Length; break;
+                            case Manifestations.Entwine: entwine += s.Length; break;
+                            case Manifestations.Focus: target += s.Length; break;
+                            case Manifestations.Gather: gather += s.Length; break;
+                            case Manifestations.Orb: orb += s.Length; break;
                             default: unmodeled.Add(s.Manifestation); break;
                         }
                         break;
@@ -209,6 +216,7 @@ namespace SpellSimulator.Compiler
                 Circulation = agg.Circulation + WeaveSwirl * weave,
                 Budget = agg.Budget + power,
                 Crush = crush, Collection = collection, Billow = billow, Repetition = repetition, Weave = weave, Directed = directed,
+                Cool = cool, Empower = empower, Entwine = entwine, Target = target, Gather = gather, Orb = orb,
                 Hold = ResolveHold(levitation),
                 Intake = ResolveIntake(pulls),
                 Focus = 1f + LensPerLength * lensBudget,

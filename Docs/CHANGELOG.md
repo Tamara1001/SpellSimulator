@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-16 — Seis signos sin efecto: cool, empower, entwine, focus, gather, orb
+
+- Entradas JSON nuevas en `Data/Dictionary/signs/13..18` (trazo derivado de los SVG del repo base `wha-spell-simulator`; significado de la wiki de Witch Hat Atelier, *Signs Explained*). `GlyphDictionary.asset` regenerado: las 6 clases del modelo ya se reconocen y cuentan en el plan.
+- `Manifestations`/`PlanResolver`/`SpellPlan` suman `Cool, Empower, Entwine, Target (focus), Gather, Orb`; `MagicField` los ejecuta (`ApplyCool/Entwine/Gather/Orb/Target` y Empower como multiplicador de caudal). Los valores numéricos son **interpretación propia**, sin medir a mano.
+- Test: `SignEffectsTests.LosSeisSignosDeLaWikiQuedanEnElPlan`.
+
 ## 2026-11-16 — Laboratorio v6 (parte B): alas grandes sin paginas, atril invertido, fogata lejos y estacas legibles
 
 - Tamara probó el v5 en VR: paneles chicos, muy bajos, con demasiadas subdivisiones. Plan en `LABORATORIO_V6_PLAN.md` (parte B; la parte A, etiquetas por mirada, es de `Scripts/Lab`). **Sin compilar ni probar** (lo compila el agente principal).

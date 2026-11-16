@@ -76,6 +76,8 @@ namespace SpellSimulator.Compiler
         /// livianos (nube), Repetition rebobina, Weave trenza (suma giro al remolino) y Directed apunta (tierra: lanza la roca). Ver SignEffects.
         /// </summary>
         public float Crush, Collection, Billow, Repetition, Weave, Directed;
+        /// <summary>Signos de la wiki de Witch Hat Atelier: enfriar, fortalecer, enroscar, fijar objetivo (Sights Set), reunir material y esfera (Orb).</summary>
+        public float Cool, Empower, Entwine, Target, Gather, Orb;
         public PlanPrimitive Primitives;
         public readonly List<string> Notes = new List<string>();
         /// <summary>Lectura de cada signo que entro al plan (para diagnostico y overlays).</summary>
@@ -84,7 +86,8 @@ namespace SpellSimulator.Compiler
         public static SpellPlan Inert() => new SpellPlan { Primitives = PlanPrimitive.Burst };
 
         /// <summary>True si algun signo con efecto propio (crush, collection, billowing, repetition) esta presente.</summary>
-        public bool HasAreaSigns => Crush > 0f || Collection > 0f || Billow > 0f || Repetition > 0f;
+        public bool HasAreaSigns => Crush > 0f || Collection > 0f || Billow > 0f || Repetition > 0f ||
+                                       Cool > 0f || Empower > 0f || Entwine > 0f || Target > 0f || Gather > 0f || Orb > 0f;
 
         public bool Has(PlanPrimitive primitive) => (Primitives & primitive) != 0;
     }

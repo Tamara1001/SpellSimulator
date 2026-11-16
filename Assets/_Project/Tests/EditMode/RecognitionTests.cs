@@ -141,7 +141,8 @@ namespace SpellSimulator.Tests
             Assert.AreEqual(GlyphKind.Sign, d.Get("column").Kind);
             Assert.AreEqual("column", d.Get("column").Semantic.manifestation);
             Assert.AreEqual("inward", d.Get("column").Semantic.directionMode);
-            Assert.AreEqual(GlyphKind.Unknown, d.Get("orb").Kind, "orb no tiene entrada en el diccionario.");
+            Assert.AreEqual(GlyphKind.Sign, d.Get("orb").Kind, "orb tiene entrada desde 2026-11-16.");
+            Assert.AreEqual(GlyphKind.Unknown, d.Get("zzz_inexistente").Kind);
             Assert.AreEqual("fire", d.Get(d.IndexOf("fire")).Id);
         }
 

@@ -155,14 +155,10 @@ namespace SpellSimulator.Tests
         [Test]
         public void UnknownClass_IsIgnoredButReported()
         {
-            var seal = NewSeal();
-            AddSigil(seal, "fire");
-            AddSign(seal, "orb", 90f);
-            var spell = Compile(seal, out var ast);
-
-            Assert.IsTrue(spell.valid);
-            Assert.AreEqual(1, ast.Unknowns.Count);
-            Assert.AreEqual("unknown_class", ast.Unknowns[0].RejectReason);
+            // Desde 2026-11-16 las 26 clases del modelo tienen entrada: ninguna cae en "unknown_class" por falta de diccionario.
+            for (int i = 0; i < dictionary.ClassCount; i++)
+                Assert.AreNotEqual(GlyphKind.Unknown, dictionary.Get(i).Kind, $"clase {i} sin entrada");
+            Assert.AreEqual(GlyphKind.Unknown, GlyphEntry.Unknown("zzz").Kind);
         }
 
         [Test]

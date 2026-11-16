@@ -1,0 +1,76 @@
+{
+	"id": "focus",
+	"recognitionRotationInvariant": true,
+	"displayName": "Focus (Sights Set)",
+	"referenceSizeNorm": 0.16,
+	"allowedLayers": [
+		"middle",
+		"outer"
+	],
+	"sourceNotes": "Focus sets sights: the spell homes on a target ahead (Witch Hat Atelier wiki, Signs Explained). Directional.",
+	"semantic": {
+		"manifestation": "focus",
+		"directionMode": "outward",
+		"force": 0.04,
+		"focus": 0.5,
+		"spread": -0.3,
+		"range": 0.1
+	},
+	"strokeTemplate": {
+		"sourceAspectRatio": 1,
+		"strokes": [
+			[
+				{
+					"x": 0.622,
+					"y": 0.222
+				},
+				{
+					"x": 0.5,
+					"y": 0.1
+				}
+			],
+			[
+				{
+					"x": 0.5,
+					"y": 0.656
+				},
+				{
+					"x": 0.622,
+					"y": 0.778
+				},
+				{
+					"x": 0.5,
+					"y": 0.9
+				},
+				{
+					"x": 0.378,
+					"y": 0.778
+				},
+				{
+					"x": 0.5,
+					"y": 0.656
+				}
+			],
+			[
+				{
+					"x": 0.5,
+					"y": 0.9
+				},
+				{
+					"x": 0.5,
+					"y": 0.1
+				}
+			],
+			[
+				{
+					"x": 0.378,
+					"y": 0.222
+				},
+				{
+					"x": 0.5,
+					"y": 0.1
+				}
+			]
+		]
+	}
+}

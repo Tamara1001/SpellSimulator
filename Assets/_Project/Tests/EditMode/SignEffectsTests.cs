@@ -25,6 +25,20 @@ namespace SpellSimulator.Tests
             PlanResolver.Resolve(new List<SignReading>(signs), "earth", "earth", 0.9f);
 
         [Test]
+        public void LosSeisSignosDeLaWikiQuedanEnElPlan()
+        {
+            var plan = Plan(Sign("cool"), Sign("empower", 60f, 2f), Sign("entwine", 120f), Sign("focus", 180f), Sign("gather", 240f), Sign("orb", 300f));
+            Assert.AreEqual(1f, plan.Cool, 1e-4f);
+            Assert.AreEqual(2f, plan.Empower, 1e-4f);
+            Assert.AreEqual(1f, plan.Entwine, 1e-4f);
+            Assert.AreEqual(1f, plan.Target, 1e-4f);
+            Assert.AreEqual(1f, plan.Gather, 1e-4f);
+            Assert.AreEqual(1f, plan.Orb, 1e-4f);
+            Assert.IsTrue(plan.HasAreaSigns);
+            Assert.IsFalse(plan.Notes.Exists(n => n.StartsWith("unmodeled-")), "ya estan modelados");
+        }
+
+        [Test]
         public void CadaSignoDeAreaQuedaEnElPlan()
         {
             var plan = Plan(Sign("crush"), Sign("collection", 0f, 2f), Sign("billowing", 90f), Sign("repetition", 180f), Sign("directed", 45f));

@@ -34,20 +34,20 @@ Deltas = `force / focus / spread / range / lifetimeBias`. Sigilos permitidos en 
 | 2 | collection | signo | | collection · inward | 0.08 / 0.20 / -0.22 / -0.06 / 0 | 0.172 |
 | 3 | column | signo | | column · inward | 0.30 / 0.35 / -0.24 / 0.18 / 0 | 0.154 |
 | 4 | convergence | signo | | convergence · inward | 0.08 / 0.36 / -0.32 / -0.04 / 0.08 | 0.165 |
-| 5 | cool | **sin entrada** | | | | |
+| 5 | cool | signo | | cool · inward | -0.05 / 0.1 / 0.05 / 0 / 0.05 | 0.16 |
 | 6 | crush | signo | | crush · position | 0.26 / 0.08 / 0.06 / 0 / 0 | 0.235 |
 | 7 | crystal | sigilo | earth | — | -0.02 / 0.06 / -0.04 / 0 / 0.05 | |
 | 8 | dispersion | signo | | dispersion · position | -0.04 / -0.30 / 0.34 / 0.10 / 0 | 0.183 |
 | 9 | earth | sigilo | earth | — | 0.10 / 0.10 / -0.06 / -0.02 / 0.12 | |
-| 10 | empower | **sin entrada** | | | | |
-| 11 | entwine | **sin entrada** | | | | |
+| 10 | empower | signo | | empower · position | 0.12 / 0.1 / 0.0 / 0 / 0.08 | 0.17 |
+| 11 | entwine | signo | | entwine · position | 0.02 / 0.2 / -0.05 / 0 / 0 | 0.16 |
 | 12 | fire | sigilo | fire | — | 0.12 / 0.04 / 0.08 / 0.02 / -0.03 | 0.21 |
 | 13 | float | signo | | levitation · position | -0.06 / -0.04 / 0.06 / 0 / 0.26 | 0.22 |
-| 14 | focus | **sin entrada** | | | | |
-| 15 | gather | **sin entrada** | | | | |
+| 14 | focus | signo | | focus · outward | 0.04 / 0.5 / -0.3 / 0.1 / 0 | 0.16 |
+| 15 | gather | signo | | gather · inward | 0.1 / 0.2 / -0.25 / -0.05 / 0 | 0.16 |
 | 16 | levitation | signo | | levitation · orientation | 0.12 / 0.02 / 0.08 / 0.18 / 0.28 | 0.176 |
 | 17 | light | sigilo | light | — | 0.02 / 0.16 / 0.04 / 0.16 / 0.02 | |
-| 18 | orb | **sin entrada** | | | | |
+| 18 | orb | signo | | orb · position | 0.0 / 0.3 / 0.0 / 0 / 0.1 | 0.17 |
 | 19 | pull | signo | | pull · inward | 0.18 / 0.16 / -0.22 / 0.16 / 0 | 0.205 |
 | 20 | region | signo | | directed · orientation | 0.06 / 0.16 / -0.14 / 0.24 / 0 | 0.154 |
 | 21 | repetition | signo | | repetition · position | 0 / 0 / 0 / 0 / 0.34 | 0.326 |
