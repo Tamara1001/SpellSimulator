@@ -1,18 +1,24 @@
 {
   "zones": [
     { "id": "tower", "name": "Torre", "use": "Biblioteca y estaciones de viento y agua; arriba, el estudio con portal y la alquimia.", "color": "#8E6B4A", "origin": "Tower", "x": 0, "z": 16 },
-    { "id": "training", "name": "Entrenamiento", "use": "Blancos, muñecos y atril de papel para practicar sellos.", "color": "#D0563B", "origin": "Training", "x": 23, "z": -45 },
+    { "id": "training", "name": "Entrenamiento", "use": "Blancos, muñecos y atril de papel para practicar sellos.", "color": "#D0563B", "origin": "Training", "x": 16, "z": -46 },
     { "id": "laboratory", "name": "Laboratorio", "use": "Mesa de variables: cambiá el sello, lanzalo y registrá lo que pasa.", "color": "#4F7FC4", "origin": "Laboratory", "x": 47, "z": -27 },
-    { "id": "cabin-south", "name": "Cabaña del sur", "use": "Refugio con mesa y un libro de hechizos de viento y agua.", "color": "#B5793E", "origin": "Cabin_1", "x": 12, "z": -40 },
+    { "id": "cabin-north", "name": "Cabaña del norte", "use": "Refugio con mesa y un libro de hechizos de viento y agua.", "color": "#B5793E", "origin": "Cabin_1", "x": -8, "z": 46 },
     { "id": "cabin-forest", "name": "Cabaña del bosque", "use": "Refugio con mesa y un libro de hechizos de fuego y tierra.", "color": "#6E8F35", "origin": "Cabin_2", "x": -28, "z": 34 },
     { "id": "shrine", "name": "Santuario", "use": "Cambiá runas gastadas o papeles por otros nuevos; el relicario guarda una runa de oro.", "color": "#D9A82E", "origin": "Shrine", "x": 34, "z": -36 },
     { "id": "stone-circle", "name": "Círculo de piedras", "use": "Dibujá el sello del portal en la placa para viajar.", "color": "#8A7FB8", "origin": "StoneCircle", "x": 50, "z": -10 },
-    { "id": "supply-stall", "name": "Puesto de suministros", "use": "Papeles y runas de piedra que se reponen solos con el tiempo.", "color": "#C2853A", "origin": "SupplyStall", "x": 8, "z": -22 },
+    { "id": "supply-stall", "name": "Puesto de suministros", "use": "Papeles y runas de piedra que se reponen solos con el tiempo.", "color": "#C2853A", "origin": "SupplyStall", "x": 10, "z": 48 },
     { "id": "water-lab", "name": "Laboratorio del lago", "use": "Ejercicios de agua: columna, dispersión y empujar cajas al lago.", "color": "#3A9BB5", "origin": "WaterLab", "x": -44, "z": 1 },
     { "id": "earth-workshop", "name": "Taller de tierra", "use": "Rocas, muros, puentes y romper paredes con el sigilo Tierra.", "color": "#9C6B3C", "origin": "EarthWorkshop", "x": 40, "z": 30 },
     { "id": "watchtower", "name": "Torre de vigía", "use": "Subí por la rampa: altura, portal y runas de piedra.", "color": "#5F8A55", "origin": "Watchtower", "x": 33, "z": 40 },
     { "id": "cave", "name": "Cueva", "use": "Portal, tinta y runas de metal en la cámara del fondo.", "color": "#5E5A66", "origin": "Cave", "x": -32, "z": 52 },
     { "id": "lake", "name": "Lago", "use": "Agua para tus hechizos; la cascada baja de las montañas del oeste.", "color": "#2F7FB0", "origin": "Lake", "x": -34, "z": -16 },
     { "id": "meadow", "name": "Pradera", "use": "Campo abierto y llano al este de la torre.", "color": "#8DB04A", "origin": "Field", "x": 28, "z": -6 }
+  ],
+  "portals": [
+    { "id": "tower-study", "name": "Portal del estudio", "use": "Primer piso de la torre. Presioná el rombo para viajar hasta ahí.", "color": "#8E4FD6", "origin": "Tower", "x": 0, "z": 16 },
+    { "id": "watchtower", "name": "Portal de la atalaya", "use": "Arriba de la torre de vigía. Presioná el rombo para viajar hasta ahí.", "color": "#1F9E89", "origin": "Watchtower", "x": 33, "z": 40 },
+    { "id": "field-circle", "name": "Círculo de la pradera", "use": "En el círculo de piedras. Presioná el rombo para viajar hasta ahí.", "color": "#C93A7A", "origin": "StoneCircle", "x": 50, "z": -10 },
+    { "id": "cave", "name": "Portal de la cueva", "use": "En la cámara del fondo de la cueva. Presioná el rombo para viajar hasta ahí.", "color": "#E2731E", "origin": "Cave", "x": -32, "z": 52 }
   ]
 }

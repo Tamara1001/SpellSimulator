@@ -3,13 +3,20 @@ using UnityEngine;
 namespace SpellSimulator.World.Map
 {
     /// <summary>
-    /// Proyección del valle al cuadro del mapa de la torre (Docs/LABORATORIO_V3_PLAN.md (e)) y medidas del cuadro. Lógica pura:
-    /// la usan el generador del Editor (MapTowerMap), <see cref="TowerMap"/> y los tests.
+    /// Proyección del valle al cuadro del mapa de la torre (Docs/LABORATORIO_V3_PLAN.md (e)) y medidas del cuadro, de la
+    /// leyenda y de la vista a pantalla completa. Lógica pura: la usan el generador del Editor (MapTowerMap),
+    /// <see cref="TowerMap"/> y los tests.
     /// Marco del cuadro: +X a la derecha de quien lo mira, +Y arriba, −Z hacia la habitación; z = 0 es la cara del muro.
     /// En el dibujo, arriba es el norte (+Z del mundo) y a la derecha el este (+X del mundo).
     /// </summary>
     public static class MapProjection
     {
+        /// <summary>Medidas exteriores del marco (m). Entra en la cara del segmento del muro (1,53 m) sin pisar la esquina.</summary>
+        public const float BoardWidth = 1.5f, BoardHeight = 1.14f;
+
+        /// <summary>Ancho del listón del marco (m): el pergamino va de −(alto/2 − listón) a +(alto/2 − listón).</summary>
+        public const float FrameBar = 0.055f;
+
         /// <summary>Centro del valle que cae en el centro del área del mapa (m, XZ del mundo).</summary>
         public static readonly Vector2 WorldCenter = new Vector2(5f, 3f);
 
@@ -40,6 +47,58 @@ namespace SpellSimulator.World.Map
         /// <summary>Separación del texto sobre la superficie que tiene debajo (≥ 6 mm: nada coplanar, sin ZTest Always).</summary>
         public const float TextLift = 0.006f;
 
+        // ---------------------------------------------------------------- portales
+
+        /// <summary>Medio ancho (m, del centro a la punta) del rombo de un portal en el mapa; mismo alto que los marcadores.</summary>
+        public const float PortalRadius = 0.018f;
+
+        /// <summary>
+        /// Corrimiento (m, marco del cuadro) del rombo de un portal respecto del lugar de su estructura: arriba a la derecha,
+        /// para no tapar el marcador numerado de la zona (torre, torre de vigía, cueva y círculo tienen los dos).
+        /// </summary>
+        public static readonly Vector2 PortalSymbolOffset = new Vector2(0.033f, 0.033f);
+
+        /// <summary>Punto del cuadro donde va el rombo de un portal cuya estructura está en (x, z) del mundo.</summary>
+        public static Vector2 PortalToTable(float x, float z) => WorldToTable(x, z) + PortalSymbolOffset;
+
+        // ---------------------------------------------------------------- columna y leyenda
+
+        /// <summary>Columna de texto a la derecha del mapa (centro X y ancho, marco del cuadro).</summary>
+        public const float ColumnX = 0.4975f, ColumnWidth = 0.36f;
+
+        /// <summary>Borde de arriba de la primera fila de la leyenda y borde de abajo de la última (m, marco del cuadro).</summary>
+        public const float LegendTop = 0.235f, LegendBottom = -0.505f;
+
+        /// <summary>Alto máximo de una fila de la leyenda (m); con muchas filas se achica para que entren todas.</summary>
+        public const float LegendMaxRowHeight = 0.0385f;
+
+        /// <summary>Radio (m) de la chapa de color de cada fila (con su número; los portales llevan un rombo).</summary>
+        public const float LegendChipRadius = 0.0145f;
+
+        /// <summary>Alto (m) de la barra de resaltado sobre el pergamino y de la chapa de color sobre el pergamino.</summary>
+        public const float LegendBarDepth = 0.002f, LegendChipDepth = 0.004f;
+
+        /// <summary>Filas de la leyenda: una por zona, un título «Portales» y una por portal (sin portales, sin título).</summary>
+        public static int LegendRows(int zones, int portals) => zones + (portals > 0 ? portals + 1 : 0);
+
+        /// <summary>Alto de cada fila para que entren <paramref name="rows"/> filas entre LegendTop y LegendBottom.</summary>
+        public static float LegendRowHeight(int rows) =>
+            rows <= 0 ? LegendMaxRowHeight : Mathf.Min(LegendMaxRowHeight, (LegendTop - LegendBottom) / rows);
+
+        /// <summary>Fila (0 = arriba) de la entrada: zonas primero; los portales van después del título «Portales».</summary>
+        public static int LegendRowOf(int entry, int zones) => entry < zones ? entry : entry + 1;
+
+        /// <summary>Centro Y (marco del cuadro) de la fila.</summary>
+        public static float LegendRowCenterY(int row, float rowHeight) => LegendTop - rowHeight * (row + 0.5f);
+
+        /// <summary>Centro X de la chapa de color de cada fila (borde izquierdo de la columna + margen).</summary>
+        public static float LegendChipX => ColumnX - ColumnWidth * 0.5f + 0.02f;
+
+        /// <summary>Borde izquierdo del nombre de cada fila (a la derecha de la chapa).</summary>
+        public static float LegendNameLeft => LegendChipX + LegendChipRadius + 0.012f;
+
+        // ---------------------------------------------------------------- proyección
+
         /// <summary>Proyección general: (world − center) · scale, en el plano del cuadro.</summary>
         public static Vector2 WorldToPlane(Vector2 world, Vector2 center, float scale) => (world - center) * scale;
 
@@ -63,6 +122,32 @@ namespace SpellSimulator.World.Map
             return new Vector2(
                 Mathf.Clamp(table.x, TableCenter.x - half, TableCenter.x + half),
                 Mathf.Clamp(table.y, TableCenter.y - half, TableCenter.y + half));
+        }
+
+        // ---------------------------------------------------------------- pantalla completa
+
+        /// <summary>PC: distancia (m) del cuadro a la cámara en pantalla completa (más cerca que cualquier pared de la torre).</summary>
+        public const float FullscreenDistancePc = 0.5f;
+
+        /// <summary>VR: distancia (m) del panel a la cabeza, campo vertical (grados) y proporción supuestos para encuadrarlo.</summary>
+        public const float FullscreenDistanceVr = 0.8f, FullscreenFovVr = 70f, FullscreenAspectVr = 1f;
+
+        /// <summary>Fracción de la vista que ocupa el cuadro (deja un borde para verlo entero).</summary>
+        public const float FullscreenFill = 0.92f;
+
+        /// <summary>Si la cámara se aleja más de esto (m) de donde se abrió la pantalla completa, se cierra sola.</summary>
+        public const float FullscreenMaxDrift = 1.5f;
+
+        /// <summary>
+        /// Escala del cuadro para que, a <paramref name="distance"/> de una cámara con campo vertical
+        /// <paramref name="verticalFovDeg"/> y proporción <paramref name="aspect"/>, ocupe <paramref name="fill"/> de la vista
+        /// sin salirse ni a lo alto ni a lo ancho.
+        /// </summary>
+        public static float FitScale(float distance, float verticalFovDeg, float aspect, float fill = FullscreenFill)
+        {
+            float viewHeight = 2f * Mathf.Max(distance, 1e-3f) * Mathf.Tan(Mathf.Clamp(verticalFovDeg, 1f, 179f) * 0.5f * Mathf.Deg2Rad);
+            float viewWidth = viewHeight * Mathf.Max(aspect, 1e-3f);
+            return Mathf.Min(viewHeight * fill / BoardHeight, viewWidth * fill / BoardWidth);
         }
     }
 }

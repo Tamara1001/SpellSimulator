@@ -318,7 +318,8 @@ namespace SpellSimulator.Lab
             if (fromBench)
             {
                 LabSealSpec spec = bench.Spec;
-                specText = LabSealBenchMath.Serialize(spec);
+                // v4: el lanzamiento puede venir del dibujo del atril (el spec describe igual el papel y la tinta).
+                specText = (bench.LastLaunchFromDrawing ? "origen=dibujo " : "origen=controles ") + LabSealBenchMath.Serialize(spec);
                 recipe = spec.recipeId;
                 seed = spec.seed;
                 pose = spec.paperPose;

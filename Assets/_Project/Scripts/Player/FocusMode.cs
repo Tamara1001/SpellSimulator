@@ -45,6 +45,33 @@ namespace SpellSimulator.Player
             Exit();
         }
 
+        /// <summary>
+        /// True mientras un panel del mundo está a pantalla completa (el mapa de la torre, PC y VR). No congela la vista ni
+        /// libera el cursor: solo hace que Esc cierre el panel en vez de abrir el grimorio o soltar el cursor.
+        /// </summary>
+        public static bool PanelView { get; private set; }
+
+        /// <summary>Frame en que se cerró el panel a pantalla completa (el Esc de ese frame no debe abrir el grimorio).</summary>
+        public static int PanelViewExitFrame { get; private set; } = -1;
+
+        /// <summary>True si Esc en este frame le corresponde al panel a pantalla completa (abierto o recién cerrado).</summary>
+        public static bool PanelViewOwnsEscape => PanelView || PanelViewExitFrame == Time.frameCount;
+
+        public static void EnterPanelView() => PanelView = true;
+
+        public static void ExitPanelView()
+        {
+            if (PanelView) PanelViewExitFrame = Time.frameCount;
+            PanelView = false;
+        }
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetPanelView()
+        {
+            PanelView = false;
+            PanelViewExitFrame = -1;
+        }
+
         public static void Exit()
         {
             CanvasView = false;

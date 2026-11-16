@@ -61,6 +61,13 @@ namespace SpellSimulator.EditorTools.Map
         /// </summary>
         private static readonly Vector2 StampArea = new Vector2(28f, -16.5f);
 
+        /// <summary>
+        /// Sitios preferidos de la cabaña 1 y del puesto de suministros: al NORTE de la torre, en la zona libre entre la cueva,
+        /// la cabaña del bosque, la torre de vigía y el peñasco 4. Antes estaban al sur, en (12, -40) y (8, -22): se mudaron
+        /// para dejarle lugar al entrenamiento (ValleyShape.TrainingOrigin). Find puede correrlos unos metros si el piso no es plano.
+        /// </summary>
+        public static readonly Vector2 CabinNorthPreferred = new Vector2(-8f, 46f), SupplyStallPreferred = new Vector2(10f, 48f);
+
         /// <summary>Radio (m) alrededor de <see cref="ValleyShape.TrainingOrigin"/> que la pista del laboratorio no puede pisar.</summary>
         public const float TrainingKeepOut = 12f;
 
@@ -121,11 +128,11 @@ namespace SpellSimulator.EditorTools.Map
             Add("Watchtower", best, ValleyShape.FieldCenter, 4.5f, false);
 
             Add("Cave", Find(Polar(122f, 61f), 6f, 6.5f, 1.4f, true, taken), Vector2.zero, 6.5f, true);
-            Add("Cabin_1", Find(new Vector2(12f, -40f), 7f, 3.6f, 0.7f, false, taken), ValleyShape.Spawn, 3.6f, true);
+            Add("Cabin_1", Find(CabinNorthPreferred, 7f, 3.6f, 0.7f, false, taken), ValleyShape.Spawn, 3.6f, true);
             Add("Cabin_2", Find(new Vector2(-28f, 34f), 7f, 3.6f, 0.7f, false, taken), ValleyShape.TowerCenter, 3.6f, true);
             Add("StoneCircle", Find(new Vector2(50f, -10f), 6f, 5.8f, 0.8f, false, taken), ValleyShape.FieldCenter, 5.8f, false);
             Add("Shrine", Find(new Vector2(34f, -36f), 6f, 3.8f, 0.6f, false, taken), ValleyShape.FieldCenter, 3.8f, false);
-            Add("SupplyStall", Find(new Vector2(8f, -22f), 5f, 2.8f, 0.4f, false, taken), ValleyShape.Spawn, 2.8f, false);
+            Add("SupplyStall", Find(SupplyStallPreferred, 5f, 2.8f, 0.4f, false, taken), ValleyShape.Spawn, 2.8f, false);
             Vector2[] crags = { new Vector2(20f, -28f), new Vector2(44f, 10f), new Vector2(-6f, -40f), new Vector2(22f, 30f) };
             for (int i = 0; i < crags.Length; i++)
                 Add("Crag_" + (i + 1), Find(crags[i], 7f, 6f, 1.8f, false, taken), ValleyShape.FieldCenter, 6f, false);
@@ -317,7 +324,7 @@ namespace SpellSimulator.EditorTools.Map
             ClearVegetation(MapBuilder.Ground(ValleyShape.TrainingOrigin.x, ValleyShape.TrainingOrigin.y), TrainingKeepOut);
             var s = Sites();
             Watchtower(root, s["Watchtower"]);
-            Cabin(root, s["Cabin_1"], 1, "spells-wind-water", "Cabaña del sur");
+            Cabin(root, s["Cabin_1"], 1, "spells-wind-water", "Cabaña del norte");
             Cabin(root, s["Cabin_2"], 2, "spells-fire-earth", "Cabaña del bosque");
             Cave(root, s["Cave"]);
             for (int i = 1; i <= 4; i++) Crag(root, s["Crag_" + i], i);

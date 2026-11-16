@@ -38,8 +38,15 @@ namespace SpellSimulator.Lab
         /// <summary>Largo maximo de un rotulo de control (una sola linea, sin ajuste).</summary>
         public const int MaxLabelChars = 10;
 
-        /// <summary>Paso minimo entre controles de una fila (m): rotulo de 1,6 cm entero y rayo de VR con temblor.</summary>
-        public const float MinControlPitch = 0.30f;
+        /// <summary>
+        /// Paso minimo entre controles de una fila (m): plaquita de 18 cm (rotulo ≤ 10 caracteres de 1,6 cm) + 4 cm de aire, con
+        /// colliders de 9–13 cm que no se tocan (rayo de VR con temblor). v3: 0.30; v4 lo baja a 0.22 para que todo quede al
+        /// alcance (≤ 0,7 m, LabBenchLayout.ReachMax) sin quitar variables.
+        /// </summary>
+        public const float MinControlPitch = 0.22f;
+
+        /// <summary>Ancho de la plaquita del rotulo y de la ventanita de la lectura (m): deja ≥ 4 cm entre controles vecinos.</summary>
+        public const float PlaqueWidth = 0.18f;
 
         /// <summary>Altura del texto que apoya sobre una superficie cuyo tope esta en <paramref name="surfaceTop"/>.</summary>
         public static float TextY(float surfaceTop) => surfaceTop + TextLift;

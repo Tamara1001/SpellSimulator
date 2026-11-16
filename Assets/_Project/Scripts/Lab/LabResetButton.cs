@@ -10,12 +10,15 @@ namespace SpellSimulator.Lab
     /// catalogo y el fuego a sus defaults (<see cref="LabParameters.ResetAll"/>). No borra lo materializado.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
-    public class LabResetButton : MonoBehaviour, IPressable, LabParameters.IHoverTarget
+    public class LabResetButton : MonoBehaviour, IPressable, LabParameters.IHoverTarget, ILabHelp
     {
         [SerializeField, Tooltip("Renderer que se resalta al apuntar (vacio = el primero en los hijos).")]
         private Renderer highlight;
 
         private LabControl.HoverTint tint;
+
+        /// <summary>Ayuda para la tira del panel (v4): «Reiniciar entorno». No borra lo materializado ni toca el sello.</summary>
+        public string HelpLine => LabHelpStrip.Line("Reiniciar entorno", "Vuelve viento, fuego y masa a sus valores de inicio.");
 
         private void Awake()
         {
@@ -25,7 +28,7 @@ namespace SpellSimulator.Lab
 
         public bool PressWithClick => true;
 
-        public string GetPressPrompt() => "Valores por defecto";
+        public string GetPressPrompt() => "Reiniciar entorno";
 
         public void Press()
         {
@@ -37,9 +40,16 @@ namespace SpellSimulator.Lab
             LabParameters parameters = LabParameters.Current;
             if (parameters == null) return;
             parameters.ResetAll();
-            Hud.Notify("lab", "Laboratorio: valores por defecto", 2f);
+            Hud.Notify("lab", "Laboratorio: entorno reiniciado", 2f);
         }
 
-        public void SetHovered(bool on) => tint.Set(on);
+        public void SetHovered(bool on)
+        {
+            tint.Set(on);
+            if (on) LabHelpStrip.Focus(this);
+            else LabHelpStrip.Unfocus(this);
+        }
+
+        private void OnDisable() => LabHelpStrip.Unfocus(this);
     }
 }

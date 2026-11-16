@@ -360,15 +360,36 @@ namespace SpellSimulator.World
         /// <summary>Red: el anfitrion autorizo el cruce de este jugador: se teletransporta a la llegada del portal de destino.</summary>
         public void NetTeleportLocal(Portal dest)
         {
-            if (dest == null || dest.arrival == null) return;
-            IPlayerContext local = PlayerRegistry.Local;
-            PlayerMovement mover = local != null && local.Root != null ? local.Root.GetComponent<PlayerMovement>() : null;
-            if (mover == null) return;
-            player = mover;
-            playerBody = mover.GetComponent<Rigidbody>();
-            Teleport(dest.arrival);
+            if (dest == null || !TeleportLocalPlayer(dest.arrival)) return;
             Debug.Log($"[Portal] {id} -> {dest.id}: cruce del jugador (autorizado por el anfitrion)", this);
             Traveled?.Invoke(this, dest);
+        }
+
+        /// <summary>
+        /// Lleva al jugador local a la llegada de ESTE portal sin cruzar uno abierto (lo usa el mapa de la torre al presionar
+        /// el rombo del portal). Mismo teletransporte que el cruce, con el enfriamiento de viaje del jugador para que no rebote
+        /// si el portal esta abierto. No dispara <see cref="Traveled"/> (no hay portal de origen). False si no hay jugador local
+        /// o el portal no tiene punto de llegada.
+        /// </summary>
+        public bool TeleportLocalPlayerHere()
+        {
+            if (!TeleportLocalPlayer(arrival)) return false;
+            int ownerId = player.TryGetComponent(out IPlayerContext traveler) ? traveler.OwnerId : 0;
+            PortalTravelerCooldowns.Mark(ownerId, GameClock.Time, travelerCooldown);
+            Debug.Log($"[Portal] mapa -> {id}: viaje del jugador local", this);
+            return true;
+        }
+
+        private bool TeleportLocalPlayer(Transform destination)
+        {
+            if (destination == null) return false;
+            IPlayerContext local = PlayerRegistry.Local;
+            PlayerMovement mover = local != null && local.Root != null ? local.Root.GetComponent<PlayerMovement>() : null;
+            if (mover == null) return false;
+            player = mover;
+            playerBody = mover.GetComponent<Rigidbody>();
+            Teleport(destination);
+            return true;
         }
 
         /// <summary>Lo llama PortalGate cuando algo entra al volumen de cruce. Viaja si el portal esta Open y es el jugador.</summary>

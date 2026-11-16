@@ -39,6 +39,12 @@ namespace SpellSimulator.World.Map
 
         public Zone[] zones = Array.Empty<Zone>();
 
+        /// <summary>
+        /// Portales que se dibujan en el mapa (rombos): <c>id</c> es el id del portal (Data/Portals/portals.json, el mismo que
+        /// <see cref="SpellSimulator.World.Portal.Id"/>) y <c>origin</c> el sitio de su estructura (Tower, Watchtower, Cave...).
+        /// </summary>
+        public Zone[] portals = Array.Empty<Zone>();
+
         /// <summary>Lee el catálogo; nunca devuelve null (un JSON vacío o roto da un catálogo sin zonas).</summary>
         public static WorldZoneCatalog Parse(string json)
         {
@@ -55,6 +61,7 @@ namespace SpellSimulator.World.Map
             }
             if (catalog == null) return new WorldZoneCatalog();
             if (catalog.zones == null) catalog.zones = Array.Empty<Zone>();
+            if (catalog.portals == null) catalog.portals = Array.Empty<Zone>();
             return catalog;
         }
 

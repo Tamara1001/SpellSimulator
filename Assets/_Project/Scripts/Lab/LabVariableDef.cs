@@ -106,7 +106,12 @@ namespace SpellSimulator.Lab
         PaperTilt = 16,
         PenWidth = 17,
         /// <summary>Preset de posicion del papel (Laboratorio v3): atril, piso, pista, etc. Ver <see cref="LabSealBenchMath.PaperPose"/>.</summary>
-        PaperPose = 18
+        PaperPose = 18,
+        /// <summary>Laboratorio v4: posicion libre del papel del campo (X, distancia por la pista, giro y altura).</summary>
+        PaperX = 19,
+        PaperDistance = 20,
+        PaperYaw = 21,
+        PaperHeight = 22
     }
 
     /// <summary>Como se mueve una variable del banco: deslizador continuo, muescas numericas o lista de opciones.</summary>
@@ -128,7 +133,7 @@ namespace SpellSimulator.Lab
         public readonly LabSealVarKind Kind;
         /// <summary>Ayuda corta en español (hasta <see cref="LabSealCatalog.MaxHelpLength"/> caracteres): que hace y que pasa al subirla.</summary>
         public readonly string Help;
-        /// <summary>Grupo de consola: 1 Receta/Sigilo, 2 Signos, 3 Papel y posicion, 4 Tinta/Prolijidad.</summary>
+        /// <summary>Grupo: 1 Hechizo, 2 Signos, 3 Papel y tinta, 4 Afinado (consola del sello); 5 Papel de prueba (panel de objetos).</summary>
         public readonly int Group;
 
         public LabSealVarDef(LabSealVarId id, string label, string unit, float min, float max, float defaultValue, float step,
@@ -145,10 +150,12 @@ namespace SpellSimulator.Lab
         /// <summary>Largo maximo de <see cref="LabSealVarDef.Help"/> (cabe en la tira de ayuda de la consola).</summary>
         public const int MaxHelpLength = 60;
         /// <summary>Cantidad de grupos de consola (numerados desde 1).</summary>
-        public const int GroupCount = 4;
+        public const int GroupCount = 5;
+        /// <summary>Grupos de la consola del sello (1..SealGroupCount); el 5 es el papel de prueba del panel de objetos.</summary>
+        public const int SealGroupCount = 4;
 
         /// <summary>Titulos de los grupos, indexados por grupo - 1.</summary>
-        public static readonly string[] GroupNames = { "1 Receta / Sigilo", "2 Signos", "3 Papel y posición", "4 Tinta / Prolijidad" };
+        public static readonly string[] GroupNames = { "1 Hechizo", "2 Signos", "3 Papel y tinta", "4 Afinado", "Papel de prueba" };
 
         /// <summary>Definiciones, indexables por <c>(int)LabSealVarId</c>. Receta, sigilo, tipo de signo, tinta, pluma y posicion del papel son listas (indices).</summary>
         public static readonly LabSealVarDef[] Defs =
@@ -158,11 +165,11 @@ namespace SpellSimulator.Lab
             new LabSealVarDef(LabSealVarId.Sigil, "Sigilo", "", 0f, 8f, 0f, 1f, LabSealVarKind.List,
                 "Dibujo central del sello: define el elemento.", 1),
             new LabSealVarDef(LabSealVarId.PaperSize, "Tamaño del papel", "m", 0f, 4f, LabSealSpec.DefaultPaperSize, 1f, LabSealVarKind.List,
-                "Lado del papel. Más grande, sello más grande.", 3),
+                "Lado del papel de prueba. Más grande, sello más grande.", 5),
             new LabSealVarDef(LabSealVarId.RingFill, "Llenado del anillo", "", LabSealSpec.MinRingFill, LabSealSpec.MaxRingFill, LabSealSpec.DefaultRingFill, 0.05f, LabSealVarKind.Continuous,
-                "Cuánto del papel ocupa el anillo. Más, anillo más grande.", 1),
+                "Cuánto del papel ocupa el anillo. Más, anillo más grande.", 4),
             new LabSealVarDef(LabSealVarId.SigilScale, "Tamaño del sigilo", "x", LabSealSpec.MinSigilScale, LabSealSpec.MaxSigilScale, 1f, 0.05f, LabSealVarKind.Continuous,
-                "Tamaño del sigilo en el anillo. Más, sigilo más grande.", 1),
+                "Tamaño del sigilo en el anillo. Más, sigilo más grande.", 4),
             new LabSealVarDef(LabSealVarId.SignType, "Tipo de signo", "", 0f, 11f, 0f, 1f, LabSealVarKind.List,
                 "Clase de signo que se repite alrededor del anillo.", 2),
             new LabSealVarDef(LabSealVarId.SignCount, "Cantidad de signos", "", 0f, LabSealSpec.MaxSignCount, 0f, 1f, LabSealVarKind.Discrete,
@@ -172,35 +179,47 @@ namespace SpellSimulator.Lab
             new LabSealVarDef(LabSealVarId.TurnDeg, "Hacia adentro / afuera", "°", 0f, LabSealSpec.TurnOutDeg, 0f, LabSealSpec.TurnOutDeg, LabSealVarKind.Discrete,
                 "Signos hacia adentro o hacia afuera del anillo.", 2),
             new LabSealVarDef(LabSealVarId.SignLength, "Largo del signo", "x", LabSealSpec.MinSignLength, LabSealSpec.MaxSignLength, 1f, 0.05f, LabSealVarKind.Continuous,
-                "Largo de cada signo. Más largo, efecto más marcado.", 2),
+                "Largo de cada signo. Más largo, efecto más marcado.", 4),
             new LabSealVarDef(LabSealVarId.Asymmetry, "Asimetría", "x", LabSealSpec.MinAsymmetry, LabSealSpec.MaxAsymmetry, 1f, 0.05f, LabSealVarKind.Continuous,
-                "Largo extra del primer signo. Más, sello más desparejo.", 2),
+                "Largo extra del primer signo. Más, sello más desparejo.", 4),
             new LabSealVarDef(LabSealVarId.SignDistance, "Distancia del signo", "R", LabSealSpec.MinSignDistance, LabSealSpec.MaxSignDistance, SpellSimulator.Learning.SpellStrokeBuilder.SignDistance, 0.01f, LabSealVarKind.Continuous,
-                "Distancia de los signos al centro. Más, más lejos.", 2),
+                "Distancia de los signos al centro. Más, más lejos.", 4),
             new LabSealVarDef(LabSealVarId.RingGap, "Hueco del anillo", "°", 0f, LabSealSpec.MaxRingGapDeg, 0f, 2f, LabSealVarKind.Continuous,
-                "Hueco del anillo. Desde 34° queda «preparado».", 1),
+                "Hueco del anillo. Desde 34° queda «preparado».", 4),
             new LabSealVarDef(LabSealVarId.Tremor, "Prolijidad (temblor)", "R", 0f, LabSealSpec.MaxTremor, 0f, 0.005f, LabSealVarKind.Continuous,
                 "Temblor del trazo. Más temblor, sello menos prolijo.", 4),
             new LabSealVarDef(LabSealVarId.Ink, "Tinta", "", 0f, 2f, 0f, 1f, LabSealVarKind.List,
-                "Tinta normal, poderosa o resistente.", 4),
-            new LabSealVarDef(LabSealVarId.PaperFace, "Cara del papel", "", -1f, 1f, 1f, 2f, LabSealVarKind.Discrete,
-                "Abajo invierte hacia dónde sale el hechizo.", 3),
-            new LabSealVarDef(LabSealVarId.PaperTilt, "Inclinación", "°", 0f, LabSealSpec.MaxPaperTiltDeg, 0f, 5f, LabSealVarKind.Continuous,
-                "Levanta el disparo. Solo con la posición «Libre».", 3),
+                "Tinta normal, poderosa o resistente.", 3),
+            new LabSealVarDef(LabSealVarId.PaperFace, "Sentido del disparo", "", -1f, 1f, 1f, 2f, LabSealVarKind.Discrete,
+                "Invertido: el hechizo sale por el otro lado del papel.", 3),
+            new LabSealVarDef(LabSealVarId.PaperTilt, "Inclinación", "°", LabSealSpec.MinPaperTiltDeg, LabSealSpec.MaxPaperTiltDeg, 0f, 15f, LabSealVarKind.Discrete,
+                "0 de pie, 90 mira arriba, −90 mira abajo.", 5),
             new LabSealVarDef(LabSealVarId.PenWidth, "Grosor de pluma", "", 0f, LabSealSpec.PenWidthCount - 1, 0f, 1f, LabSealVarKind.List,
-                "Grosor de la pluma. Más grueso, trazo más ancho.", 4),
-            new LabSealVarDef(LabSealVarId.PaperPose, "Posición del papel", "", 0f, LabSealSpec.PaperPoseCount - 1, LabSealSpec.DefaultPaperPose, 1f, LabSealVarKind.List,
-                "Dónde está el papel y hacia dónde sale el hechizo.", 3)
+                "Grosor de la pluma. Más grueso, trazo más ancho.", 3),
+            new LabSealVarDef(LabSealVarId.PaperPose, "Atajo de posición", "", 0f, LabSealSpec.PaperPoseCount - 1, LabSealSpec.DefaultPaperPose, 1f, LabSealVarKind.List,
+                "Carga una posición típica: Frente, Piso, Izquierda…", 5),
+            new LabSealVarDef(LabSealVarId.PaperX, "Papel: lado", "m", -LabSealSpec.MaxPaperX, LabSealSpec.MaxPaperX, 0f, 0.1f, LabSealVarKind.Continuous,
+                "Mueve el papel a la izquierda o a la derecha de la pista.", 5),
+            new LabSealVarDef(LabSealVarId.PaperDistance, "Papel: distancia", "m", LabSealSpec.MinPaperDistance, LabSealSpec.MaxPaperDistance, LabSealSpec.DefaultPaperDistance, 0.1f, LabSealVarKind.Continuous,
+                "Distancia del papel desde el comienzo de la pista.", 5),
+            new LabSealVarDef(LabSealVarId.PaperYaw, "Papel: giro", "°", -180f, 180f, 0f, 15f, LabSealVarKind.Discrete,
+                "0 dispara al fondo, 180 hacia vos, ±90 a los lados.", 5),
+            new LabSealVarDef(LabSealVarId.PaperHeight, "Papel: altura", "m", 0f, LabSealSpec.MaxPaperHeight, LabSealSpec.DefaultPaperHeight, 0.05f, LabSealVarKind.Continuous,
+                "Altura del centro del papel: desde el piso hasta 1,5 m.", 5)
         };
 
         // Ids por grupo, en el orden en que se muestran en la consola (izquierda a derecha).
         private static readonly LabSealVarId[][] GroupIds =
         {
-            new[] { LabSealVarId.BaseRecipe, LabSealVarId.Sigil, LabSealVarId.SigilScale, LabSealVarId.RingFill, LabSealVarId.RingGap },
-            new[] { LabSealVarId.SignType, LabSealVarId.SignCount, LabSealVarId.BaseAngle, LabSealVarId.TurnDeg,
-                    LabSealVarId.SignLength, LabSealVarId.Asymmetry, LabSealVarId.SignDistance },
-            new[] { LabSealVarId.PaperSize, LabSealVarId.PaperPose, LabSealVarId.PaperFace, LabSealVarId.PaperTilt },
-            new[] { LabSealVarId.Ink, LabSealVarId.PenWidth, LabSealVarId.Tremor }
+            // Laboratorio v4: lo mas importante arriba (hechizo, signos, papel/tinta, afinado). El 5 es el papel del campo; el
+            // atajo de posicion va al final para que un reset de grupo lo deje en su valor despues de mover X, distancia, etc.
+            new[] { LabSealVarId.BaseRecipe, LabSealVarId.Sigil },
+            new[] { LabSealVarId.SignType, LabSealVarId.SignCount, LabSealVarId.BaseAngle, LabSealVarId.TurnDeg },
+            new[] { LabSealVarId.Ink, LabSealVarId.PenWidth, LabSealVarId.PaperFace },
+            new[] { LabSealVarId.SigilScale, LabSealVarId.RingFill, LabSealVarId.RingGap, LabSealVarId.SignLength,
+                    LabSealVarId.Asymmetry, LabSealVarId.SignDistance, LabSealVarId.Tremor },
+            new[] { LabSealVarId.PaperX, LabSealVarId.PaperDistance, LabSealVarId.PaperYaw, LabSealVarId.PaperHeight,
+                    LabSealVarId.PaperTilt, LabSealVarId.PaperSize, LabSealVarId.PaperPose }
         };
 
         public static int Count => Defs.Length;

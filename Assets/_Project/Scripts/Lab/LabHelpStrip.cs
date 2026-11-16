@@ -88,7 +88,7 @@ namespace SpellSimulator.Lab
             if (HelpCache.TryGetValue(key, out string cached)) return cached;
 
             string help;
-            if (target is LabBenchButton button) help = button.HelpLine;
+            if (target is ILabHelp custom) help = custom.HelpLine;
             else if (target.TryGetComponent(out LabControlBinding binding)) help = BindingHelp(binding);
             else if (target is LabControl control) help = control.HelpText;
             else help = target.name;
@@ -102,6 +102,13 @@ namespace SpellSimulator.Lab
             {
                 LabSealVarDef def = LabSealCatalog.Get((LabSealVarId)binding.Variable);
                 return Line(LabSealCatalog.GroupName(def.Group) + " · " + def.Label, def.Help);
+            }
+            if (binding.Source == LabControlSource.Field)
+            {
+                var v = (LabFieldVar)binding.Variable;
+                LabSealVarDef def = LabSealCatalog.Get(LabField.SealVar(v));
+                bool boxToo = v == LabFieldVar.X || v == LabFieldVar.Distance || v == LabFieldVar.Yaw;
+                return Line("Objeto elegido · " + def.Label + (boxToo ? "" : " (solo papel)"), def.Help);
             }
             LabVariableDef env = LabCatalog.Get((LabVariableId)binding.Variable);
             return Line(env.Label, "Doble clic: valor por defecto · Rueda: un paso.");

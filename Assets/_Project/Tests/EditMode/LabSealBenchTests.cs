@@ -163,107 +163,140 @@ namespace SpellSimulator.Tests
             Assert.That(right.x, Is.EqualTo(0.75f).Within(1e-5f));
         }
 
-        // ---------------------------------------------------------------- posicion del papel (Laboratorio v3)
+        // ---------------------------------------------------------------- papel del campo (Laboratorio v4)
 
+        private static readonly Vector3 Viewer = LabSealBenchMath.DefaultViewer;
+
+        /// <summary>Direccion de cada atajo con cara normal (0 Frente … 7 Diagonal).</summary>
         private static readonly Vector3[] ExpectedEmission =
         {
-            Vector3.forward, Vector3.back, Vector3.up, Vector3.up, Vector3.left, Vector3.right, Vector3.back, Vector3.down, Vector3.forward
+            Vector3.forward, Vector3.back, Vector3.up, Vector3.up, Vector3.left, Vector3.right, Vector3.down,
+            new Vector3(0f, 0.70710677f, 0.70710677f)
         };
+
+        private static LabPaperPose PoseOf(LabSealSpec s)
+        {
+            float h = LabSealBenchMath.PaperCenterHeight(s.paperHeight, s.paperTiltDeg, s.paperSize);
+            return LabSealBenchMath.PaperPose(s, new Vector3(s.paperX, h, 5f + s.paperDistance), Viewer);
+        }
 
         [Test]
         public void PaperPose_EmisionYArribaPerpendicularesYUnitarios()
         {
-            for (int preset = 0; preset < LabSealSpec.PaperPoseCount; preset++)
-                for (int face = -1; face <= 1; face += 2)
-                {
-                    LabPaperPose p = LabSealBenchMath.PaperPose(preset, face, 30f, 0f);
-                    Assert.That(p.Emission.magnitude, Is.EqualTo(1f).Within(1e-4f), "emision unitaria, preset " + preset);
-                    Assert.That(p.Up.magnitude, Is.EqualTo(1f).Within(1e-4f), "up unitario, preset " + preset);
-                    Assert.That(Vector3.Dot(p.Emission, p.Up), Is.EqualTo(0f).Within(1e-4f), "perpendicular, preset " + preset + " cara " + face);
-                    Assert.That(Mathf.Abs(Vector3.Dot(p.ViewNormal, p.Emission)), Is.EqualTo(1f).Within(1e-4f), "cara visible paralela a la emision, preset " + preset);
-                    Assert.That(Vector3.Dot(p.ViewNormal, p.Up), Is.EqualTo(0f).Within(1e-4f), "up en el plano del papel, preset " + preset);
-                }
+            for (int yaw = -180; yaw <= 180; yaw += 45)
+                for (int tilt = -90; tilt <= 90; tilt += 30)
+                    for (int face = -1; face <= 1; face += 2)
+                    {
+                        LabPaperPose p = LabSealBenchMath.PaperPose(new Vector3(1f, 0.5f, 8f), yaw, tilt, face, Viewer);
+                        string at = $"giro {yaw}, incl. {tilt}, cara {face}";
+                        Assert.That(p.Emission.magnitude, Is.EqualTo(1f).Within(1e-4f), "emision unitaria, " + at);
+                        Assert.That(p.Up.magnitude, Is.EqualTo(1f).Within(1e-4f), "up unitario, " + at);
+                        Assert.That(Vector3.Dot(p.Emission, p.Up), Is.EqualTo(0f).Within(1e-4f), "perpendicular, " + at);
+                        Assert.That(Mathf.Abs(Vector3.Dot(p.ViewNormal, p.Emission)), Is.EqualTo(1f).Within(1e-4f), "cara paralela a la emision, " + at);
+                    }
         }
 
         [Test]
-        public void PaperPose_SentidoPorPreset()
+        public void Atajos_SentidoPorPreset()
         {
-            for (int preset = 0; preset < 8; preset++)
+            for (int preset = 0; preset < LabSealSpec.PaperPoseCount - 1; preset++)
             {
-                LabPaperPose p = LabSealBenchMath.PaperPose(preset, 1, 0f, 0f);
-                Assert.That(Vector3.Distance(p.Emission, ExpectedEmission[preset]), Is.LessThan(1e-4f), "preset " + preset);
+                LabSealSpec s = LabSealBenchMath.ApplyPaperPreset(LabSealSpec.Default(), preset);
+                Assert.AreEqual(preset, s.paperPose);
+                Assert.That(Vector3.Distance(PoseOf(s).Emission, ExpectedEmission[preset]), Is.LessThan(1e-4f), "atajo " + preset);
             }
-            LabPaperPose free = LabSealBenchMath.PaperPose(LabSealSpec.FreePaperPose, 1, 0f, 0f);
-            Assert.That(Vector3.Distance(free.Emission, Vector3.forward), Is.LessThan(1e-4f));
+            Assert.AreEqual("Frente", LabSealBenchMath.PaperPoseName(0));
+            Assert.AreEqual("Piso", LabSealBenchMath.PaperPoseName(3));
+            Assert.AreEqual("Personalizada", LabSealBenchMath.PaperPoseName(LabSealSpec.FreePaperPose));
         }
 
         [Test]
-        public void PaperPose_CaraMenosUnoInvierteLaEmision_YSeIgnoraLaInclinacionEn0a7()
+        public void Atajo_Personalizada_NoMueveNada()
         {
-            for (int preset = 0; preset < 8; preset++)
+            LabSealSpec s = LabSealBenchMath.With(LabSealSpec.Default(), LabSealVarId.PaperX, 2f, Recipes, Sigils, Signs);
+            LabSealSpec p = LabSealBenchMath.With(s, LabSealVarId.PaperPose, LabSealSpec.FreePaperPose, Recipes, Sigils, Signs);
+            Assert.AreEqual(2f, p.paperX);
+            Assert.AreEqual(LabSealSpec.FreePaperPose, p.paperPose);
+            Assert.IsFalse(LabSealBenchMath.TryGetPreset(LabSealSpec.FreePaperPose, out _));
+        }
+
+        [Test]
+        public void MoverElPapel_PasaAPersonalizada_YUnAtajoLoVuelveATraer()
+        {
+            LabSealSpec s = LabSealSpec.Default();
+            Assert.AreEqual(LabSealSpec.DefaultPaperPose, s.paperPose);
+            foreach (LabSealVarId id in new[] { LabSealVarId.PaperX, LabSealVarId.PaperDistance, LabSealVarId.PaperYaw, LabSealVarId.PaperHeight, LabSealVarId.PaperTilt })
             {
-                LabPaperPose up = LabSealBenchMath.PaperPose(preset, 1, 0f, 1f);
-                LabPaperPose down = LabSealBenchMath.PaperPose(preset, -1, 0f, 1f);
-                Assert.That(Vector3.Distance(down.Emission, -up.Emission), Is.LessThan(1e-4f), "invierte, preset " + preset);
+                LabSealSpec moved = LabSealBenchMath.With(s, id, 1f, Recipes, Sigils, Signs);
+                Assert.AreEqual(LabSealSpec.FreePaperPose, moved.paperPose, "mover " + id);
+            }
+            LabSealSpec back = LabSealBenchMath.With(LabSealBenchMath.With(s, LabSealVarId.PaperX, 3f, Recipes, Sigils, Signs),
+                LabSealVarId.PaperPose, 3f, Recipes, Sigils, Signs);
+            Assert.AreEqual(3, back.paperPose);
+            Assert.AreEqual(0f, back.paperX, "el atajo Piso vuelve al centro");
+            Assert.AreEqual(90f, back.paperTiltDeg);
+        }
+
+        [Test]
+        public void CaraMenosUno_InvierteLaEmision_SinGirarElPapel()
+        {
+            for (int preset = 0; preset < LabSealSpec.PaperPoseCount - 1; preset++)
+            {
+                LabSealSpec s = LabSealBenchMath.ApplyPaperPreset(LabSealSpec.Default(), preset);
+                LabPaperPose up = PoseOf(s);
+                s.paperFace = -1;
+                LabPaperPose down = PoseOf(s);
+                Assert.That(Vector3.Distance(down.Emission, -up.Emission), Is.LessThan(1e-4f), "invierte, atajo " + preset);
                 Assert.That(Vector3.Distance(down.ViewNormal, up.ViewNormal), Is.LessThan(1e-4f), "la cara visible no cambia");
+                Assert.That(Vector3.Distance(down.Up, up.Up), Is.LessThan(1e-4f), "la rotacion no cambia");
                 Assert.AreEqual(-up.InkSign, down.InkSign, "la tinta pasa al otro lado");
-                LabPaperPose tilted = LabSealBenchMath.PaperPose(preset, 1, 60f, 1f);
-                Assert.That(Vector3.Distance(tilted.Emission, up.Emission), Is.LessThan(1e-4f), "inclinacion ignorada, preset " + preset);
-                Assert.That(Vector3.Distance(tilted.Position, up.Position), Is.LessThan(1e-4f));
             }
         }
 
         [Test]
-        public void PaperPose_PosicionesDeLaPista()
+        public void Frente_IgualQueElAtrilDelV2_YHaciaMi_PorLaCaraVisible()
         {
-            const float start = 4f;
-            foreach (int atEasel in new[] { 0, 1, 2, 8 })
-                Assert.IsTrue(LabSealBenchMath.PaperPose(atEasel, 1, 0f, start).AtEasel, "atril, preset " + atEasel);
-            Assert.That(LabSealBenchMath.PaperPose(3, 1, 0f, start).Position, Is.EqualTo(new Vector3(0f, LabSealBenchMath.FloorHeight, start + 2f)));
-            Assert.That(LabSealBenchMath.PaperPose(4, 1, 0f, start).Position, Is.EqualTo(new Vector3(0f, LabSealBenchMath.StandHeight, start + 3f)));
-            Assert.That(LabSealBenchMath.PaperPose(5, 1, 0f, start).Position, Is.EqualTo(new Vector3(0f, LabSealBenchMath.StandHeight, start + 3f)));
-            Assert.That(LabSealBenchMath.PaperPose(6, 1, 0f, start).Position, Is.EqualTo(new Vector3(0f, LabSealBenchMath.StandHeight, start + 6f)));
-            Assert.That(LabSealBenchMath.PaperPose(7, 1, 0f, start).Position.y, Is.EqualTo(1.5f));
-            for (int preset = 3; preset < 8; preset++) Assert.IsFalse(LabSealBenchMath.PaperPose(preset, 1, 0f, start).AtEasel);
+            LabPaperPose front = PoseOf(LabSealBenchMath.ApplyPaperPreset(LabSealSpec.Default(), 0));
+            Assert.AreEqual(-1, front.InkSign, "como el atril → pista del v2: la tinta del lado de atras");
+            Assert.That(Vector3.Distance(front.ViewNormal, Vector3.back), Is.LessThan(1e-4f), "el dibujo mira al banco");
+            Assert.AreEqual(1, PoseOf(LabSealBenchMath.ApplyPaperPreset(LabSealSpec.Default(), 1)).InkSign, "hacia mí: sale por la cara visible");
+            LabPaperPose floor = PoseOf(LabSealBenchMath.ApplyPaperPreset(LabSealSpec.Default(), 3));
+            Assert.That(Vector3.Distance(floor.Up, Vector3.forward), Is.LessThan(1e-4f), "en el piso, el arriba del papel apunta al fondo (se lee desde el banco)");
         }
 
         [Test]
-        public void PaperPose_LibreIgualQueAntes()
+        public void PaperCenterHeight_NoEntierraElPapel()
         {
-            LabPaperPose p = LabSealBenchMath.PaperPose(LabSealSpec.FreePaperPose, 1, 30f, 0f);
-            Vector3 expected = LabSealBenchMath.EmissionDirection(Vector3.zero, Vector3.forward, 30f, Vector3.forward, out Vector3 expectedUp);
-            Assert.That(Vector3.Distance(p.Emission, expected), Is.LessThan(1e-4f));
-            Assert.That(Vector3.Distance(p.Up, expectedUp), Is.LessThan(1e-4f));
-            Assert.That(Vector3.Distance(p.ViewNormal, -expected), Is.LessThan(1e-4f), "la cara mira al jugador, como antes");
-            Assert.AreEqual(-1, p.InkSign, "cara +1 -> SetInkSign(-1), como antes");
-            LabPaperPose flipped = LabSealBenchMath.PaperPose(LabSealSpec.FreePaperPose, -1, 30f, 0f);
-            Assert.AreEqual(1, flipped.InkSign, "cara -1 -> SetInkSign(+1), como antes");
-            Assert.That(Vector3.Distance(flipped.Up, expectedUp), Is.LessThan(1e-4f), "la cara no cambia la rotacion");
+            Assert.AreEqual(1.2f, LabSealBenchMath.PaperCenterHeight(1.2f, 0f, 0.45f), 1e-5f);
+            Assert.AreEqual(LabSealBenchMath.FloorClearance + 0.225f, LabSealBenchMath.PaperCenterHeight(0f, 0f, 0.45f), 1e-5f, "de pie en el piso");
+            Assert.AreEqual(LabSealBenchMath.FloorClearance, LabSealBenchMath.PaperCenterHeight(0f, 90f, 2f), 1e-5f, "acostado: casi en el suelo");
+            Assert.AreEqual(LabSealBenchMath.FloorClearance, LabSealBenchMath.PaperCenterHeight(0f, -90f, 1f), 1e-5f, "boca abajo");
+            Assert.AreEqual(1.02f, LabSealBenchMath.PaperCenterHeight(0.5f, 0f, 2f), 1e-5f, "papel de 2 m de pie");
         }
 
         [Test]
-        public void PaperPose_AtrilPistaIgualQueElV2()
+        public void PosicionLibre_GetWithYRecorteALaPista()
         {
-            LabPaperPose p = LabSealBenchMath.PaperPose(0, 1, 0f, 0f);
-            Assert.AreEqual(-1, p.InkSign);
-            Assert.That(Vector3.Distance(p.ViewNormal, Vector3.back), Is.LessThan(1e-4f));
-            Assert.AreEqual(1, LabSealBenchMath.PaperPose(1, 1, 0f, 0f).InkSign, "emite hacia el jugador por la cara visible");
+            LabSealSpec s = LabSealBenchMath.With(LabSealSpec.Default(), LabSealVarId.PaperX, 99f, Recipes, Sigils, Signs);
+            Assert.AreEqual(LabSealSpec.MaxPaperX, s.paperX);
+            s = LabSealBenchMath.With(s, LabSealVarId.PaperDistance, -5f, Recipes, Sigils, Signs);
+            Assert.AreEqual(LabSealSpec.MinPaperDistance, s.paperDistance);
+            s = LabSealBenchMath.With(s, LabSealVarId.PaperHeight, 9f, Recipes, Sigils, Signs);
+            Assert.AreEqual(LabSealSpec.MaxPaperHeight, s.paperHeight);
+            s = LabSealBenchMath.With(s, LabSealVarId.PaperTilt, -120f, Recipes, Sigils, Signs);
+            Assert.AreEqual(LabSealSpec.MinPaperTiltDeg, s.paperTiltDeg);
+            s = LabSealBenchMath.With(s, LabSealVarId.PaperYaw, 135f, Recipes, Sigils, Signs);
+            Assert.AreEqual(135f, LabSealBenchMath.Get(s, LabSealVarId.PaperYaw, Recipes, Sigils, Signs));
+            Assert.AreEqual("135°", LabSealBenchMath.FormatNumeric(LabSealVarId.PaperYaw, 135f));
+            Assert.AreEqual("1,50 m", LabSealBenchMath.FormatNumeric(LabSealVarId.PaperHeight, 1.5f));
+            Assert.AreEqual("invertido", LabSealBenchMath.FormatNumeric(LabSealVarId.PaperFace, -1f));
+            string text = LabSealBenchMath.Serialize(s);
+            StringAssert.Contains("papelX=4,5", text);
+            StringAssert.Contains("papelGiro=135", text);
+            StringAssert.Contains("pose=8", text);
         }
 
-        [Test]
-        public void PaperPose_GetYWith_ConRecorte()
-        {
-            LabSealSpec s = LabSealBenchMath.With(LabSealSpec.Default(), LabSealVarId.PaperPose, 6f, Recipes, Sigils, Signs);
-            Assert.AreEqual(6, s.paperPose);
-            Assert.AreEqual(6f, LabSealBenchMath.Get(s, LabSealVarId.PaperPose, Recipes, Sigils, Signs));
-            s = LabSealBenchMath.With(s, LabSealVarId.PaperPose, 99f, Recipes, Sigils, Signs);
-            Assert.AreEqual(LabSealSpec.PaperPoseCount - 1, s.paperPose);
-            Assert.AreEqual(0, LabSealSpec.Default().paperPose);
-            Assert.AreEqual("Piso", LabSealBenchMath.FormatNumeric(LabSealVarId.PaperPose, 3f));
-            StringAssert.Contains("pose=8", LabSealBenchMath.Serialize(s));
-        }
-
-        // ---------------------------------------------------------------- resumen del sello
+        // ---------------------------------------------------------------- cartel «Vas a lanzar»
 
         [Test]
         public void Summary_SelloPorDefecto()
@@ -271,16 +304,17 @@ namespace SpellSimulator.Tests
             var sb = new StringBuilder();
             LabSealSummary.Build(LabSealSpec.Default(), sb);
             string text = sb.ToString();
-            StringAssert.Contains("Receta: gust", text);
-            StringAssert.Contains("Elemento: sin sigilo", text);
+            StringAssert.Contains("Hechizo: gust", text);
+            StringAssert.Contains("Sigilo: ninguno", text);
             StringAssert.Contains("Signos: ninguno", text);
             StringAssert.Contains("Tinta: Normal", text);
-            StringAssert.Contains("Papel: 0,45 m, Atril → pista", text);
-            StringAssert.EndsWith("Estado previsto: cerrado", text);
+            StringAssert.Contains("Papel: 0,45 m · Frente · a 3 m", text);
+            StringAssert.EndsWith("Se lanza: el sello de los controles", text);
+            Assert.AreEqual("cerrado", LabSealSummary.Prediction(LabSealSpec.Default()));
         }
 
         [Test]
-        public void Summary_SignosElementoYEstado()
+        public void Summary_SignosTintaYDibujo()
         {
             LabSealSpec s = LabSealSpec.Default();
             s.sigilId = "fire";
@@ -289,38 +323,40 @@ namespace SpellSimulator.Tests
             s.turnDeg = LabSealSpec.TurnOutDeg;
             s.ink = LabInkKind.Powerful;
             s.ringGapDeg = 34f;
-            s.paperPose = 3;
+            s = LabSealBenchMath.ApplyPaperPreset(s, 3);
             s.paperFace = -1;
             var sb = new StringBuilder();
-            LabSealSummary.Build(s, sb);
+            LabSealSummary.Build(s, sb, null, true);
             string text = sb.ToString();
-            StringAssert.Contains("Elemento: fuego", text);
-            StringAssert.Contains("Signos: 2 × column (afuera)", text);
-            StringAssert.Contains("Tinta: Poderosa", text);
-            StringAssert.Contains("Piso (cara abajo)", text);
-            StringAssert.EndsWith("Estado previsto: preparado", text);
+            StringAssert.Contains("Sigilo: fire", text);
+            StringAssert.Contains("Signos: 2 × column, hacia afuera", text);
+            StringAssert.Contains("Tinta: Poderosa, disparo invertido", text);
+            StringAssert.Contains("Piso", text);
+            StringAssert.EndsWith("Se lanza: tu dibujo del atril", text);
+            Assert.AreEqual("preparado", LabSealSummary.Prediction(s), "el estado previsto va solo con lentes");
+            StringAssert.DoesNotContain("previsto", text, "el cartel no muestra datos de reconocimiento");
 
             s.ringGapDeg = 33.9f;
-            s.turnDeg = 0f;
-            LabSealSummary.Build(s, sb);
-            StringAssert.Contains("(adentro)", sb.ToString());
-            StringAssert.EndsWith("Estado previsto: cerrado", sb.ToString());
+            Assert.AreEqual("cerrado", LabSealSummary.Prediction(s));
         }
 
         [Test]
-        public void Summary_ReutilizaElStringBuilder_YUsaNombres()
+        public void Summary_FilasReutilizanElStringBuilder_YUsanNombres()
         {
             var sb = new StringBuilder("basura anterior");
             LabSealSpec s = LabSealSpec.Default();
             s.signId = "column";
             s.signCount = 1;
-            LabSealSummary.Build(s, sb, id => id == "gust" ? "Ráfaga" : id == "column" ? "Columna" : null);
-            string first = sb.ToString();
-            StringAssert.DoesNotContain("basura", first);
-            StringAssert.Contains("Receta: Ráfaga", first);
-            StringAssert.Contains("1 × Columna", first);
-            LabSealSummary.Build(s, sb, id => id == "gust" ? "Ráfaga" : id == "column" ? "Columna" : null);
-            Assert.AreEqual(first, sb.ToString(), "no acumula entre llamadas");
+            System.Func<string, string> names = id => id == "gust" ? "Ráfaga" : id == "column" ? "Columna" : null;
+            LabSealSummary.BuildRow(s, LabSealSummary.RowRecipe, sb, names, false);
+            Assert.AreEqual("Ráfaga", sb.ToString());
+            LabSealSummary.BuildRow(s, LabSealSummary.RowSigns, sb, names, false);
+            Assert.AreEqual("1 × Columna, hacia adentro", sb.ToString(), "no acumula entre llamadas");
+            for (int i = 0; i < LabSealSummary.RowCount; i++)
+            {
+                Assert.IsFalse(string.IsNullOrEmpty(LabSealSummary.RowLabel(i)));
+                Assert.That(LabSealSummary.RowGroup(i), Is.InRange(0, LabSealCatalog.GroupCount));
+            }
         }
 
         // ---------------------------------------------------------------- catalogo y reset por grupo
@@ -328,7 +364,7 @@ namespace SpellSimulator.Tests
         [Test]
         public void Catalogo_AyudaNoVaciaYCorta()
         {
-            Assert.AreEqual(19, LabSealCatalog.Count);
+            Assert.AreEqual(23, LabSealCatalog.Count);
             for (int i = 0; i < LabSealCatalog.Count; i++)
             {
                 LabSealVarDef def = LabSealCatalog.Defs[i];
@@ -340,10 +376,11 @@ namespace SpellSimulator.Tests
             Assert.AreEqual(LabSealVarKind.List, pose.Kind);
             Assert.AreEqual(0f, pose.Default);
             Assert.AreEqual(8f, pose.Max);
+            Assert.AreEqual(-90f, LabSealCatalog.Get(LabSealVarId.PaperTilt).Min);
         }
 
         [Test]
-        public void Catalogo_GruposCubrenTodasLasVariablesUnaVez()
+        public void Catalogo_GruposCubrenTodasLasVariablesUnaVez_YLoImportanteVaPrimero()
         {
             var seen = new HashSet<LabSealVarId>();
             for (int group = 1; group <= LabSealCatalog.GroupCount; group++)
@@ -359,8 +396,14 @@ namespace SpellSimulator.Tests
             }
             Assert.AreEqual(LabSealCatalog.Count, seen.Count);
             Assert.AreEqual(0, LabSealCatalog.IdsOfGroup(0).Count);
-            Assert.AreEqual(0, LabSealCatalog.IdsOfGroup(5).Count);
-            Assert.AreEqual(3, LabSealCatalog.GroupOf(LabSealVarId.PaperPose));
+            Assert.AreEqual(0, LabSealCatalog.IdsOfGroup(LabSealCatalog.GroupCount + 1).Count);
+            Assert.AreEqual(LabSealVarId.BaseRecipe, LabSealCatalog.IdsOfGroup(1)[0], "1: receta y sigilo arriba");
+            Assert.AreEqual(LabSealVarId.SignType, LabSealCatalog.IdsOfGroup(2)[0], "2: signos");
+            Assert.AreEqual(LabSealVarId.Ink, LabSealCatalog.IdsOfGroup(3)[0], "3: papel y tinta");
+            Assert.AreEqual(4, LabSealCatalog.GroupOf(LabSealVarId.Tremor), "4: afinado y prolijidad al final");
+            Assert.AreEqual(5, LabSealCatalog.GroupOf(LabSealVarId.PaperPose), "5: papel del campo (panel de objetos)");
+            IReadOnlyList<LabSealVarId> paper = LabSealCatalog.IdsOfGroup(5);
+            Assert.AreEqual(LabSealVarId.PaperPose, paper[paper.Count - 1], "el atajo se restaura despues de la posicion");
         }
 
         [Test]
@@ -370,15 +413,15 @@ namespace SpellSimulator.Tests
             LabSealSpec s = baseline;
             s = LabSealBenchMath.With(s, LabSealVarId.PaperSize, 3f, Recipes, Sigils, Signs);
             s = LabSealBenchMath.With(s, LabSealVarId.PaperPose, 5f, Recipes, Sigils, Signs);
-            s = LabSealBenchMath.With(s, LabSealVarId.PaperFace, -1f, Recipes, Sigils, Signs);
+            s = LabSealBenchMath.With(s, LabSealVarId.PaperX, 2f, Recipes, Sigils, Signs);
             s = LabSealBenchMath.With(s, LabSealVarId.PaperTilt, 45f, Recipes, Sigils, Signs);
             s = LabSealBenchMath.With(s, LabSealVarId.Ink, 2f, Recipes, Sigils, Signs);
             s = LabSealBenchMath.With(s, LabSealVarId.SignCount, 3f, Recipes, Sigils, Signs);
 
-            LabSealSpec r = LabSealBenchMath.ResetVars(s, baseline, LabSealCatalog.IdsOfGroup(3), Recipes, Sigils, Signs);
+            LabSealSpec r = LabSealBenchMath.ResetVars(s, baseline, LabSealCatalog.IdsOfGroup(5), Recipes, Sigils, Signs);
             Assert.AreEqual(baseline.paperSize, r.paperSize);
-            Assert.AreEqual(0, r.paperPose);
-            Assert.AreEqual(1, r.paperFace);
+            Assert.AreEqual(LabSealSpec.DefaultPaperPose, r.paperPose);
+            Assert.AreEqual(0f, r.paperX);
             Assert.AreEqual(0f, r.paperTiltDeg);
             Assert.AreEqual(LabInkKind.Resistant, r.ink, "otro grupo: no cambia");
             Assert.AreEqual(3, r.signCount, "otro grupo: no cambia");

@@ -16,12 +16,13 @@ namespace SpellSimulator.EditorTools.Map
     /// Genera el area del Laboratorio v2 (Docs/LABORATORIO_V2_PLAN.md, «Área») en el sitio «Laboratory» de MapStructures
     /// (pradera sureste), estilo low-poly cartoon con la paleta de MapStructures (tela, revoque, laton):
     /// - plataforma de lajas (r ≈ 5 m) con toldo a rayas, faroles y guirnaldas;
-    /// - banco en U de 4,5 × 1,2 m: al centro el atril con el papel de prueba (DrawingCanvas + LabSealBench), LANZAR grande
-    ///   delante, «Sello por defecto» al costado y la pizarra «Vas a lanzar» con la banda de resultado (LabBenchDisplay; espejo
-    ///   y flecha de emision cuando el papel sale a la pista); ala izquierda con la consola del sello por grupos numerados
-    ///   (LabSealCatalog: 1 Receta/Sigilo, 2 Signos, 3 Papel y posicion, 4 Tinta/Prolijidad; pestaña ↺ por grupo); ala derecha
-    ///   con la consola de entorno (masa, viento, fuego) y los botones de materializar y «Todo por defecto». Cada consola tiene
-    ///   una tira de ayuda en su tablero (LabHelpStrip) y muescas de rango y valor por defecto en perillas y deslizadores;
+    /// - banco compacto v4 (Docs/LABORATORIO_V4_PLAN.md, LabBenchLayout): todo control a ≤ 0,7 m de donde se para el jugador.
+    ///   Adelante una mesa baja con el atril de dibujo (LabSketchPad), LANZAR, «Borrar dibujo» y «Reiniciar sello»; a los lados
+    ///   cuatro paneles empinados en arco: izquierda el sello (1 Hechizo con grilla de sigilos, 2 Signos con grilla de signos,
+    ///   3 Papel y tinta, 4 Afinado), derecha los objetos del campo (+ Caja, borrar, casillas P/1–4 y controles del elegido) y
+    ///   viento/fuego. Cada panel tiene titulo y tira de ayuda arriba (LabHelpStrip) y muescas de rango y valor por defecto;
+    /// - papel de prueba en la pista (con poste) y aro del objeto elegido (LabField); cartel «Vas a lanzar» (LabBenchDisplay)
+    ///   y datos de reconocimiento que solo se ven con lentes (LabLensGate); tres luces reales sin sombras y faroles emisivos;
     /// - repisa con las lentes de tinta (InkLenses + LabOverlay) y pizarron con los contadores (LabCounters);
     /// - pista de pasto de 12 × 10 m al frente con estacas cada 2 m, manga de viento con banderines (LabWindVisual) y fogon de
     ///   piedras a ≥ 8 m (ancla del fuego).
@@ -42,48 +43,28 @@ namespace SpellSimulator.EditorTools.Map
         private const float PlatformLift = 0.12f;
         private const float SlabCell = 0.8f;
 
-        // Banco en U (4,5 × 1,2 m): alas de 1,2 × 1,2 m a cada lado y mesa de atras de 2,1 × 0,5 m entre ellas.
-        private const float DeskTop = 0.86f;
-        private const float WingInner = 1.05f, WingWidth = 1.2f, WingDepth = 1.2f;
-        private const float BackDeskZ = 0.35f, BackDeskDepth = 0.5f;
-        /// <summary>Centro del papel de prueba sobre la mesa (m).</summary>
-        private const float PaperHeight = 0.6f;
-
-        // Consolas inclinadas (marco del panel: +X a lo ancho, +Z subiendo la pendiente, +Y la normal).
-        // Texto legible (LABORATORIO_V3_PLAN (a)): nada coplanar, alturas y tamaños fijos en LabPanelLayout.
-        private const float PanelTilt = LabPanelLayout.PanelTilt, PanelLength = 1.13f, PanelWidth = 1.24f, PanelFrontZ = 0.08f;
-        /// <summary>Centro de cada fila sobre la pendiente (paso 0.185 m: plaquita arriba, control, ventanita abajo).</summary>
-        private static readonly float[] RowZ = { 0.1f, 0.285f, 0.47f, 0.655f, 0.84f, 1.025f };
-        /// <summary>Profundidad de la franja de color de una fila (m).</summary>
-        private const float StripDepth = 0.18f;
-        /// <summary>Ancho util de la fila (4 controles a paso ≥ 0.30 m) y corrimiento a la derecha (margen del titulo de grupo).</summary>
-        private const float RowSpan = 1.2f, RowShiftX = 0.03f;
-        /// <summary>
-        /// Consola del sello: corrimiento de las filas para dejar a la izquierda la pestaña de cada grupo (numero + ↺, reinicia
-        /// el grupo). Con 4 controles las plaquitas van de −0.50 a +0.60 y la pestaña de −0.60 a −0.52.
-        /// </summary>
-        private const float SealRowShiftX = 0.05f, TabWidth = 0.08f, TabLift = 0.012f;
-        private const float TabX = -PanelWidth * 0.5f + 0.02f + TabWidth * 0.5f;
+        // Banco compacto v4 (LabBenchLayout): el jugador se para en StandZ y todo control queda a ≤ 0,7 m.
+        private const float StandZ = LabBenchLayout.StandZ, DeskTop = LabBenchLayout.DeskTop;
+        private const float FacetTilt = LabBenchLayout.FacetTilt, FacetSlope = LabBenchLayout.FacetSlope, CrestSlope = LabBenchLayout.CrestSlope;
+        private const float FacetWidth = LabBenchLayout.FacetWidth, FacetNear = LabBenchLayout.FacetNear, FacetBottom = LabBenchLayout.FacetBottom;
         /// <summary>Muescas: mas de esto se ve como una regla y no ayuda (queda solo min/max y default).</summary>
         private const int MaxTicks = 13;
-        private const float KnobRadius = 0.045f;
+        private const float KnobRadius = 0.04f, DialRadius = 0.045f;
         /// <summary>Medio recorrido del deslizador (m) y altura del riel.</summary>
         private const float RailHalf = 0.05f, RailY = 0.008f;
-        /// <summary>Plaquita del rotulo (arriba) y ventanita de la lectura (abajo): centro en Z, ancho y profundidad (m).</summary>
-        private const float LabelZ = 0.076f, ReadoutZ = -0.073f, PlaqueWidth = 0.2f, LabelDepth = 0.026f, ReadoutDepth = 0.03f;
-        private const float ButtonPitch = 0.26f;
-        /// <summary>LANZAR (35 × 25 cm, (c).4): delante del atril, desde el borde de la mesa (z = BackDeskZ − BackDeskDepth/2).</summary>
-        private const float LaunchWidth = 0.35f, LaunchDepth = 0.25f, LaunchZ = BackDeskZ - BackDeskDepth * 0.5f + LaunchDepth * 0.5f;
-        /// <summary>Pizarra «Vas a lanzar» a la izquierda del atril: centro en X, base en Z, ancho, alto de la pizarra, alto de las patas e inclinacion.</summary>
-        private const float DisplayX = -0.63f, DisplayZ = BackDeskZ + 0.07f, DisplayWidth = 0.64f, DisplayHeight = 0.5f, DisplayLegs = 0.14f, DisplayLean = 12f;
+        /// <summary>Plaquita del rotulo (arriba) y ventanita de la lectura (abajo): centro sobre la pendiente, ancho y profundidad (m).</summary>
+        private const float LabelZ = 0.066f, ReadoutZ = -0.066f, PlaqueWidth = LabPanelLayout.PlaqueWidth, LabelDepth = 0.024f, ReadoutDepth = 0.028f;
         /// <summary>Largo de las flechas de emision (m).</summary>
         private const float ArrowLength = 0.32f;
         /// <summary>Tope de la tapa de los botones planos (sobre su base).</summary>
-        private const float ButtonTop = 0.06f;
-        /// <summary>Centro en Y del tablero de atras del ala: subido para que el panel a 35° no tape la leyenda.</summary>
-        private const float BoardY = 0.85f;
-        /// <summary>Cara del tablero de atras donde apoya el texto (mira a −Z).</summary>
-        private const float BoardFaceZ = WingDepth - 0.09f;
+        private const float ButtonTop = 0.05f;
+
+        // Cartel «Vas a lanzar» (relativo al jugador): adelante a la izquierda, fuera de la vista de la pista.
+        private static readonly Vector3 CartelLocal = new Vector3(-1.25f, 0f, 0.8f);
+        private const float CartelWidth = 0.8f, CartelHeight = 0.64f, CartelBottom = 1.12f;
+        /// <summary>Banda de resultado y lectura del atril (solo con lentes), relativas al jugador.</summary>
+        private static readonly Vector3 ResultLocal = new Vector3(-0.78f, 1.08f, 0.95f);
+        private static readonly Vector3 PadInfoLocal = new Vector3(0f, 1.47f, 0.74f);
 
         // Toldo: postes en las esquinas, mas alto del lado de la pista.
         private const float PostX = 2.45f, PostFrontZ = -1.15f, PostBackZ = 1.65f;
@@ -94,8 +75,6 @@ namespace SpellSimulator.EditorTools.Map
         private const float TrackStart = MapStructures.LaboratoryTrackStart;
         private const float TrackLength = MapStructures.LaboratoryTrackLength, TrackWidth = MapStructures.LaboratoryTrackWidth;
         private const float StakeEvery = 2f, FirstStake = 6f;
-        /// <summary>Altura (m) del blanco del disparo sobre el centro de la pista.</summary>
-        private const float AimHeight = 1.2f;
         /// <summary>Distancia minima (m) del parche de fuego al banco (riesgo 12: que el banco no se queme).</summary>
         private const float MinFireDistance = 8f;
 
@@ -107,7 +86,7 @@ namespace SpellSimulator.EditorTools.Map
         private static readonly Vector3 SockLocal = new Vector3(-6.3f, 0f, 6.5f);
         private static readonly Vector3 SignLocal = new Vector3(-3.25f, 0f, 0.9f);
         private static readonly Vector3 ShelfLocal = new Vector3(1.75f, 0f, -1.6f);
-        private static readonly Vector3 ViewerLocal = new Vector3(0f, 0f, -0.3f);
+        private static readonly Vector3 ViewerLocal = new Vector3(0f, 0f, StandZ);
 
         // Manga de viento (misma altura de mastil que LabWindVisual).
         private const float MastHeight = 3f;
@@ -129,18 +108,16 @@ namespace SpellSimulator.EditorTools.Map
         private static Color Iron => MapStructures.Iron;
 
         private static readonly Color PanelColor = new Color(0.17f, 0.15f, 0.24f);
+        private static readonly Color CrestColor = new Color(0.11f, 0.1f, 0.16f);
         private static readonly Color DialColor = new Color(0.1f, 0.09f, 0.14f);
         private static readonly Color ChalkBoard = new Color(0.16f, 0.24f, 0.2f);
         private static readonly Color ButtonBase = new Color(0.3f, 0.2f, 0.13f);
-        private static readonly Color PaperGroup = new Color(0.36f, 0.52f, 0.82f);
-        private static readonly Color SigilGroup = new Color(0.9f, 0.45f, 0.25f);
-        private static readonly Color SignGroup = new Color(0.42f, 0.7f, 0.36f);
-        private static readonly Color InkGroup = new Color(0.62f, 0.44f, 0.82f);
         private static readonly Color BoxGroup = new Color(0.86f, 0.72f, 0.48f);
         private static readonly Color WindGroup = new Color(0.62f, 0.86f, 0.95f);
         private static readonly Color FireGroup = new Color(0.95f, 0.5f, 0.25f);
-        private static readonly Color MaterializeGroup = new Color(0.75f, 0.7f, 0.62f);
-        private static readonly Color ResetColor = new Color(0.62f, 0.75f, 0.55f);
+        /// <summary>Botones de reinicio y borrado: neutros (no compiten con LANZAR).</summary>
+        private static readonly Color NeutralButton = new Color(0.78f, 0.74f, 0.66f);
+        private static readonly Color DeleteButton = new Color(0.72f, 0.58f, 0.55f);
         private static readonly Color LaunchColor = new Color(0.86f, 0.24f, 0.2f);
         private static readonly Color LensColor = new Color(0.25f, 0.55f, 0.75f);
         private static readonly Color Glass = new Color(0.55f, 0.8f, 0.85f);
@@ -148,23 +125,31 @@ namespace SpellSimulator.EditorTools.Map
         private static readonly Color TextGold = new Color(1f, 0.82f, 0.45f);
         private static readonly Color TextDark = new Color(0.14f, 0.08f, 0.04f);
         private static readonly Color PlaqueCream = new Color(0.96f, 0.9f, 0.76f);
+        private static readonly Color Parchment = new Color(0.95f, 0.88f, 0.7f);
+        private static readonly Color ParchmentEdge = new Color(0.82f, 0.7f, 0.5f);
         private static readonly Color WindowDark = new Color(0.07f, 0.06f, 0.1f);
         /// <summary>Banda de resultado: casi blanca, la tiñe LabBenchDisplay (verde/rojo) con un MaterialPropertyBlock.</summary>
         private static readonly Color BandBase = new Color(0.95f, 0.95f, 0.95f);
-        /// <summary>Flechas de emision: HDR (como TowerBuilder.LanternGlow) para que brillen con el bloom.</summary>
+        /// <summary>Flechas de emision y aro de seleccion: HDR (como TowerBuilder.LanternGlow) para que brillen con el bloom.</summary>
         private static readonly Color ArrowGlow = new Color(2.6f, 1.25f, 0.35f);
+        private static readonly Color RingGlow = new Color(2.4f, 1.9f, 0.6f);
         /// <summary>Muesca del valor por defecto en perillas y deslizadores.</summary>
         private static readonly Color DefaultMark = new Color(1f, 0.78f, 0.25f);
+        /// <summary>Luz calida de faroles y focos.</summary>
+        private static readonly Color WarmLight = new Color(1f, 0.8f, 0.55f);
 
         private const string BoxMaterialPath = "Assets/_Project/Materials/Crate.mat";
         private const string WindMaterialPath = "Assets/_Project/Materials/SpellStreak.mat";
         private const string WindLookPath = "Assets/_Project/Data/Elements/Wind.asset";
+        private const string IconMaterialPath = "Assets/_Project/Materials/Canvas.mat";
         private const string SpellsFolder = "Assets/_Project/Data/Spells";
 
         /// <summary>Texto acostado sobre una superficie de normal +Y, legible con la parte de arriba hacia +Z.</summary>
         private static readonly Quaternion Lying = Quaternion.Euler(90f, 0f, 0f);
+        /// <summary>Texto acostado que se lee subiendo la pendiente (titulos del margen izquierdo).</summary>
+        private static readonly Quaternion Spine = Quaternion.AngleAxis(-90f, Vector3.up) * Quaternion.Euler(90f, 0f, 0f);
 
-        // ---------------------------------------------------------------- filas de controles
+        // ---------------------------------------------------------------- controles
 
         private struct Ctl
         {
@@ -183,135 +168,22 @@ namespace SpellSimulator.EditorTools.Map
                 Source = LabControlSource.Environment; Var = (int)id; Kind = kind; Label = label;
             }
 
-            public string Key => Source == LabControlSource.Seal ? "Seal_" + (LabSealVarId)Var : "Env_" + (LabVariableId)Var;
+            public Ctl(LabFieldVar id, LabControlKind kind, string label)
+            {
+                Source = LabControlSource.Field; Var = (int)id; Kind = kind; Label = label;
+            }
+
+            public string Key => Source == LabControlSource.Seal ? "Seal_" + (LabSealVarId)Var
+                : Source == LabControlSource.Field ? "Field_" + (LabFieldVar)Var : "Env_" + (LabVariableId)Var;
         }
 
-        private struct Row
+        /// <summary>Color y clave (para cachear mallas) de una fila o grupo.</summary>
+        private struct Tone
         {
-            public string Title;
-            public string Key;
             public Color Color;
-            public Ctl[] Controls;
-            /// <summary>Grupo de la consola del sello (1..4, LabSealCatalog); 0 en la consola de entorno.</summary>
-            public int Group;
-
-            public Row(string title, string key, Color color, params Ctl[] controls)
-            {
-                Title = title; Key = key; Color = color; Controls = controls; Group = 0;
-            }
+            public string Key;
+            public Tone(Color color, string key) { Color = color; Key = key; }
         }
-
-        // Consola del sello por grupos numerados (LABORATORIO_V3_PLAN (c).5): el orden y la pertenencia salen de
-        // LabSealCatalog.IdsOfGroup; aca solo el tipo de control, el rotulo corto (≤ 10 caracteres) y el color de cada grupo.
-        // Las claves de grupo reusan las del v2 («Sigil», «Sign», «Paper», «Ink») para no dejar mallas huerfanas.
-        private static readonly string[] GroupKeys = { "Sigil", "Sign", "Paper", "Ink" };
-        private static Color GroupColor(int group)
-        {
-            switch (group)
-            {
-                case 1: return SigilGroup;
-                case 2: return SignGroup;
-                case 3: return PaperGroup;
-                default: return InkGroup;
-            }
-        }
-
-        /// <summary>Perillas para angulos, deslizadores para continuos y selectores para listas.</summary>
-        private static LabControlKind SealKind(LabSealVarId id)
-        {
-            switch (id)
-            {
-                case LabSealVarId.RingGap:
-                case LabSealVarId.BaseAngle:
-                case LabSealVarId.PaperTilt:
-                    return LabControlKind.Knob;
-                case LabSealVarId.SigilScale:
-                case LabSealVarId.RingFill:
-                case LabSealVarId.SignLength:
-                case LabSealVarId.Asymmetry:
-                case LabSealVarId.SignDistance:
-                case LabSealVarId.Tremor:
-                    return LabControlKind.Slider;
-                default:
-                    return LabControlKind.Selector;
-            }
-        }
-
-        /// <summary>Rotulo corto (≤ LabPanelLayout.MaxLabelChars) de cada variable del sello.</summary>
-        private static string SealLabel(LabSealVarId id)
-        {
-            switch (id)
-            {
-                case LabSealVarId.BaseRecipe: return "Receta";
-                case LabSealVarId.Sigil: return "Sigilo";
-                case LabSealVarId.SigilScale: return "Tamaño";
-                case LabSealVarId.RingFill: return "Llenado";
-                case LabSealVarId.RingGap: return "Hueco";
-                case LabSealVarId.SignType: return "Tipo";
-                case LabSealVarId.SignCount: return "Cantidad";
-                case LabSealVarId.BaseAngle: return "Áng. base";
-                case LabSealVarId.TurnDeg: return "Sentido";
-                case LabSealVarId.SignLength: return "Largo";
-                case LabSealVarId.Asymmetry: return "Asimetría";
-                case LabSealVarId.SignDistance: return "Distancia";
-                case LabSealVarId.PaperSize: return "Tam. papel";
-                case LabSealVarId.PaperPose: return "Posición";
-                case LabSealVarId.PaperFace: return "Cara";
-                case LabSealVarId.PaperTilt: return "Inclinac.";
-                case LabSealVarId.Ink: return "Tinta";
-                case LabSealVarId.PenWidth: return "Pluma";
-                case LabSealVarId.Tremor: return "Temblor";
-                default: return id.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Filas de la consola del sello: cada grupo en sus propias filas (≤ 4 controles a paso ≥ 0.30 m, repartidos parejo:
-        /// 5 → 3 + 2, 7 → 4 + 3), adelante el grupo 1 y atras el 4. Nunca se quitan variables: avisa si alguna quedo afuera.
-        /// </summary>
-        private static Row[] BuildSealRows()
-        {
-            var rows = new List<Row>(RowZ.Length);
-            int total = 0;
-            for (int g = 1; g <= LabSealCatalog.GroupCount; g++)
-            {
-                IReadOnlyList<LabSealVarId> ids = LabSealCatalog.IdsOfGroup(g);
-                int n = ids.Count;
-                if (n == 0) continue;
-                int rowCount = LabPanelLayout.RowsNeeded(n, RowSpan);
-                int perRow = (n + rowCount - 1) / rowCount;
-                for (int start = 0; start < n; start += perRow)
-                {
-                    int count = Mathf.Min(perRow, n - start);
-                    var controls = new Ctl[count];
-                    for (int k = 0; k < count; k++)
-                    {
-                        LabSealVarId id = ids[start + k];
-                        controls[k] = new Ctl(id, SealKind(id), SealLabel(id));
-                    }
-                    rows.Add(new Row(LabSealCatalog.GroupName(g), GroupKeys[g - 1], GroupColor(g), controls) { Group = g });
-                    total += count;
-                }
-            }
-            if (total != LabSealCatalog.Count)
-                Debug.LogWarning($"[MapLab] la consola del sello muestra {total} de {LabSealCatalog.Count} variables: revisá LabSealCatalog.IdsOfGroup.");
-            if (rows.Count > RowZ.Length)
-                Debug.LogWarning($"[MapLab] la consola del sello necesita {rows.Count} filas y el panel tiene {RowZ.Length}: sobran controles.");
-            return rows.ToArray();
-        }
-
-        private static readonly Row[] EnvRows =
-        {
-            new Row("Caja", "Box", BoxGroup,
-                new Ctl(LabVariableId.Mass, LabControlKind.Selector, "Masa")),
-            new Row("Viento", "Wind", WindGroup,
-                new Ctl(LabVariableId.WindYaw, LabControlKind.Knob, "Dirección"),
-                new Ctl(LabVariableId.WindSpeed, LabControlKind.Slider, "Velocidad")),
-            new Row("Fuego", "Fire", FireGroup,
-                new Ctl(LabVariableId.FireSeedRadius, LabControlKind.Slider, "Semilla"),
-                new Ctl(LabVariableId.FireDecay, LabControlKind.Slider, "Merma"),
-                new Ctl(LabVariableId.FireMaxGenerations, LabControlKind.Knob, "Generac."))
-        };
 
         private static readonly Dictionary<string, Mesh> meshes = new Dictionary<string, Mesh>();
         private static int controlCount;
@@ -335,29 +207,13 @@ namespace SpellSimulator.EditorTools.Map
             int cleared = ClearVegetation(map, root);
             float floor = Platform(root, material);
             Awning(root, material, floor);
+            Track(root, material);
+            CheckTrackBounds();
 
             var caster = SceneCaster();
             if (caster == null) Debug.LogWarning("[MapLab] no hay SpellCaster en la escena: el banco, el overlay y el registro no veran los hechizos.");
 
-            // Pista y blanco del disparo.
-            var target = new GameObject("LabTrackTarget").transform;
-            target.SetParent(root, false);
-            target.SetPositionAndRotation(GroundAt(root, new Vector3(0f, 0f, TrackStart + TrackLength * 0.5f)) + Vector3.up * AimHeight, root.rotation);
-            Track(root, material);
-
-            // Banco en U: mesa de atras con atril y papel, botones del sello, consolas a los lados.
-            LabSealBench bench = BenchCenter(root, material, floor, caster, target);
-            Console(root, material, floor, -1f, "LabSealConsole", "Sello",
-                "Doble clic: por defecto · Rueda: un paso · Pestaña: reinicia", BuildSealRows(), bench, true);
-            Transform envPanel = Console(root, material, floor, 1f, "LabEnvConsole", "Entorno",
-                "Ajustá y materializá: aparece en la pista", EnvRows, bench, false);
-            MaterializeRow(envPanel, material, RowZ[EnvRows.Length]);
-            // Sin franja debajo: apoya sobre la losa (y = 0).
-            Text(envPanel, "Hint", new Vector3(0f, LabPanelLayout.TextY(0f), RowZ[EnvRows.Length + 1]), Lying, new Vector2(1.1f, 0.12f),
-                LabPanelLayout.ReadoutFontSize, TextLight,
-                "Los botones y controles se apuntan con el rayo.\nLas lentes muestran los parámetros en el mundo.");
-
-            // Sistemas: parametros del entorno + materializador con sus anclas.
+            // Sistemas: parametros del entorno + materializador con sus anclas (el campo y el banco los usan).
             var systems = Child(root, "LabSystems", Vector3.zero);
             systems.AddComponent<LabParameters>();
             var spawner = systems.AddComponent<LabSpawner>();
@@ -373,6 +229,12 @@ namespace SpellSimulator.EditorTools.Map
             Assign(spawner, "windParticleMaterial", AssetDatabase.LoadAssetAtPath<Material>(WindMaterialPath));
             CheckFireAnchor(fireAnchor.position, root.position);
 
+            // Marco de la pista: X y distancia del papel y de las cajas se miden aca (suelo a la altura de TrackStart + 2).
+            var trackOrigin = Child(root, "LabTrackOrigin", new Vector3(0f, Rel(root, 0f, TrackStart + 2f), 0f)).transform;
+
+            // Banco compacto: mesa de adelante (atril de dibujo y LANZAR) y cuatro paneles en arco; papel de prueba en el campo.
+            LabSealBench bench = Bench(root, material, floor, caster, trackOrigin, spawner);
+
             WindSock(root, material, windAnchor);
             FirePit(root, material, fireAnchor.position);
 
@@ -385,9 +247,17 @@ namespace SpellSimulator.EditorTools.Map
 
             Shelf(root, material, floor);
             Sign(root, material, floor);
+            Lights(root, material, floor);
 
             Debug.Log($"[MapLab] laboratorio en {root.position} mirando {forward}; pinos/rocas despejados: {cleared}; " +
-                      $"controles: {controlCount}; fuego en {fireAnchor.position}; blanco en {target.position}.");
+                      $"controles: {controlCount}; fuego en {fireAnchor.position}; banco: {(bench != null ? "ok" : "sin banco")}.");
+        }
+
+        /// <summary>Los limites del papel/cajas (LabSealSpec) tienen que caber en la pista que genera MapStructures.</summary>
+        private static void CheckTrackBounds()
+        {
+            if (LabSealSpec.MaxPaperX > TrackWidth * 0.5f - 0.3f || LabSealSpec.MaxPaperDistance > TrackLength - 0.3f)
+                Debug.LogWarning($"[MapLab] LabSealSpec.MaxPaperX/MaxPaperDistance no caben en la pista ({TrackWidth} × {TrackLength} m): ajustalos.");
         }
 
         // ---------------------------------------------------------------- plataforma y toldo
@@ -541,86 +411,86 @@ namespace SpellSimulator.EditorTools.Map
             }
         }
 
-        // ---------------------------------------------------------------- banco: centro
+        // ---------------------------------------------------------------- banco compacto (Laboratorio v4)
 
-        /// <summary>Mesa de atras con el atril, el papel de prueba (LabSealBench), «Lanzar», «Sello por defecto» y frascos.</summary>
-        private static LabSealBench BenchCenter(Transform root, Material material, float floor, SpellCaster caster, Transform target)
+        /// <summary>
+        /// Banco v4 (Docs/LABORATORIO_V4_PLAN.md): cuelga de <c>Map/Lab/LabBench</c>, con el origen donde se para el jugador.
+        /// Adelante la mesa baja con el atril de dibujo, LANZAR, «Borrar dibujo» y «Reiniciar sello»; a los lados cuatro paneles
+        /// empinados en arco (izquierda: sello; derecha: objetos del campo y entorno); el cartel «Vas a lanzar» adelante a la
+        /// izquierda. El papel de prueba (con su poste) y el aro de seleccion viven en el campo.
+        /// </summary>
+        private static LabSealBench Bench(Transform root, Material material, float floor, SpellCaster caster, Transform trackOrigin, LabSpawner spawner)
         {
-            float top = floor + DeskTop;
-            var b = new LowPolyMesh();
-            float width = WingInner * 2f;
-            b.Box(Matrix4x4.Translate(new Vector3(0f, (DeskTop - 0.05f) * 0.5f, BackDeskZ)), new Vector3(width - 0.06f, DeskTop - 0.05f, BackDeskDepth - 0.08f), WoodA);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, DeskTop - 0.025f, BackDeskZ)), new Vector3(width, 0.05f, BackDeskDepth), WoodB, Plank);
-            foreach (float sx in new[] { -0.5f, 0f, 0.5f })
-                b.Box(Matrix4x4.Translate(new Vector3(sx, DeskTop * 0.55f, BackDeskZ - BackDeskDepth * 0.5f + 0.035f)), new Vector3(0.36f, 0.22f, 0.01f), WoodB);
-            // Atril: caballete detras del papel.
-            float paperZ = BackDeskZ - 0.02f;
-            foreach (float sx in new[] { -0.17f, 0.17f })
-                Beam(b, new Vector3(sx, DeskTop, BackDeskZ + 0.16f), new Vector3(sx * 0.6f, DeskTop + PaperHeight + 0.2f, paperZ + 0.08f), 0.035f, WoodB);
-            Beam(b, new Vector3(0f, DeskTop, BackDeskZ + 0.22f), new Vector3(0f, DeskTop + PaperHeight, paperZ + 0.1f), 0.03f, WoodA);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, DeskTop + PaperHeight - 0.27f, paperZ + 0.03f)), new Vector3(0.5f, 0.04f, 0.06f), WoodA, Brass);
-            var desk = MapBuilder.Place("LabBenchDesk", root, Save("Lab_BenchDesk", b), material, root.TransformPoint(new Vector3(0f, floor, 0f)), root.rotation);
-            var col = desk.AddComponent<BoxCollider>();
-            col.center = new Vector3(0f, DeskTop * 0.5f, BackDeskZ);
-            col.size = new Vector3(width, DeskTop, BackDeskDepth);
-            desk.isStatic = true;
+            var benchGo = Child(root, "LabBench", new Vector3(0f, floor, StandZ));
+            Transform bench = benchGo.transform;
+            var sealBench = benchGo.AddComponent<LabSealBench>();
+            var iconMaterial = AssetDatabase.LoadAssetAtPath<Material>(IconMaterialPath);
+            if (iconMaterial == null) Debug.LogWarning($"[MapLab] no se encontro {IconMaterialPath}: las grillas de iconos no se veran.");
 
-            // Banco de sellos: el papel de prueba vive debajo (Map/Lab/LabBench/LabBenchPaper).
-            var benchGo = Child(root, "LabBench", new Vector3(0f, top, BackDeskZ));
-            var bench = benchGo.AddComponent<LabSealBench>();
-            DrawingCanvas canvas = BenchPaper(benchGo.transform, root.TransformPoint(new Vector3(0f, top + PaperHeight, paperZ)), root.rotation);
-            // Marco de la pista para los presets de posicion del papel (LABORATORIO_V3_PLAN (b)): mismo frente que el sitio y la
-            // altura del suelo donde se acuesta el papel «Piso» (TrackStart + 2), para que no quede enterrado ni flotando.
-            var trackOrigin = Child(root, "LabTrackOrigin", new Vector3(0f, Rel(root, 0f, TrackStart + 2f), 0f)).transform;
-            var so = new SerializedObject(bench);
-            so.FindProperty("canvas").objectReferenceValue = canvas;
+            // Papel de prueba en el campo («Frente», a 3 m del inicio de la pista; el banco lo reubica en runtime).
+            var fieldPaper = Child(root, "LabFieldPaper", Vector3.zero).transform;
+            Vector3 paperAt = trackOrigin.TransformPoint(new Vector3(0f, LabSealSpec.DefaultPaperHeight, TrackStart + LabSealSpec.DefaultPaperDistance));
+            DrawingCanvas paper = ClonePaper(fieldPaper, "LabBenchPaper", LabSealSpec.DefaultPaperSize, paperAt, root.rotation, true);
+            if (paper == null) Debug.LogWarning("[MapLab] falta PaperCanvas en la escena: el banco no tiene papel de prueba.");
+            var stand = Part("LabPaperStand", fieldPaper, StandMesh(), material, Vector3.zero, Quaternion.identity);
+            stand.transform.position = GroundAt(root, new Vector3(0f, 0f, TrackStart + LabSealSpec.DefaultPaperDistance));
+            stand.transform.localScale = new Vector3(1f, LabSealSpec.DefaultPaperHeight, 1f);
+            var ring = Part("LabFieldRing", root, SelectionRingMesh(), material, Vector3.zero, Quaternion.identity);
+            ring.transform.position = stand.transform.position + Vector3.up * 0.03f;
+            ring.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+
+            LabSketchPad pad = Front(bench, material, sealBench, out Transform front);
+
+            var so = new SerializedObject(sealBench);
+            so.FindProperty("canvas").objectReferenceValue = paper;
             so.FindProperty("caster").objectReferenceValue = caster;
-            so.FindProperty("aim").objectReferenceValue = target;
             so.FindProperty("trackOrigin").objectReferenceValue = trackOrigin;
-            so.FindProperty("paperRoot").objectReferenceValue = canvas != null ? canvas.transform : null;
             so.FindProperty("trackStart").floatValue = TrackStart;
+            so.FindProperty("sketchPad").objectReferenceValue = pad;
+            so.FindProperty("paperStand").objectReferenceValue = stand.transform;
             var files = so.FindProperty("spellFiles");
             List<TextAsset> spells = SpellFiles();
             files.arraySize = spells.Count;
             for (int i = 0; i < spells.Count; i++) files.GetArrayElementAtIndex(i).objectReferenceValue = spells[i];
             so.ApplyModifiedPropertiesWithoutUndo();
-            if (canvas == null) Debug.LogWarning("[MapLab] falta PaperCanvas en la escena: el banco no tiene papel de prueba.");
 
-            // LANZAR grande y rojo, centrado delante del atril ((c).4); «Sello por defecto» al costado, mas chico.
-            var launch = Button(root, material, "LabLaunch", "Lab_ButtonLaunch", "LANZAR", LaunchColor,
-                new Vector3(0f, top, LaunchZ), LaunchWidth, LaunchDepth, 0.55f);
-            launch.AddComponent<LabBenchButton>().Configure(LabBenchAction.Launch, bench, launch.GetComponent<MeshRenderer>());
-            var reset = Button(root, material, "LabSealDefault", "Lab_ButtonSealReset", "Sello por\ndefecto", ResetColor,
-                new Vector3(0.62f, top, LaunchZ), 0.2f, 0.15f, 0.2f);
-            reset.AddComponent<LabBenchButton>().Configure(LabBenchAction.ResetSeal, bench, reset.GetComponent<MeshRenderer>());
-            EditorUtility.SetDirty(launch.GetComponent<LabBenchButton>());
-            EditorUtility.SetDirty(reset.GetComponent<LabBenchButton>());
+            // Campo: papel elegido de entrada; las cajas las suma el spawner.
+            var field = Child(root, "LabField", Vector3.zero).AddComponent<LabField>();
+            Assign(field, "bench", sealBench);
+            Assign(field, "spawner", spawner);
+            Assign(field, "selectionRing", ring.transform);
 
-            BenchDisplay(root, material, top, paperZ, bench, canvas);
-
-            Mesh jars = JarsMesh();
-            // Detras de la pizarra (antes en −0.95, BackDeskZ + 0.12, donde ahora va la pizarra).
-            MapBuilder.Place("LabJars_Desk", root, jars, material, root.TransformPoint(new Vector3(-0.98f, top, BackDeskZ + 0.13f)), root.rotation).isStatic = true;
-            MapBuilder.Place("LabJars_Desk2", root, jars, material, root.TransformPoint(new Vector3(0.95f, top, BackDeskZ + 0.14f)), root.rotation * Quaternion.Euler(0f, 140f, 0f)).isStatic = true;
-            return bench;
+            SealFacetInner(bench, material, sealBench, iconMaterial);
+            SealFacetOuter(bench, material, sealBench);
+            ObjectsFacet(bench, material, sealBench);
+            EnvFacet(bench, material, sealBench);
+            Cartel(bench, material, sealBench, caster, front);
+            BenchLamps(bench, material);
+            return sealBench;
         }
 
-        /// <summary>Lienzo de prueba: clon de PaperCanvas cuadrado de 45 cm, sin PhysicalCanvas ni Respawnable, kinematico, emite por la cara con tinta.</summary>
-        private static DrawingCanvas BenchPaper(Transform parent, Vector3 position, Quaternion rotation)
+        /// <summary>
+        /// Clon de PaperCanvas cuadrado de <paramref name="size"/> m, sin PhysicalCanvas, Respawnable ni componentes de red,
+        /// kinematico y con los colliders apagados (no se agarra ni lo ve la lapicera). <paramref name="inkSide"/>: el hechizo
+        /// sale por la cara con tinta (papel de prueba).
+        /// </summary>
+        private static DrawingCanvas ClonePaper(Transform parent, string name, float size, Vector3 position, Quaternion rotation, bool inkSide)
         {
             var src = GameObject.Find("PaperCanvas");
             if (src == null) return null;
             var go = Object.Instantiate(src, position, rotation);
-            go.name = "LabBenchPaper";
-            go.transform.localScale = new Vector3(LabSealSpec.DefaultPaperSize, LabSealSpec.DefaultPaperSize, src.transform.localScale.z);
+            go.name = name;
+            go.transform.localScale = new Vector3(size, size, src.transform.localScale.z);
             var grab = go.GetComponent<PhysicalCanvas>();
             if (grab != null) Object.DestroyImmediate(grab);
             var respawn = go.GetComponent<Respawnable>();
             if (respawn != null) Object.DestroyImmediate(respawn);
+            StripNetwork(go);
             var rb = go.GetComponent<Rigidbody>();
             if (rb != null) { rb.isKinematic = true; rb.useGravity = false; }
+            foreach (var col in go.GetComponentsInChildren<Collider>(true)) col.enabled = false;
             var canvas = go.GetComponent<DrawingCanvas>();
-            if (canvas != null)
+            if (canvas != null && inkSide)
             {
                 var so = new SerializedObject(canvas);
                 so.FindProperty("emissionSide").enumValueIndex = (int)EmissionSide.InkSide;
@@ -630,293 +500,337 @@ namespace SpellSimulator.EditorTools.Map
             return canvas;
         }
 
-        /// <summary>
-        /// Pizarra «Vas a lanzar» a la izquierda del atril (resumen del sello + banda de resultado, <see cref="LabBenchDisplay"/>),
-        /// espejo del papel en el atril con su flecha de emision (se ven cuando el papel sale a la pista) y la flecha que acompaña
-        /// al papel real. La pizarra mira al jugador (−Z) y se recuesta <see cref="DisplayLean"/>° para leerse desde arriba.
-        /// </summary>
-        private static void BenchDisplay(Transform root, Material material, float top, float paperZ, LabSealBench bench, DrawingCanvas canvas)
+        /// <summary>Saca los componentes de red (Netcode y SpellSimulator.Net) de un clon: el laboratorio no se replica.</summary>
+        private static void StripNetwork(GameObject go)
         {
-            var go = Child(root, "LabBenchDisplay", new Vector3(DisplayX, top, DisplayZ));
-            go.transform.localRotation = Quaternion.Euler(DisplayLean, 0f, 0f);
-            const float legs = DisplayLegs, mid = DisplayLegs + DisplayHeight * 0.5f;
-            var b = new LowPolyMesh();
-            foreach (float sx in new[] { -1f, 1f })
-                b.Box(Matrix4x4.Translate(new Vector3(sx * (DisplayWidth * 0.5f - 0.04f), legs * 0.5f + 0.01f, 0.02f)), new Vector3(0.04f, legs + 0.02f, 0.04f), WoodB);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, mid, 0.015f)), new Vector3(DisplayWidth + 0.05f, DisplayHeight + 0.05f, 0.03f), WoodA);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, mid, 0f)), new Vector3(DisplayWidth, DisplayHeight, 0.03f), ChalkBoard);
-            b.Frustum(Matrix4x4.Translate(new Vector3(0f, legs + DisplayHeight + 0.025f, 0.015f)), 0.04f, 0f, 0f, 0.08f, 6, Brass, false);
-            Part("Board", go.transform, Save("Lab_BenchDisplay", b), material, Vector3.zero, Quaternion.identity);
-            var col = go.AddComponent<BoxCollider>();
-            col.center = new Vector3(0f, mid, 0.01f);
-            col.size = new Vector3(DisplayWidth + 0.05f, DisplayHeight + 0.05f, 0.05f);
-
-            // La pizarra termina en z = −0.015; la banda de resultado sobresale 4 mm. Texto a TextLift de lo que tenga detras.
-            const float face = -0.015f;
-            float boardTop = legs + DisplayHeight;
-            var title = Text(go.transform, "Title", new Vector3(0f, boardTop - 0.045f, face - LabPanelLayout.TextLift), Quaternion.identity,
-                new Vector2(DisplayWidth - 0.04f, 0.06f), 0.42f, TextGold, "Vas a lanzar");
-            title.fontStyle = FontStyles.Bold;
-            var summary = Text(go.transform, "Summary", new Vector3(0f, boardTop - 0.19f, face - LabPanelLayout.TextLift), Quaternion.identity,
-                new Vector2(DisplayWidth - 0.04f, 0.22f), 0.24f, TextLight, "-");
-            summary.alignment = TextAlignmentOptions.TopLeft;
-
-            const float bandDepth = 0.004f, bandHeight = 0.13f;
-            float bandY = legs + 0.085f;
-            var bandMesh = new LowPolyMesh();
-            bandMesh.Box(Matrix4x4.Translate(new Vector3(0f, 0f, -bandDepth * 0.5f)), new Vector3(DisplayWidth - 0.04f, bandHeight, bandDepth), BandBase);
-            var band = Part("ResultBand", go.transform, Save("Lab_ResultBand", bandMesh), material, new Vector3(0f, bandY, face), Quaternion.identity);
-            band.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            var result = Text(go.transform, "Result", new Vector3(0f, bandY, face - bandDepth - LabPanelLayout.TextLift), Quaternion.identity,
-                new Vector2(DisplayWidth - 0.06f, bandHeight - 0.02f), 0.24f, TextLight, "Todavía no lanzaste\nApretá LANZAR");
-            result.fontStyle = FontStyles.Bold;
-
-            var display = go.AddComponent<LabBenchDisplay>();
-            Assign(display, "bench", bench);
-            Assign(display, "summaryText", summary);
-            Assign(display, "resultText", result);
-            Assign(display, "resultBand", band.GetComponent<MeshRenderer>());
-
-            // Espejo del atril: misma malla y material que el papel (el material del lienzo se toma en runtime), un poco detras
-            // del papel para que no se pisen; oculto hasta que el papel salga a la pista.
-            var anchor = Child(root, "LabEaselMirror", new Vector3(0f, top + PaperHeight, paperZ + 0.015f)).transform;
-            if (canvas != null && canvas.TryGetComponent(out MeshFilter paperFilter) && canvas.TryGetComponent(out MeshRenderer paperRenderer))
-            {
-                var mirror = Child(anchor, "Mirror", Vector3.zero);
-                mirror.transform.rotation = LabSealBenchMath.FaceRotation(canvas.SurfaceNormalLocal, -anchor.forward, anchor.up);
-                mirror.transform.localScale = canvas.transform.lossyScale;
-                mirror.AddComponent<MeshFilter>().sharedMesh = paperFilter.sharedMesh;
-                var mirrorRenderer = mirror.AddComponent<MeshRenderer>();
-                mirrorRenderer.sharedMaterial = paperRenderer.sharedMaterial;
-                mirrorRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                mirrorRenderer.enabled = false;
-                Assign(display, "mirrorRenderer", mirrorRenderer);
-            }
-            else Debug.LogWarning("[MapLab] el papel del banco no tiene MeshFilter/MeshRenderer: el atril no tendra espejo.");
-            Assign(display, "mirrorAnchor", anchor);
-            var easelArrow = Part("Arrow", anchor, ArrowMesh(), material, Vector3.zero, Quaternion.identity);
-            easelArrow.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            easelArrow.SetActive(false);
-            Assign(display, "easelArrow", easelArrow.transform);
-
-            var paperArrow = Part("LabPaperArrow", root, ArrowMesh(), material, new Vector3(0f, top + PaperHeight, paperZ), Quaternion.identity);
-            paperArrow.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            Assign(display, "paperArrow", paperArrow.transform);
-            EditorUtility.SetDirty(display);
-        }
-
-        /// <summary>Flecha de emision (+Z = punta), color HDR que brilla con el bloom como los faroles.</summary>
-        private static Mesh ArrowMesh() => Cached("Lab_EmissionArrow", () =>
-        {
-            var b = new LowPolyMesh();
-            const float head = 0.1f, shaft = ArrowLength - head;
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0f, shaft * 0.5f)), new Vector3(0.024f, 0.024f, shaft), ArrowGlow);
-            b.Frustum(Matrix4x4.TRS(new Vector3(0f, 0f, shaft), Quaternion.Euler(90f, 0f, 0f), Vector3.one), 0.055f, 0f, 0f, head, 6, ArrowGlow, false, true);
-            return b;
-        });
-
-        private static List<TextAsset> SpellFiles()
-        {
-            var list = new List<TextAsset>();
-            foreach (string guid in AssetDatabase.FindAssets("t:TextAsset", new[] { SpellsFolder }))
-            {
-                var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(AssetDatabase.GUIDToAssetPath(guid));
-                if (asset != null) list.Add(asset);
-            }
-            list.Sort((a, c) => string.CompareOrdinal(a.name, c.name));
-            return list;
-        }
-
-        private static Mesh JarsMesh()
-        {
-            var b = new LowPolyMesh();
-            Color[] liquids = { new Color(0.35f, 0.6f, 0.9f), new Color(0.45f, 0.8f, 0.4f), new Color(0.95f, 0.65f, 0.25f) };
-            Vector3[] at = { new Vector3(0f, 0f, 0f), new Vector3(0.1f, 0f, 0.05f), new Vector3(0.03f, 0f, 0.11f) };
-            float[] heights = { 0.16f, 0.11f, 0.13f };
-            for (int i = 0; i < 3; i++)
-            {
-                float h = heights[i];
-                b.Frustum(Matrix4x4.Translate(at[i]), 0.04f, 0.04f, 0f, h * 0.6f, 8, liquids[i]);
-                b.Frustum(Matrix4x4.Translate(at[i]), 0.04f, 0.025f, h * 0.6f, h, 8, Glass);
-                b.Frustum(Matrix4x4.Translate(at[i]), 0.02f, 0.02f, h, h + 0.03f, 6, WoodA);
-            }
-            return Save("Lab_Jars", b);
-        }
-
-        // ---------------------------------------------------------------- consolas (alas)
-
-        /// <summary>
-        /// Ala del banco (side −1 izquierda, +1 derecha): mesa de 1,2 × 1,2 m, panel inclinado 35° con una fila por grupo de color y
-        /// tablero de atras con el titulo. Marco del ala: +Z hacia afuera (lejos de quien usa el banco), +X a su derecha.
-        /// Devuelve el panel (marco donde van los controles).
-        /// </summary>
-        private static Transform Console(Transform root, Material material, float floor, float side, string name, string title,
-            string help, Row[] rows, LabSealBench bench, bool groupTabs)
-        {
-            var wing = Child(root, name, new Vector3(side * WingInner, floor + DeskTop, 0f)).transform;
-            wing.localRotation = Quaternion.Euler(0f, side * 90f, 0f);
-
-            var b = new LowPolyMesh();
-            float half = WingWidth * 0.5f;
-            b.Box(Matrix4x4.Translate(new Vector3(0f, -(DeskTop + 0.05f) * 0.5f, WingDepth * 0.5f)), new Vector3(WingWidth - 0.06f, DeskTop - 0.05f, WingDepth - 0.08f), WoodA);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, -0.025f, WingDepth * 0.5f)), new Vector3(WingWidth, 0.05f, WingDepth), WoodB, Plank);
-            // Cuña bajo el panel inclinado.
-            float cos = Mathf.Cos(PanelTilt * Mathf.Deg2Rad), sin = Mathf.Sin(PanelTilt * Mathf.Deg2Rad);
-            float zb = PanelFrontZ + PanelLength * cos, yb = PanelLength * sin - 0.04f;
-            foreach (float sx in new[] { -half + 0.02f, half - 0.02f })
-            {
-                Vector3 f = new Vector3(sx, 0f, PanelFrontZ), bk = new Vector3(sx, 0f, zb), t = new Vector3(sx, yb, zb);
-                b.Tri(f, t, bk, WoodB);
-                b.Tri(f, bk, t, WoodB);
-            }
-            b.Box(Matrix4x4.Translate(new Vector3(0f, yb * 0.5f, zb - 0.01f)), new Vector3(WingWidth - 0.04f, yb, 0.02f), WoodB);
-            // Tablero de atras con el titulo (su cara oscura termina en BoardFaceZ).
-            b.Box(Matrix4x4.Translate(new Vector3(0f, BoardY, WingDepth - 0.06f)), new Vector3(WingWidth, 0.5f, 0.04f), WoodB);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, BoardY, BoardFaceZ + 0.005f)), new Vector3(WingWidth - 0.06f, 0.44f, 0.01f), PanelColor);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, BoardY + 0.27f, WingDepth - 0.06f)), new Vector3(WingWidth + 0.04f, 0.04f, 0.08f), Brass);
-            // Patas del tablero (ahora flota sobre la mesa).
-            foreach (float sx in new[] { -half + 0.03f, half - 0.03f })
-                b.Box(Matrix4x4.Translate(new Vector3(sx, (BoardY - 0.25f) * 0.5f, WingDepth - 0.06f)), new Vector3(0.05f, BoardY - 0.25f, 0.04f), WoodB);
-            var wingMesh = Save("Lab_Console", b);
-            wing.gameObject.AddComponent<MeshFilter>().sharedMesh = wingMesh;
-            wing.gameObject.AddComponent<MeshRenderer>().sharedMaterial = material;
-            var col = wing.gameObject.AddComponent<BoxCollider>();
-            col.center = new Vector3(0f, -DeskTop * 0.5f, WingDepth * 0.5f);
-            col.size = new Vector3(WingWidth, DeskTop, WingDepth);
-            var boardCol = wing.gameObject.AddComponent<BoxCollider>();
-            boardCol.center = new Vector3(0f, BoardY, WingDepth - 0.06f);
-            boardCol.size = new Vector3(WingWidth, 0.5f, 0.06f);
-
-            // Texto del tablero: TextLift por delante de la cara (normal −Z), tamaños fijos.
-            float boardTextZ = BoardFaceZ - LabPanelLayout.TextLift;
-            var titleText = Text(wing, "Title", new Vector3(0f, BoardY + 0.16f, boardTextZ), Quaternion.identity, new Vector2(1.08f, 0.12f), 0.8f, TextGold, title);
-            titleText.fontStyle = FontStyles.Bold;
-            Text(wing, "Legend", new Vector3(0f, BoardY + 0.035f, boardTextZ), Quaternion.identity, new Vector2(1.08f, 0.12f), 0.28f, TextLight, Legend(rows) + "\n" + help);
-            // Tira de ayuda ((c).6): dos renglones con la ayuda del control apuntado o agarrado de esta consola.
-            var helpText = Text(wing, "Help", new Vector3(0f, BoardY - 0.125f, boardTextZ), Quaternion.identity, new Vector2(1.08f, 0.08f), 0.28f, TextLight,
-                "Apuntá un control para ver qué hace.");
-            wing.gameObject.AddComponent<LabHelpStrip>().Configure(helpText, wing, null);
-            EditorUtility.SetDirty(wing.GetComponent<LabHelpStrip>());
-
-            // Panel inclinado: losa oscura y una franja de color por fila (tope en LabPanelLayout.SurfaceTop).
-            var panel = Child(wing, "Panel", new Vector3(0f, 0f, PanelFrontZ)).transform;
-            panel.localRotation = Quaternion.Euler(-PanelTilt, 0f, 0f);
-            var p = new LowPolyMesh();
-            p.Box(Matrix4x4.Translate(new Vector3(0f, -0.02f, PanelLength * 0.5f)), new Vector3(PanelWidth, 0.04f, PanelLength), WoodB, PanelColor);
-            p.Box(Matrix4x4.Translate(new Vector3(0f, 0.005f, -0.005f)), new Vector3(PanelWidth, 0.02f, 0.02f), Brass);
-            const float strip = LabPanelLayout.SurfaceTop;
-            for (int i = 0; i < rows.Length && i < RowZ.Length; i++)
-                p.Box(Matrix4x4.Translate(new Vector3(0f, strip * 0.5f, RowZ[i])), new Vector3(PanelWidth - 0.04f, strip, StripDepth), Color.Lerp(PanelColor, rows[i].Color, 0.32f));
-            if (rows.Length < RowZ.Length) // fila de botones (consola de entorno)
-                p.Box(Matrix4x4.Translate(new Vector3(0f, strip * 0.5f, RowZ[rows.Length])), new Vector3(PanelWidth - 0.04f, strip, StripDepth), Color.Lerp(PanelColor, MaterializeGroup, 0.25f));
-            Part("PanelBody", panel, Save(side < 0f ? "Lab_SealPanel" : "Lab_EnvPanel", p), material, Vector3.zero, Quaternion.identity);
-
-            float shift = groupTabs ? SealRowShiftX : RowShiftX;
-            for (int i = 0; i < rows.Length && i < RowZ.Length; i++) ControlRow(panel, material, rows[i], RowZ[i], bench, shift, !groupTabs);
-            if (groupTabs)
-                // Una pestaña por grupo a lo largo de sus filas (numero + ↺): titulo numerado y reset del grupo en un solo blanco.
-                for (int g = 1; g <= LabSealCatalog.GroupCount; g++)
+            for (int pass = 0; pass < 2; pass++)
+                foreach (var c in go.GetComponentsInChildren<Component>(true))
                 {
-                    int first = -1, last = -1;
-                    for (int i = 0; i < rows.Length && i < RowZ.Length; i++)
-                        if (rows[i].Group == g) { if (first < 0) first = i; last = i; }
-                    if (first < 0) continue;
-                    GroupTab(panel, material, g, RowZ[first] - StripDepth * 0.5f, RowZ[last] + StripDepth * 0.5f, bench);
+                    if (c == null || c is Transform) continue;
+                    string ns = c.GetType().Namespace ?? string.Empty;
+                    bool ours = ns.StartsWith("SpellSimulator.Net"), netcode = ns.StartsWith("Unity.Netcode");
+                    if ((pass == 0 && ours) || (pass == 1 && netcode)) Object.DestroyImmediate(c);
                 }
+        }
+
+        // ---------------------------------------------------------------- mesa de adelante
+
+        /// <summary>Mesa baja de adelante: atril de dibujo (LabSketchPad), LANZAR y a sus costados «Borrar dibujo» y «Reiniciar sello».</summary>
+        private static LabSketchPad Front(Transform bench, Material material, LabSealBench sealBench, out Transform front)
+        {
+            front = Child(bench, "LabFront", Vector3.zero).transform;
+            float w = LabBenchLayout.FrontWidth, near = LabBenchLayout.FrontNear, depth = LabBenchLayout.FrontDepth;
+            var b = new LowPolyMesh();
+            b.Box(Matrix4x4.Translate(new Vector3(0f, (DeskTop - 0.05f) * 0.5f, near + depth * 0.5f + 0.02f)), new Vector3(w - 0.06f, DeskTop - 0.05f, depth - 0.06f), WoodA);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, DeskTop - 0.025f, near + depth * 0.5f)), new Vector3(w, 0.05f, depth), WoodB, Plank);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, DeskTop - 0.04f, near + 0.005f)), new Vector3(w + 0.02f, 0.03f, 0.02f), Brass);
+            var desk = Part("Desk", front, Save("Lab_FrontDesk", b), material, Vector3.zero, Quaternion.identity);
+            var col = desk.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, DeskTop * 0.5f, near + depth * 0.5f);
+            col.size = new Vector3(w, DeskTop, depth);
+            desk.isStatic = true;
+
+            LabSketchPad pad = SketchPad(front, material);
+
+            Vector3 launchAt = LabBenchLayout.LaunchCenter;
+            var launch = Button(front, material, "LabLaunch", "Lab_ButtonLaunch", "LANZAR", LaunchColor, launchAt,
+                LabBenchLayout.LaunchWidth, LabBenchLayout.LaunchDepth, 0.42f, ButtonIcon.None);
+            launch.AddComponent<LabBenchButton>().Configure(LabBenchAction.Launch, sealBench, launch.GetComponent<MeshRenderer>());
+            float bw = LabBenchLayout.FrontButtonWidth;
+            var clear = Button(front, material, "LabClearDrawing", "Lab_ButtonClearDrawing", "Borrar\ndibujo", NeutralButton,
+                launchAt + new Vector3(-LabBenchLayout.FrontButtonX, 0f, 0f), bw, LabBenchLayout.LaunchDepth, 0.15f, ButtonIcon.Eraser, true);
+            clear.AddComponent<LabBenchButton>().Configure(LabBenchAction.ClearDrawing, sealBench, clear.GetComponent<MeshRenderer>());
+            var reset = Button(front, material, "LabSealDefault", "Lab_ButtonSealReset", "Reiniciar\nsello", NeutralButton,
+                launchAt + new Vector3(LabBenchLayout.FrontButtonX, 0f, 0f), bw, LabBenchLayout.LaunchDepth, 0.15f, ButtonIcon.Reset, true);
+            reset.AddComponent<LabBenchButton>().Configure(LabBenchAction.ResetSeal, sealBench, reset.GetComponent<MeshRenderer>());
+            EditorUtility.SetDirty(launch.GetComponent<LabBenchButton>());
+            EditorUtility.SetDirty(clear.GetComponent<LabBenchButton>());
+            EditorUtility.SetDirty(reset.GetComponent<LabBenchButton>());
+            return pad;
+        }
+
+        /// <summary>
+        /// Atril de dibujo: caballete inclinado <see cref="LabBenchLayout.PadTilt"/>° hacia el jugador con un DrawingCanvas real
+        /// (clon de PaperCanvas sin colliders) y un collider disparador en un hijo SIN DrawingCanvas (la lapicera no lo ve; el
+        /// interactor encuentra el LabSketchPad por GetComponentInParent).
+        /// </summary>
+        private static LabSketchPad SketchPad(Transform front, Material material)
+        {
+            float tilt = LabBenchLayout.PadTilt * Mathf.Deg2Rad, size = LabBenchLayout.PadSize;
+            var normal = new Vector3(0f, Mathf.Cos(tilt), -Mathf.Sin(tilt));   // hacia el jugador y arriba
+            var slopeUp = new Vector3(0f, Mathf.Sin(tilt), Mathf.Cos(tilt));
+            var padGo = Child(front, "LabSketchPad", LabBenchLayout.PadCenter);
+            var board = Child(padGo.transform, "Board", Vector3.zero).transform;
+            board.localRotation = Quaternion.LookRotation(-normal, slopeUp); // +Z hacia adentro del atril, +Y subiendo
+
+            // Caballete (marco de madera, respaldo y patas hasta la mesa) en el marco del tablero.
+            var e = new LowPolyMesh();
+            float frame = size + 0.05f;
+            e.Box(Matrix4x4.Translate(new Vector3(0f, 0f, 0.02f)), new Vector3(frame, frame, 0.02f), WoodB);
+            foreach (float sx in new[] { -1f, 1f })
+                e.Box(Matrix4x4.Translate(new Vector3(sx * (frame * 0.5f - 0.0125f), 0f, 0f)), new Vector3(0.025f, frame, 0.022f), WoodA, Brass);
+            e.Box(Matrix4x4.Translate(new Vector3(0f, -(frame * 0.5f - 0.0125f), -0.004f)), new Vector3(frame, 0.025f, 0.03f), WoodA, Brass);
+            // Copete con el titulo, arriba del papel.
+            e.Box(Matrix4x4.Translate(new Vector3(0f, size * 0.5f + 0.05f, 0.006f)), new Vector3(frame, 0.06f, 0.02f), WoodA);
+            var easel = Part("Easel", board, Save("Lab_SketchEasel", e), material, Vector3.zero, Quaternion.identity);
+            // Patas: del borde de abajo del atril a la mesa (en el marco del frente).
+            var legs = new LowPolyMesh();
+            Vector3 bottom = LabBenchLayout.PadCenter - slopeUp * (size * 0.5f) + new Vector3(0f, 0f, 0.03f);
+            Vector3 top = LabBenchLayout.PadCenter + slopeUp * (size * 0.3f) + new Vector3(0f, 0f, 0.05f);
+            foreach (float sx in new[] { -0.13f, 0.13f })
+            {
+                Beam(legs, new Vector3(sx, DeskTop, bottom.z - 0.02f), new Vector3(sx, bottom.y, bottom.z), 0.025f, WoodB);
+                Beam(legs, new Vector3(sx * 0.6f, DeskTop, top.z + 0.1f), new Vector3(sx * 0.6f, top.y, top.z), 0.025f, WoodB);
+            }
+            Part("Legs", front, Save("Lab_SketchLegs", legs), material, Vector3.zero, Quaternion.identity);
+
+            // Collider del rayo en un hijo sin DrawingCanvas: ahi va el LabSketchPad (lo resalta el interactor) y el lienzo cuelga
+            // de el (SpellCaster encuentra el ISealGate por GetComponentInParent y no lo auto-lanza).
+            var surfaceGo = Child(board, "Surface", Vector3.zero);
+            var box = surfaceGo.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+            box.center = new Vector3(0f, 0f, 0.005f);
+            box.size = new Vector3(size, size, 0.03f);
+
+            // Lienzo real: centro de la malla sobre el centro del atril, un poco adelante del marco.
+            Vector3 center = front.TransformPoint(LabBenchLayout.PadCenter + normal * 0.004f);
+            DrawingCanvas canvas = ClonePaper(surfaceGo.transform, "LabSketchCanvas", size, center, Quaternion.identity, false);
+            if (canvas != null)
+            {
+                MeshFilter mf = canvas.GetComponent<MeshFilter>();
+                Vector3 surface = SurfaceNormal(mf);
+                Quaternion rot = LabSealBenchMath.FaceRotation(surface, front.TransformDirection(normal), front.TransformDirection(slopeUp));
+                canvas.transform.rotation = rot;
+                Vector3 offset = mf != null && mf.sharedMesh != null ? Vector3.Scale(mf.sharedMesh.bounds.center, canvas.transform.lossyScale) : Vector3.zero;
+                canvas.transform.position = center - rot * offset;
+            }
+            else Debug.LogWarning("[MapLab] falta PaperCanvas: el atril de dibujo no tiene lienzo.");
+
+            // Titulo del atril (mira al jugador: −Z del tablero).
+            var title = Text(board, "Title", new Vector3(0f, size * 0.5f + 0.05f, -0.004f - LabPanelLayout.TextLift), Quaternion.identity,
+                new Vector2(frame - 0.03f, 0.05f), 0.2f, TextLight, "Dibujá acá (opcional)");
+            title.fontStyle = FontStyles.Bold;
+
+            var pad = surfaceGo.AddComponent<LabSketchPad>();
+            pad.Configure(canvas, easel.GetComponent<MeshRenderer>());
+            EditorUtility.SetDirty(pad);
+            return pad;
+        }
+
+        /// <summary>Normal de la cara del lienzo segun su malla (primera normal), como DrawingCanvas.Awake.</summary>
+        private static Vector3 SurfaceNormal(MeshFilter mf)
+        {
+            if (mf == null || mf.sharedMesh == null || mf.sharedMesh.normals.Length == 0) return Vector3.back;
+            return mf.sharedMesh.normals[0];
+        }
+
+        // ---------------------------------------------------------------- paneles en arco
+
+        /// <summary>
+        /// Panel empinado del arco (LabBenchLayout): gabinete, losa inclinada con rieles de laton y un copete arriba con el
+        /// titulo y la tira de ayuda (LabHelpStrip del panel). Devuelve el marco de la losa (+X ancho, +Z subiendo, +Y normal);
+        /// el que llama agrega franjas a <paramref name="body"/> y termina con <see cref="FinishFacet"/>.
+        /// </summary>
+        private static Transform Facet(Transform bench, Material material, int index, string name, string title, string idle, out LowPolyMesh body)
+        {
+            var wing = Child(bench, name, Vector3.zero).transform;
+            wing.localRotation = Quaternion.Euler(0f, LabBenchLayout.FacetYaw(index), 0f);
+            float depth = LabBenchLayout.FacetDepth, length = FacetSlope + CrestSlope;
+            float t = FacetTilt * Mathf.Deg2Rad;
+
+            var w = new LowPolyMesh();
+            w.Box(Matrix4x4.Translate(new Vector3(0f, (FacetBottom - 0.03f) * 0.5f, FacetNear + 0.04f + depth * 0.5f)),
+                new Vector3(FacetWidth - 0.06f, FacetBottom - 0.03f, depth), WoodA, Plank);
+            Vector3 topEdge = new Vector3(0f, FacetBottom + length * Mathf.Sin(t), FacetNear + length * Mathf.Cos(t)) + new Vector3(0f, -0.02f, 0.03f);
+            foreach (float sx in new[] { -FacetWidth * 0.5f + 0.05f, FacetWidth * 0.5f - 0.05f })
+                Beam(w, new Vector3(sx, FacetBottom - 0.03f, FacetNear + depth + 0.03f), new Vector3(sx, topEdge.y, topEdge.z), 0.03f, WoodB);
+            Part("Body", wing, Save("Lab_FacetBody", w), material, Vector3.zero, Quaternion.identity);
+
+            var panel = Child(wing, "Panel", new Vector3(0f, FacetBottom, FacetNear)).transform;
+            panel.localRotation = Quaternion.Euler(-FacetTilt, 0f, 0f);
+            body = new LowPolyMesh();
+            body.Box(Matrix4x4.Translate(new Vector3(0f, -0.02f, length * 0.5f)), new Vector3(FacetWidth, 0.04f, length), WoodB, PanelColor);
+            // Rieles de laton a los lados (marco biselado) y bordes de abajo y arriba.
+            foreach (float sx in new[] { -1f, 1f })
+                body.Box(Matrix4x4.Translate(new Vector3(sx * (FacetWidth * 0.5f - 0.004f), 0.004f, length * 0.5f)), new Vector3(0.008f, 0.016f, length), Brass);
+            body.Box(Matrix4x4.Translate(new Vector3(0f, 0.004f, -0.006f)), new Vector3(FacetWidth + 0.01f, 0.024f, 0.016f), Brass);
+            body.Box(Matrix4x4.Translate(new Vector3(0f, 0.004f, length + 0.006f)), new Vector3(FacetWidth + 0.01f, 0.024f, 0.016f), Brass);
+            // Copete oscuro para el titulo y la ayuda.
+            const float strip = LabPanelLayout.SurfaceTop;
+            body.Box(Matrix4x4.Translate(new Vector3(0f, strip * 0.5f, FacetSlope + CrestSlope * 0.5f)), new Vector3(FacetWidth - 0.02f, strip, CrestSlope - 0.01f), CrestColor);
+
+            float textY = LabPanelLayout.TextY(LabPanelLayout.SurfaceTop);
+            var titleText = Text(panel, "Title", new Vector3(0f, textY, FacetSlope + CrestSlope - 0.028f), Lying, new Vector2(FacetWidth - 0.04f, 0.035f),
+                LabPanelLayout.TitleFontSize, TextGold, title);
+            titleText.fontStyle = FontStyles.Bold;
+            var help = Text(panel, "Help", new Vector3(0f, textY, FacetSlope + 0.05f), Lying, new Vector2(FacetWidth - 0.04f, 0.085f), 0.15f, TextLight, idle);
+            help.textWrappingMode = TextWrappingModes.Normal;
+            help.alignment = TextAlignmentOptions.Top;
+            var strip2 = wing.gameObject.AddComponent<LabHelpStrip>();
+            strip2.Configure(help, wing, idle);
+            EditorUtility.SetDirty(strip2);
             return panel;
         }
 
-        /// <summary>
-        /// Pestaña de un grupo de la consola del sello, en el margen izquierdo: barra del color del grupo con el numero grande y
-        /// el icono ↺ (malla: la fuente TMP no trae la flecha circular). Apretarla llama a <see cref="LabSealBench.ResetGroup"/>
-        /// (<see cref="LabBenchButton"/>, accion ResetGroup). El titulo completo del grupo esta en la leyenda del tablero y en la
-        /// tira de ayuda al apuntarla. Ancho ≥ 8 cm y collider ≥ 9 cm (rayo de VR).
-        /// </summary>
-        private static void GroupTab(Transform panel, Material material, int group, float zFrom, float zTo, LabSealBench bench)
-        {
-            Color color = GroupColor(group);
-            float length = zTo - zFrom, zMid = (zFrom + zTo) * 0.5f;
-            const float tabTop = LabPanelLayout.SurfaceTop + TabLift;
-            var b = new LowPolyMesh();
-            b.Box(Matrix4x4.Translate(new Vector3(0f, tabTop * 0.5f, 0f)), new Vector3(TabWidth, tabTop, length - 0.01f), Darken(color, 0.75f), color);
-            // ↺: arco de 300° con la punta al final, acostado sobre la tapa, en la punta de la pestaña mas cerca del jugador.
-            const float iconR = 0.021f, iconY = tabTop + 0.0015f;
-            float iconZ = -length * 0.5f + 0.038f;
-            const int segments = 9;
-            for (int i = 0; i < segments; i++)
-            {
-                float a0 = (50f + 300f * i / segments) * Mathf.Deg2Rad, a1 = (50f + 300f * (i + 1) / segments) * Mathf.Deg2Rad;
-                Vector3 p0 = new Vector3(Mathf.Sin(a0) * iconR, iconY, iconZ + Mathf.Cos(a0) * iconR);
-                Vector3 p1 = new Vector3(Mathf.Sin(a1) * iconR, iconY, iconZ + Mathf.Cos(a1) * iconR);
-                Vector3 mid = (p0 + p1) * 0.5f;
-                b.Box(Matrix4x4.TRS(mid, Quaternion.LookRotation(p1 - p0), Vector3.one), new Vector3(0.006f, 0.003f, (p1 - p0).magnitude + 0.002f), TextDark);
-            }
-            float end = 350f * Mathf.Deg2Rad;
-            Vector3 tip = new Vector3(Mathf.Sin(end) * iconR, iconY, iconZ + Mathf.Cos(end) * iconR);
-            Vector3 along = new Vector3(Mathf.Cos(end), 0f, -Mathf.Sin(end)), outward = new Vector3(Mathf.Sin(end), 0f, Mathf.Cos(end));
-            Vector3 lift = Vector3.up * 0.0015f;
-            b.Tri(tip + outward * 0.011f + lift, tip + along * 0.014f + lift, tip - outward * 0.011f + lift, TextDark);
-            b.Tri(tip - outward * 0.011f + lift, tip + along * 0.014f + lift, tip + outward * 0.011f + lift, TextDark);
+        private static void FinishFacet(Transform panel, Material material, LowPolyMesh body, string meshName)
+            => Part("PanelBody", panel, Save(meshName, body), material, Vector3.zero, Quaternion.identity);
 
-            var go = Part("LabGroupReset_" + group, panel, Save($"Lab_GroupTab_{group}_{Mathf.RoundToInt(length * 1000f)}", b), material,
-                new Vector3(TabX, 0f, zMid), Quaternion.identity);
-            var col = go.AddComponent<BoxCollider>();
-            col.isTrigger = true;
-            col.center = new Vector3(0f, 0.03f, 0f);
-            col.size = new Vector3(0.09f, 0.06f, Mathf.Max(0.09f, length - 0.01f));
-            // Numero en la mitad de arriba (lejos del icono): nada debajo del texto salvo la tapa.
-            var number = Text(go.transform, "Number", new Vector3(0f, LabPanelLayout.TextY(tabTop), length * 0.5f - 0.045f), Lying,
-                new Vector2(TabWidth - 0.01f, 0.06f), 0.45f, TextDark, group.ToString());
-            number.fontStyle = FontStyles.Bold;
-            go.AddComponent<LabBenchButton>().Configure(LabBenchAction.ResetGroup, bench, go.GetComponent<MeshRenderer>(), group);
-            EditorUtility.SetDirty(go.GetComponent<LabBenchButton>());
+        /// <summary>Franja de color de un grupo entre <paramref name="sFrom"/> y <paramref name="sTo"/> y su titulo en el margen izquierdo.</summary>
+        private static TextMeshPro Band(Transform panel, LowPolyMesh body, float sFrom, float sTo, Color color, string title)
+        {
+            const float strip = LabPanelLayout.SurfaceTop;
+            float length = sTo - sFrom;
+            body.Box(Matrix4x4.Translate(new Vector3(0f, strip * 0.5f, (sFrom + sTo) * 0.5f)), new Vector3(FacetWidth - 0.02f, strip, length - 0.006f),
+                Color.Lerp(PanelColor, color, 0.32f));
+            // Filete del color del grupo junto al margen (ayuda a ver donde empieza cada grupo).
+            body.Box(Matrix4x4.Translate(new Vector3(LabBenchLayout.SpineX + 0.017f, strip + 0.001f, (sFrom + sTo) * 0.5f)), new Vector3(0.004f, 0.002f, length - 0.02f), color);
+            if (string.IsNullOrEmpty(title)) return null;
+            var text = Text(panel, "Group_" + Mathf.RoundToInt(sFrom * 1000f), new Vector3(LabBenchLayout.SpineX, LabPanelLayout.TextY(strip), (sFrom + sTo) * 0.5f),
+                Spine, new Vector2(length - 0.01f, 0.03f), 0.18f, color, title);
+            text.fontStyle = FontStyles.Bold;
+            return text;
         }
 
-        private static string Legend(Row[] rows)
+        private static Vector3 At(float x, float s) => new Vector3(x, LabPanelLayout.SurfaceTop, s);
+
+        private static float Col(int i) => LabBenchLayout.ColumnX[i];
+        private static float Row(int i) => LabBenchLayout.RowS[i];
+
+        /// <summary>Izquierda adentro: «1 Hechizo» (receta y grilla de sigilos) y «2 Signos» (grilla de signos, cantidad, angulo, sentido).</summary>
+        private static void SealFacetInner(Transform bench, Material material, LabSealBench sealBench, Material iconMaterial)
         {
-            var sb = new System.Text.StringBuilder();
-            string last = null;
-            int distinct = 0, count = 0;
-            foreach (Row row in rows)
-                if (row.Title != last) { distinct++; last = row.Title; }
-            last = null;
-            foreach (Row row in rows)
-            {
-                if (row.Title == last) continue;
-                // Con mas de 3 grupos, de a dos por renglon (los titulos numerados del sello no entran en uno).
-                if (last != null) sb.Append(distinct > 3 && count % 2 == 0 ? "\n" : "   ");
-                count++;
-                sb.Append("<color=#").Append(ColorUtility.ToHtmlStringRGB(row.Color)).Append('>').Append(row.Title).Append("</color>");
-                last = row.Title;
-            }
-            return sb.ToString();
+            Transform p = Facet(bench, material, LabBenchLayout.LeftInner, "LabFacet_Seal", "Armá el sello",
+                "1 Elegí un hechizo · 2 Ajustá lo que quieras · 3 Tocá LANZAR. Apuntá un control para ver qué hace.", out LowPolyMesh body);
+            var g1 = new Tone(LabPalette.Recipe, "Recipe");
+            var g2 = new Tone(LabPalette.Signs, "Signs");
+            float cell = LabBenchLayout.CellPitch;
+            // Grupo 1: receta arriba y grilla de sigilos (2 filas) debajo.
+            const float recipeS = 0.9f, sigilS = 0.7225f, signS = 0.5f, countS = 0.28f, turnS = 0.11f;
+            Band(p, body, recipeS - 0.08f, recipeS + 0.08f, g1.Color, "1 Hechizo");
+            Control(p, material, new Ctl(LabSealVarId.BaseRecipe, LabControlKind.Selector, "Receta"), g1, At(0f, recipeS), sealBench);
+            TextMeshPro sigilName = Band(p, body, sigilS - cell - 0.003f, sigilS + cell + 0.003f, g1.Color, "Sigilo");
+            Grid(p, material, LabSealVarId.Sigil, sigilS, 2, "Sigilo", sigilName, sealBench, iconMaterial);
+            // Grupo 2: grilla de signos (3 filas), cantidad y angulo, sentido.
+            TextMeshPro signName = Band(p, body, signS - 1.5f * cell - 0.003f, signS + 1.5f * cell + 0.003f, g2.Color, "2 Signos");
+            Grid(p, material, LabSealVarId.SignType, signS, 3, "Signo", signName, sealBench, iconMaterial);
+            Band(p, body, turnS - 0.08f, countS + 0.08f, g2.Color, null);
+            Control(p, material, new Ctl(LabSealVarId.SignCount, LabControlKind.Selector, "Cantidad"), g2, At(Col(0), countS), sealBench);
+            Control(p, material, new Ctl(LabSealVarId.BaseAngle, LabControlKind.Knob, "Ángulo"), g2, At(Col(1), countS), sealBench);
+            Control(p, material, new Ctl(LabSealVarId.TurnDeg, LabControlKind.Selector, "Sentido"), g2, At(0f, turnS), sealBench);
+            FinishFacet(p, material, body, "Lab_FacetSealInner");
+        }
+
+        /// <summary>Izquierda afuera: «3 Papel y tinta» (tinta, pluma, sentido del disparo) y «4 Afinado» (geometria y prolijidad).</summary>
+        private static void SealFacetOuter(Transform bench, Material material, LabSealBench sealBench)
+        {
+            Transform p = Facet(bench, material, LabBenchLayout.LeftOuter, "LabFacet_Tuning", "Tinta y afinado",
+                "Opcional: cambiá tinta y pluma; abajo, el afinado fino del sello. Doble clic: valor inicial.", out LowPolyMesh body);
+            var g3 = new Tone(LabPalette.Ink, "Ink");
+            var g4 = new Tone(LabPalette.Tuning, "Tuning");
+            Band(p, body, Row(1) - 0.08f, Row(0) + 0.08f, g3.Color, "3 Papel y tinta");
+            Control(p, material, new Ctl(LabSealVarId.Ink, LabControlKind.Selector, "Tinta"), g3, At(Col(0), Row(0)), sealBench);
+            Control(p, material, new Ctl(LabSealVarId.PenWidth, LabControlKind.Selector, "Pluma"), g3, At(Col(1), Row(0)), sealBench);
+            Control(p, material, new Ctl(LabSealVarId.PaperFace, LabControlKind.Selector, "Disparo"), g3, At(0f, Row(1)), sealBench);
+            Band(p, body, Row(5) - 0.08f, Row(2) + 0.08f, g4.Color, "4 Afinado");
+            Control(p, material, new Ctl(LabSealVarId.SigilScale, LabControlKind.Slider, "Tamaño"), g4, At(Col(0), Row(2)), sealBench);
+            Control(p, material, new Ctl(LabSealVarId.RingFill, LabControlKind.Slider, "Llenado"), g4, At(Col(1), Row(2)), sealBench);
+            Control(p, material, new Ctl(LabSealVarId.RingGap, LabControlKind.Knob, "Hueco"), g4, At(Col(0), Row(3)), sealBench);
+            Control(p, material, new Ctl(LabSealVarId.SignLength, LabControlKind.Slider, "Largo"), g4, At(Col(1), Row(3)), sealBench);
+            Control(p, material, new Ctl(LabSealVarId.Asymmetry, LabControlKind.Slider, "Asimetría"), g4, At(Col(0), Row(4)), sealBench);
+            Control(p, material, new Ctl(LabSealVarId.SignDistance, LabControlKind.Slider, "Distancia"), g4, At(Col(1), Row(4)), sealBench);
+            Control(p, material, new Ctl(LabSealVarId.Tremor, LabControlKind.Slider, "Temblor"), g4, At(0f, Row(5)), sealBench);
+            FinishFacet(p, material, body, "Lab_FacetSealOuter");
+        }
+
+        /// <summary>Derecha adentro: «Objetos del campo»: + Caja / Borrar elegido / Borrar todo, lista de casillas y controles del elegido.</summary>
+        private static void ObjectsFacet(Transform bench, Material material, LabSealBench sealBench)
+        {
+            Transform p = Facet(bench, material, LabBenchLayout.RightInner, "LabFacet_Objects", "Objetos del campo",
+                "1 Agregá una caja o elegí una casilla (P = papel) · 2 Movela con los controles de abajo.", out LowPolyMesh body);
+            var tone = new Tone(LabPalette.Paper, "Field");
+            float bp = LabBenchLayout.ButtonPitch, bw = LabBenchLayout.ButtonWidth, bd = LabBenchLayout.ButtonDepth;
+            Band(p, body, Row(0) - 0.07f, Row(0) + 0.07f, LabPalette.Neutral, null);
+            MaterializeButton(p, material, LabSpawnKind.Box, "+ Caja", BoxGroup, At(-bp, Row(0)), ButtonIcon.Box);
+            var del = Button(p, material, "LabDeleteSelected", "Lab_ButtonDeleteSelected", "Borrar\nelegido", DeleteButton, At(0f, Row(0)), bw, bd, 0.15f, ButtonIcon.Cross);
+            del.AddComponent<LabBenchButton>().Configure(LabBenchAction.DeleteSelected, sealBench, del.GetComponent<MeshRenderer>());
+            var all = Button(p, material, "LabDeleteAll", "Lab_ButtonDeleteAll", "Borrar\ntodo", DeleteButton, At(bp, Row(0)), bw, bd, 0.15f, ButtonIcon.Cross);
+            all.AddComponent<LabBenchButton>().Configure(LabBenchAction.DeleteAll, sealBench, all.GetComponent<MeshRenderer>());
+            EditorUtility.SetDirty(del.GetComponent<LabBenchButton>());
+            EditorUtility.SetDirty(all.GetComponent<LabBenchButton>());
+
+            const float slotS = 0.765f, r0 = 0.62f, r1 = 0.46f, r2 = 0.3f, r3 = 0.14f;
+            Band(p, body, slotS - 0.05f, slotS + 0.05f, tone.Color, "Elegí");
+            FieldSlots(p, material, slotS);
+            Band(p, body, r3 - 0.08f, r0 + 0.08f, tone.Color, "El elegido");
+            Control(p, material, new Ctl(LabFieldVar.Preset, LabControlKind.Selector, "Atajo"), tone, At(Col(0), r0), sealBench);
+            Control(p, material, new Ctl(LabFieldVar.Size, LabControlKind.Selector, "Tam. papel"), tone, At(Col(1), r0), sealBench);
+            Control(p, material, new Ctl(LabFieldVar.X, LabControlKind.Slider, "Lado"), tone, At(Col(0), r1), sealBench);
+            Control(p, material, new Ctl(LabFieldVar.Distance, LabControlKind.Slider, "Distancia"), tone, At(Col(1), r1), sealBench);
+            Control(p, material, new Ctl(LabFieldVar.Yaw, LabControlKind.Knob, "Giro"), tone, At(Col(0), r2), sealBench);
+            Control(p, material, new Ctl(LabFieldVar.Height, LabControlKind.Slider, "Altura"), tone, At(Col(1), r2), sealBench);
+            Control(p, material, new Ctl(LabFieldVar.Tilt, LabControlKind.Knob, "Inclinac."), tone, At(0f, r3), sealBench);
+            FinishFacet(p, material, body, "Lab_FacetObjects");
+        }
+
+        /// <summary>Derecha afuera: «Viento y fuego»: + Viento / + Fuego / Reiniciar entorno, perillas del viento, del fuego y la masa de la caja.</summary>
+        private static void EnvFacet(Transform bench, Material material, LabSealBench sealBench)
+        {
+            Transform p = Facet(bench, material, LabBenchLayout.RightOuter, "LabFacet_Env", "Viento y fuego",
+                "Agregá viento o fuego y ajustalos en vivo. La masa vale para la caja elegida y las nuevas.", out LowPolyMesh body);
+            var wind = new Tone(WindGroup, "Wind");
+            var fire = new Tone(FireGroup, "Fire");
+            var box = new Tone(BoxGroup, "Box");
+            float bp = LabBenchLayout.ButtonPitch, bw = LabBenchLayout.ButtonWidth, bd = LabBenchLayout.ButtonDepth;
+            Band(p, body, Row(0) - 0.07f, Row(0) + 0.07f, LabPalette.Neutral, null);
+            MaterializeButton(p, material, LabSpawnKind.Wind, "+ Viento", WindGroup, At(-bp, Row(0)), ButtonIcon.Wind);
+            MaterializeButton(p, material, LabSpawnKind.Fire, "+ Fuego", FireGroup, At(0f, Row(0)), ButtonIcon.Fire);
+            var reset = Button(p, material, "LabReset", "Lab_ButtonReset", "Reiniciar\nentorno", NeutralButton, At(bp, Row(0)), bw, bd, 0.15f, ButtonIcon.Reset);
+            Assign(reset.AddComponent<LabResetButton>(), "highlight", reset.GetComponent<MeshRenderer>());
+
+            Band(p, body, Row(1) - 0.08f, Row(1) + 0.08f, wind.Color, "Viento");
+            Control(p, material, new Ctl(LabVariableId.WindYaw, LabControlKind.Knob, "Dirección"), wind, At(Col(0), Row(1)), sealBench);
+            Control(p, material, new Ctl(LabVariableId.WindSpeed, LabControlKind.Slider, "Velocidad"), wind, At(Col(1), Row(1)), sealBench);
+            Band(p, body, Row(3) - 0.08f, Row(2) + 0.08f, fire.Color, "Fuego");
+            Control(p, material, new Ctl(LabVariableId.FireSeedRadius, LabControlKind.Slider, "Semilla"), fire, At(Col(0), Row(2)), sealBench);
+            Control(p, material, new Ctl(LabVariableId.FireDecay, LabControlKind.Slider, "Merma"), fire, At(Col(1), Row(2)), sealBench);
+            Control(p, material, new Ctl(LabVariableId.FireMaxGenerations, LabControlKind.Knob, "Generac."), fire, At(Col(0), Row(3)), sealBench);
+            Band(p, body, Row(4) - 0.08f, Row(4) + 0.08f, box.Color, "Caja");
+            Control(p, material, new Ctl(LabVariableId.Mass, LabControlKind.Selector, "Masa caja"), box, At(0f, Row(4)), sealBench);
+            FinishFacet(p, material, body, "Lab_FacetEnv");
         }
 
         /// <summary>
-        /// Fila de controles centrada en el panel (corrida <paramref name="shiftX"/>). Con <paramref name="spineTitle"/> el titulo
-        /// del grupo va acostado en el margen izquierdo (consola de entorno); la del sello usa la pestaña de grupo (GroupTab).
+        /// Grilla de iconos (LabGlyphGrid): las celdas las arma el runtime con el diccionario; aca el marco dorado de la elegida
+        /// y la configuracion. <paramref name="nameText"/> = titulo del margen, que pasa a mostrar «Sigilo: Fuego».
         /// </summary>
-        private static void ControlRow(Transform panel, Material material, Row row, float z, LabSealBench bench, float shiftX, bool spineTitle)
+        private static void Grid(Transform panel, Material material, LabSealVarId variable, float sCenter, int rows, string prefix,
+            TextMeshPro nameText, LabSealBench bench, Material iconMaterial)
         {
-            int n = row.Controls.Length;
-            if (n > LabPanelLayout.MaxPerRow(RowSpan))
-                Debug.LogWarning($"[MapLab] la fila «{row.Title}» tiene {n} controles: no entran a paso {LabPanelLayout.MinControlPitch} m (partila en dos).");
-            float pitch = LabPanelLayout.MinControlPitch;
+            var go = Child(panel, "LabGrid_" + variable, At(0f, sCenter));
+            var frame = Part("Selection", go.transform, SelectionFrameMesh(), material, new Vector3(0f, 0.0005f, 0f), Quaternion.identity);
+            frame.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            var grid = go.AddComponent<LabGlyphGrid>();
+            grid.Configure(variable, bench, iconMaterial, frame.transform, nameText, rows, prefix);
+            EditorUtility.SetDirty(grid);
+        }
 
-            if (spineTitle)
+        /// <summary>Lista de objetos del campo: casilla «P» (papel) y 1..4 (cajas), contiguas, ≥ 8,5 cm cada una.</summary>
+        private static void FieldSlots(Transform panel, Material material, float s)
+        {
+            float cell = LabBenchLayout.CellPitch;
+            for (int i = 0; i < LabField.SlotCount; i++)
             {
-                // Titulo del grupo: se lee subiendo la pendiente, en el margen izquierdo, sobre la franja.
-                Quaternion spine = Quaternion.AngleAxis(-90f, Vector3.up) * Lying;
-                var title = Text(panel, "Group_" + row.Key + "_" + Mathf.RoundToInt(z * 1000f),
-                    new Vector3(-PanelWidth * 0.5f + 0.03f, LabPanelLayout.TextY(LabPanelLayout.SurfaceTop), z), spine,
-                    new Vector2(StripDepth, 0.045f), LabPanelLayout.TitleFontSize, row.Color, row.Title);
-                title.fontStyle = FontStyles.Bold;
-            }
-
-            for (int i = 0; i < n; i++)
-            {
-                float x = shiftX + (i - (n - 1) * 0.5f) * pitch;
-                Control(panel, material, row.Controls[i], row, new Vector3(x, LabPanelLayout.SurfaceTop, z), bench);
+                var go = Part("LabFieldSlot_" + i, panel, SlotMesh(i == 0), material,
+                    At((i - (LabField.SlotCount - 1) * 0.5f) * cell, s), Quaternion.identity);
+                var col = go.AddComponent<BoxCollider>();
+                col.isTrigger = true;
+                col.center = new Vector3(0f, 0.015f, 0f);
+                col.size = new Vector3(cell, 0.03f, cell);
+                var label = Text(go.transform, "Label", new Vector3(0f, LabPanelLayout.TextY(0.01f), 0f), Lying, new Vector2(cell - 0.01f, cell - 0.01f),
+                    0.34f, TextDark, i == 0 ? "P" : i.ToString());
+                label.fontStyle = FontStyles.Bold;
+                go.AddComponent<LabFieldSlot>().Configure(i, go.GetComponent<MeshRenderer>());
+                EditorUtility.SetDirty(go.GetComponent<LabFieldSlot>());
             }
         }
 
@@ -925,7 +839,7 @@ namespace SpellSimulator.EditorTools.Map
         /// que se resalta al apuntar), rotulo oscuro sobre plaquita crema arriba y lectura clara en ventanita oscura abajo.
         /// LabControl + LabControlBinding (enlace en runtime). <paramref name="at"/>.y es el tope de la franja.
         /// </summary>
-        private static void Control(Transform panel, Material material, Ctl c, Row row, Vector3 at, LabSealBench bench)
+        private static void Control(Transform panel, Material material, Ctl c, Tone tone, Vector3 at, LabSealBench bench)
         {
             if (!LabPanelLayout.LabelFits(c.Label))
                 Debug.LogWarning($"[MapLab] el rotulo «{c.Label}» pasa de {LabPanelLayout.MaxLabelChars} caracteres: se corta con «…».");
@@ -938,8 +852,8 @@ namespace SpellSimulator.EditorTools.Map
             Transform movable, railStart = null, railEnd = null;
             if (c.Kind == LabControlKind.Slider)
             {
-                col.size = new Vector3(RailHalf * 2f + 0.04f, 0.06f, 0.09f);
-                var handle = Part("Handle", go.transform, HandleMesh(row), material, new Vector3(0f, RailY, 0f), Quaternion.identity);
+                col.size = new Vector3(RailHalf * 2f + 0.04f, 0.06f, 0.095f);
+                var handle = Part("Handle", go.transform, HandleMesh(tone), material, new Vector3(0f, RailY, 0f), Quaternion.identity);
                 Part("Rail", go.transform, RailMesh(ticks, defaultFraction), material, Vector3.zero, Quaternion.identity);
                 railStart = Child(go.transform, "RailStart", new Vector3(-RailHalf, RailY, 0f)).transform;
                 railEnd = Child(go.transform, "RailEnd", new Vector3(RailHalf, RailY, 0f)).transform;
@@ -951,7 +865,7 @@ namespace SpellSimulator.EditorTools.Map
                 // LabControl gira la pieza sobre su Z local: el pivote apunta su Z a la normal del panel; la tapa se gira de vuelta.
                 var pivot = Child(go.transform, "Pivot", Vector3.zero).transform;
                 pivot.localRotation = Quaternion.Euler(-90f, 0f, 0f);
-                Part("Cap", pivot, c.Kind == LabControlKind.Selector ? SelectorMesh(row) : KnobMesh(row), material, Vector3.zero, Quaternion.Euler(90f, 0f, 0f));
+                Part("Cap", pivot, c.Kind == LabControlKind.Selector ? SelectorMesh(tone) : KnobMesh(tone), material, Vector3.zero, Quaternion.Euler(90f, 0f, 0f));
                 Part("Dial", go.transform, DialMesh(ticks, defaultFraction), material, Vector3.zero, Quaternion.identity);
                 movable = pivot;
             }
@@ -973,29 +887,29 @@ namespace SpellSimulator.EditorTools.Map
             controlCount++;
         }
 
-        private static Mesh KnobMesh(Row row) => Cached("Lab_Knob_" + row.Key, () =>
+        private static Mesh KnobMesh(Tone tone) => Cached("Lab_Knob_" + tone.Key, () =>
         {
             var b = new LowPolyMesh();
-            b.Frustum(Matrix4x4.identity, KnobRadius, KnobRadius, 0f, 0.012f, 10, Darken(row.Color, 0.6f));
-            b.Frustum(Matrix4x4.identity, KnobRadius - 0.005f, KnobRadius - 0.012f, 0.012f, 0.04f, 10, row.Color);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.041f, 0.018f)), new Vector3(0.01f, 0.004f, 0.026f), TextLight);
+            b.Frustum(Matrix4x4.identity, KnobRadius, KnobRadius, 0f, 0.012f, 10, Darken(tone.Color, 0.6f));
+            b.Frustum(Matrix4x4.identity, KnobRadius - 0.005f, KnobRadius - 0.012f, 0.012f, 0.038f, 10, tone.Color);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.039f, 0.015f)), new Vector3(0.009f, 0.004f, 0.022f), TextLight);
             return b;
         });
 
-        private static Mesh SelectorMesh(Row row) => Cached("Lab_Selector_" + row.Key, () =>
+        private static Mesh SelectorMesh(Tone tone) => Cached("Lab_Selector_" + tone.Key, () =>
         {
             var b = new LowPolyMesh();
-            b.Frustum(Matrix4x4.identity, 0.04f, 0.04f, 0f, 0.012f, 10, Darken(row.Color, 0.6f));
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.026f, 0.004f)), new Vector3(0.024f, 0.03f, 0.085f), Darken(row.Color, 0.85f), row.Color);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.043f, 0.03f)), new Vector3(0.012f, 0.004f, 0.022f), TextLight);
+            b.Frustum(Matrix4x4.identity, 0.036f, 0.036f, 0f, 0.012f, 10, Darken(tone.Color, 0.6f));
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.026f, 0.003f)), new Vector3(0.024f, 0.03f, 0.07f), Darken(tone.Color, 0.85f), tone.Color);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.043f, 0.024f)), new Vector3(0.012f, 0.004f, 0.018f), TextLight);
             return b;
         });
 
-        private static Mesh HandleMesh(Row row) => Cached("Lab_Handle_" + row.Key, () =>
+        private static Mesh HandleMesh(Tone tone) => Cached("Lab_Handle_" + tone.Key, () =>
         {
             var b = new LowPolyMesh();
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.014f, 0f)), new Vector3(0.026f, 0.028f, 0.05f), Darken(row.Color, 0.8f), row.Color);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.029f, 0f)), new Vector3(0.006f, 0.003f, 0.04f), TextLight);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.014f, 0f)), new Vector3(0.026f, 0.028f, 0.046f), Darken(tone.Color, 0.8f), tone.Color);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.029f, 0f)), new Vector3(0.006f, 0.003f, 0.036f), TextLight);
             return b;
         });
 
@@ -1028,7 +942,7 @@ namespace SpellSimulator.EditorTools.Map
             }
             else
             {
-                var id = (LabSealVarId)c.Var;
+                var id = c.Source == LabControlSource.Field ? LabField.SealVar((LabFieldVar)c.Var) : (LabSealVarId)c.Var;
                 LabSealVarDef def = LabSealCatalog.Get(id);
                 switch (id)
                 {
@@ -1063,20 +977,20 @@ namespace SpellSimulator.EditorTools.Map
 
         /// <summary>
         /// Base de la perilla/selector sobre el recorrido de LabControl (−120°..+120°): muescas grandes de bronce en el minimo y el
-        /// maximo, chicas en cada paso (selector de 9 presets, etc.) y una dorada mas alta en el valor por defecto. Todas terminan
-        /// antes de r = 0.061 para no meterse bajo el rotulo (plaquita desde z = 0.063).
+        /// maximo, chicas en cada paso y una dorada en el valor por defecto. Todas terminan antes de r = 0.053 para no meterse
+        /// bajo el rotulo (plaquita desde z = 0.054).
         /// </summary>
         private static Mesh DialMesh(int ticks, float defaultFraction) =>
             Cached($"Lab_Dial_{ticks}_{Mathf.RoundToInt(defaultFraction * 1000f)}", () =>
         {
             var b = new LowPolyMesh();
-            b.Frustum(Matrix4x4.identity, 0.05f, 0.05f, 0f, 0.004f, 12, DialColor);
+            b.Frustum(Matrix4x4.identity, DialRadius, DialRadius, 0f, 0.004f, 12, DialColor);
             for (int i = 1; i < ticks - 1; i++)
-                DialTick(b, Mathf.Lerp(-120f, 120f, i / (float)(ticks - 1)), 0.053f, new Vector3(0.004f, 0.005f, 0.01f), Brass);
-            DialTick(b, -120f, 0.054f, new Vector3(0.007f, 0.006f, 0.012f), Brass);
-            DialTick(b, 120f, 0.054f, new Vector3(0.007f, 0.006f, 0.012f), Brass);
+                DialTick(b, Mathf.Lerp(-120f, 120f, i / (float)(ticks - 1)), 0.047f, new Vector3(0.004f, 0.005f, 0.008f), Brass);
+            DialTick(b, -120f, 0.048f, new Vector3(0.007f, 0.006f, 0.008f), Brass);
+            DialTick(b, 120f, 0.048f, new Vector3(0.007f, 0.006f, 0.008f), Brass);
             if (defaultFraction >= 0f)
-                DialTick(b, Mathf.Lerp(-120f, 120f, defaultFraction), 0.055f, new Vector3(0.008f, 0.008f, 0.012f), DefaultMark);
+                DialTick(b, Mathf.Lerp(-120f, 120f, defaultFraction), 0.048f, new Vector3(0.008f, 0.008f, 0.008f), DefaultMark);
             return b;
         });
 
@@ -1087,7 +1001,7 @@ namespace SpellSimulator.EditorTools.Map
         }
 
         /// <summary>Plaquita crema del rotulo: apoya sobre la franja y sube LabPanelLayout.PlaqueHeight (3 mm).</summary>
-        private static Mesh PlaqueMesh() => Cached("Lab_Plaque", () =>
+        private static Mesh PlaqueMesh() => Cached("Lab_Plaque_v4", () =>
         {
             var b = new LowPolyMesh();
             b.Box(Matrix4x4.Translate(new Vector3(0f, LabPanelLayout.PlaqueHeight * 0.5f, 0f)), new Vector3(PlaqueWidth, LabPanelLayout.PlaqueHeight, LabelDepth), PlaqueCream);
@@ -1095,17 +1009,14 @@ namespace SpellSimulator.EditorTools.Map
         });
 
         /// <summary>Ventanita oscura de la lectura, a la misma altura que la plaquita.</summary>
-        private static Mesh WindowMesh() => Cached("Lab_ReadoutWindow", () =>
+        private static Mesh WindowMesh() => Cached("Lab_ReadoutWindow_v4", () =>
         {
             var b = new LowPolyMesh();
             b.Box(Matrix4x4.Translate(new Vector3(0f, LabPanelLayout.PlaqueHeight * 0.5f, 0f)), new Vector3(PlaqueWidth, LabPanelLayout.PlaqueHeight, ReadoutDepth), WindowDark);
             return b;
         });
 
-        /// <summary>
-        /// Riel del deslizador: topes de bronce en el minimo y el maximo, muescas chicas en cada paso (si hay) del lado del jugador
-        /// y una dorada mas alta en el valor por defecto.
-        /// </summary>
+        /// <summary>Riel del deslizador: topes de bronce en el minimo y el maximo, muescas en cada paso (si hay) y una dorada en el valor por defecto.</summary>
         private static Mesh RailMesh(int ticks, float defaultFraction) =>
             Cached($"Lab_Rail_{ticks}_{Mathf.RoundToInt(defaultFraction * 1000f)}", () =>
         {
@@ -1120,39 +1031,378 @@ namespace SpellSimulator.EditorTools.Map
             return b;
         });
 
-        /// <summary>Fila de botones de la consola de entorno: materializar caja, viento y fuego, y «Todo por defecto» (LabReset).</summary>
-        private static void MaterializeRow(Transform panel, Material material, float z)
+        /// <summary>Marco dorado (brilla con el bloom) de la celda elegida de una grilla: un poco mas grande que el icono y debajo de el.</summary>
+        private static Mesh SelectionFrameMesh() => Cached("Lab_GridSelection", () =>
         {
-            MaterializeButton(panel, material, LabSpawnKind.Box, "Materializar\ncaja", BoxGroup, new Vector3(-1.5f * ButtonPitch, 0f, z));
-            MaterializeButton(panel, material, LabSpawnKind.Wind, "Materializar\nviento", WindGroup, new Vector3(-0.5f * ButtonPitch, 0f, z));
-            MaterializeButton(panel, material, LabSpawnKind.Fire, "Materializar\nfuego", FireGroup, new Vector3(0.5f * ButtonPitch, 0f, z));
-            var go = Button(panel, material, "LabReset", "Lab_ButtonReset", "Todo por\ndefecto", ResetColor, new Vector3(1.5f * ButtonPitch, 0f, z), 0.18f, 0.13f, 0.24f);
-            Assign(go.AddComponent<LabResetButton>(), "highlight", go.GetComponent<MeshRenderer>());
-        }
+            var b = new LowPolyMesh();
+            float c = LabBenchLayout.CellPitch, bar = 0.008f, h = 0.004f;
+            foreach (float s in new[] { -1f, 1f })
+            {
+                b.Box(Matrix4x4.Translate(new Vector3(0f, h * 0.5f, s * (c * 0.5f - bar * 0.5f))), new Vector3(c, h, bar), RingGlow);
+                b.Box(Matrix4x4.Translate(new Vector3(s * (c * 0.5f - bar * 0.5f), h * 0.5f, 0f)), new Vector3(bar, h, c), RingGlow);
+            }
+            return b;
+        });
 
-        private static void MaterializeButton(Transform parent, Material material, LabSpawnKind kind, string text, Color color, Vector3 local)
+        /// <summary>Casilla de la lista de objetos (placa con borde; la tiñe LabFieldSlot).</summary>
+        private static Mesh SlotMesh(bool paper) => Cached(paper ? "Lab_SlotPaper" : "Lab_SlotBox", () =>
         {
-            var go = Button(parent, material, "LabMaterialize_" + kind, "Lab_Button" + kind, text, color, local, 0.18f, 0.13f, 0.18f);
+            var b = new LowPolyMesh();
+            float c = LabBenchLayout.CellPitch - 0.008f;
+            Color face = paper ? Color.Lerp(LabPalette.Paper, Color.white, 0.55f) : BoxGroup;
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.005f, 0f)), new Vector3(c, 0.01f, c), Darken(face, 0.7f), face);
+            return b;
+        });
+
+        /// <summary>Poste del papel del campo: alto 1 m en Y con el pivote abajo (el banco lo estira hasta el papel).</summary>
+        private static Mesh StandMesh() => Cached("Lab_PaperStand", () =>
+        {
+            var b = new LowPolyMesh();
+            b.Frustum(Matrix4x4.identity, 0.03f, 0.022f, 0f, 1f, 6, WoodB);
+            b.Frustum(Matrix4x4.identity, 0.12f, 0.1f, 0f, 0.03f, 8, StoneB, true);
+            return b;
+        });
+
+        /// <summary>Aro luminoso del objeto elegido (radio 0,6 m) con cuatro marcas hacia adentro.</summary>
+        private static Mesh SelectionRingMesh() => Cached("Lab_SelectionRing", () =>
+        {
+            var b = new LowPolyMesh();
+            const int segments = 24;
+            const float r = 0.6f;
+            for (int i = 0; i < segments; i++)
+            {
+                float a0 = i * Mathf.PI * 2f / segments, a1 = (i + 1) * Mathf.PI * 2f / segments;
+                Vector3 p0 = new Vector3(Mathf.Cos(a0) * r, 0f, Mathf.Sin(a0) * r), p1 = new Vector3(Mathf.Cos(a1) * r, 0f, Mathf.Sin(a1) * r);
+                b.Box(Matrix4x4.TRS((p0 + p1) * 0.5f, Quaternion.LookRotation(p1 - p0), Vector3.one), new Vector3(0.04f, 0.02f, (p1 - p0).magnitude + 0.01f), RingGlow);
+            }
+            for (int i = 0; i < 4; i++)
+            {
+                float a = i * Mathf.PI * 0.5f;
+                var dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                b.Box(Matrix4x4.TRS(dir * (r - 0.09f), Quaternion.LookRotation(dir), Vector3.one), new Vector3(0.03f, 0.02f, 0.12f), RingGlow);
+            }
+            return b;
+        });
+
+        // ---------------------------------------------------------------- botones
+
+        private enum ButtonIcon { None, Box, Wind, Fire, Reset, Cross, Eraser }
+
+        private static void MaterializeButton(Transform parent, Material material, LabSpawnKind kind, string text, Color color, Vector3 local, ButtonIcon icon)
+        {
+            var go = Button(parent, material, "LabMaterialize_" + kind, "Lab_Button" + kind, text, color, local,
+                LabBenchLayout.ButtonWidth, LabBenchLayout.ButtonDepth, 0.16f, icon);
             var button = go.AddComponent<LabMaterializeButton>();
             AssignInt(button, "kind", (int)kind);
             Assign(button, "highlight", go.GetComponent<MeshRenderer>());
         }
 
-        /// <summary>Boton plano (base de madera + tapa de color) con el rotulo acostado encima (tamaño fijo) y collider disparador.</summary>
+        /// <summary>
+        /// Boton plano (base de madera + tapa de color) con icono grande opcional y rotulo acostado (tamaño fijo, ≥ 1,5 cm) y
+        /// collider disparador. <paramref name="iconAbove"/>: icono arriba y texto abajo (botones angostos); si no, icono a la izquierda.
+        /// </summary>
         private static GameObject Button(Transform parent, Material material, string name, string meshName, string text, Color color,
-            Vector3 local, float width, float depth, float fontSize)
+            Vector3 local, float width, float depth, float fontSize, ButtonIcon icon, bool iconAbove = false)
         {
             var b = new LowPolyMesh();
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.015f, 0f)), new Vector3(width, 0.03f, depth), ButtonBase);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.045f, 0f)), new Vector3(width - 0.03f, ButtonTop - 0.03f, depth - 0.03f), Darken(color, 0.85f), color);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.012f, 0f)), new Vector3(width, 0.024f, depth), ButtonBase);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.037f, 0f)), new Vector3(width - 0.02f, ButtonTop - 0.024f, depth - 0.02f), Darken(color, 0.85f), color);
+            Vector3 iconAt = Vector3.zero;
+            Vector2 textSize = new Vector2(width - 0.03f, depth - 0.025f);
+            Vector3 textAt = Vector3.zero;
+            if (icon != ButtonIcon.None)
+            {
+                if (iconAbove)
+                {
+                    iconAt = new Vector3(0f, ButtonTop, depth * 0.5f - 0.032f);
+                    textAt = new Vector3(0f, 0f, -0.014f);
+                    textSize = new Vector2(width - 0.012f, depth - 0.06f);
+                }
+                else
+                {
+                    iconAt = new Vector3(-width * 0.5f + 0.03f, ButtonTop, 0f);
+                    textAt = new Vector3(0.022f, 0f, 0f);
+                    textSize = new Vector2(width - 0.055f, depth - 0.02f);
+                }
+                Icon(b, icon, iconAt);
+            }
             var go = Part(name, parent, Save(meshName, b), material, local, Quaternion.identity);
             var col = go.AddComponent<BoxCollider>();
             col.isTrigger = true;
-            col.center = new Vector3(0f, 0.045f, 0f);
-            col.size = new Vector3(width, 0.09f, depth);
-            var label = Text(go.transform, "Label", new Vector3(0f, LabPanelLayout.TextY(ButtonTop), 0f), Lying, new Vector2(width - 0.035f, depth - 0.035f), fontSize, TextDark, text);
+            col.center = new Vector3(0f, 0.04f, 0f);
+            col.size = new Vector3(Mathf.Max(width, 0.09f), 0.08f, Mathf.Max(depth, 0.09f));
+            var label = Text(go.transform, "Label", new Vector3(textAt.x, LabPanelLayout.TextY(ButtonTop), textAt.z), Lying, textSize, fontSize, TextDark, text);
             label.fontStyle = FontStyles.Bold;
             return go;
+        }
+
+        /// <summary>Icono acostado sobre la tapa (≈ 4 cm), en tinta oscura (o en color para fuego/caja).</summary>
+        private static void Icon(LowPolyMesh b, ButtonIcon icon, Vector3 at)
+        {
+            Vector3 up = Vector3.up * 0.0015f;
+            switch (icon)
+            {
+                case ButtonIcon.Reset:
+                    ResetArc(b, at + up, 0.018f);
+                    break;
+                case ButtonIcon.Box:
+                    b.Box(Matrix4x4.Translate(at + new Vector3(0f, 0.008f, 0f)), new Vector3(0.03f, 0.016f, 0.03f), Darken(BoxGroup, 0.55f), Darken(BoxGroup, 0.8f));
+                    b.Box(Matrix4x4.Translate(at + new Vector3(0f, 0.0165f, 0f)), new Vector3(0.032f, 0.002f, 0.004f), TextDark);
+                    break;
+                case ButtonIcon.Wind:
+                    for (int i = 0; i < 3; i++)
+                        b.Box(Matrix4x4.Translate(at + new Vector3(-0.004f * i, 0.002f, 0.012f - 0.012f * i)), new Vector3(0.034f - 0.008f * i, 0.003f, 0.005f), TextDark);
+                    break;
+                case ButtonIcon.Fire:
+                    b.Tri(at + new Vector3(-0.015f, 0.003f, -0.016f), at + new Vector3(0f, 0.003f, 0.02f), at + new Vector3(0.015f, 0.003f, -0.016f), new Color(0.8f, 0.2f, 0.08f));
+                    b.Tri(at + new Vector3(-0.008f, 0.004f, -0.014f), at + new Vector3(0f, 0.004f, 0.006f), at + new Vector3(0.008f, 0.004f, -0.014f), new Color(1f, 0.85f, 0.3f));
+                    break;
+                case ButtonIcon.Cross:
+                    foreach (float yaw in new[] { 45f, -45f })
+                        b.Box(Matrix4x4.TRS(at + new Vector3(0f, 0.002f, 0f), Quaternion.Euler(0f, yaw, 0f), Vector3.one), new Vector3(0.006f, 0.003f, 0.036f), TextDark);
+                    break;
+                case ButtonIcon.Eraser:
+                    b.Box(Matrix4x4.TRS(at + new Vector3(0f, 0.006f, 0f), Quaternion.Euler(0f, 30f, 0f), Vector3.one), new Vector3(0.034f, 0.012f, 0.016f), new Color(0.93f, 0.62f, 0.66f));
+                    break;
+            }
+        }
+
+        /// <summary>↺: arco de 300° con la punta al final (malla: la fuente TMP no trae la flecha circular).</summary>
+        private static void ResetArc(LowPolyMesh b, Vector3 center, float radius)
+        {
+            const int segments = 9;
+            for (int i = 0; i < segments; i++)
+            {
+                float a0 = (50f + 300f * i / segments) * Mathf.Deg2Rad, a1 = (50f + 300f * (i + 1) / segments) * Mathf.Deg2Rad;
+                Vector3 p0 = center + new Vector3(Mathf.Sin(a0) * radius, 0f, Mathf.Cos(a0) * radius);
+                Vector3 p1 = center + new Vector3(Mathf.Sin(a1) * radius, 0f, Mathf.Cos(a1) * radius);
+                b.Box(Matrix4x4.TRS((p0 + p1) * 0.5f, Quaternion.LookRotation(p1 - p0), Vector3.one), new Vector3(0.006f, 0.003f, (p1 - p0).magnitude + 0.002f), TextDark);
+            }
+            float end = 350f * Mathf.Deg2Rad;
+            Vector3 tip = center + new Vector3(Mathf.Sin(end) * radius, 0f, Mathf.Cos(end) * radius);
+            Vector3 along = new Vector3(Mathf.Cos(end), 0f, -Mathf.Sin(end)), outward = new Vector3(Mathf.Sin(end), 0f, Mathf.Cos(end));
+            Vector3 lift = Vector3.up * 0.0015f;
+            b.Tri(tip + outward * 0.011f + lift, tip + along * 0.014f + lift, tip - outward * 0.011f + lift, TextDark);
+            b.Tri(tip - outward * 0.011f + lift, tip + along * 0.014f + lift, tip + outward * 0.011f + lift, TextDark);
+        }
+
+        // ---------------------------------------------------------------- cartel «Vas a lanzar» y datos con lentes
+
+        /// <summary>
+        /// Cartel fisico «Vas a lanzar» (se ve siempre): madera con marco biselado, pergamino, titulo con ornamentos, una fila por
+        /// dato con un rombo del color de su grupo, y abajo la tira de ayuda de la mesa de adelante. Al lado flotan (solo con
+        /// lentes, LabLensGate) la banda de resultado y la lectura del atril.
+        /// </summary>
+        private static void Cartel(Transform bench, Material material, LabSealBench sealBench, SpellCaster caster, Transform front)
+        {
+            Quaternion facing = Quaternion.LookRotation(Flat(CartelLocal));
+            var go = Child(bench, "LabCartel", CartelLocal);
+            go.transform.localRotation = facing;
+            const float W = CartelWidth, H = CartelHeight, bottom = CartelBottom;
+            float mid = bottom + H * 0.5f, top = bottom + H;
+            var b = new LowPolyMesh();
+            foreach (float sx in new[] { -1f, 1f })
+            {
+                b.Box(Matrix4x4.Translate(new Vector3(sx * (W * 0.5f + 0.05f), (top + 0.08f) * 0.5f, 0.03f)), new Vector3(0.06f, top + 0.08f, 0.06f), WoodB);
+                b.Frustum(Matrix4x4.Translate(new Vector3(sx * (W * 0.5f + 0.05f), top + 0.08f, 0.03f)), 0.045f, 0f, 0f, 0.07f, 6, Brass, false);
+            }
+            // Marco biselado: tabla oscura, filete claro y pergamino (cara en z = −0.013).
+            b.Box(Matrix4x4.Translate(new Vector3(0f, mid, 0.025f)), new Vector3(W + 0.1f, H + 0.1f, 0.05f), WoodB);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, mid, -0.002f)), new Vector3(W + 0.04f, H + 0.04f, 0.01f), WoodA);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, mid, -0.008f)), new Vector3(W + 0.01f, H + 0.01f, 0.004f), ParchmentEdge);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, mid, -0.011f)), new Vector3(W, H, 0.004f), Parchment);
+            const float face = -0.013f;
+            // Titulo con ornamentos (rombos de laton y filete).
+            float titleY = top - 0.055f;
+            foreach (float sx in new[] { -1f, 1f })
+            {
+                b.Box(Matrix4x4.TRS(new Vector3(sx * 0.27f, titleY, face - 0.002f), Quaternion.Euler(0f, 0f, 45f), Vector3.one), new Vector3(0.022f, 0.022f, 0.004f), Brass);
+                b.Box(Matrix4x4.Translate(new Vector3(sx * 0.33f, titleY, face - 0.001f)), new Vector3(0.07f, 0.004f, 0.002f), Brass);
+            }
+            b.Box(Matrix4x4.Translate(new Vector3(0f, titleY - 0.045f, face - 0.001f)), new Vector3(W - 0.12f, 0.004f, 0.002f), ParchmentEdge);
+            // Filas: rombo del color del grupo a la izquierda.
+            const float rowTop = 0.11f, rowPitch = 0.064f;
+            for (int i = 0; i < LabSealSummary.RowCount; i++)
+            {
+                float y = top - rowTop - 0.03f - i * rowPitch;
+                b.Box(Matrix4x4.TRS(new Vector3(-W * 0.5f + 0.045f, y, face - 0.002f), Quaternion.Euler(0f, 0f, 45f), Vector3.one),
+                    new Vector3(0.022f, 0.022f, 0.004f), LabPalette.Group(LabSealSummary.RowGroup(i)));
+            }
+            // Tira de ayuda (placa oscura) abajo.
+            const float helpH = 0.1f;
+            float helpY = bottom + helpH * 0.5f + 0.02f;
+            b.Box(Matrix4x4.Translate(new Vector3(0f, helpY, face - 0.002f)), new Vector3(W - 0.04f, helpH, 0.004f), WindowDark);
+            var board = Part("Board", go.transform, Save("Lab_Cartel", b), material, Vector3.zero, Quaternion.identity);
+            board.isStatic = true;
+
+            float textZ = face - LabPanelLayout.TextLift;
+            var title = Text(go.transform, "Title", new Vector3(0f, titleY, textZ), Quaternion.identity, new Vector2(0.46f, 0.07f), 0.5f,
+                new Color(0.35f, 0.17f, 0.06f), "Vas a lanzar");
+            title.fontStyle = FontStyles.Bold | FontStyles.SmallCaps;
+            var rows = new TextMeshPro[LabSealSummary.RowCount];
+            for (int i = 0; i < rows.Length; i++)
+            {
+                float y = top - rowTop - 0.03f - i * rowPitch;
+                rows[i] = Text(go.transform, "Row_" + i, new Vector3(0.025f, y, textZ), Quaternion.identity, new Vector2(W - 0.11f, 0.055f), 0.27f, TextDark,
+                    LabSealSummary.RowLabel(i) + "   -");
+                rows[i].alignment = TextAlignmentOptions.Left;
+            }
+            const string idle = "Dibujá en el atril o usá los controles de la izquierda.\nDespués tocá LANZAR: sale del papel del campo.";
+            var help = Text(go.transform, "Help", new Vector3(0f, helpY, face - 0.004f - LabPanelLayout.TextLift), Quaternion.identity,
+                new Vector2(W - 0.08f, helpH - 0.015f), 0.18f, TextLight, idle);
+            help.textWrappingMode = TextWrappingModes.Normal;
+            var strip = go.AddComponent<LabHelpStrip>();
+            strip.Configure(help, front, idle);
+            EditorUtility.SetDirty(strip);
+
+            // Solo con lentes: banda de resultado y lectura del atril.
+            TextMeshPro result = LensBoard(bench, material, "LabLensResult", ResultLocal, new Vector2(0.62f, 0.15f), 0.19f, "Todavía no lanzaste", out Renderer band);
+            TextMeshPro padInfo = LensBoard(bench, material, "LabLensPad", PadInfoLocal, new Vector2(0.42f, 0.06f), 0.17f, "Atril vacío", out _);
+
+            var display = go.AddComponent<LabBenchDisplay>();
+            var so = new SerializedObject(display);
+            so.FindProperty("bench").objectReferenceValue = sealBench;
+            var rowsProp = so.FindProperty("rowTexts");
+            rowsProp.arraySize = rows.Length;
+            for (int i = 0; i < rows.Length; i++) rowsProp.GetArrayElementAtIndex(i).objectReferenceValue = rows[i];
+            so.FindProperty("resultText").objectReferenceValue = result;
+            so.FindProperty("resultBand").objectReferenceValue = band;
+            so.FindProperty("padInfoText").objectReferenceValue = padInfo;
+            so.FindProperty("caster").objectReferenceValue = caster;
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            var arrow = Part("LabPaperArrow", bench.parent, ArrowMesh(), material, Vector3.zero, Quaternion.identity);
+            arrow.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            Assign(display, "paperArrow", arrow.transform);
+            EditorUtility.SetDirty(display);
+        }
+
+        /// <summary>
+        /// Placa flotante de datos que solo se ve con lentes, cerca y mirandola (LabLensGate sobre la raiz; el contenido es el hijo
+        /// «Content»): placa oscura, banda clara (la tiñe LabBenchDisplay) y texto 6 mm por delante. Mira al jugador.
+        /// </summary>
+        private static TextMeshPro LensBoard(Transform bench, Material material, string name, Vector3 local, Vector2 size, float fontSize, string text, out Renderer band)
+        {
+            var go = Child(bench, name, local);
+            go.transform.localRotation = Quaternion.LookRotation(Flat(local).sqrMagnitude > 1e-4f ? Flat(local) : Vector3.forward);
+            var content = Child(go.transform, "Content", Vector3.zero);
+            var b = new LowPolyMesh();
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0f, 0.006f)), new Vector3(size.x + 0.03f, size.y + 0.03f, 0.006f), WindowDark);
+            Part("Plate", content.transform, Save("Lab_LensPlate_" + name, b), material, Vector3.zero, Quaternion.identity)
+                .GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            var bandMesh = new LowPolyMesh();
+            bandMesh.Box(Matrix4x4.Translate(new Vector3(0f, 0f, 0.001f)), new Vector3(size.x, size.y, 0.002f), BandBase);
+            var bandGo = Part("Band", content.transform, Save("Lab_LensBand_" + name, bandMesh), material, Vector3.zero, Quaternion.identity);
+            band = bandGo.GetComponent<MeshRenderer>();
+            band.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            var label = Text(content.transform, "Text", new Vector3(0f, 0f, -LabPanelLayout.TextLift), Quaternion.identity,
+                new Vector2(size.x - 0.02f, size.y - 0.01f), fontSize, TextLight, text);
+            label.fontStyle = FontStyles.Bold;
+            label.textWrappingMode = TextWrappingModes.Normal;
+            var gate = go.AddComponent<LabLensGate>();
+            gate.Configure(content, go.transform, LabLensVisibility.ShowDistance);
+            content.SetActive(false);
+            EditorUtility.SetDirty(gate);
+            return label;
+        }
+
+        /// <summary>Flecha de emision (+Z = punta), color HDR que brilla con el bloom como los faroles.</summary>
+        private static Mesh ArrowMesh() => Cached("Lab_EmissionArrow", () =>
+        {
+            var b = new LowPolyMesh();
+            const float head = 0.1f, shaft = ArrowLength - head;
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0f, shaft * 0.5f)), new Vector3(0.024f, 0.024f, shaft), ArrowGlow);
+            b.Frustum(Matrix4x4.TRS(new Vector3(0f, 0f, shaft), Quaternion.Euler(90f, 0f, 0f), Vector3.one), 0.055f, 0f, 0f, head, 6, ArrowGlow, false, true);
+            return b;
+        });
+
+        // ---------------------------------------------------------------- luz (presupuesto Quest: 3 luces reales)
+
+        /// <summary>Faroles del banco: dos postes con farol en las juntas de atras y una lampara sobre el cartel (solo emisivo + bloom).</summary>
+        private static void BenchLamps(Transform bench, Material material)
+        {
+            Mesh lamp = Cached("Lab_BenchLamp", () =>
+            {
+                var b = new LowPolyMesh();
+                b.Frustum(Matrix4x4.identity, 0.03f, 0.025f, 0f, 1.85f, 6, WoodB);
+                b.Box(Matrix4x4.Translate(new Vector3(0f, 1.87f, 0f)), new Vector3(0.12f, 0.03f, 0.12f), Iron);
+                b.Box(Matrix4x4.Translate(new Vector3(0f, 1.97f, 0f)), new Vector3(0.09f, 0.17f, 0.09f), TowerBuilder.LanternGlow);
+                b.Frustum(Matrix4x4.Translate(new Vector3(0f, 2.05f, 0f)), 0.1f, 0.02f, 0f, 0.08f, 4, Iron, true, true);
+                // Halo falso: brillo mas tenue alrededor del vidrio (lo agranda el bloom).
+                b.Frustum(Matrix4x4.Translate(new Vector3(0f, 1.9f, 0f)), 0.075f, 0.075f, 0f, 0.14f, 8, TowerBuilder.LanternGlow * 0.45f, false);
+                return b;
+            });
+            float yaw = LabBenchLayout.FrontHalfAngle + 2f * LabBenchLayout.FacetHalfAngle;
+            foreach (float s in new[] { -1f, 1f })
+            {
+                Vector3 at = Quaternion.Euler(0f, s * yaw, 0f) * new Vector3(0f, 0f, 0.8f);
+                Part(s < 0f ? "LabLamp_L" : "LabLamp_R", bench, lamp, material, at, Quaternion.identity).isStatic = true;
+            }
+        }
+
+        /// <summary>
+        /// Tres luces reales calidas, sin sombras y de rango corto: una sobre el banco (bajo el toldo), un foco al cartel y un foco
+        /// a la pista (donde esta el papel). El resto de la iluminacion son faroles emisivos con bloom.
+        /// </summary>
+        private static void Lights(Transform root, Material material, float floor)
+        {
+            Vector3 stand = new Vector3(0f, floor, StandZ);
+            NewLight(root, "LabLight_Bench", LightType.Point, stand + new Vector3(0f, 2.15f, 0.35f), Vector3.down, 3.6f, 1.8f, 0f);
+            Vector3 cartel = stand + CartelLocal + new Vector3(0f, CartelBottom + CartelHeight * 0.5f, 0f);
+            Vector3 spotAt = stand + new Vector3(-0.55f, 2.35f, 0.15f);
+            NewLight(root, "LabLight_Cartel", LightType.Spot, spotAt, cartel - spotAt, 3.2f, 2.4f, 55f);
+            Vector3 beam = new Vector3(0f, CanopyY(PostBackZ) - 0.25f + floor, PostBackZ - 0.1f);
+            Vector3 aim = new Vector3(0f, Rel(root, 0f, TrackStart + LabSealSpec.DefaultPaperDistance) + 0.8f, TrackStart + LabSealSpec.DefaultPaperDistance);
+            NewLight(root, "LabLight_Track", LightType.Spot, beam, aim - beam, 12f, 5f, 48f);
+            // Farol colgado que «justifica» el foco de la pista.
+            MapBuilder.Place("LabLantern_Spot", root, LanternMesh("Lab_LanternSpot", 0.25f), material, root.TransformPoint(beam + Vector3.down * 0.3f), root.rotation).isStatic = true;
+        }
+
+        private static void NewLight(Transform root, string name, LightType type, Vector3 local, Vector3 directionLocal, float range, float intensity, float spotAngle)
+        {
+            var go = Child(root, name, local);
+            if (directionLocal.sqrMagnitude > 1e-6f) go.transform.localRotation = Quaternion.LookRotation(directionLocal.normalized);
+            var light = go.AddComponent<Light>();
+            light.type = type;
+            light.color = WarmLight;
+            light.range = range;
+            light.intensity = intensity;
+            if (type == LightType.Spot)
+            {
+                light.spotAngle = spotAngle;
+                light.innerSpotAngle = spotAngle * 0.6f;
+            }
+            light.shadows = LightShadows.None;
+            light.lightmapBakeType = LightmapBakeType.Realtime;
+            light.renderMode = LightRenderMode.ForcePixel;
+        }
+
+        private static List<TextAsset> SpellFiles()
+        {
+            var list = new List<TextAsset>();
+            foreach (string guid in AssetDatabase.FindAssets("t:TextAsset", new[] { SpellsFolder }))
+            {
+                var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(AssetDatabase.GUIDToAssetPath(guid));
+                if (asset != null) list.Add(asset);
+            }
+            list.Sort((a, c) => string.CompareOrdinal(a.name, c.name));
+            return list;
+        }
+
+        private static Mesh JarsMesh()
+        {
+            var b = new LowPolyMesh();
+            Color[] liquids = { new Color(0.35f, 0.6f, 0.9f), new Color(0.45f, 0.8f, 0.4f), new Color(0.95f, 0.65f, 0.25f) };
+            Vector3[] at = { new Vector3(0f, 0f, 0f), new Vector3(0.1f, 0f, 0.05f), new Vector3(0.03f, 0f, 0.11f) };
+            float[] heights = { 0.16f, 0.11f, 0.13f };
+            for (int i = 0; i < 3; i++)
+            {
+                float h = heights[i];
+                b.Frustum(Matrix4x4.Translate(at[i]), 0.04f, 0.04f, 0f, h * 0.6f, 8, liquids[i]);
+                b.Frustum(Matrix4x4.Translate(at[i]), 0.04f, 0.025f, h * 0.6f, h, 8, Glass);
+                b.Frustum(Matrix4x4.Translate(at[i]), 0.02f, 0.02f, h, h + 0.03f, 6, WoodA);
+            }
+            return Save("Lab_Jars", b);
         }
 
         // ---------------------------------------------------------------- repisa de lentes y pizarron
@@ -1233,14 +1483,19 @@ namespace SpellSimulator.EditorTools.Map
             const float face = SignTextZ;
             var title = Text(go.transform, "Title", new Vector3(0f, 1.73f, face), Quaternion.identity, new Vector2(0.94f, 0.1f), 0.55f, TextGold, "Laboratorio");
             title.fontStyle = FontStyles.Bold;
-            var help = Text(go.transform, "Instructions", new Vector3(0f, 1.57f, face), Quaternion.identity, new Vector2(0.94f, 0.2f), 0.3f, TextLight,
-                "Izquierda: armá el sello y apretá LANZAR (dispara a la pista). Derecha: ajustá el entorno y materializalo. Las lentes muestran los parámetros.");
-            AutoSize(help, 0.12f, 0.3f);
+            var help = Text(go.transform, "Instructions", new Vector3(0f, 1.56f, face), Quaternion.identity, new Vector2(0.94f, 0.22f), 0.24f, TextLight,
+                "Parate en el centro del banco. Izquierda: armá el sello o dibujalo en el atril y tocá LANZAR. Derecha: cajas, viento y fuego. Con las lentes ves las mediciones.");
+            help.textWrappingMode = TextWrappingModes.Normal;
 
-            var fire = Counter(go.transform, "FireArea", 1.4f, "Área quemada: -");
-            var box = Counter(go.transform, "BoxDistance", 1.3f, "Distancia de la caja: -");
-            var reach = Counter(go.transform, "CastReach", 1.2f, "Alcance del hechizo: -");
-            var duration = Counter(go.transform, "CastDuration", 1.1f, "Duración del hechizo: -");
+            // Mediciones: solo con las lentes puestas, cerca y mirando el pizarron (v4, punto 10; se leen hasta 6 m).
+            var content = Child(go.transform, "Counters", Vector3.zero);
+            var fire = Counter(content.transform, "FireArea", 1.4f, "Área quemada: -");
+            var box = Counter(content.transform, "BoxDistance", 1.3f, "Distancia de la caja: -");
+            var reach = Counter(content.transform, "CastReach", 1.2f, "Alcance del hechizo: -");
+            var duration = Counter(content.transform, "CastDuration", 1.1f, "Duración del hechizo: -");
+            var gate = go.AddComponent<LabLensGate>();
+            gate.Configure(content, Child(go.transform, "LensAnchor", new Vector3(0f, 1.3f, 0f)).transform, 6f);
+            EditorUtility.SetDirty(gate);
 
             var counters = go.AddComponent<LabCounters>();
             Assign(counters, "fireAreaText", fire);
@@ -1270,7 +1525,7 @@ namespace SpellSimulator.EditorTools.Map
             s.Box(Matrix4x4.Translate(new Vector3(0f, 0.45f, -0.012f)), new Vector3(0.21f, 0.1f, 0.01f), ClothLight);
             s.Box(Matrix4x4.Translate(new Vector3(0f, 0.53f, 0f)), new Vector3(0.07f, 0.04f, 0.07f), Cloth);
             Mesh stake = Save("Lab_Stake", s);
-            float paperZ = BackDeskZ;
+            float paperZ = StandZ; // distancias desde donde se para el jugador
             for (float d = FirstStake; paperZ + d <= TrackStart + TrackLength + 0.01f; d += StakeEvery)
                 foreach (float side in new[] { -1f, 1f })
                 {

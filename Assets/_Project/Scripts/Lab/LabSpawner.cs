@@ -94,9 +94,32 @@ namespace SpellSimulator.Lab
             block = new MaterialPropertyBlock();
         }
 
+        private LabParameters subscribedParameters;
+
         private void OnEnable() => MagicWorld.WorldReset += ClearAll;
 
-        private void OnDisable() => MagicWorld.WorldReset -= ClearAll;
+        private void OnDisable()
+        {
+            MagicWorld.WorldReset -= ClearAll;
+            if (subscribedParameters != null) subscribedParameters.ValueChanged -= OnParameterChanged;
+            subscribedParameters = null;
+        }
+
+        private void Start()
+        {
+            // v4: el viento se ajusta en vivo (las perillas mueven las zonas ya materializadas).
+            subscribedParameters = LabParameters.Current;
+            if (subscribedParameters != null) subscribedParameters.ValueChanged += OnParameterChanged;
+        }
+
+        private void OnParameterChanged(LabVariableId id, float previous, float next)
+        {
+            if (id != LabVariableId.WindYaw && id != LabVariableId.WindSpeed) return;
+            Prune(winds);
+            for (int i = 0; i < winds.Count; i++)
+                if (winds[i] != null && winds[i].TryGetComponent(out LabWindZone zone))
+                    zone.Configure(Param(LabVariableId.WindYaw), Param(LabVariableId.WindSpeed));
+        }
 
         private void OnDestroy()
         {
@@ -134,6 +157,48 @@ namespace SpellSimulator.Lab
             };
             if (go != null) Materialized?.Invoke(kind, go);
             return go;
+        }
+
+        /// <summary>Cajas vivas (sin las que se estan retirando), de la mas vieja a la mas nueva. Maximo <see cref="MaxBoxCount"/>.</summary>
+        public IReadOnlyList<GameObject> Boxes
+        {
+            get
+            {
+                Prune(boxes);
+                return boxes;
+            }
+        }
+
+        /// <summary>Tope de cajas a la vez (al pasarse se retira la mas vieja).</summary>
+        public const int MaxBoxCount = MaxBoxes;
+
+        /// <summary>True si <paramref name="t"/> cuelga de lo materializado (cajas, viento, fuego).</summary>
+        public bool Owns(Transform t) => root != null && t != null && t.IsChildOf(root);
+
+        /// <summary>Retira una caja (se achica y desaparece) o borra una zona de viento. Devuelve false si no es de la mesa.</summary>
+        public bool Remove(GameObject go)
+        {
+            if (go == null) return false;
+            if (boxes.Remove(go))
+            {
+                Retire(go);
+                return true;
+            }
+            if (winds.Remove(go))
+            {
+                Destroy(go);
+                return true;
+            }
+            return false;
+        }
+
+        /// <summary>Cambia la masa de una caja materializada (y su color: claro liviano, oscuro pesado).</summary>
+        public void ApplyMass(GameObject box, float mass)
+        {
+            if (box == null || !box.TryGetComponent(out Rigidbody rb)) return;
+            rb.mass = mass;
+            rb.collisionDetectionMode = mass >= ContinuousMass ? CollisionDetectionMode.ContinuousDynamic : CollisionDetectionMode.Discrete;
+            if (box.TryGetComponent(out Renderer renderer)) Tint(renderer, mass);
         }
 
         /// <summary>Destruye todo lo materializado (lo llama el reinicio del mundo). El fuego del pasto lo reinicia GrassFire.</summary>
@@ -178,9 +243,7 @@ namespace SpellSimulator.Lab
             Material material = boxMaterial != null ? boxMaterial : BoxFallbackMaterial();
             if (material != null) renderer.sharedMaterial = material;
             // Color por masa (claro = liviano, oscuro = pesado); el overlay rotula el numero.
-            block.Clear();
-            block.SetColor(BaseColorId, Color.Lerp(LightBox, HeavyBox, LabParameterMath.Normalized(mass, LabCatalog.Get(LabVariableId.Mass))));
-            renderer.SetPropertyBlock(block);
+            Tint(renderer, mass);
 
             // Rigidbody antes que Movable: Movable cachea collider/renderers/rigidbody en su Awake.
             var rb = go.AddComponent<Rigidbody>();
@@ -289,6 +352,13 @@ namespace SpellSimulator.Lab
         }
 
         // ---------------------------------------------------------------- utilidades
+
+        private void Tint(Renderer renderer, float mass)
+        {
+            block.Clear();
+            block.SetColor(BaseColorId, Color.Lerp(LightBox, HeavyBox, LabParameterMath.Normalized(mass, LabCatalog.Get(LabVariableId.Mass))));
+            renderer.SetPropertyBlock(block);
+        }
 
         private static float Param(LabVariableId id)
         {

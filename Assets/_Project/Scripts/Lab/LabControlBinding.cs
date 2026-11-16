@@ -6,7 +6,7 @@ using UnityEngine;
 namespace SpellSimulator.Lab
 {
     /// <summary>De donde lee y escribe un control del laboratorio.</summary>
-    public enum LabControlSource { Seal = 0, Environment = 1 }
+    public enum LabControlSource { Seal = 0, Environment = 1, Field = 2 }
 
     /// <summary>
     /// Enlace serializable de un <see cref="LabControl"/> con su variable (lo arma el generador de escena, MapLab). Los
@@ -20,7 +20,7 @@ namespace SpellSimulator.Lab
     {
         [SerializeField, Tooltip("Banco de sellos o mesa de entorno.")]
         private LabControlSource source;
-        [SerializeField, Tooltip("(int)LabSealVarId si source = Seal; (int)LabVariableId si source = Environment.")]
+        [SerializeField, Tooltip("(int)LabSealVarId si source = Seal; (int)LabVariableId si source = Environment; (int)LabFieldVar si source = Field.")]
         private int variable;
         [SerializeField, Tooltip("Perilla, deslizador o selector.")]
         private LabControlKind kind;
@@ -36,6 +36,8 @@ namespace SpellSimulator.Lab
         private static readonly CultureInfo Spanish = CultureInfo.GetCultureInfo("es-ES");
 
         private LabControl control;
+        private LabField subscribedField;
+        private System.Action onSelection;
 
         /// <summary>Fuente de la variable.</summary>
         public LabControlSource Source => source;
@@ -62,12 +64,18 @@ namespace SpellSimulator.Lab
 
         private void Start() => Bind();
 
+        private void OnDestroy()
+        {
+            if (subscribedField != null && onSelection != null) subscribedField.SelectionChanged -= onSelection;
+            subscribedField = null;
+        }
+
         /// <summary>Enlaza el control con su variable. Devuelve false si falta el banco o la mesa.</summary>
         public bool Bind()
         {
             LabControl c = Control;
             if (c == null) return false;
-            Bound = source == LabControlSource.Seal ? BindSeal(c) : BindEnvironment(c);
+            Bound = source == LabControlSource.Seal ? BindSeal(c) : source == LabControlSource.Field ? BindField(c) : BindEnvironment(c);
             if (!Bound) Debug.LogWarning($"[Laboratorio] {name}: no se pudo enlazar el control ({source} {variable}).", this);
             return Bound;
         }
@@ -106,6 +114,46 @@ namespace SpellSimulator.Lab
             Func<float, string> format = v => b.FormatVar(id, v);
             c.Setup(kind, def.Label, get, set, format, min, max, detents, movable, railStart, railEnd, readout);
             if (!isList) c.SetResetValue(def.Default);
+            return true;
+        }
+
+        // ---------------------------------------------------------------- objeto elegido del campo (v4)
+
+        /// <summary>
+        /// Control del objeto elegido (<see cref="LabField"/>): papel (variables del grupo 5 del banco) o caja (X, distancia, giro).
+        /// Rangos y pasos de la variable del banco equivalente; al elegir otro objeto se olvidan las lecturas cacheadas.
+        /// </summary>
+        private bool BindField(LabControl c)
+        {
+            LabField f = LabField.Current;
+            LabSealBench b = bench != null ? bench : LabSealBench.Current;
+            if (f == null || b == null) return false;
+            bench = b;
+            var v = (LabFieldVar)variable;
+            LabSealVarId id = LabField.SealVar(v);
+            LabSealVarDef def = LabSealCatalog.Get(id);
+            float min = def.Min, max = def.Max;
+            if (id == LabSealVarId.PaperSize) { min = 0f; max = LabSealSpec.PaperSizes.Length - 1; }
+            bool isList = def.Kind == LabSealVarKind.List;
+            float step = isList ? 1f : def.Step;
+            int detents = 0;
+            if (def.Kind != LabSealVarKind.Continuous && step > 0f) detents = Mathf.RoundToInt((max - min) / step) + 1;
+
+            Func<float> get = () => f.Get(v);
+            Action<float> set = value =>
+            {
+                if (isList && Mathf.RoundToInt(value) == Mathf.RoundToInt(f.Get(v))) return;
+                f.Set(v, value);
+            };
+            Func<float, string> format = value => f.Format(v, value);
+            c.Setup(kind, def.Label, get, set, format, min, max, detents, movable, railStart, railEnd, readout);
+            if (!isList) c.SetResetValue(def.Default);
+            if (subscribedField == null)
+            {
+                onSelection = c.Invalidate;
+                f.SelectionChanged += onSelection;
+                subscribedField = f;
+            }
             return true;
         }
 

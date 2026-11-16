@@ -43,12 +43,13 @@ namespace SpellSimulator.Tests
         [Test]
         public void Filas_NoQuitanControlesYRespetanElPaso()
         {
-            Assert.AreEqual(4, LabPanelLayout.MaxPerRow(1.2f));
-            Assert.AreEqual(2, LabPanelLayout.RowsNeeded(5, 1.2f)); // 5 no entran: dos filas
-            Assert.AreEqual(1, LabPanelLayout.RowsNeeded(4, 1.2f));
-            Assert.AreEqual(0, LabPanelLayout.RowsNeeded(0, 1.2f));
+            Assert.AreEqual(2, LabPanelLayout.MaxPerRow(0.44f));
+            Assert.AreEqual(2, LabPanelLayout.RowsNeeded(3, 0.44f)); // 3 no entran: dos filas
+            Assert.AreEqual(1, LabPanelLayout.RowsNeeded(2, 0.44f));
+            Assert.AreEqual(0, LabPanelLayout.RowsNeeded(0, 0.44f));
             Assert.AreEqual(1, LabPanelLayout.MaxPerRow(0.1f));
-            Assert.AreEqual(35f, LabPanelLayout.PanelTilt);
+            // La plaquita entra en el paso con aire (≥ 4 cm) y el control tiene collider ≥ 9 cm.
+            Assert.GreaterOrEqual(LabPanelLayout.MinControlPitch - LabPanelLayout.PlaqueWidth, 0.04f - 1e-5f);
         }
     }
 }

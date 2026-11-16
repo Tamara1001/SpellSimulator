@@ -9,7 +9,7 @@ namespace SpellSimulator.Lab
     /// Los topes, el enfriamiento y el bloqueo en red los decide el spawner.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
-    public class LabMaterializeButton : MonoBehaviour, IPressable, LabParameters.IHoverTarget
+    public class LabMaterializeButton : MonoBehaviour, IPressable, LabParameters.IHoverTarget, ILabHelp
     {
         [SerializeField, Tooltip("Que materializa este boton.")]
         private LabSpawnKind kind = LabSpawnKind.Box;
@@ -17,6 +17,16 @@ namespace SpellSimulator.Lab
         private Renderer highlight;
 
         private string prompt;
+        private string helpLine;
+
+        /// <summary>Ayuda para la tira del panel (v4).</summary>
+        public string HelpLine => helpLine ??= kind switch
+        {
+            LabSpawnKind.Box => LabHelpStrip.Line("+ Caja", "Pone una caja en la pista (hasta 4) y la elige."),
+            LabSpawnKind.Wind => LabHelpStrip.Line("+ Viento", "Sopla una zona de viento; ajustala con las perillas."),
+            LabSpawnKind.Fire => LabHelpStrip.Line("+ Fuego", "Prende el pasto en el fogón con la semilla elegida."),
+            _ => LabHelpStrip.Line("Materializar", "")
+        };
         private LabControl.HoverTint tint;
 
         private void Awake()
@@ -25,9 +35,9 @@ namespace SpellSimulator.Lab
             tint.Init(highlight);
             prompt = kind switch
             {
-                LabSpawnKind.Box => "Materializar caja",
-                LabSpawnKind.Wind => "Materializar viento",
-                LabSpawnKind.Fire => "Materializar fuego",
+                LabSpawnKind.Box => "Agregar una caja",
+                LabSpawnKind.Wind => "Agregar viento",
+                LabSpawnKind.Fire => "Prender fuego",
                 LabSpawnKind.Fountain => "Materializar fuente",
                 _ => "Materializar"
             };
@@ -43,6 +53,13 @@ namespace SpellSimulator.Lab
             if (spawner != null) spawner.Materialize(kind);
         }
 
-        public void SetHovered(bool on) => tint.Set(on);
+        public void SetHovered(bool on)
+        {
+            tint.Set(on);
+            if (on) LabHelpStrip.Focus(this);
+            else LabHelpStrip.Unfocus(this);
+        }
+
+        private void OnDisable() => LabHelpStrip.Unfocus(this);
     }
 }

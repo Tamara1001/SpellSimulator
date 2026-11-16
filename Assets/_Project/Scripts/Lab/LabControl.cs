@@ -115,6 +115,17 @@ namespace SpellSimulator.Lab
             resetValue = value;
         }
 
+        /// <summary>
+        /// Olvida las lecturas cacheadas y redibuja (Laboratorio v4: los controles del objeto elegido cambian de significado al
+        /// elegir otro objeto, p. ej. «—» en la altura de una caja). Solo en eventos, no por frame.
+        /// </summary>
+        public void Invalidate()
+        {
+            if (detentLabels != null) Array.Clear(detentLabels, 0, detentLabels.Length);
+            shownValue = float.NaN;
+            Refresh();
+        }
+
         /// <summary>Relee el valor y actualiza pieza y lectura si cambio.</summary>
         public void Refresh()
         {

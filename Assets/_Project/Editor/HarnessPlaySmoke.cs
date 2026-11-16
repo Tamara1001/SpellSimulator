@@ -498,11 +498,11 @@ namespace SpellSimulator.EditorTools
                 while (Time.frameCount < recipesFrame + 2) yield return null;
             }
 
-            // --- Laboratorio v3: el papel se lanza valido desde cada pose, el mapa de la torre y el entrenamiento reubicado.
+            // --- Laboratorio v4: papel del campo en cada atajo y en pose libre, dibujo del atril vs. sello de los controles.
             if (bench != null && bench.Canvas != null)
             {
-                int posesOk = 0;
-                for (int pose = 0; pose < LabSealSpec.PaperPoseCount; pose++)
+                int posesOk = 0, presets = LabSealSpec.PaperPoseCount - 1;
+                for (int pose = 0; pose < presets; pose++)
                 {
                     bench.ResetSpec();
                     bench.ApplyRecipe("gust");
@@ -512,18 +512,115 @@ namespace SpellSimulator.EditorTools
                     if (bench.LastCastValid) posesOk++;
                     yield return null;
                 }
-                string poseReport = $"laboratorio v3: {posesOk}/{LabSealSpec.PaperPoseCount} poses del papel lanzan valido";
+                string poseReport = $"laboratorio v4: {posesOk}/{presets} atajos del papel lanzan valido";
                 passed.Append(poseReport).Append("; ");
                 Debug.Log("[PlaySmoke] " + poseReport);
-                Check(posesOk >= 1, "laboratorio v3: al menos una pose del papel lanza valido");
+                Check(posesOk >= 1, "laboratorio v4: al menos un atajo del papel lanza valido");
+
+                // Pose libre: en el piso, de canto hacia la derecha; el atajo pasa a «Personalizada» y el papel no se entierra.
+                bench.SetVar(LabSealVarId.PaperHeight, 0f);
+                bench.SetVar(LabSealVarId.PaperYaw, 90f);
+                bench.SetVar(LabSealVarId.PaperX, 2f);
+                bench.Rebuild();
+                float lift = bench.Canvas.WorldCenter.y - bench.PaperGroundWorld.y;
+                Check(bench.Spec.paperPose == LabSealSpec.FreePaperPose && lift > 0.1f && lift < 0.4f,
+                    $"laboratorio v4: pose libre en el piso (atajo personalizado, centro a {lift:0.00} m del suelo)");
+
+                // Dibujo del atril vs. sintetico: con trazos LANZAR usa el dibujo; vacio, los controles.
+                var pad = bench.SketchPad;
+                Check(pad != null && pad.Canvas != null, "laboratorio v4: atril de dibujo (LabSketchPad) con lienzo");
+                if (pad != null && pad.Canvas != null)
+                {
+                    bench.ResetSpec();
+                    bench.ApplyRecipe("gust");
+                    bench.SetVar(LabSealVarId.Tremor, 0f);
+                    bench.SetVar(LabSealVarId.PaperPose, 0f);
+                    pad.Clear();
+                    bench.Rebuild(); // el sello sintetico queda en el papel: se copia al atril como si fuera un dibujo
+                    foreach (var stroke in bench.Canvas.Session.Strokes)
+                        pad.Canvas.Session.AddStroke(new SpellSimulator.Core.Stroke(new List<Vector2>(stroke.Points)) { Width = stroke.Width, Ink = stroke.Ink });
+                    pad.Canvas.Redraw();
+                    bench.Launch();
+                    bool fromDrawing = bench.LastLaunchFromDrawing, drawingValid = bench.LastCastValid;
+                    pad.Clear();
+                    bench.Launch();
+                    bool fromControls = !bench.LastLaunchFromDrawing;
+                    Check(fromDrawing && fromControls, "laboratorio v4: LANZAR usa el dibujo del atril si tiene trazos y si no, el sello de los controles");
+                    string drawReport = $"laboratorio v4: el dibujo copiado del sello gust lanza {(drawingValid ? "valido" : "INVALIDO")}";
+                    passed.Append(drawReport).Append("; ");
+                    Debug.Log("[PlaySmoke] " + drawReport);
+                }
                 bench.ResetSpec();
+                bench.SetVar(LabSealVarId.PaperPose, 0f);
                 world.ResetWorld();
                 int poseFrame = Time.frameCount;
                 while (Time.frameCount < poseFrame + 2) yield return null;
             }
+
+            // --- Laboratorio v4: objetos del campo (papel elegido de entrada, hasta 4 cajas, elegir y mover).
+            var field = LabField.Current;
+            Check(field != null && field.Selected == LabField.PaperSlot, "laboratorio v4: LabField con el papel elegido de entrada");
+            if (field != null)
+            {
+                spawner.ClearAll();
+                for (int i = 0; i < LabSpawner.MaxBoxCount + 1; i++)
+                {
+                    float boxAt = Time.time;
+                    for (float end = Time.realtimeSinceStartup + 5f; Time.time - boxAt < 1.05f && Time.realtimeSinceStartup < end;) yield return null;
+                    spawner.Materialize(LabSpawnKind.Box);
+                    yield return null;
+                }
+                for (float end = Time.realtimeSinceStartup + 0.8f; Time.realtimeSinceStartup < end;) yield return null;
+                Check(field.BoxCount == LabSpawner.MaxBoxCount && field.Selected == LabSpawner.MaxBoxCount,
+                    $"laboratorio v4: {field.BoxCount} cajas en el campo (tope {LabSpawner.MaxBoxCount}) y la ultima elegida");
+                field.Select(1);
+                field.Set(LabFieldVar.X, 2f);
+                field.Set(LabFieldVar.Distance, 4f);
+                yield return null;
+                Check(field.Selected == 1 && Mathf.Abs(field.Get(LabFieldVar.X) - 2f) < 0.25f && Mathf.Abs(field.Get(LabFieldVar.Distance) - 4f) < 0.25f,
+                    "laboratorio v4: los controles mueven la caja elegida (X y distancia)");
+                field.Select(LabField.PaperSlot);
+                field.DeleteAll();
+                yield return null;
+                Check(field.BoxCount == 0 && field.Selected == LabField.PaperSlot, "laboratorio v4: Borrar todo deja solo el papel");
+            }
+
+            // --- Laboratorio v4: los datos de reconocimiento solo se ven con lentes, cerca y mirando.
+            var gates = Object.FindObjectsByType<LabLensGate>(FindObjectsSortMode.None);
+            LabLensGate resultGate = null;
+            foreach (var g in gates) if (g.name == "LabLensResult") resultGate = g;
+            LabOverlay.Visible = false;
+            for (float end = Time.realtimeSinceStartup + 0.3f; Time.realtimeSinceStartup < end;) yield return null;
+            bool hiddenWithout = true;
+            foreach (var g in gates) if (g.IsShowing || (g.Content != null && g.Content.activeSelf)) hiddenWithout = false;
+            bool shownNear = false, hiddenFar = false;
+            if (resultGate != null)
+            {
+                var viewer = new GameObject("HarnessLensViewer").transform;
+                Transform anchor = resultGate.transform;
+                viewer.SetPositionAndRotation(anchor.position - anchor.forward * 1.2f, Quaternion.LookRotation(anchor.forward));
+                LabLensGate.ViewerOverride = viewer;
+                LabOverlay.Visible = true;
+                for (float end = Time.realtimeSinceStartup + 0.3f; Time.realtimeSinceStartup < end;) yield return null;
+                shownNear = resultGate.IsShowing && resultGate.Content.activeSelf;
+                viewer.position = anchor.position - anchor.forward * 6f;
+                for (float end = Time.realtimeSinceStartup + 0.3f; Time.realtimeSinceStartup < end;) yield return null;
+                hiddenFar = !resultGate.IsShowing;
+                LabOverlay.Visible = false;
+                LabLensGate.ViewerOverride = null;
+                Object.Destroy(viewer.gameObject);
+            }
+            Check(gates.Length >= 3 && hiddenWithout && shownNear && hiddenFar,
+                $"laboratorio v4: {gates.Length} datos con lentes (ocultos sin lentes {hiddenWithout}, a 1,2 m {shownNear}, a 6 m ocultos {hiddenFar})");
             var towerMap = Object.FindFirstObjectByType<SpellSimulator.World.Map.TowerMap>();
             Check(towerMap != null && towerMap.ZoneCount > 0 && towerMap.MarkerCount == towerMap.ZoneCount,
                 $"mapa de la torre: {(towerMap != null ? towerMap.MarkerCount : 0)} marcadores = zonas");
+            int mapPortalsFound = 0;
+            if (towerMap != null)
+                for (int i = 0; i < towerMap.PortalCount; i++)
+                    if (SpellSimulator.World.Portal.Find(towerMap.GetPortal(i).id) != null) mapPortalsFound++;
+            Check(towerMap != null && towerMap.PortalCount >= 4 && towerMap.PortalMarkerCount == towerMap.PortalCount && mapPortalsFound == towerMap.PortalCount,
+                $"mapa de la torre: {mapPortalsFound}/{(towerMap != null ? towerMap.PortalCount : 0)} rombos de portal con su portal en la escena");
             var trainingTarget = GameObject.Find("PaperCanvas");
             var labBench = GameObject.Find("LabBench");
             Check(trainingTarget != null && labBench != null && Vector3.Distance(trainingTarget.transform.position, labBench.transform.position) > 12f,
@@ -577,6 +674,7 @@ namespace SpellSimulator.EditorTools
             Object.Destroy(logGo);
             spawner.ClearAll();
             parameters.ResetAll();
+            if (bench != null) bench.ResetSpec();
         }
 
         /// <summary>Elemento que deberia dar un sigilo (su entrada del diccionario); None si no se puede saber.</summary>

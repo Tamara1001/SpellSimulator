@@ -7,13 +7,25 @@ using SpellSimulator.Learning;
 
 namespace SpellSimulator.Lab
 {
+    /// <summary>Valores de un atajo de posicion del papel del campo (Laboratorio v4).</summary>
+    public readonly struct LabPaperPlacement
+    {
+        /// <summary>X lateral (m), distancia desde el inicio de la pista (m), giro (°), altura del centro (m) e inclinacion (°).</summary>
+        public readonly float X, Distance, YawDeg, Height, TiltDeg;
+
+        public LabPaperPlacement(float x, float distance, float yawDeg, float height, float tiltDeg)
+        {
+            X = x; Distance = distance; YawDeg = yawDeg; Height = height; TiltDeg = tiltDeg;
+        }
+    }
+
     /// <summary>
-    /// Pose del papel del banco (<see cref="LabSealBenchMath.PaperPose"/>) en el marco local del laboratorio (+Z pista, +Y arriba).
-    /// <see cref="Position"/> solo vale si <see cref="AtEasel"/> es false (si no, el papel se queda en el atril).
+    /// Pose del papel del campo (LabSealBenchMath.PaperPose) en el marco de la
+    /// pista (+Z a lo largo, +Y arriba). Laboratorio v4: el papel siempre esta en el campo (ya no hay atril chico).
     /// </summary>
     public readonly struct LabPaperPose
     {
-        /// <summary>Posicion local del centro del papel (ignorar si <see cref="AtEasel"/>).</summary>
+        /// <summary>Centro del papel en el marco de la pista.</summary>
         public readonly Vector3 Position;
         /// <summary>Direccion (unitaria) en que sale el hechizo, ya con la cara aplicada.</summary>
         public readonly Vector3 Emission;
@@ -21,12 +33,10 @@ namespace SpellSimulator.Lab
         public readonly Vector3 ViewNormal;
         /// <summary>Vector «arriba» del papel (perpendicular a la emision).</summary>
         public readonly Vector3 Up;
-        /// <summary>True si el papel esta en el atril (presets 0–2 y 8).</summary>
-        public readonly bool AtEasel;
 
-        public LabPaperPose(Vector3 position, Vector3 emission, Vector3 viewNormal, Vector3 up, bool atEasel)
+        public LabPaperPose(Vector3 position, Vector3 emission, Vector3 viewNormal, Vector3 up)
         {
-            Position = position; Emission = emission; ViewNormal = viewNormal; Up = up; AtEasel = atEasel;
+            Position = position; Emission = emission; ViewNormal = viewNormal; Up = up;
         }
 
         /// <summary>Signo de tinta para <c>DrawingCanvas.SetInkSign</c>: +1 si el hechizo sale por la cara visible, −1 si sale por detras.</summary>
@@ -74,6 +84,10 @@ namespace SpellSimulator.Lab
                 case LabSealVarId.PaperTilt: return s.paperTiltDeg;
                 case LabSealVarId.PenWidth: return s.penWidthIndex;
                 case LabSealVarId.PaperPose: return s.paperPose;
+                case LabSealVarId.PaperX: return s.paperX;
+                case LabSealVarId.PaperDistance: return s.paperDistance;
+                case LabSealVarId.PaperYaw: return s.paperYawDeg;
+                case LabSealVarId.PaperHeight: return s.paperHeight;
                 default: return 0f;
             }
         }
@@ -106,9 +120,14 @@ namespace SpellSimulator.Lab
                 case LabSealVarId.Tremor: s.tremor = value; break;
                 case LabSealVarId.Ink: s.ink = (LabInkKind)Mathf.Clamp(index, 0, InkNames.Length - 1); break;
                 case LabSealVarId.PaperFace: s.paperFace = value < 0f ? -1 : 1; break;
-                case LabSealVarId.PaperTilt: s.paperTiltDeg = value; break;
+                case LabSealVarId.PaperTilt: s.paperTiltDeg = value; s.paperPose = LabSealSpec.FreePaperPose; break;
                 case LabSealVarId.PenWidth: s.penWidthIndex = index; break;
-                case LabSealVarId.PaperPose: s.paperPose = index; break;
+                // Atajo (v4): carga los valores de posicion del preset; «Personalizada» no cambia nada.
+                case LabSealVarId.PaperPose: s = ApplyPaperPreset(s, index); break;
+                case LabSealVarId.PaperX: s.paperX = value; s.paperPose = LabSealSpec.FreePaperPose; break;
+                case LabSealVarId.PaperDistance: s.paperDistance = value; s.paperPose = LabSealSpec.FreePaperPose; break;
+                case LabSealVarId.PaperYaw: s.paperYawDeg = value; s.paperPose = LabSealSpec.FreePaperPose; break;
+                case LabSealVarId.PaperHeight: s.paperHeight = value; s.paperPose = LabSealSpec.FreePaperPose; break;
             }
             return LabSealSpec.Clamp(s);
         }
@@ -189,14 +208,18 @@ namespace SpellSimulator.Lab
                 case LabSealVarId.Asymmetry: return "×" + Num(value, "0.##");
                 case LabSealVarId.SignCount: return Mathf.RoundToInt(value).ToString(LabCsv.NumberFormat);
                 case LabSealVarId.BaseAngle:
-                case LabSealVarId.PaperTilt: return Num(value, "0") + "°";
+                case LabSealVarId.PaperTilt:
+                case LabSealVarId.PaperYaw: return Num(value, "0") + "°";
+                case LabSealVarId.PaperX:
+                case LabSealVarId.PaperDistance: return Num(value, "0.0") + " m";
+                case LabSealVarId.PaperHeight: return Num(value, "0.00") + " m";
                 case LabSealVarId.TurnDeg: return value >= LabSealSpec.TurnOutDeg * 0.5f ? "hacia afuera" : "hacia adentro";
                 case LabSealVarId.SignDistance: return Num(value, "0.00") + " R";
                 case LabSealVarId.RingGap:
                     return Num(value, "0") + "°" + (value >= StampPattern.RingGapDeg ? " (preparado)" : value <= 0f ? " (cerrado)" : "");
                 case LabSealVarId.Tremor: return value <= 0f ? "prolijo" : Num(value, "0.000") + " R";
                 case LabSealVarId.Ink: return InkNames[Mathf.Clamp(Mathf.RoundToInt(value), 0, InkNames.Length - 1)];
-                case LabSealVarId.PaperFace: return value < 0f ? "abajo" : "arriba";
+                case LabSealVarId.PaperFace: return value < 0f ? "invertido" : "normal";
                 case LabSealVarId.PaperPose: return PaperPoseName(Mathf.RoundToInt(value));
                 default: return null;
             }
@@ -223,10 +246,14 @@ namespace SpellSimulator.Lab
             sb.Append(" temblor=").Append(Num(s.tremor, "0.###"));
             sb.Append(" papel=").Append(Num(s.paperSize, "0.##"));
             sb.Append(" tinta=").Append(InkNames[(int)s.ink]);
-            sb.Append(" cara=").Append(s.paperFace < 0 ? "abajo" : "arriba");
+            sb.Append(" cara=").Append(s.paperFace < 0 ? "invertido" : "normal");
             sb.Append(" incl=").Append(Num(s.paperTiltDeg, "0"));
             sb.Append(" pluma=").Append(s.penWidthIndex);
             sb.Append(" pose=").Append(s.paperPose);
+            sb.Append(" papelX=").Append(Num(s.paperX, "0.##"));
+            sb.Append(" papelDist=").Append(Num(s.paperDistance, "0.##"));
+            sb.Append(" papelGiro=").Append(Num(s.paperYawDeg, "0"));
+            sb.Append(" papelAlto=").Append(Num(s.paperHeight, "0.##"));
             sb.Append(" semilla=").Append(s.seed);
             return sb.ToString();
         }
@@ -248,62 +275,109 @@ namespace SpellSimulator.Lab
             return s;
         }
 
-        // ---------------------------------------------------------------- posicion del papel (Laboratorio v3)
+        // ---------------------------------------------------------------- papel del campo (Laboratorio v4)
 
-        /// <summary>Nombres de los presets de posicion del papel, indexados por <see cref="LabSealSpec.paperPose"/>.</summary>
+        /// <summary>Nombres de los atajos de posicion del papel, indexados por <see cref="LabSealSpec.paperPose"/> (el ultimo = personalizada).</summary>
         public static readonly string[] PaperPoseNames =
         {
-            "Atril → pista", "Atril → jugador", "Atril → arriba", "Piso", "Pista → izquierda",
-            "Pista → derecha", "Pista → banco", "Pista → piso", "Libre"
+            "Frente", "Hacia mí", "Mesa", "Piso", "Izquierda", "Derecha", "Boca abajo", "Diagonal", "Personalizada"
         };
 
-        /// <summary>Altura (m) del centro del papel de pie en la pista.</summary>
-        public const float StandHeight = 1.2f;
-        /// <summary>Altura (m) del papel acostado en el piso (levemente sobre el suelo).</summary>
-        public const float FloorHeight = 0.02f;
-        /// <summary>Altura (m) del papel «Pista → piso» (boca abajo).</summary>
-        public const float HighHeight = 1.5f;
+        /// <summary>
+        /// Valores de cada atajo (X, distancia por la pista, giro, altura del centro, inclinacion). Equivalen a los presets del
+        /// v3: Frente = «Atril → pista», Hacia mí = «Pista → banco», Piso, Izquierda/Derecha y Boca abajo = «Pista → piso».
+        /// </summary>
+        private static readonly LabPaperPlacement[] PaperPresets =
+        {
+            new LabPaperPlacement(0f, 3f, 0f, 1.2f, 0f),     // Frente: de pie, dispara hacia el fondo de la pista
+            new LabPaperPlacement(0f, 6f, 180f, 1.2f, 0f),   // Hacia mí: de pie, dispara hacia el banco
+            new LabPaperPlacement(0f, 3f, 0f, 1f, 90f),      // Mesa: acostado a 1 m, dispara arriba
+            new LabPaperPlacement(0f, 2f, 180f, 0f, 90f),    // Piso: acostado en el suelo (arriba hacia el fondo), dispara arriba
+            new LabPaperPlacement(0f, 3f, -90f, 1.2f, 0f),   // Izquierda
+            new LabPaperPlacement(0f, 3f, 90f, 1.2f, 0f),    // Derecha
+            new LabPaperPlacement(0f, 3f, 0f, 1.5f, -90f),   // Boca abajo: a 1,5 m, dispara al piso
+            new LabPaperPlacement(0f, 3f, 0f, 1f, 45f)       // Diagonal: de pie inclinado 45°, dispara al fondo y arriba
+        };
 
-        // Hacia donde mira el jugador desde el banco: hacia atras (−Z) y un poco desde arriba.
-        private static readonly Vector3 ViewerHint = new Vector3(0f, 0.5f, -1f);
+        /// <summary>Separacion minima (m) entre el borde mas bajo del papel y el piso.</summary>
+        public const float FloorClearance = 0.02f;
 
-        /// <summary>Nombre del preset (vacio fuera de rango).</summary>
+        /// <summary>Punto de vista por defecto (marco de la pista: donde se para el jugador, a la altura de los ojos) para decidir que cara se ve.</summary>
+        public static readonly Vector3 DefaultViewer = new Vector3(0f, 1.6f, -0.2f);
+
+        /// <summary>Nombre del atajo (vacio fuera de rango).</summary>
         public static string PaperPoseName(int preset)
             => preset >= 0 && preset < PaperPoseNames.Length ? PaperPoseNames[preset] : string.Empty;
 
-        /// <summary>
-        /// Pose del papel para un preset (tabla de Docs/LABORATORIO_V3_PLAN.md, (b)), en el marco local del laboratorio:
-        /// +Z a lo largo de la pista (desde el banco hacia el fondo), +Y arriba, +X a la derecha del jugador mirando la pista.
-        /// <paramref name="trackStart"/> = Z (m) del inicio de la pista en ese marco. En 0–7 <paramref name="face"/> = −1 invierte la
-        /// emision y <paramref name="tiltDeg"/> se ignora; el 8 (libre) usa cara e inclinacion como en el Laboratorio v2.
-        /// </summary>
-        public static LabPaperPose PaperPose(int preset, int face, float tiltDeg, float trackStart)
+        /// <summary>Valores de un atajo; false para «Personalizada» o fuera de rango.</summary>
+        public static bool TryGetPreset(int preset, out LabPaperPlacement placement)
         {
-            preset = Mathf.Clamp(preset, 0, LabSealSpec.PaperPoseCount - 1);
-            int f = face < 0 ? -1 : 1;
-            Vector3 dir, up, position = Vector3.zero;
-            bool atEasel = true;
-            switch (preset)
+            if (preset >= 0 && preset < PaperPresets.Length)
             {
-                case 0: dir = Vector3.forward; up = Vector3.up; break;
-                case 1: dir = Vector3.back; up = Vector3.up; break;
-                case 2: dir = Vector3.up; up = Vector3.forward; break;
-                case 3: dir = Vector3.up; up = Vector3.forward; position = new Vector3(0f, FloorHeight, trackStart + 2f); atEasel = false; break;
-                case 4: dir = Vector3.left; up = Vector3.up; position = new Vector3(0f, StandHeight, trackStart + 3f); atEasel = false; break;
-                case 5: dir = Vector3.right; up = Vector3.up; position = new Vector3(0f, StandHeight, trackStart + 3f); atEasel = false; break;
-                case 6: dir = Vector3.back; up = Vector3.up; position = new Vector3(0f, StandHeight, trackStart + 6f); atEasel = false; break;
-                case 7: dir = Vector3.down; up = Vector3.forward; position = new Vector3(0f, HighHeight, trackStart + 3f); atEasel = false; break;
-                default:
-                    // Libre: como el v2 (horizontal hacia el fondo de la pista, levantada tiltDeg). La cara no cambia la rotacion, solo el lado de la tinta.
-                    dir = EmissionDirection(Vector3.zero, Vector3.forward, tiltDeg, Vector3.forward, out up);
-                    return new LabPaperPose(position, dir * f, -dir, up, true);
+                placement = PaperPresets[preset];
+                return true;
             }
-            // Cara visible: el lado del eje de emision que mira hacia el jugador (en los laterales, sin lado preferido: el opuesto a la emision base).
-            float d = Vector3.Dot(dir, ViewerHint);
-            Vector3 view = d > 1e-4f ? dir : -dir;
-            return new LabPaperPose(position, dir * f, view, up, atEasel);
+            placement = default;
+            return false;
         }
 
+        /// <summary>Carga un atajo en el spec (posicion, giro, altura e inclinacion) y lo deja como <c>paperPose</c>. Cara y tamaño no cambian.</summary>
+        public static LabSealSpec ApplyPaperPreset(LabSealSpec s, int preset)
+        {
+            preset = Mathf.Clamp(preset, 0, LabSealSpec.PaperPoseCount - 1);
+            if (TryGetPreset(preset, out LabPaperPlacement p))
+            {
+                s.paperX = p.X;
+                s.paperDistance = p.Distance;
+                s.paperYawDeg = p.YawDeg;
+                s.paperHeight = p.Height;
+                s.paperTiltDeg = p.TiltDeg;
+            }
+            s.paperPose = preset;
+            return LabSealSpec.Clamp(s);
+        }
+
+        /// <summary>
+        /// Direccion de disparo (unitaria) para un giro y una inclinacion: giro 0 = +Z (fondo de la pista), 90 = +X (derecha),
+        /// 180 = −Z (hacia el banco); inclinacion 90 = arriba, −90 = abajo. <paramref name="up"/> queda perpendicular (el
+        /// «arriba» del papel), que con inclinacion ±90 apunta hacia donde «mira» el giro.
+        /// </summary>
+        public static Vector3 PaperDirection(float yawDeg, float tiltDeg, out Vector3 up)
+        {
+            float y = yawDeg * Mathf.Deg2Rad, t = Mathf.Clamp(tiltDeg, -90f, 90f) * Mathf.Deg2Rad;
+            float sy = Mathf.Sin(y), cy = Mathf.Cos(y), st = Mathf.Sin(t), ct = Mathf.Cos(t);
+            up = new Vector3(-sy * st, ct, -cy * st);
+            return new Vector3(sy * ct, st, cy * ct);
+        }
+
+        /// <summary>
+        /// Pose libre del papel del campo (marco de la pista: +Z a lo largo, +Y arriba, +X a la derecha del jugador).
+        /// <paramref name="face"/> = −1 invierte la emision sin girar el papel. La cara visible (la del dibujo) es el lado del eje de
+        /// emision que mira a <paramref name="viewer"/> (el banco); si el jugador queda de canto, la opuesta a la emision base.
+        /// </summary>
+        public static LabPaperPose PaperPose(Vector3 center, float yawDeg, float tiltDeg, int face, Vector3 viewer)
+        {
+            int f = face < 0 ? -1 : 1;
+            Vector3 dir = PaperDirection(yawDeg, tiltDeg, out Vector3 up);
+            Vector3 toViewer = viewer - center;
+            float d = toViewer.sqrMagnitude > 1e-8f ? Vector3.Dot(dir, toViewer.normalized) : 0f;
+            Vector3 view = d > 1e-3f ? dir : -dir;
+            return new LabPaperPose(center, dir * f, view, up);
+        }
+
+        /// <summary>Pose del papel del spec con el centro dado (la altura sobre el piso ya resuelta por quien llama).</summary>
+        public static LabPaperPose PaperPose(in LabSealSpec s, Vector3 center, Vector3 viewer)
+            => PaperPose(center, s.paperYawDeg, s.paperTiltDeg, s.paperFace, viewer);
+
+        /// <summary>
+        /// Altura del centro del papel sobre el piso: la pedida, pero nunca menos de lo que hace falta para que el borde mas bajo
+        /// quede a <see cref="FloorClearance"/> (de pie un papel de 2 m necesita el centro a 1,02 m; acostado, a 2 cm).
+        /// </summary>
+        public static float PaperCenterHeight(float height, float tiltDeg, float size)
+        {
+            float half = 0.5f * Mathf.Max(0f, size) * Mathf.Abs(Mathf.Cos(Mathf.Clamp(tiltDeg, -90f, 90f) * Mathf.Deg2Rad));
+            return Mathf.Max(height, FloorClearance + half);
+        }
         // ---------------------------------------------------------------- geometria del lienzo de prueba
 
         /// <summary>

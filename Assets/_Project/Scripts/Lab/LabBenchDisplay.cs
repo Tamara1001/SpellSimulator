@@ -3,20 +3,20 @@ using System.Text;
 using TMPro;
 using UnityEngine;
 using SpellSimulator.Audio;
+using SpellSimulator.Casting;
 using SpellSimulator.Compiler;
 
 namespace SpellSimulator.Lab
 {
     /// <summary>
-    /// Pizarra del banco de sellos (Docs/LABORATORIO_V3_PLAN.md, (c).2–3 y (b)):
-    /// - «Vas a lanzar»: resumen del sello (<see cref="LabSealSummary"/>),
-    ///   rearmado solo cuando cambia una variable (<see cref="LabSealBench.VarChanged"/>);
-    /// - banda de resultado del ultimo lanzamiento (<see cref="LabSealBench.UltimoResultado"/>): verde valido / roja invalido con
-    ///   elemento, calidad % y motivo;
-    /// - espejo en el atril cuando el papel real esta en la pista (<see cref="LabSealBench.PaperAtEasel"/> falso): muestra la
-    ///   textura del lienzo de prueba con una flecha emisiva hacia <see cref="LabSealBench.PaperEmissionWorld"/>; otra flecha
-    ///   acompaña al papel real.
-    /// Sin allocations por frame: textos solo al cambiar, poses de flechas a <see cref="PollHz"/> y sin GetComponent en Update.
+    /// Textos del banco (Laboratorio v4, puntos 5, 8 y 10):
+    /// - cartel «Vas a lanzar» (se ve siempre): una fila por dato con el rotulo en el color de su grupo
+    ///   (<see cref="LabSealSummary.BuildRow"/>), rearmado solo cuando cambia una variable o el dibujo del atril;
+    /// - datos de reconocimiento SOLO CON LENTES (los oculta/muestra <see cref="LabLensGate"/>, aca solo se escribe el texto):
+    ///   banda de resultado del ultimo lanzamiento (valido/invalido, elemento, calidad %, motivo, estado previsto) y lectura del
+    ///   atril de dibujo (trazos y si el anillo esta cerrado);
+    /// - flecha emisiva que acompaña al papel del campo hacia donde sale el hechizo.
+    /// Sin allocations por frame: textos solo al cambiar, pose de la flecha a <see cref="PollHz"/>.
     /// </summary>
     public class LabBenchDisplay : MonoBehaviour
     {
@@ -35,36 +35,37 @@ namespace SpellSimulator.Lab
         [SerializeField, Tooltip("Banco de sellos (vacio = LabSealBench.Current).")]
         private LabSealBench bench;
 
-        [Header("Pizarra")]
-        [SerializeField, Tooltip("Texto del resumen «Vas a lanzar».")]
-        private TMP_Text summaryText;
+        [Header("Cartel «Vas a lanzar»")]
+        [SerializeField, Tooltip("Una fila por dato (LabSealSummary.RowCount), de arriba hacia abajo.")]
+        private TMP_Text[] rowTexts;
+
+        [Header("Solo con lentes")]
         [SerializeField, Tooltip("Texto de la banda de resultado.")]
         private TMP_Text resultText;
         [SerializeField, Tooltip("Banda de resultado (malla clara: se tiñe con un MaterialPropertyBlock).")]
         private Renderer resultBand;
+        [SerializeField, Tooltip("Lectura del atril de dibujo (trazos, anillo).")]
+        private TMP_Text padInfoText;
+        [SerializeField, Tooltip("Lanzador (para saber si el anillo del dibujo cierra). Vacio = el de la escena.")]
+        private SpellCaster caster;
 
-        [Header("Espejo del atril")]
-        [SerializeField, Tooltip("Ancla del espejo en el atril: centro del papel, +Z hacia la pista, +Y arriba.")]
-        private Transform mirrorAnchor;
-        [SerializeField, Tooltip("Renderer del espejo (misma malla que el papel; el material del lienzo se toma en runtime).")]
-        private Renderer mirrorRenderer;
-        [SerializeField, Tooltip("Flecha emisiva del espejo (+Z = punta).")]
-        private Transform easelArrow;
-        [SerializeField, Tooltip("Flecha emisiva que acompaña al papel real (+Z = punta).")]
+        [Header("Flecha del papel")]
+        [SerializeField, Tooltip("Flecha emisiva que acompaña al papel (+Z = punta).")]
         private Transform paperArrow;
-        [SerializeField, Tooltip("Distancia (m) del centro del papel al comienzo de la flecha que lo acompaña.")]
+        [SerializeField, Tooltip("Distancia (m) del centro del papel al comienzo de la flecha.")]
         private float paperArrowOffset = 0.05f;
 
         private readonly StringBuilder sb = new StringBuilder(256);
+        private readonly StringBuilder row = new StringBuilder(96);
         private Func<string, string> nameOf;
         private MaterialPropertyBlock block;
         private int bandColorId;
         private bool subscribed;
-        private bool summaryDirty = true, resultDirty = true;
+        private LabSketchPad subscribedPad;
+        private bool summaryDirty = true, resultDirty = true, padDirty = true;
         private float nextPoll;
-        private int mirrorState = -1; // -1 sin mirar, 0 oculto, 1 visible
-        private Vector3 shownEmission, shownPaperPosition, shownPaperScale;
-        private Renderer paperRenderer;
+        private Vector3 shownEmission, shownPaperPosition;
+        private string[] rowPrefixes;
 
         private void Awake()
         {
@@ -73,8 +74,11 @@ namespace SpellSimulator.Lab
             bandColorId = BaseColorId;
             if (resultBand != null && resultBand.sharedMaterial != null && !resultBand.sharedMaterial.HasProperty(BaseColorId)
                 && resultBand.sharedMaterial.HasProperty(ColorId)) bandColorId = ColorId;
-            if (mirrorRenderer != null) mirrorRenderer.enabled = false;
-            if (easelArrow != null) easelArrow.gameObject.SetActive(false);
+            // Rotulo de cada fila en el color oscuro de su grupo (se arma una vez).
+            rowPrefixes = new string[LabSealSummary.RowCount];
+            for (int i = 0; i < rowPrefixes.Length; i++)
+                rowPrefixes[i] = "<b><color=#" + ColorUtility.ToHtmlStringRGB(LabPalette.Dark(LabPalette.Group(LabSealSummary.RowGroup(i)))) + ">"
+                                 + LabSealSummary.RowLabel(i) + "</color></b>   ";
         }
 
         private void OnEnable() => Subscribe();
@@ -82,7 +86,8 @@ namespace SpellSimulator.Lab
         private void Start()
         {
             Subscribe();
-            summaryDirty = resultDirty = true;
+            if (caster == null) caster = FindFirstObjectByType<SpellCaster>();
+            summaryDirty = resultDirty = padDirty = true;
         }
 
         private void OnDisable() => Unsubscribe();
@@ -94,12 +99,13 @@ namespace SpellSimulator.Lab
             if (bench == null) return;
             if (summaryDirty) RefreshSummary();
             if (resultDirty) RefreshResult();
+            if (padDirty) RefreshPad();
             if (Time.unscaledTime < nextPoll) return;
             nextPoll = Time.unscaledTime + 1f / PollHz;
-            RefreshPaper();
+            RefreshArrow();
         }
 
-        // ---------------------------------------------------------------- eventos del banco
+        // ---------------------------------------------------------------- eventos
 
         private void Subscribe()
         {
@@ -108,6 +114,8 @@ namespace SpellSimulator.Lab
             if (bench == null) return;
             bench.VarChanged += OnVarChanged;
             bench.Launched += OnLaunched;
+            subscribedPad = bench.SketchPad;
+            if (subscribedPad != null) subscribedPad.Changed += OnPadChanged;
             subscribed = true;
         }
 
@@ -116,15 +124,22 @@ namespace SpellSimulator.Lab
             if (!subscribed || bench == null) return;
             bench.VarChanged -= OnVarChanged;
             bench.Launched -= OnLaunched;
+            if (subscribedPad != null) subscribedPad.Changed -= OnPadChanged;
+            subscribedPad = null;
             subscribed = false;
         }
 
         private void OnVarChanged(LabSealVarId id, float previous, float next)
         {
             summaryDirty = true;
-            // La pose del papel cambia en el proximo redibujo del banco: mirar pronto.
-            if (id == LabSealVarId.PaperPose || id == LabSealVarId.PaperFace || id == LabSealVarId.PaperTilt || id == LabSealVarId.PaperSize)
-                nextPoll = 0f;
+            resultDirty = true; // el estado previsto depende del hueco del anillo
+            nextPoll = 0f;
+        }
+
+        private void OnPadChanged()
+        {
+            summaryDirty = true;
+            padDirty = true;
         }
 
         private void OnLaunched(SpellIR spell)
@@ -134,16 +149,25 @@ namespace SpellSimulator.Lab
             if (director != null) director.Play(ResultCue, transform.position, 0.8f);
         }
 
-        // ---------------------------------------------------------------- pizarra
+        // ---------------------------------------------------------------- cartel
 
         private void RefreshSummary()
         {
             summaryDirty = false;
-            if (summaryText == null) return;
+            if (rowTexts == null) return;
             LabSealSpec spec = bench.Spec;
-            LabSealSummary.Build(spec, sb, nameOf);
-            summaryText.SetText(sb);
+            bool drawing = bench.UsesDrawing;
+            for (int i = 0; i < rowTexts.Length && i < LabSealSummary.RowCount; i++)
+            {
+                if (rowTexts[i] == null) continue;
+                LabSealSummary.BuildRow(spec, i, row, nameOf, drawing);
+                sb.Clear();
+                sb.Append(rowPrefixes[i]).Append(row);
+                rowTexts[i].SetText(sb);
+            }
         }
+
+        // ---------------------------------------------------------------- solo con lentes
 
         private void RefreshResult()
         {
@@ -153,7 +177,7 @@ namespace SpellSimulator.Lab
             Color band;
             if (!r.HasResult)
             {
-                sb.Append("Todavía no lanzaste\nApretá LANZAR");
+                sb.Append("Todavía no lanzaste · Apretá LANZAR");
                 band = IdleColor;
             }
             else
@@ -161,15 +185,33 @@ namespace SpellSimulator.Lab
                 sb.Append(r.Valid ? "VÁLIDO" : "INVÁLIDO");
                 if (r.Valid) sb.Append(" · ").Append(ElementName(r.Element));
                 sb.Append(" · calidad ").Append(Mathf.RoundToInt(r.QualityPercent)).Append(" %");
+                sb.Append(bench.LastLaunchFromDrawing ? " · dibujo" : " · controles");
                 sb.Append('\n').Append(string.IsNullOrEmpty(r.Reason) ? (r.Valid ? "Listo" : "Sin motivo") : r.Reason);
                 band = r.Valid ? ValidColor : InvalidColor;
             }
+            sb.Append("\nPrevisto con los controles: ").Append(LabSealSummary.Prediction(bench.Spec));
             if (resultText != null) resultText.SetText(sb);
             if (resultBand != null)
             {
                 block.SetColor(bandColorId, band);
                 resultBand.SetPropertyBlock(block);
             }
+        }
+
+        private void RefreshPad()
+        {
+            padDirty = false;
+            if (padInfoText == null) return;
+            LabSketchPad pad = bench.SketchPad;
+            sb.Clear();
+            if (pad == null || !pad.HasDrawing) sb.Append("Atril vacío · LANZAR usa los controles");
+            else
+            {
+                int strokes = pad.Canvas.Session.Strokes.Count;
+                bool closed = caster != null && caster.IsRingClosed(pad.Canvas.Session, pad.Canvas.WorldSize);
+                sb.Append(strokes).Append(strokes == 1 ? " trazo" : " trazos").Append(" · anillo ").Append(closed ? "cerrado" : "abierto");
+            }
+            padInfoText.SetText(sb);
         }
 
         private static string ElementName(ElementType element)
@@ -185,69 +227,28 @@ namespace SpellSimulator.Lab
             }
         }
 
-        /// <summary>Nombre visible de una receta o de un signo (solo al rearmar el resumen, no por frame).</summary>
+        /// <summary>Nombre visible de una receta, un sigilo o un signo (solo al rearmar el cartel, no por frame).</summary>
         private string NameOf(string id)
         {
             var recipes = bench.RecipeIds;
             for (int i = 0; i < recipes.Count; i++)
                 if (recipes[i] == id) return bench.FormatVar(LabSealVarId.BaseRecipe, i);
-            var signs = bench.SignIds;
-            for (int i = 0; i < signs.Count; i++)
-                if (signs[i] == id) return bench.FormatVar(LabSealVarId.SignType, i);
-            return null;
+            return bench.GlyphDisplayName(id);
         }
 
-        // ---------------------------------------------------------------- espejo y flechas
+        // ---------------------------------------------------------------- flecha
 
-        private void RefreshPaper()
+        private void RefreshArrow()
         {
-            Vector3 emission = bench.PaperEmissionWorld;
+            if (paperArrow == null) return;
             Transform paper = bench.PaperTransform;
-
-            // Flecha del papel real: sale del centro del papel hacia donde sale el hechizo.
-            if (paperArrow != null && paper != null)
-            {
-                Vector3 at = paper.position + emission * paperArrowOffset;
-                if (emission != shownEmission || at != shownPaperPosition)
-                {
-                    paperArrow.SetPositionAndRotation(at, Look(emission));
-                    shownPaperPosition = at;
-                }
-            }
-
-            int state = bench.PaperAtEasel ? 0 : 1;
-            if (state != mirrorState)
-            {
-                mirrorState = state;
-                if (paperRenderer == null && bench.Canvas != null) paperRenderer = bench.Canvas.GetComponent<Renderer>();
-                if (mirrorRenderer != null)
-                {
-                    // El material del lienzo es una instancia creada en runtime (DrawingCanvas): se toma al mostrar.
-                    if (state == 1 && paperRenderer != null) mirrorRenderer.sharedMaterial = paperRenderer.sharedMaterial;
-                    mirrorRenderer.enabled = state == 1;
-                }
-                if (easelArrow != null) easelArrow.gameObject.SetActive(state == 1);
-                shownEmission = Vector3.zero; // fuerza la pose
-            }
-
-            if (state == 1)
-            {
-                if (mirrorRenderer != null && bench.Canvas != null)
-                {
-                    Transform canvas = bench.Canvas.transform;
-                    Vector3 scale = canvas.lossyScale;
-                    if (scale != shownPaperScale)
-                    {
-                        mirrorRenderer.transform.localScale = scale;
-                        shownPaperScale = scale;
-                    }
-                    if (mirrorAnchor != null && emission != shownEmission)
-                        // La cara visible del espejo mira al jugador (−Z del ancla), como el papel en el atril.
-                        mirrorRenderer.transform.rotation = LabSealBenchMath.FaceRotation(bench.Canvas.SurfaceNormalLocal, -mirrorAnchor.forward, mirrorAnchor.up);
-                }
-                if (easelArrow != null && emission != shownEmission) easelArrow.rotation = Look(emission);
-            }
+            if (paper == null) return;
+            Vector3 emission = bench.PaperEmissionWorld;
+            Vector3 at = bench.Canvas.WorldCenter + emission * paperArrowOffset;
+            if (emission == shownEmission && at == shownPaperPosition) return;
+            paperArrow.SetPositionAndRotation(at, Look(emission));
             shownEmission = emission;
+            shownPaperPosition = at;
         }
 
         private static Quaternion Look(Vector3 direction)

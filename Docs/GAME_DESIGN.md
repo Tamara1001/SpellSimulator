@@ -139,18 +139,22 @@ el sello queda preparado y se lanza al cerrarlo con la pluma (el tamaño de la e
 potencia). Un **signo** se estampa del tamaño del anillo que ya hay en el papel, apuntando a su centro.
 
 ## Laboratorio y lentes de tinta
-Mesa al este de la mesa de estampas para experimentar con variables (consigna de *Simuladores*). Seis **perillas**: masa
-de la caja (1-600 kg, escala logarítmica), dirección y velocidad del viento, radio de semilla, debilitamiento y
-generaciones máximas del fuego. Cada una tiene una palanca, una lectura y dos placas **− / +** que se aprietan apuntando
-(clic en PC, gatillo en VR, como los botones del grimorio). Tres botones **materializan** el experimento delante de la
-mesa: una caja de 0,6 m con la masa elegida, una zona de viento de 4×3×4 m (30 s) y un parche de fuego sobre el pasto a
-~10 m. **«Valores por defecto»** vuelve todo a los valores del juego. El reinicio del mundo borra lo materializado y
-conserva los valores. Un cartel muestra las instrucciones y el último resultado medido (área quemada, distancia de la
-caja, alcance y duración del hechizo); cada cambio y su resultado quedan en un **registro CSV** de la sesión
-(`registro-sesion-AAAAMMDD-HHMM.csv`, se abre en Excel). Las **lentes de tinta** están en un soporte sobre la mesa:
-agarrarlas (E / grip) las «pone» y en el mundo aparecen etiquetas con los parámetros (masa y velocidad de los objetos,
-viento, generación del fuego, fuerza/alcance/duración de cada hechizo); otra vez sobre el soporte, se sacan. Solo en
-modo Libre. Controles: no cambian.
+Banco en arco (Laboratorio v4) en la pradera sureste, con una pista de pasto enfrente. El jugador se para en el centro y
+todo queda al alcance de la mano (≤ 0,7 m). **Adelante**: el atril de dibujo (se dibuja a mano con clic o gatillo
+sostenido, sin gastar tinta y sin que se lance solo), **LANZAR** (lanza el dibujo del atril o, si está vacío, el sello
+armado con los controles), «Borrar dibujo» y «↺ Reiniciar sello». **Izquierda**: el sello, con lo importante arriba —
+1 Hechizo (receta y grilla de sigilos), 2 Signos (grilla de signos, cantidad, ángulo, sentido), 3 Papel y tinta,
+4 Afinado. **Derecha**: objetos del campo — «+ Caja» (hasta 4), «Borrar elegido», «Borrar todo», casillas P (papel de
+prueba) y 1–4 (cajas) para elegir, y los controles del elegido (atajo de posición, tamaño, lado, distancia, giro, altura,
+inclinación; las cajas solo lado, distancia y giro); un aro luminoso marca el elegido. Más afuera: «+ Viento»,
+«+ Fuego», «↺ Reiniciar entorno», viento (dirección y velocidad, en vivo), fuego (semilla, merma, generaciones) y masa de
+la caja elegida. El papel puede ir de pie, en el piso, de frente, hacia atrás o a un lado. Perillas, deslizadores y
+selectores se manejan con clic/gatillo y arrastre (rueda: un paso; doble clic: valor inicial); apuntar cualquier pieza
+muestra su ayuda arriba del panel. El cartel «Vas a lanzar» resume el sello. Las **lentes de tinta** (soporte en la
+repisa, E / grip) muestran los datos: etiquetas en el mundo y, de cerca y mirándolos, el resultado del último
+lanzamiento (válido, elemento, calidad, estado previsto), la lectura del atril y las mediciones del pizarrón. Cada
+cambio queda en un **registro CSV** de la sesión. El reinicio del mundo borra lo materializado. Solo en modo Libre.
+Controles del juego: no cambian.
 
 ## Audio (M5)
 Música ambiental suave (pads + campanitas), viento y pájaros de fondo, cascada que se oye al acercarse. Cada acción
@@ -200,6 +204,8 @@ Esquema (ADR-032/033). Se repasa en el grimorio (Tab → Controles).
 | Menú | Grimorio en la mano / a pantalla y menú | T / Esc | Botón de menú izquierdo |
 | | Botones del grimorio | Apuntar + clic izquierdo | Apuntar + gatillo |
 | | Panel de depuración / reiniciar el mundo | F3 / Retroceso | — / Y |
+| | Mapa de la torre a pantalla completa (apuntándolo; también clic en el cuadro) / cerrarlo | M / M o Esc | X (izquierdo) o gatillo en el cuadro / X |
+| | Viajar a un portal desde el mapa | Clic en su rombo | Gatillo en su rombo |
 
 **Inventario:** la mano principal (derecha por defecto; se cambia en Opciones) tiene 3 slots (lápiz, goma, estampas, tinta...) y la
 secundaria uno solo: lo que se agarra con E (lienzo, caja, el grimorio) y se arrastra por el mundo, siempre visible en la barra.

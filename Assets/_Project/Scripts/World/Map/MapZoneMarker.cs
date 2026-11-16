@@ -4,9 +4,10 @@ using SpellSimulator.Interfaces;
 namespace SpellSimulator.World.Map
 {
     /// <summary>
-    /// Marcador numerado de una zona en el mapa de la torre. Apuntarlo (mouse en PC, rayo en VR) muestra el nombre y el uso
-    /// de la zona en el panel del cuadro; presionarlo (clic o gatillo) marca su línea en la leyenda. El resaltado y el panel
-    /// los maneja <see cref="TowerMap"/>, que sigue lo apuntado por el PlayerInteractor en ambas plataformas.
+    /// Marcador del mapa de la torre: el círculo numerado de una zona o el rombo de un portal. Apuntarlo (mouse en PC, rayo
+    /// en VR) muestra el nombre y el uso en el panel del cuadro; presionarlo (clic o gatillo) marca la zona en la leyenda o,
+    /// si es un portal, lleva al jugador hasta ese portal. El resaltado, el panel y el viaje los maneja <see cref="TowerMap"/>,
+    /// que sigue lo apuntado por el PlayerInteractor en ambas plataformas.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
     public class MapZoneMarker : MonoBehaviour, IPressable
@@ -17,20 +18,25 @@ namespace SpellSimulator.World.Map
         [SerializeField, Tooltip("Mapa dueño del marcador.")]
         private TowerMap owner;
 
-        [SerializeField, Tooltip("Índice de la zona en el catálogo del mapa.")]
+        [SerializeField, Tooltip("Índice de la zona (o del portal) en el catálogo del mapa.")]
         private int index;
 
-        [SerializeField, Tooltip("Nombre de la zona (para el aviso de interacción).")]
+        [SerializeField, Tooltip("True si es el rombo de un portal (presionarlo hace viajar).")]
+        private bool portal;
+
+        [SerializeField, Tooltip("Nombre de la zona o del portal (para el aviso de interacción).")]
         private string zoneName = "";
 
         public TowerMap Owner => owner;
         public int Index => index;
+        public bool IsPortal => portal;
 
-        /// <summary>Lo llama <see cref="TowerMap.Setup"/> al crear el marcador.</summary>
-        public void Configure(TowerMap map, int zoneIndex, string name)
+        /// <summary>Lo llama <see cref="TowerMap"/> al crear el marcador.</summary>
+        public void Configure(TowerMap map, int zoneIndex, string name, bool isPortal = false)
         {
             owner = map;
             index = zoneIndex;
+            portal = isPortal;
             zoneName = name ?? "";
         }
 
@@ -40,7 +46,9 @@ namespace SpellSimulator.World.Map
 
         public void Press()
         {
-            if (owner != null) owner.Select(index);
+            if (owner == null) return;
+            if (portal) owner.Travel(index);
+            else owner.Select(index);
         }
 
         /// <summary>Agranda el marcador mientras se lo apunta (sin allocations).</summary>

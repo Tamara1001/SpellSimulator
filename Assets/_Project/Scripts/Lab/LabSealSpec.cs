@@ -31,9 +31,18 @@ namespace SpellSimulator.Lab
         /// <summary>Hueco maximo del anillo (grados); StampPattern.RingGapDeg (34°) ya lo deja «preparado».</summary>
         public const float MaxRingGapDeg = 40f;
         public const float MaxTremor = 0.05f;
-        public const float MaxPaperTiltDeg = 90f;
+        /// <summary>Inclinacion del papel del campo (Laboratorio v4): 0 = de pie, 90 = mira arriba, −90 = mira abajo.</summary>
+        public const float MaxPaperTiltDeg = 90f, MinPaperTiltDeg = -90f;
+        /// <summary>
+        /// Papel del campo (Laboratorio v4): X a lo ancho de la pista (m, 0 = centro) y distancia desde el inicio de la pista (m).
+        /// Reflejan MapStructures.LaboratoryTrackWidth (10 m, con 0,5 m de margen) y LaboratoryTrackLength (12 m); MapLab avisa si no coinciden.
+        /// </summary>
+        public const float MaxPaperX = 4.5f, MinPaperDistance = 0.5f, MaxPaperDistance = 11.5f;
+        /// <summary>Altura del centro del papel sobre el piso (m); LabSealBenchMath.PaperCenterHeight evita que se entierre.</summary>
+        public const float MaxPaperHeight = 1.5f;
+        public const float DefaultPaperDistance = 3f, DefaultPaperHeight = 1.2f;
         public const int PenWidthCount = 4;
-        /// <summary>Presets de posicion del papel (0..8, ver LabSealBenchMath.PaperPose); 8 = libre (usa cara e inclinacion).</summary>
+        /// <summary>Atajos de posicion del papel (0..8, ver LabSealBenchMath.PaperPresets); 8 = personalizada (no carga nada).</summary>
         public const int PaperPoseCount = 9;
         public const int DefaultPaperPose = 0;
         public const int FreePaperPose = 8;
@@ -60,8 +69,13 @@ namespace SpellSimulator.Lab
         public float paperTiltDeg;
         /// <summary>Indice de grosor de pluma (0..3).</summary>
         public int penWidthIndex;
-        /// <summary>Preset de posicion del papel (0..8). En 0..7 la cara invierte la emision y la inclinacion se ignora.</summary>
+        /// <summary>Ultimo atajo de posicion cargado (0..7) u 8 = personalizada (se movio algun control de posicion).</summary>
         public int paperPose;
+        /// <summary>Papel del campo (v4): X lateral (m), distancia desde el inicio de la pista (m), giro (°, 0 = sale hacia el fondo, 90 = derecha, 180 = hacia el banco) y altura del centro sobre el piso (m).</summary>
+        public float paperX;
+        public float paperDistance;
+        public float paperYawDeg;
+        public float paperHeight;
         public int seed;
 
         /// <summary>Sello por defecto: sin signos, anillo cerrado, tinta normal.</summary>
@@ -88,6 +102,10 @@ namespace SpellSimulator.Lab
                 paperTiltDeg = 0f,
                 penWidthIndex = 0,
                 paperPose = DefaultPaperPose,
+                paperX = 0f,
+                paperDistance = DefaultPaperDistance,
+                paperYawDeg = 0f,
+                paperHeight = DefaultPaperHeight,
                 seed = 1
             };
         }
@@ -109,9 +127,13 @@ namespace SpellSimulator.Lab
             s.tremor = Mathf.Clamp(s.tremor, 0f, MaxTremor);
             s.ink = (LabInkKind)Mathf.Clamp((int)s.ink, 0, 2);
             s.paperFace = s.paperFace < 0 ? -1 : 1;
-            s.paperTiltDeg = Mathf.Clamp(s.paperTiltDeg, 0f, MaxPaperTiltDeg);
+            s.paperTiltDeg = Mathf.Clamp(s.paperTiltDeg, MinPaperTiltDeg, MaxPaperTiltDeg);
             s.penWidthIndex = Mathf.Clamp(s.penWidthIndex, 0, PenWidthCount - 1);
             s.paperPose = Mathf.Clamp(s.paperPose, 0, PaperPoseCount - 1);
+            s.paperX = Mathf.Clamp(s.paperX, -MaxPaperX, MaxPaperX);
+            s.paperDistance = Mathf.Clamp(s.paperDistance, MinPaperDistance, MaxPaperDistance);
+            s.paperYawDeg = Mathf.Clamp(s.paperYawDeg, -180f, 180f);
+            s.paperHeight = Mathf.Clamp(s.paperHeight, 0f, MaxPaperHeight);
             return s;
         }
 

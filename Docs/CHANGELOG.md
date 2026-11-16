@@ -5,6 +5,28 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-15 — Laboratorio v4: banco al alcance, objetos del campo, atril de dibujo y datos con lentes
+
+- Tamara probó el v3 en VR (12 puntos). Plan y decisiones en `LABORATORIO_V4_PLAN.md`.
+- Banco compacto (`LabBenchLayout`): mesa baja adelante y cuatro paneles casi verticales en arco; todo control a ≤ 0,7 m de donde se para el jugador, profundidad útil 0,24 m. `MinControlPitch` 0,30 → 0,22 m.
+- Paneles con título y ayuda que dicen qué hacer; lo importante arriba; sigilos y signos como grillas de iconos generados de las plantillas (`LabGlyphGrid`, `LabGlyphIcons`).
+- Objetos del campo (`LabField`, `LabFieldSlot`): papel de prueba con posición libre (variables 19–22, inclinación −90..90, atajos «Frente/Piso/Izquierda…»), hasta 4 cajas, aro en el elegido, borrar elegido/todo; viento ajustable en vivo; masa a la caja elegida.
+- Atril de dibujo (`LabSketchPad`): se dibuja a mano con el rayo; LANZAR usa el dibujo o, vacío, el sello de los controles (sin tinta ni auto-lanzamiento).
+- Cartel «Vas a lanzar» nuevo (pergamino, filas con color de grupo); «↺ Reiniciar sello» / «↺ Reiniciar entorno» con icono y ayuda; 3 luces + faroles.
+- Datos de reconocimiento solo con lentes, cerca y mirando (`LabLensVisibility`, `LabLensGate`): banda de resultado, lectura del atril, contadores.
+- Tests: `LabV4Tests` (lentes, alcance, iconos), `LabSealBenchTests` (pose libre, atajos, cartel, grupos) y `LabPanelLayoutTests`. `HarnessPlaySmoke`: atajos, pose libre en el piso, dibujo vs. sintético, 4 cajas y mover la elegida, datos con lentes.
+- **Sin compilar ni probar todavía** (KI-137). Docs: `GAME_DESIGN.md`, `STRUCTURE.md`, `KNOWN_ISSUES.md`.
+
+## 2026-11-15 — Mapa de la torre: leyenda nueva, pantalla completa, portales y zonas reubicadas
+
+- Pedido de Tamara tras probar el mapa: leyenda poco llamativa, sin pantalla completa, sin portales y el entrenamiento en otro lugar.
+- Leyenda rediseñada (`MapTowerMap.BuildLegend`, medidas en `MapProjection.Legend*`): una fila por zona y por portal con chapa del color del marcador (con su número; rombo en los portales), nombre en negrita casi negra ~50 % más grande, título «Portales» y barra dorada con filete rojo en la fila apuntada o marcada. Capas sin texto coplanar (barra 2 mm, chapa 4 mm, texto 6 mm encima), sin sombras.
+- Pantalla completa: apuntando el cuadro, **M** (PC) o **X izquierdo** (VR), o clic/gatillo en el cuadro. PC: el cuadro se trae a 0,5 m de la cámara escalado para llenar la vista (`MapProjection.FitScale`); VR: panel vertical a 0,8 m frente a la cabeza. Se cierra con M/X, Esc o alejándose 1,5 m. Tab no se usó: ya es la vista completa del lienzo. Esc no abre el grimorio ni suelta el cursor mientras el mapa está abierto (`FocusMode.PanelView`). El cuadro dejó de ser estático.
+- Portales en el mapa (`WorldZones.json` → `portals`, los 4 de `portals.json`): rombo con el color de cada portal, corrido arriba a la derecha del marcador de su estructura. Presionarlo lleva al jugador a la llegada del portal con el mismo teletransporte del cruce (`Portal.TeleportLocalPlayerHere`, refactor de `NetTeleportLocal`); evento `TowerMap.TraveledFromMap`.
+- Entrenamiento movido a (16, −46) (`ValleyShape.TrainingOrigin`; aplanado, `ClearVegetation`, `TrackClear` y el catálogo lo siguen solos). La cabaña 1 (ahora «Cabaña del norte», id `cabin-north`) y el puesto de suministros se mudaron al norte: `MapStructures.CabinNorthPreferred` (−8, 46) y `SupplyStallPreferred` (10, 48). El laboratorio no se movió.
+- Tests: `TowerMapTests` (portales en `portals.json`, rombos sin tapar marcadores, `SetupPortals`, leyenda dentro del pergamino, texto no coplanar, `FitScale`), `StructureSitesPinTests` (sitios nuevos, al norte y separados de sus vecinos; entrenamiento a > 12 m del laboratorio). `HarnessPlaySmoke`: un rombo por portal con su portal en la escena.
+- Docs: `GAME_DESIGN.md` (controles: M / X), `GrimoireTexts` (Controles), `KNOWN_ISSUES.md` (KI-135).
+
 ## 2026-11-15 — Laboratorio v3: texto legible, posiciones del papel, entrenamiento reubicado y mapa en la torre
 
 - Tamara probó el v2: textos ilegibles (z-fighting entre rótulo y franja de color), papel solo hacia un lado, confuso de usar, laboratorio pegado al entrenamiento base. Plan en `LABORATORIO_V3_PLAN.md`.

@@ -1,0 +1,18 @@
+# Laboratorio v4 — banco al alcance, objetos del campo, atril de dibujo y datos con lentes
+
+Sigue a [LABORATORIO_V3_PLAN.md](LABORATORIO_V3_PLAN.md). Feedback de Tamara tras probar el v3 en VR (12 puntos).
+
+## Decisiones
+1. **Alcance** (`LabBenchLayout`, test `LabV4Tests`): el jugador se para en `StandZ`; adelante una mesa baja (atril de dibujo, LANZAR, «Borrar dibujo», «↺ Reiniciar sello») que no tapa la pista; a los lados **cuatro paneles casi verticales (76°) en arco** (±65,6° y ±124,8°): profundidad útil 0,24 m y todo control a ≤ 0,7 m en horizontal (filas apiladas en altura, 0,9–1,7 m). Para que entre todo sin quitar variables, `LabPanelLayout.MinControlPitch` baja de 0,30 a **0,22 m** (plaquita de 18 cm + 4 cm de aire; colliders ≥ 9 cm) y se achican perillas/dial. Las grillas usan celdas contiguas de 8,5 cm (blanco de VR = celda). El banco no tiene colisión sólida salvo la mesa de adelante (se entra por el hueco de atrás).
+2. **Encabezados**: cada panel tiene un copete con título y la tira de ayuda, cuyo texto en reposo dice qué hacer («1 Elegí un hechizo · 2 Ajustá lo que quieras · 3 Tocá LANZAR»…).
+3. **Orden** (lo importante arriba): izquierda adentro «1 Hechizo» (receta + **grilla de sigilos**) y «2 Signos» (**grilla de signos**, cantidad, ángulo, sentido); izquierda afuera «3 Papel y tinta» y «4 Afinado». Iconos generados una vez al inicio desde `GlyphEntry.TemplateStrokes` en un atlas chico (`LabGlyphIcons`, `LabGlyphGrid`); marco dorado en el elegido; el título del margen muestra «Sigilo: X».
+4. **Objetos del campo** (`LabField`): el papel de prueba vive en la pista con posición libre — variables nuevas `PaperX/PaperDistance/PaperYaw/PaperHeight` (ids 19–22, grupo 5) e inclinación −90..90. `LabSealBenchMath.PaperPose(centro, giro, inclinación, cara, observador)` + `PaperCenterHeight` (nunca se entierra). Los 9 presets quedan como **atajos** (Frente, Hacia mí, Mesa, Piso, Izquierda, Derecha, Boca abajo, Diagonal, Personalizada); mover cualquier control pasa a «Personalizada». Hasta 4 cajas; casillas P/1–4; aro luminoso en el elegido; los controles editan al elegido (en cajas: lado, distancia y giro; el resto muestra «—»).
+5. **Cartel «Vas a lanzar»**: pergamino con marco biselado, título con ornamentos, 6 filas con rombo del color del grupo (`LabSealSummary.BuildRow`, `LabPalette`) y la tira de ayuda de la mesa de adelante. Sin banda de resultado.
+6. **Reinicios**: «↺ Reiniciar sello» (icono grande, color neutro) vuelve los grupos 1–4 a la receta elegida (no mueve el papel); «↺ Reiniciar entorno» ya no toca el sello.
+7. **Panel de objetos**: «+ Caja / Borrar elegido / Borrar todo», casillas y controles del elegido; afuera «+ Viento / + Fuego / Reiniciar entorno», viento (en vivo sobre las zonas ya creadas), fuego y masa (se aplica a la caja elegida).
+8. **Atril de dibujo** (`LabSketchPad`): `DrawingCanvas` real con `PenTool`, manejado como `IManipulable` (el clic no llega a la lapicera: sin tinta) y `ISealGate` bloqueado (sin auto-lanzamiento). LANZAR copia sus trazos al papel del campo; vacío, usa el sello de los controles.
+9. **Luz**: 3 luces reales sin sombras (punto sobre el banco, foco al cartel, foco a la pista) + faroles emisivos con halo por bloom.
+10. **Datos solo con lentes** (`LabLensVisibility` pura con histéresis 3 m / 50°, `LabLensGate`): banda de resultado + estado previsto, lectura del atril y contadores del pizarrón (6 m). El cartel se ve siempre.
+
+## Riesgos
+Sin compilar en esta tanda; colisión y orientación del atril (normal del PaperCanvas), orientación de los iconos (Y de las plantillas), lectura PC del atril (cursor por delta de mouse con la vista congelada), entrada al banco, rendimiento de 3 luces en Quest. Ver KI-137.
