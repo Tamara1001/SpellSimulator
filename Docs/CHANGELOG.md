@@ -5,6 +5,11 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-16 — Plan de reorganización del mapa por flujo de aprendizaje (solo documentación)
+
+- Nuevo [MAPA_FLUJO_PLAN.md](MAPA_FLUJO_PLAN.md): plan aprobado por Tamara (torre → entrenamiento → Archivo → 4 campos de elemento → late game; laboratorio en la pradera), con tracker de pasos, protocolo «avanzá con el mapa», coordenadas v2, reparto de libros, riesgos y tabla de agentes/modelos. Junto con [MAPA_FLUJO_CRITICA.md](MAPA_FLUJO_CRITICA.md) (revisión externa) y [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias).
+- Sin cambios de código, escenas ni datos. `ROADMAP.md` («Siguiente») y `CLAUDE.md` apuntan al plan.
+
 ## 2026-11-16 — Siete hechizos de la wiki de Witch Hat Atelier
 
 - Nuevos en `Data/Spells/`: `pyreball`, `ring_of_fire`, `flame_shot`, `wall_bend`, `grasping_wind`, `wind_wall` y `water_orb` (este usa el signo orb). Composición tomada de las páginas de la wiki (telepedia); ángulos, dificultad y textos son adaptación propia, y las regiones de `flame_shot` se simplificaron (la wiki muestra grupos de cinco). Sumados a los libros `spells-fire-earth`, `spells-wind-water` y `spells-water-deep` en `Lore/glifos.json`.

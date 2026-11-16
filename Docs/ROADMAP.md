@@ -131,6 +131,7 @@ Estados: ✅ hecho · 🔄 en curso · ⬜ pendiente. `KI-xxx` → [[KNOWN_ISSUE
 ## Siguiente (backlog priorizado para quien continúe)
 > Estado al 2026-10-10: tanda de la prueba manual (13 puntos) hecha y subida; falta probarla a mano (KI-123) y medir el reconocimiento de luz/raros (KI-124).
 > Plan vigente de la octava tanda (controles, tinta, hechizos, runas, cinturón, mundo y portales, multijugador): [PLAN_OCTAVA_TANDA](PLAN_OCTAVA_TANDA.md).
+0. **Reorganizar el mapa del modo Libre por flujo de aprendizaje** (aprobado 2026-11-16): seguir [MAPA_FLUJO_PLAN](MAPA_FLUJO_PLAN.md) — el tracker y el protocolo «avanzá con el mapa» están al principio del documento.
 1. **Probar a mano** lo hecho (ver M7) y corregir lo que aparezca. Es lo que más valor da ahora.
 2. ~~WebGL/itch.io (KI-104)~~ resuelto 2026-10-09.
 3. **Reconocimiento agua vs viento** (KI-105): juntar sellos mal leídos como fixtures (`Tests/Fixtures`, ver su README) y, con ~20 casos,

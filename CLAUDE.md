@@ -73,6 +73,9 @@ notas de memoria del agente anterior. Si la persona que te habla es otra, pregun
 libros; es lo que debe estar sólido) y **Duelo** (arena, rival IA, online; después). PC y Quest en paralelo; sin fecha fija. Estilo visual: *Witch Hat Atelier*, low-poly cartoon.
 El ONNX y el diccionario ya están en el repo; la referencia `wha-spell-simulator` solo hace falta para re-sincronizarlos.
 
+**Si te piden «avanzá con el mapa»** (reorganización del modo Libre por flujo de aprendizaje): seguí el protocolo y el tracker al principio de
+[Docs/MAPA_FLUJO_PLAN.md](Docs/MAPA_FLUJO_PLAN.md) (plan aprobado por Tamara el 2026-11-16, v2). Hacé el primer paso sin tildar, commit chico, tildalo.
+
 **Primeros pasos:** [Docs/ONBOARDING.md](Docs/ONBOARDING.md) → [Docs/STATUS.md](Docs/STATUS.md) → «Siguiente» al final de [Docs/ROADMAP.md](Docs/ROADMAP.md).
 Lo reciente (HUD, inventario, grimorio, torre, VFX, sellos, menú, calidad, WebGL) **nunca se probó a mano con teclado/mouse reales ni en VR**: lo primero es probar y corregir.
 
