@@ -176,6 +176,10 @@ namespace SpellSimulator.Lab
         private void Awake()
         {
             root = new GameObject("LabOverlay_Pool").transform;
+            root.SetParent(transform, false);
+            var gazeTags = new GameObject("LabGazeTags");
+            gazeTags.transform.SetParent(transform, false);
+            gazeTags.AddComponent<LabGazeTagPresenter>();
 
             Material lines = lineMaterial;
             Shader spriteShader = Shader.Find("Sprites/Default");
@@ -409,48 +413,7 @@ namespace SpellSimulator.Lab
 
         private void LateUpdate()
         {
-            if (!visible || warming) return;
-            if (cam == null)
-            {
-                cam = Camera.main;
-                if (cam == null) return;
-            }
-
-            if (Time.unscaledTime >= nextRefresh)
-            {
-                nextRefresh = Time.unscaledTime + RefreshPeriod;
-                Refresh(cam.transform.position);
-            }
-
-            Vector3 camPos = cam.transform.position;
-            for (int i = 0; i < LabelCount; i++)
-            {
-                if (slotKind[i] == SlotKind.None) continue;
-                Vector3 at;
-                switch (slotKind[i])
-                {
-                    case SlotKind.Movable:
-                        var m = slotMovable[i];
-                        if (m == null) { HideSlot(i); continue; }
-                        var body = m.Body;
-                        at = (body != null ? body.worldCenterOfMass : m.transform.position) + Vector3.up * slotHeight[i];
-                        break;
-                    case SlotKind.Canvas:
-                        var c = slotCanvas[i];
-                        at = (c != null ? c.WorldCenter : slotAnchor[i]) + Vector3.up * slotHeight[i];
-                        break;
-                    default:
-                        at = slotAnchor[i] + Vector3.up * slotHeight[i];
-                        break;
-                }
-                Vector3 toLabel = at - camPos;
-                float distance = toLabel.magnitude;
-                var t = labelTransforms[i];
-                t.position = at;
-                if (distance > 1e-3f) t.rotation = Quaternion.LookRotation(toLabel / distance, Vector3.up);
-                float s = Mathf.Clamp(distance / ReferenceDistance, MinScale, MaxScale);
-                t.localScale = new Vector3(s, s, s);
-            }
+            // Las etiquetas de datos del overlay v5 quedaron reemplazadas por LabGazeTagPresenter.
         }
 
         // ---------------------------------------------------------------- refresco (5 Hz)

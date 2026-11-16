@@ -5,6 +5,17 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-16 — Laboratorio v6 (parte B): alas grandes sin paginas, atril invertido, fogata lejos y estacas legibles
+
+- Tamara probó el v5 en VR: paneles chicos, muy bajos, con demasiadas subdivisiones. Plan en `LABORATORIO_V6_PLAN.md` (parte B; la parte A, etiquetas por mirada, es de `Scripts/Lab`). **Sin compilar ni probar** (lo compila el agente principal).
+- **Dos alas grandes** (`LabBenchLayout`, `MapLab`): ~0,96 × 1 m, casi verticales (65°), borde de abajo a 0,94 m y de arriba a 1,85 m, a ~0,92 m del punto de pie y giradas 30° hacia adentro; solo un pie fino debajo (poste + base). **Sin páginas ni pestañas** (se dejó de construir `LabPageSet`/`LabPageTab`; los tipos siguen): izquierda el sello (grillas de sigilos y signos lado a lado + tres filas con título: «Hechizo y signo», «Forma y tamaño», «Tinta y disparo»), derecha el campo (casillas P/1–4 + dos filas de tres botones, «Objeto elegido», «Atajo y papel», «Viento y cajas», «Fuego»). 14 + 13 controles, 5 columnas (paso 0,19 m, plaquita 0,15 m), colliders de 12 cm. De más importante arriba a menos abajo.
+- **Atril invertido** (inclinado 60°, desde 0,95 m): el lienzo arriba (centro a ~1,43 m), debajo LANZAR / «Borrar dibujo» / «Reiniciar sello» y la pantalla «Vas a lanzar» abajo de todo. Tab sigue abriendo la vista completa.
+- **Fuera de la construcción:** la pizarra «Mediciones» (`LabLensCounters`), la banda verde de resultado (`LabLensResult`) y la lectura del atril (`LabLensPad`); `LabBenchDisplay` los tolera nulos.
+- **Fogata** (anillo de piedras) a (−14,5; 11,5) del marco del laboratorio: ≥ 8 m del borde de la pista y de la plataforma (se avisa si no); el ancla del fuego queda dentro de la pista sin decorado; la limpieza de vegetación incluye el claro de la fogata.
+- **Estacas de distancia** (`Lab_Stake_v6`): chapa crema de 40 × 22 cm con marco, número oscuro de ~15 cm de cuerpo (≥ 10 cm de mayúscula) a 6 mm delante de la chapa, cada estaca girada hacia la zona de pie.
+- `LabPanelLayout`: `MinControlPitch` 0,22 → 0,19 y `PlaqueWidth` 0,18 → 0,15. `LabBenchLayout` reescrito (alcance del centro ≤ 0,9 m; de las alas ≤ 1,5 m, porque un ala de 0,96 m a 0,9 m del jugador no cabe en 0,9 m). `LabV5Tests` reescrito para el nuevo diseño; `HarnessPlaySmoke`: el chequeo de páginas pasa a «sin páginas, 14 + 13 controles» y se quitó el de las placas fijas con lentes.
+- Docs: `GAME_DESIGN.md` (Laboratorio), `KNOWN_ISSUES.md` (KI-140).
+
 ## 2026-11-15 — Mapa de la torre v5: vista completa con Tab y sin viaje
 
 - Tamara probó el v4 en VR. Plan en `LABORATORIO_V5_PLAN.md` (sección B). Se reusa el sistema de vista completa que ya existía en vez de uno propio del mapa.

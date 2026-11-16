@@ -16,8 +16,19 @@ namespace SpellSimulator.Lab
         /// <summary>Mirada forzada (solo pruebas: HarnessPlaySmoke). Null = el jugador local.</summary>
         public static Transform ViewerOverride { get; set; }
 
+        /// <summary>
+        /// Laboratorio v6: la pizarra de mediciones, la banda de resultado y la lectura del atril se retiraron (ahora son las
+        /// etiquetas por mirada de <see cref="LabGazeTagPresenter"/>). Con true (por defecto) el gate no muestra nunca su contenido.
+        /// Codigo muerto a limpiar al final de v6; las pruebas viejas pueden ponerlo en false.
+        /// </summary>
+        public static bool Retired { get; set; } = true;
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => ViewerOverride = null;
+        private static void ResetStatics()
+        {
+            ViewerOverride = null;
+            Retired = true;
+        }
 
         [SerializeField, Tooltip("Lo que se muestra/oculta (no debe ser este objeto).")]
         private GameObject content;
@@ -55,7 +66,7 @@ namespace SpellSimulator.Lab
             if (Time.unscaledTime < nextPoll) return;
             nextPoll = Time.unscaledTime + PollSeconds;
             bool next = false;
-            if (LabOverlay.Visible && Viewer(out Vector3 eye, out Vector3 forward))
+            if (!Retired && LabOverlay.Visible && Viewer(out Vector3 eye, out Vector3 forward))
             {
                 Vector3 to = anchor.position - eye;
                 float distance = to.magnitude;
@@ -67,7 +78,13 @@ namespace SpellSimulator.Lab
             if (content != null) content.SetActive(next);
         }
 
-        private bool Viewer(out Vector3 eye, out Vector3 forward)
+        private bool Viewer(out Vector3 eye, out Vector3 forward) => TryGetViewer(ref cachedCamera, out eye, out forward);
+
+        /// <summary>
+        /// Ojo y direccion de la mirada del jugador local (o <see cref="ViewerOverride"/>); lo comparte <see cref="LabGazeTagPresenter"/>.
+        /// <paramref name="cameraCache"/> guarda Camera.main entre llamadas.
+        /// </summary>
+        public static bool TryGetViewer(ref Camera cameraCache, out Vector3 eye, out Vector3 forward)
         {
             Transform head = ViewerOverride;
             if (head == null)
@@ -77,8 +94,8 @@ namespace SpellSimulator.Lab
             }
             if (head == null)
             {
-                if (cachedCamera == null) cachedCamera = Camera.main;
-                if (cachedCamera != null) head = cachedCamera.transform;
+                if (cameraCache == null) cameraCache = Camera.main;
+                if (cameraCache != null) head = cameraCache.transform;
             }
             if (head == null)
             {

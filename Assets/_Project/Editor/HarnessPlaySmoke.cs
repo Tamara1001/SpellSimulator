@@ -600,20 +600,15 @@ namespace SpellSimulator.EditorTools
                     Debug.Log("[PlaySmoke] " + drawReport);
                 }
 
-                // Consola v5: dos laterales con 4 paginas; se ve una por vez y las pestañas las cambian.
-                var pageSets = Object.FindObjectsByType<LabPageSet>(FindObjectsSortMode.None);
-                bool pagesOk = pageSets.Length == 2;
-                foreach (var set in pageSets)
-                {
-                    int start = set.CurrentPage;
-                    bool onlyOne = set.PageCount == LabBenchLayout.PagesPerPanel && start == set.InitialPage;
-                    for (int i = 0; i < set.PageCount; i++) onlyOne &= set.Page(i) != null && set.Page(i).activeSelf == (i == start);
-                    set.Show(1);
-                    onlyOne &= set.Page(1).activeSelf && !set.Page(start).activeSelf;
-                    set.Show(start);
-                    pagesOk &= onlyOne;
-                }
-                Check(pagesOk, $"laboratorio v5: {pageSets.Length} paneles con paginas (una visible, las pestañas cambian de pagina)");
+                // Consola v6: sin paginas ni pestañas (todas las variables a la vez) y sin las placas fijas de lentes.
+                var pageSets = Object.FindObjectsByType<LabPageSet>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+                bool noPages = pageSets.Length == 0 && GameObject.Find("LabLensResult") == null && GameObject.Find("LabLensPad") == null
+                    && GameObject.Find("LabLensCounters") == null;
+                var wingSeal = GameObject.Find("LabPanel_Seal");
+                var wingField = GameObject.Find("LabPanel_Field");
+                bool wingsOk = wingSeal != null && wingField != null && wingSeal.GetComponentsInChildren<LabControlBinding>(true).Length == 14
+                    && wingField.GetComponentsInChildren<LabControlBinding>(true).Length == 13;
+                Check(noPages && wingsOk, $"laboratorio v6: alas sin paginas (LabPageSet {pageSets.Length}), 14 controles a la izquierda y 13 a la derecha");
 
                 // Cartel «Laboratorio» de la entrada: estetica de los carteles del mundo, de cara a la torre.
                 var labSign = GameObject.Find("Sign_Lab");
@@ -661,33 +656,10 @@ namespace SpellSimulator.EditorTools
                 Check(field.BoxCount == 0 && field.Selected == LabField.PaperSlot, "laboratorio v4: Borrar todo deja solo el papel");
             }
 
-            // --- Laboratorio v4: los datos de reconocimiento solo se ven con lentes, cerca y mirando.
-            var gates = Object.FindObjectsByType<LabLensGate>(FindObjectsSortMode.None);
-            LabLensGate resultGate = null;
-            foreach (var g in gates) if (g.name == "LabLensResult") resultGate = g;
+            // --- Laboratorio v6: las placas fijas con lentes (resultado, atril, mediciones) ya no existen (B.3): son etiquetas por mirada
+            // (Scripts/Lab/LabGazeTags, las comprueba su propio bloque). Aca solo se apagan las lentes.
             LabOverlay.Visible = false;
             for (float end = Time.realtimeSinceStartup + 0.3f; Time.realtimeSinceStartup < end;) yield return null;
-            bool hiddenWithout = true;
-            foreach (var g in gates) if (g.IsShowing || (g.Content != null && g.Content.activeSelf)) hiddenWithout = false;
-            bool shownNear = false, hiddenFar = false;
-            if (resultGate != null)
-            {
-                var viewer = new GameObject("HarnessLensViewer").transform;
-                Transform anchor = resultGate.transform;
-                viewer.SetPositionAndRotation(anchor.position - anchor.forward * 1.2f, Quaternion.LookRotation(anchor.forward));
-                LabLensGate.ViewerOverride = viewer;
-                LabOverlay.Visible = true;
-                for (float end = Time.realtimeSinceStartup + 0.3f; Time.realtimeSinceStartup < end;) yield return null;
-                shownNear = resultGate.IsShowing && resultGate.Content.activeSelf;
-                viewer.position = anchor.position - anchor.forward * 6f;
-                for (float end = Time.realtimeSinceStartup + 0.3f; Time.realtimeSinceStartup < end;) yield return null;
-                hiddenFar = !resultGate.IsShowing;
-                LabOverlay.Visible = false;
-                LabLensGate.ViewerOverride = null;
-                Object.Destroy(viewer.gameObject);
-            }
-            Check(gates.Length >= 3 && hiddenWithout && shownNear && hiddenFar,
-                $"laboratorio v4: {gates.Length} datos con lentes (ocultos sin lentes {hiddenWithout}, a 1,2 m {shownNear}, a 6 m ocultos {hiddenFar})");
             var towerMap = Object.FindFirstObjectByType<SpellSimulator.World.Map.TowerMap>();
             Check(towerMap != null && towerMap.ZoneCount > 0 && towerMap.MarkerCount == towerMap.ZoneCount,
                 $"mapa de la torre: {(towerMap != null ? towerMap.MarkerCount : 0)} marcadores = zonas");

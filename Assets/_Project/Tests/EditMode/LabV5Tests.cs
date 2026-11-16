@@ -6,94 +6,158 @@ using UnityEngine;
 
 namespace SpellSimulator.Tests
 {
-    /// <summary>Logica pura del Laboratorio v5: consola frontal (alcance, alturas, todo hacia adelante), pantalla y vista previa del atril.</summary>
+    /// <summary>
+    /// Logica pura del Laboratorio v6: dos alas grandes (alcance, alturas, giro hacia adentro, filas y grupos sin pisarse), atril
+    /// (lienzo arriba, botones, pantalla abajo) y vista previa del atril.
+    /// </summary>
     public class LabV5Tests
     {
         private static readonly int[] Sides = { LabBenchLayout.Left, LabBenchLayout.Right };
+        private const float TitleHalf = 0.011f, ControlCollider = 0.12f;
 
-        /// <summary>Todos los puntos que se tocan en los laterales: filas × columnas, botones, grillas, casillas y pestañas.</summary>
-        private static IEnumerable<Vector2> SideTargets()
+        /// <summary>Todos los puntos extremos que se tocan en un ala: filas (columnas de las puntas), grillas, casillas y botones.</summary>
+        private static IEnumerable<Vector2> SideTargets(int panel)
         {
+            float reach = 2f * LabBenchLayout.ColumnPitch;
+            foreach (float s in LabBenchLayout.RowS(panel))
+                foreach (float sx in new[] { -1f, 1f })
+                    foreach (float ds in new[] { -LabBenchLayout.ControlHalfHeight, LabBenchLayout.ControlHalfHeight })
+                        yield return new Vector2(sx * reach, s + ds);
             float cell = LabBenchLayout.CellPitch, gridHalf = (LabBenchLayout.GridColumns - 1) * 0.5f * cell;
-            foreach (float s in LabBenchLayout.RowS)
+            if (panel == LabBenchLayout.Left)
             {
-                foreach (float x in LabBenchLayout.ColumnX) yield return new Vector2(x, s);
-                yield return new Vector2(0f, s);
-                yield return new Vector2(-LabBenchLayout.ButtonPitch, s);
-                yield return new Vector2(LabBenchLayout.ButtonPitch, s);
+                foreach (float sx in new[] { -1f, 1f })
+                {
+                    yield return new Vector2(LabBenchLayout.SigilGridX + sx * gridHalf, LabBenchLayout.SigilGridS + cell * 0.5f);
+                    yield return new Vector2(LabBenchLayout.SigilGridX + sx * gridHalf, LabBenchLayout.SigilGridS - cell * 0.5f);
+                    yield return new Vector2(LabBenchLayout.SignGridX + sx * gridHalf, LabBenchLayout.SignGridS + cell);
+                    yield return new Vector2(LabBenchLayout.SignGridX + sx * gridHalf, LabBenchLayout.SignGridS - cell);
+                }
             }
-            // Grilla de sigilos (2 filas), de signos (3 filas) y casillas del campo.
-            foreach (float x in new[] { -gridHalf, gridHalf })
+            else
             {
-                yield return new Vector2(x, LabBenchLayout.SigilGridS + cell * 0.5f);
-                yield return new Vector2(x, LabBenchLayout.SignGridS + cell);
-                yield return new Vector2(x, LabBenchLayout.SlotS);
+                foreach (float sx in new[] { -1f, 1f })
+                    yield return new Vector2(LabBenchLayout.SlotX + sx * gridHalf, LabBenchLayout.SlotS);
+                foreach (float rowS in LabBenchLayout.ButtonRowS)
+                    for (int i = 0; i < 3; i++) yield return new Vector2(LabBenchLayout.ButtonX(i), rowS);
             }
-            for (int i = 0; i < LabBenchLayout.PagesPerPanel; i++) yield return new Vector2(LabBenchLayout.TabX(i), LabBenchLayout.TabS);
         }
 
         [Test]
-        public void Consola_TodoControlAlAlcance_YHaciaAdelante()
+        public void Alas_TodoControlAlAlcance_YHaciaAdelante()
         {
             foreach (int panel in Sides)
-                foreach (Vector2 t in SideTargets())
+                foreach (Vector2 t in SideTargets(panel))
                 {
                     Vector3 p = LabBenchLayout.PanelPoint(panel, t.x, t.y);
-                    Assert.LessOrEqual(LabBenchLayout.Reach(p), LabBenchLayout.ReachMax + 1e-4f, $"panel {panel}, x {t.x}, s {t.y}");
+                    Assert.LessOrEqual(LabBenchLayout.Reach(p), LabBenchLayout.SideReachMax + 1e-4f, $"panel {panel}, x {t.x}, s {t.y}");
                     Assert.LessOrEqual(Mathf.Abs(LabBenchLayout.Bearing(p)), 90f, "como mucho al costado: nunca hay que girar hacia atras");
-                    Assert.That(p.y, Is.InRange(LabBenchLayout.PanelBottom, LabBenchLayout.TopMax));
+                    Assert.That(p.y, Is.InRange(LabBenchLayout.SideBottom, LabBenchLayout.TopMax), $"altura panel {panel}, s {t.y}");
                 }
+        }
 
-            // Centro: botones y esquinas lejanas del atril.
+        [Test]
+        public void Atril_TodoAlAlcance_LienzoALaAlturaDeDibujo()
+        {
             float half = LabBenchLayout.PadSize * 0.5f;
-            var center = new[]
+            var targets = new[]
             {
-                new Vector2(0f, LabBenchLayout.ButtonsS), new Vector2(-LabBenchLayout.FrontButtonX, LabBenchLayout.ButtonsS),
-                new Vector2(LabBenchLayout.FrontButtonX, LabBenchLayout.ButtonsS),
-                new Vector2(-half, LabBenchLayout.PadS + half), new Vector2(half, LabBenchLayout.PadS + half)
+                new Vector2(0f, LabBenchLayout.ButtonsS), new Vector2(-LabBenchLayout.FrontButtonX - LabBenchLayout.FrontButtonWidth * 0.5f, LabBenchLayout.ButtonsS),
+                new Vector2(LabBenchLayout.FrontButtonX + LabBenchLayout.FrontButtonWidth * 0.5f, LabBenchLayout.ButtonsS),
+                new Vector2(-half, LabBenchLayout.PadS + half), new Vector2(half, LabBenchLayout.PadS + half),
+                new Vector2(-half, LabBenchLayout.PadS - half), new Vector2(half, LabBenchLayout.PadS - half)
             };
-            foreach (Vector2 t in center)
-                Assert.LessOrEqual(LabBenchLayout.Reach(LabBenchLayout.PanelPoint(LabBenchLayout.Center, t.x, t.y)), LabBenchLayout.ReachMax + 1e-4f, $"centro {t}");
+            foreach (Vector2 t in targets)
+            {
+                Vector3 p = LabBenchLayout.PanelPoint(LabBenchLayout.Center, t.x, t.y);
+                Assert.LessOrEqual(LabBenchLayout.Reach(p), LabBenchLayout.ReachMax + 1e-4f, $"centro {t}");
+                Assert.That(p.y, Is.InRange(LabBenchLayout.CenterBottom, LabBenchLayout.TopMax));
+            }
+            // Se dibuja parado: el centro del lienzo entre 1,3 y 1,5 m.
+            float padHeight = LabBenchLayout.PanelPoint(LabBenchLayout.Center, 0f, LabBenchLayout.PadS).y;
+            Assert.That(padHeight, Is.InRange(1.3f, 1.5f), "lienzo a la altura de dibujo");
         }
 
         [Test]
-        public void Consola_BajaYAbierta_BordesYPendiente()
+        public void Atril_OrdenDeArribaHaciaAbajo_LienzoBotonesPantalla()
         {
-            Assert.AreEqual(40f, LabBenchLayout.Tilt, 5f, "paneles inclinados ~40°");
-            Assert.AreEqual(0.8f, LabBenchLayout.PanelBottom, 0.05f);
-            for (int panel = 0; panel < LabBenchLayout.PanelCount; panel++)
-                Assert.LessOrEqual(LabBenchLayout.TopHeight(LabBenchLayout.PanelLength(panel)), LabBenchLayout.TopMax, $"borde de arriba del panel {panel}");
+            float pad = LabBenchLayout.PadSize * 0.5f + 0.014f, buttons = LabBenchLayout.CenterButtonDepth * 0.5f;
+            Assert.Less(LabBenchLayout.ScreenTo, LabBenchLayout.ButtonsS - buttons, "la pantalla queda debajo de los botones");
+            Assert.Less(LabBenchLayout.ButtonsS + buttons, LabBenchLayout.PadS - pad, "los botones quedan debajo del lienzo");
+            Assert.LessOrEqual(LabBenchLayout.PadS + pad, LabBenchLayout.CenterLength, "el lienzo entra en la losa");
+            Assert.GreaterOrEqual(LabBenchLayout.ScreenFrom, 0f);
+            // Los botones entran a lo ancho del atril.
+            Assert.LessOrEqual(LabBenchLayout.FrontButtonX + LabBenchLayout.FrontButtonWidth * 0.5f, LabBenchLayout.CenterWidth * 0.5f);
+        }
+
+        [Test]
+        public void Alas_GrandesCasiVerticales_BordesYPendiente()
+        {
+            Assert.AreEqual(65f, LabBenchLayout.SideTilt, 5f, "alas inclinadas ~65°");
+            Assert.AreEqual(0.95f, LabBenchLayout.SideBottom, 0.05f, "borde de abajo ~0,95 m");
+            Assert.AreEqual(0.96f, LabBenchLayout.SideWidth, 0.1f, "ala de ~0,9-1 m de ancho");
+            foreach (int panel in new[] { LabBenchLayout.Left, LabBenchLayout.Center, LabBenchLayout.Right })
+                Assert.LessOrEqual(LabBenchLayout.TopHeight(panel, LabBenchLayout.PanelLength(panel)), LabBenchLayout.TopMax, $"borde de arriba del panel {panel}");
+            Assert.AreEqual(1.85f, LabBenchLayout.TopHeight(LabBenchLayout.Right, LabBenchLayout.SideLength), 0.05f, "borde de arriba ~1,85 m");
             // La pantalla (con su marco) tampoco pasa el tope.
-            Assert.LessOrEqual(LabBenchLayout.TopHeight(LabBenchLayout.ScreenTo) + 0.02f, LabBenchLayout.TopMax + 1e-4f);
-            Assert.LessOrEqual(LabBenchLayout.ScreenTo, LabBenchLayout.CenterLength);
-            Assert.LessOrEqual(LabBenchLayout.RowS[0] + LabBenchLayout.RowPitch * 0.5f, LabBenchLayout.CrestFrom + 1e-4f, "los controles no pisan el copete");
+            Assert.LessOrEqual(LabBenchLayout.TopHeight(LabBenchLayout.Center, LabBenchLayout.ScreenTo) + 0.02f, LabBenchLayout.TopMax);
+            // Distancia al punto de pie del centro del borde de abajo: ~0,9-1 m.
+            foreach (int panel in Sides)
+                Assert.That(LabBenchLayout.Reach(LabBenchLayout.PanelBase(panel)), Is.InRange(0.85f, 1.05f));
         }
 
         [Test]
-        public void Consola_PanelesContiguosSinPisarse_YSimetricos()
+        public void Alas_GiradasHaciaAdentro_YSinPisarElAtril()
         {
-            float center = LabBenchLayout.HalfAngle(LabBenchLayout.CenterWidth), side = LabBenchLayout.HalfAngle(LabBenchLayout.SideWidth);
             Assert.AreEqual(0f, LabBenchLayout.PanelYaw(LabBenchLayout.Center));
             Assert.AreEqual(-LabBenchLayout.PanelYaw(LabBenchLayout.Right), LabBenchLayout.PanelYaw(LabBenchLayout.Left), 1e-4f);
-            Assert.GreaterOrEqual(LabBenchLayout.PanelYaw(LabBenchLayout.Right) - side, center - 1e-3f, "el lateral no pisa el centro");
-            Assert.Less(LabBenchLayout.PanelYaw(LabBenchLayout.Right) + side, 100f, "el borde de afuera queda al costado, no atras");
+            Assert.That(LabBenchLayout.PanelYaw(LabBenchLayout.Right), Is.InRange(25f, 35f), "giradas 25-35° hacia adentro");
+            float edge = LabBenchLayout.SideWidth * 0.5f;
+            foreach (float s in new[] { 0f, LabBenchLayout.SideLength })
+            {
+                Assert.Greater(LabBenchLayout.PanelPoint(LabBenchLayout.Right, -edge, s).x, LabBenchLayout.ScreenWidth * 0.5f + 0.02f, "el ala derecha no pisa el atril ni la pantalla");
+                Assert.Less(LabBenchLayout.PanelPoint(LabBenchLayout.Left, edge, s).x, -LabBenchLayout.ScreenWidth * 0.5f - 0.02f, "el ala izquierda no pisa el atril ni la pantalla");
+            }
+            Assert.Less(Mathf.Abs(LabBenchLayout.Bearing(LabBenchLayout.PanelPoint(LabBenchLayout.Right, edge, 0f))), 100f, "el borde de afuera queda al costado, no atras");
         }
 
         [Test]
-        public void Consola_SeparacionDeControlesYPestanas()
+        public void Alas_FilasYGruposSinPisarse()
         {
-            Assert.GreaterOrEqual(LabBenchLayout.ColumnX[1] - LabBenchLayout.ColumnX[0], LabPanelLayout.MinControlPitch - 1e-5f);
-            for (int i = 1; i < LabBenchLayout.RowS.Length; i++)
-                Assert.GreaterOrEqual(LabBenchLayout.RowS[i - 1] - LabBenchLayout.RowS[i], LabBenchLayout.RowPitch - 1e-5f);
+            float half = LabBenchLayout.SideWidth * 0.5f, cell = LabBenchLayout.CellPitch, gridHalf = LabBenchLayout.GridColumns * cell * 0.5f;
+            Assert.GreaterOrEqual(LabBenchLayout.ColumnPitch, LabPanelLayout.MinControlPitch - 1e-5f);
+            Assert.GreaterOrEqual(LabBenchLayout.ColumnPitch - ControlCollider, 0.05f, "colliders de 12 cm con ≥ 5 cm de aire");
+            Assert.Greater(LabBenchLayout.Columns, 2);
+            // 5 columnas con su plaquita entran en el ala (con marco).
+            Assert.LessOrEqual((LabBenchLayout.Columns - 1) * 0.5f * LabBenchLayout.ColumnPitch + LabPanelLayout.PlaqueWidth * 0.5f + 0.015f, half - 0.005f);
+            foreach (int panel in Sides)
+            {
+                float[] rows = LabBenchLayout.RowS(panel);
+                for (int i = 1; i < rows.Length; i++)
+                    Assert.GreaterOrEqual(rows[i - 1] - rows[i], LabBenchLayout.RowPitch - 1e-5f, $"filas del panel {panel}");
+                Assert.GreaterOrEqual(rows[rows.Length - 1] - LabBenchLayout.ControlHalfHeight, 0f, "la ultima fila no se sale por abajo");
+                // El titulo de la fila de arriba cabe antes del copete.
+                Assert.LessOrEqual(rows[0] + LabBenchLayout.RowTitleDS + TitleHalf, LabBenchLayout.CrestFrom);
+            }
+            Assert.LessOrEqual(LabBenchLayout.GridTitleS + TitleHalf, LabBenchLayout.CrestFrom, "titulos de las grillas antes del copete");
+            Assert.LessOrEqual(LabBenchLayout.SideLength - 0.07f, LabBenchLayout.CrestFrom + 1e-4f, "copete de 7 cm");
+
+            // Izquierda: grillas lado a lado (sin pisarse, dentro del ala) y arriba de la primera fila.
             Assert.GreaterOrEqual(LabBenchLayout.CellPitch, 0.085f - 1e-5f, "blancos de VR ≥ 8,5 cm");
-            Assert.GreaterOrEqual(LabBenchLayout.TabPitch, LabBenchLayout.TabWidth, "las pestañas no se pisan");
-            float tabsHalf = LabBenchLayout.TabX(LabBenchLayout.PagesPerPanel - 1) + LabBenchLayout.TabWidth * 0.5f;
-            Assert.LessOrEqual(tabsHalf, LabBenchLayout.SideWidth * 0.5f, "las pestañas entran en el panel");
-            // La plaquita de la fila de abajo no baja hasta las pestañas (lectura 6,6 cm abajo, ventanita de 2,8 cm).
-            float lowest = LabBenchLayout.RowS[LabBenchLayout.RowS.Length - 1] - 0.066f - 0.014f;
-            Assert.GreaterOrEqual(lowest, LabBenchLayout.TabS + LabBenchLayout.TabDepth * 0.5f);
-            // Grilla de signos (3 filas) arriba de la fila de cantidad/angulo.
-            Assert.GreaterOrEqual(LabBenchLayout.SignGridS - 1.5f * LabBenchLayout.CellPitch, LabBenchLayout.SignRowS + 0.075f);
+            Assert.LessOrEqual(LabBenchLayout.SigilGridX + gridHalf, LabBenchLayout.SignGridX - gridHalf, "las grillas no se pisan");
+            Assert.LessOrEqual(LabBenchLayout.SignGridX + gridHalf, half);
+            Assert.GreaterOrEqual(LabBenchLayout.SigilGridX - gridHalf, -half);
+            Assert.GreaterOrEqual(LabBenchLayout.SignGridS - 1.5f * cell, LabBenchLayout.LeftRowS[0] + LabBenchLayout.RowTitleDS + TitleHalf + 0.005f, "las grillas no pisan el titulo de la primera fila");
+            Assert.LessOrEqual(LabBenchLayout.SignGridS + 1.5f * cell, LabBenchLayout.GridTitleS - TitleHalf + 1e-4f, "las grillas quedan bajo su titulo");
+
+            // Derecha: casillas a la izquierda, botones a la derecha (dos filas de tres), todo dentro del ala y arriba de la primera fila.
+            Assert.LessOrEqual(LabBenchLayout.SlotX + gridHalf, LabBenchLayout.ButtonX(0) - LabBenchLayout.ButtonWidth * 0.5f, "casillas y botones no se pisan");
+            Assert.LessOrEqual(LabBenchLayout.ButtonX(2) + LabBenchLayout.ButtonWidth * 0.5f, half);
+            Assert.GreaterOrEqual(LabBenchLayout.ButtonPitch, LabBenchLayout.ButtonWidth, "los botones no se pisan");
+            Assert.GreaterOrEqual(LabBenchLayout.ButtonRowS[0] - LabBenchLayout.ButtonRowS[1], LabBenchLayout.ButtonDepth, "las filas de botones no se pisan");
+            Assert.GreaterOrEqual(LabBenchLayout.ButtonRowS[1] - LabBenchLayout.ButtonDepth * 0.5f,
+                LabBenchLayout.RightRowS[0] + LabBenchLayout.RowTitleDS + TitleHalf, "los botones no pisan el titulo de la primera fila");
+            Assert.LessOrEqual(LabBenchLayout.ButtonRowS[0] + LabBenchLayout.ButtonDepth * 0.5f, LabBenchLayout.GridTitleS - TitleHalf + 1e-4f);
         }
 
         [Test]
@@ -102,7 +166,6 @@ namespace SpellSimulator.Tests
             Vector3 middle = LabBenchLayout.PanelPoint(LabBenchLayout.Center, 0f, (LabBenchLayout.ScreenFrom + LabBenchLayout.ScreenTo) * 0.5f);
             Assert.LessOrEqual(LabBenchLayout.EyeDistance(middle), LabBenchLayout.ScreenReadMax, "a ≤ 0,9 m del ojo");
             Assert.GreaterOrEqual(LabPanelLayout.TextHeight(0.22f), LabBenchLayout.ScreenTextMin - 1e-5f, "letra ≥ 2,2 cm");
-            Assert.GreaterOrEqual(LabBenchLayout.ScreenFrom, LabBenchLayout.PadS + LabBenchLayout.PadSize * 0.5f, "la pantalla queda arriba del atril");
             // Hechizo grande y 4 datos, todos con rotulo; el papel no esta (se ve en la pista).
             Assert.AreEqual(4, LabSealSummary.ScreenRows.Length);
             CollectionAssert.DoesNotContain(LabSealSummary.ScreenRows, LabSealSummary.RowRecipe);

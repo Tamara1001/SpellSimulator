@@ -139,21 +139,22 @@ el sello queda preparado y se lanza al cerrarlo con la pluma (el tamaño de la e
 potencia). Un **signo** se estampa del tamaño del anillo que ya hay en el papel, apuntando a su centro.
 
 ## Laboratorio y lentes de tinta
-Consola frontal (Laboratorio v5) en la pradera sureste, con una pista de pasto enfrente; a la entrada, un cartel de
-madera de cara a la torre explica qué es y cómo se usa en 4 pasos. El jugador se para en el centro mirando a la pista:
-la consola es baja (0,8–1,25 m, inclinada 40°) y abierta, se ve la pista por encima, y todo queda al alcance de la mano
-(≤ 0,7 m). **Centro**: el atril de dibujo, un lienzo normal — se dibuja con la **lapicera equipada de siempre** (mismos
-controles, trazo, deshacer y goma; gasta tinta como cualquier lienzo) y **Tab** abre su vista completa en PC; nunca se
-lanza solo. Mientras no se dibuje a mano, el atril y el papel del campo muestran en vivo la **vista previa** del sello de
-los controles; el primer trazo a mano la reemplaza. Abajo: «Borrar dibujo» (vuelve a la vista previa), **LANZAR** (lanza
-el dibujo a mano o, si no hay, el sello de los controles, desde el papel del campo) y «Reiniciar sello». Arriba del
-atril, la pantalla **«Vas a lanzar»**: el hechizo grande y 4 datos (sigilo, signos, tinta, de dónde sale).
-**Izquierda**: el sello en 4 páginas con pestañas abajo — Hechizo (receta y grilla de sigilos), Signos (grilla, cantidad,
-ángulo), Tinta (tinta, pluma, disparo, sentido, tamaño, llenado) y Afinado. **Derecha**: el campo en 4 páginas — Objetos
-(«+ Caja» hasta 4, «Borrar elegido», «Borrar todo», casillas P = papel y 1–4 = cajas, atajo y tamaño del papel), Posición
-(lado, distancia, giro, altura, inclinación; las cajas solo lado, distancia y giro), Entorno («+ Viento», «+ Fuego»,
-«Reiniciar entorno», dirección y velocidad del viento, masa de la caja) y Fuego (semilla, merma, generaciones); un aro
-luminoso marca el elegido. Perillas, deslizadores, selectores y pestañas se manejan con clic/gatillo (y arrastre; rueda:
+Consola frontal (Laboratorio v6) en la pradera sureste, con una pista de pasto enfrente (estacas de distancia con la cifra
+grande, cada 2 m) y una fogata decorativa al costado, lejos; a la entrada, un cartel de madera de cara a la torre explica
+qué es y cómo se usa en 4 pasos. El jugador se para en el centro mirando a la pista, con **dos alas grandes** a los
+costados (~0,96 × 1 m, casi verticales, de 0,94 a 1,85 m, giradas hacia adentro, a ~0,9 m) y el atril en el medio.
+**Centro** (de arriba hacia abajo): el atril de dibujo, un lienzo normal — se dibuja con la **lapicera equipada de siempre**
+(mismos controles, trazo, deshacer y goma; gasta tinta como cualquier lienzo) y **Tab** abre su vista completa en PC; nunca
+se lanza solo. Mientras no se dibuje a mano, el atril y el papel del campo muestran en vivo la **vista previa** del sello de
+los controles; el primer trazo a mano la reemplaza. Debajo: «Borrar dibujo» (vuelve a la vista previa), **LANZAR** (lanza
+el dibujo a mano o, si no hay, el sello de los controles, desde el papel del campo) y «Reiniciar sello». Abajo de todo, la
+pantalla **«Vas a lanzar»**: el hechizo grande y 4 datos (sigilo, signos, tinta, de dónde sale).
+**Ala izquierda**: el sello entero, sin páginas — grillas de sigilos y de signos y tres grupos: Hechizo y signo (receta,
+cantidad, ángulo, largo, distancia), Forma y tamaño (tamaño, llenado, hueco, asimetría, temblor) y Tinta y disparo (tinta,
+pluma, disparo, sentido). **Ala derecha**: el campo y el entorno, sin páginas — casillas P = papel y 1–4 = cajas, «+ Caja»
+(hasta 4), «+ Viento», «+ Fuego», «Borrar elegido», «Borrar todo», «Reiniciar entorno»; Objeto elegido (lado, distancia, giro,
+altura, inclinación; las cajas solo lado, distancia y giro), Atajo y papel, Viento y cajas (dirección, velocidad, masa) y
+Fuego (semilla, merma, generaciones); un aro luminoso marca el elegido. Perillas, deslizadores y selectores se manejan con clic/gatillo (y arrastre; rueda:
 un paso; doble clic: valor inicial); apuntar cualquier pieza muestra su ayuda arriba del panel. Las **lentes de tinta**
 (soporte en la repisa, E / grip) muestran los datos: etiquetas en el mundo y, de cerca y mirándolos, el resultado del
 último lanzamiento (válido, elemento, calidad, estado previsto), la lectura del atril y las mediciones. Cada cambio queda
