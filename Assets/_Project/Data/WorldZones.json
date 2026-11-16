@@ -2,7 +2,7 @@
   "zones": [
     { "id": "tower", "name": "Torre", "use": "Biblioteca y estaciones de viento y agua; arriba, el estudio con portal y la alquimia.", "color": "#8E6B4A", "origin": "Tower", "x": 0, "z": 16 },
     { "id": "training", "name": "Entrenamiento", "use": "Blancos, muñecos y atril de papel para practicar sellos.", "color": "#D0563B", "origin": "Training", "x": 16, "z": -46 },
-    { "id": "laboratory", "name": "Laboratorio", "use": "Mesa de variables: cambiá el sello, lanzalo y registrá lo que pasa.", "color": "#4F7FC4", "origin": "Laboratory", "x": 47, "z": -27 },
+    { "id": "laboratory", "name": "Laboratorio", "use": "Mesa de variables: cambiá el sello, lanzalo y registrá lo que pasa.", "color": "#4F7FC4", "origin": "Laboratory", "x": 20, "z": -8 },
     { "id": "cabin-north", "name": "Cabaña del norte", "use": "Refugio con mesa y un libro de hechizos de viento y agua.", "color": "#B5793E", "origin": "Cabin_1", "x": -8, "z": 46 },
     { "id": "cabin-forest", "name": "Cabaña del bosque", "use": "Refugio con mesa y un libro de hechizos de fuego y tierra.", "color": "#6E8F35", "origin": "Cabin_2", "x": -28, "z": 34 },
     { "id": "shrine", "name": "Santuario", "use": "Cambiá runas gastadas o papeles por otros nuevos; el relicario guarda una runa de oro.", "color": "#D9A82E", "origin": "Shrine", "x": 34, "z": -36 },

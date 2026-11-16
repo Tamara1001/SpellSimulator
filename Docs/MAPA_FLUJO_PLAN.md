@@ -1,7 +1,7 @@
 # Plan: mapa del modo Libre ordenado por flujo de aprendizaje
 
-> **Estado: APROBADO por Tamara (2026-11-16), pendiente de implementar.** Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
-> Nada de esto está implementado todavía: ningún paso del tracker de abajo está hecho; no se tocó código, escenas, prefabs, `.asset` ni `.meta`.
+> **Estado: APROBADO por Tamara (2026-11-16), en implementación** (pasos 0 y 1 hechos). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
+> **v3 (2026-11-16, correcciones de Tamara al dibujo): D19-D24 y §17-§18. La torre pasa a ser el tutorial, el spawn pasa a llamarse Nexo y el Archivo se redefine. §17 y §18 son PROPUESTA hasta que Tamara las confirme.**
 > La revisión crítica externa está en [MAPA_FLUJO_CRITICA.md](MAPA_FLUJO_CRITICA.md) y ya está volcada en §12b.
 
 ## 🚀 «Avanzá con el mapa» — protocolo para quien retome (persona o Claude)
@@ -19,19 +19,21 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
 ### Tracker (orden v2; tildar al cerrar cada paso con su commit)
 
 - [x] **0** Volcar posiciones reales (`Sites()`), alturas, `Path8/Path9`, inflamabilidad de pinos; capturas «antes»
-- [ ] **1** Mover el laboratorio a la pradera (20,−8) — **incluye tocar `TrackClear`/frente al este** (§12b-1)
+- [x] **1** Mover el laboratorio a la pradera (20,−8) — sitio y frente fijos (este); se quitó `TrackClear`/`LaboratoryFront`
 - [ ] **2** Mover el entrenamiento a (0,−26), frente O/SO; actualizar tests
 - [ ] **2b** Caminos completos (`ValleyShape.Paths`) **antes** de fijar sitios 3-6
-- [ ] **3** Archivo (rotonda abierta) en (0,−46) con 3 libros: `variants`, `motion`, `shape`
+- [ ] **N** *(v3, §17)* Nexo: reaparición al morir, tablero con mapa y guía, pregunta «¿saltear el tutorial?» al empezar en modo Libre
+- [ ] **T1-T4** *(v3, §17)* Torre-tutorial, un commit por nivel: terraza (movilidad) → piso 2 (objetos) → piso 1 (objetos mágicos) → planta baja (abrir la puerta). **Reemplaza a 9b y 13.**
+- [ ] **3** Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
 - [ ] **4** Campo de agua (orilla real vía `FindLakeside`, ≈ −22,−30)
 - [ ] **5** Campo de tierra (20,−50) + santuario (44,−38) + peñascos 1 y 3 al este/norte
 - [ ] **6** Campos de fuego (−18,−50) y viento (26,−34): aplanado, sin pinos en r=10, props
 - [ ] **7** Reparto de libros de hechizos en `glifos.json` (releer el JSON actual: hay 7 hechizos nuevos de `b83b280`) + libro `seals`
 - [ ] **8b** Portal Archivo ↔ torre (D17)
 - [ ] **9** Carteles + mapa de la torre (grupo «Campos de elemento») + `LearningFlowTests`
-- [ ] **9b** Libro «El círculo y la columna» en la torre (D16)
+- [ ] ~~**9b** Libro «El círculo y la columna» en la torre (D16)~~ → absorbido por T4 (v3)
 - [ ] **10** Casitas (libros de hechizos combinados; mientras tanto `spells-siege` a la cabaña del bosque) + camino torre→norte
-- [ ] **13** Rework de la torre (A nichos, B estantes, C terraza) — subagente **Opus**
+- [ ] ~~**13** Rework de la torre (A nichos, B estantes, C terraza)~~ → reemplazado por T1-T4; la idea B (estantes que se llenan) pasa al Archivo (§18)
 - [ ] **11** Estandartes de color por elemento (malla emisiva sin luz)
 - [ ] **12** Docs finales (`GAME_DESIGN`, `STRUCTURE`, `ROADMAP`, `STATUS`, `KNOWN_ISSUES`, `CHANGELOG`) + prueba manual en PC y Quest
 
@@ -44,6 +46,10 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
   - **`Practice/*_Path8`** (5 objetos) están en (17.5–18.9, 2.3–4.9): a ~10,7 m del laboratorio nuevo, no molestan. **`Practice/*_Path9`** (5 objetos) están en (27.4–29.5, −0.5…−3.5): **el barril y la caja caen sobre el borde norte de la pista al este** (z = −3). En el paso 1 hay que correrlos o angostar/correr la pista.
   - **Duelo:** la arena (`Net/World/DuelArena.cs`) es una plataforma de 40 × 40 m **en el cielo, en (0, 100, 0)**, fuera del mapa: hoy el valle no tiene ningún lugar de duelo. El noreste (34, 22) es llano (desnivel 0,46) y queda libre al mudar el taller.
   - Capturas: `Docs/Capturas/mapa_antes_aerea.png` (aérea «antes») y `Docs/Capturas/mapa_propuesto.svg` (dibujo del mapa propuesto, con 3 ideas nuevas **sin aprobar**: circuito exterior, faroles/estandartes que responden al progreso y arena de duelo en el noreste). La captura del mapa de la torre «antes» queda para el paso 9.
+- 2026-11-16 — **Paso 1 hecho.** Laboratorio en (20, −8) con la pista al este; `LaboratorySite`/`LaboratoryFacing` fijos en `MapStructures` (ya no pasa por `Find` ni elige frente: `Clear` lo descartaba por estar sobre la pradera). El camino nexo→laboratorio termina en el borde de la plataforma. 599 tests EditMode en verde. Capturas `paso1_lab_aerea.png` y `paso1_lab_desde_nexo.png`.
+  - Sorpresa: en la escena **no hay ningún objeto de práctica en la pradera** (los `Practice/*_Path8/_Path9` de `MapOverrides.json` no aparecen entre x 10..42, z −22..4): el aviso del paso 0 sobre la pista no aplica.
+  - `MapBuilder.Build()` reescribe en `MapOverrides.json` un rect de UI que depende del tamaño de la ventana de Game (527×296 → 789×444): es ruido, se descarta con `git checkout`.
+- 2026-11-16 — **Correcciones de Tamara al dibujo (v3):** D19-D24 en §3, propuesta en §17 (torre-tutorial, Nexo, salteo) y §18 (Archivo). La arena de duelo se saca del dibujo (poca prioridad).
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),
 > [GLYPHS.md](GLYPHS.md), [ARCHITECTURE.md](ARCHITECTURE.md), [HARNESS.md](HARNESS.md).
@@ -99,7 +105,13 @@ con un mapa **compacto y caminable**, **sin bloquear nada** (todo sigue accesibl
 | D15 | Coordenadas v2 | **Aceptadas** las de §12b (fuego −18,−50; tierra 20,−50; santuario 44,−38; agua en la orilla real; peñascos 1 y 3 al este/norte). |
 | D16 | Columna | **Libro corto nuevo en la torre** «El círculo y la columna» (`column` se queda también donde esté en `shape`, o se mueve a ese libro: decide quien implemente, sin duplicar). |
 | D17 | Portal Archivo ↔ torre | **Sí, ahora.** Un portal nuevo en el Archivo con vuelta al estudio de la torre (ver paso 8b en §11: receta, `PortalRecipeTests`, `PortalKnowledgeTests`, smoke de 5 portales). |
-| D18 | Rework de la torre | Se hacen **A (nichos reactivos), B (estantes que se llenan) y C (terraza mirador)** de §12b. |
+| D18 | Rework de la torre | ~~A, B y C de §12b~~ → **reemplazada por D19** (la torre es el tutorial). B pasa al Archivo; C (mirador) se conserva porque el jugador arranca en la terraza. |
+| D19 | **Torre = tutorial** (v3) | El **primer spawn es en la punta de la torre** y el jugador está «atrapado»: baja nivel por nivel con microtutoriales muy simples y sale abriendo la puerta de abajo **con un hechizo**. Orden pedido por Tamara: arriba **movilidad básica** (sobre todo VR) → **mover objetos** (agarrar, dejar flotando, rotar) → **objetos mágicos** (tinta, papeles, primer hechizo, un libro básico de viento) → 1 o 2 niveles con lo necesario para **abrir la puerta** (viento, agua/tierra, columnas). **Tiene que sentirse que hay varias formas de resolver todo.** **Nada de sellos, runas ni portales en la torre.** Detalle en §17. |
+| D20 | **Nexo** (v3) | Lo que se llamaba «Spawn» (0, −6) pasa a ser el **Nexo**: ahí se **reaparece al morir** y ahí están **el mapa y la guía de cómo avanzar**. |
+| D21 | **Archivo** (v3) | Hay que definirlo antes de construirlo: una **librería con hechizos y cosas, y zonas pequeñas de prueba**. Propuesta en §18. |
+| D22 | Duelos (v3) | **Poca prioridad**: no se define ni se dibuja zona de duelos por ahora. La arena sigue en el cielo como está. |
+| D23 | **Saltear el tutorial** (v3) | Al empezar una partida en modo Libre/sandbox se pregunta si se quiere **saltear el tutorial**; si sí, aparece directo en el Nexo. (Sirve para testear.) |
+| D24 | Sitio del laboratorio | Fijo en (20, −8), pista al este, a 20 m del Nexo (paso 1, hecho). |
 
 ---
 
@@ -553,3 +565,36 @@ Reglas: un solo agente con Unity abierto a la vez (candado `Logs/unity.lock`); l
 - **Sitio (`Site`):** posición/radio/frente de una estructura calculada en `MapStructures.Sites()`.
 - **`MapOverrides.json`:** ajustes manuales del mapa que `MapLayout` conserva al regenerar.
 - **Late game:** zonas del norte/exterior que piden la base: casitas, atalaya, portales, cueva, santuario.
+
+---
+
+## 17. Torre-tutorial, Nexo y salteo (v3 — PROPUESTA, falta el sí de Tamara)
+
+**Idea:** la torre ya tiene 4 niveles unidos por rampas (terraza + 3 pisos, `TowerBuilder.Floors = 3`). Se usan tal cual, **sin agregar pisos**: un tema por nivel, de arriba hacia abajo. Cada bajada está tapada por algo que se saca **de más de una forma**; nunca hay una única solución.
+
+| Nivel | Tema (pedido de Tamara) | Qué se hace | Cómo se destraba la bajada (varias formas) |
+|---|---|---|---|
+| **Terraza** (arranque) | Movilidad básica | Mirar, caminar, girar; en VR: teletransporte / movimiento continuo y giro. De paso se ve todo el valle (mirador). | Llegar caminando **o** teletransportándose hasta la rampa; un cartel por cada forma de moverse. |
+| **Piso 2** | Mover objetos | Agarrar, soltar, dejar flotando en el aire, rotar, arrojar. | La rampa está tapada con cajas y tablones: se pueden **correr**, **apilar a un lado**, **arrojar** o **dejar flotando** arriba. |
+| **Piso 1** | Objetos mágicos | Tinta y lápiz, papel, **primer hechizo** (círculo + viento) y el libro básico de viento. | Una tela pesada tapa la rampa: se vuela con viento dibujado **en un papel**, **en la pared** o **en el piso**; también sirve empujarla con un objeto lanzado con viento. |
+| **Planta baja** | Agua/tierra y columnas → **abrir la puerta** | Libro `elements` (agua y tierra) y la lección de la columna. | La puerta está trabada: **ráfaga de viento** que la abre, **tierra** que pulveriza la traba de piedra (reusa el *Wall Breaker*), o **columna de agua** que levanta el contrapeso. Queda abierta para siempre. |
+
+- **Fuera de la torre** (para cumplir «sin sellos, runas ni portales»): el **portal del estudio** se muda al **Nexo**; la alquimia y el libro `rare` van al **Archivo**; el mapa de la torre va al **Nexo**. Fuego no se enseña adentro (es una biblioteca de madera): se aprende en su campo.
+- **Nexo (0, −6):** punto de reaparición al morir; **tablero con el mapa** (el actual `MapTowerMap`, afuera) con la «siguiente etapa» resaltada; cartel de 3 flechas (Entrenamiento / Laboratorio / Torre); el portal mudado.
+- **Salteo (D23):** al empezar en modo Libre, cartel «¿Saltear el tutorial?». Si se saltea (o ya se completó en esa partida guardada), se aparece en el Nexo con la puerta de la torre abierta. En multijugador, quien se une aparece en el Nexo.
+- **Lo que NO cambia:** controles, glifos conocidos al empezar (`starting`), estructura y rampas de la torre.
+- **Trabajo:** paso **N** (Nexo + reaparición + salteo: lógica chica, primero porque sirve para testear) y pasos **T1-T4** (un nivel por commit; lógica pura del progreso del tutorial en clase estática + test; un chequeo de smoke por nivel).
+
+## 18. Qué es el Archivo (v3 — PROPUESTA, falta el sí de Tamara)
+
+Una **biblioteca al aire libre** (rotonda de columnas con techo en anillo, r ≈ 9 m, sin paredes: cómoda en VR y barata en Quest) en (0, −46), centro del anillo de campos. Es **el lugar al que se vuelve**.
+
+- **Tres nichos de estudio**, cada uno con su libro en un atril y **una zona de prueba de 2 × 2 m al lado** para probar lo que se acaba de leer sin caminar:
+  - `variants` (luz, cristal, formas de aire): rincón en sombra con una lámpara apagada y un prisma.
+  - `motion` (dispersión, atracción, flotar, levitar): plumas, una caja liviana y una canasta.
+  - `shape` (columna, convergencia, región, aplastar): bandeja de arena con estacas a distintas alturas.
+- **Mesa central** con papel y tinta de reposición, y el libro **«Primeros hechizos»**: un hechizo simple por elemento, como muestra de lo que hay en cada campo. El resto de los hechizos sigue en su campo (D7).
+- **Estantes que se llenan** (idea B del rework de la torre): cada libro leído en cualquier parte del valle aparece como un lomo de color en el Archivo y **se puede volver a leer ahí**. Así el Archivo termina siendo la librería completa de hechizos.
+- **Altillo o nicho apartado:** `rare` («Signos raros») y la mesa de alquimia que salen de la torre.
+- **Cuatro arcos de salida**, cada uno con el color y el estandarte de su campo.
+- El portal del Archivo (D17) apunta al **Nexo** en vez de al estudio de la torre.

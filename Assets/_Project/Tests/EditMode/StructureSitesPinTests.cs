@@ -31,7 +31,7 @@ namespace SpellSimulator.Tests
             ("Crag_4", 23.5f, 30f),
             ("EarthWorkshop", 40f, 30f),
             ("WaterLab", -44.189f, 1.338f),
-            ("Laboratory", 47f, -27f),
+            ("Laboratory", 20f, -8f),
         };
 
         [Test]
@@ -62,11 +62,28 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
-        public void LaboratoryFront_IsUnchanged()
+        public void Laboratory_IsInTheMeadowNearTheNexusWithTheTrackToTheEast()
         {
-            Assert.IsTrue(MapStructures.TryGetSite("Laboratory", out _, out Vector2 front));
-            Assert.AreEqual(-0.966f, front.x, 0.01f);
-            Assert.AreEqual(0.259f, front.y, 0.01f);
+            Assert.IsTrue(MapStructures.TryGetSite("Laboratory", out Vector2 lab, out Vector2 front));
+            Assert.AreEqual(1f, front.x, 0.01f);
+            Assert.AreEqual(0f, front.y, 0.01f);
+            Assert.LessOrEqual(Vector2.Distance(lab, ValleyShape.Spawn), 22f, "el laboratorio tiene que quedar a mano del nexo");
+            // La pista (12 x 10 m delante de la plataforma) no pisa caminos, otras estructuras ni sale del area jugable.
+            Vector2 side = new Vector2(front.y, -front.x);
+            for (float d = MapStructures.LaboratoryTrackStart; d <= MapStructures.LaboratoryTrackStart + MapStructures.LaboratoryTrackLength; d += 2f)
+                for (float s = -0.5f; s <= 0.51f; s += 0.25f)
+                {
+                    Vector2 p = lab + front * d + side * (s * MapStructures.LaboratoryTrackWidth);
+                    Assert.Less(p.magnitude, 63f, $"la pista sale del area jugable en {p}");
+                    Assert.Greater(ValleyShape.PathDistance(p.x, p.y), ValleyShape.PathWidth + 0.5f, $"la pista pisa un camino en {p}");
+                    foreach (var (name, x, z) in Pinned)
+                        if (name != "Laboratory")
+                            Assert.Greater(Vector2.Distance(p, new Vector2(x, z)), 7f, $"la pista pisa {name} en {p}");
+                }
+            // El camino del nexo llega hasta el borde de la plataforma sin meterse debajo.
+            float toPath = ValleyShape.PathDistance(lab.x, lab.y);
+            Assert.Greater(toPath, MapStructures.LaboratoryPlatformRadius);
+            Assert.Less(toPath, MapStructures.LaboratoryPlatformRadius + 2f);
         }
 
         [Test]

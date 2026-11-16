@@ -57,7 +57,8 @@ namespace SpellSimulator.World.Map
         {
             new[] { new Vector2(0f, -14f), Spawn, new Vector2(0f, 5f) },
             new[] { Spawn, new Vector2(-12f, -10f), new Vector2(-21f, -14f) },
-            new[] { Spawn, new Vector2(12f, -7f), new Vector2(18f, -6f) }
+            // Nexo -> laboratorio: termina en el borde de la plataforma (centro (20, -8), radio 5,2).
+            new[] { Spawn, new Vector2(8f, -7f), new Vector2(14.2f, -7.7f) }
         };
 
         public const float PathWidth = 2.2f;

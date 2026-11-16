@@ -75,7 +75,7 @@ namespace SpellSimulator.Tests
         [Test]
         public void TrainingSite_IsFarFromLabAndInsidePlayableArea()
         {
-            var lab = new Vector2(47f, -27f);   // MapStructures.Laboratory (fijo en StructureSitesPinTests)
+            Vector2 lab = SpellSimulator.EditorTools.Map.MapStructures.LaboratorySite;
             Assert.GreaterOrEqual(Vector2.Distance(ValleyShape.TrainingOrigin, lab), 12f);
             foreach (Vector2 local in new[] { TrainingLayout.DummyA, TrainingLayout.DummyB, TrainingLayout.Easel, TrainingLayout.GiantStand, TrainingLayout.TestProps })
             {

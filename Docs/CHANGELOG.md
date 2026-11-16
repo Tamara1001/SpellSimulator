@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-16 — Mapa por flujo, paso 1: el laboratorio se muda a la pradera
+
+- `MapStructures`: el laboratorio queda fijo en (20, −8), a 20 m del nexo, con la pista hacia el este (`LaboratorySite`, `LaboratoryFacing`). Se quitaron `LaboratoryFront` y `TrackClear` (elegían el frente; con el sitio fijo ya no hacen falta). `ValleyShape.Paths`: el camino del nexo termina en el borde de la plataforma.
+- Tests: `StructureSitesPinTests` (sitio nuevo, pista libre de caminos y estructuras, camino que llega a la plataforma) y `TrainingLayoutTests`. 599 EditMode en verde. `WorldZones.json` con la posición nueva. Escena y mallas regeneradas con `MapBuilder.Build()`.
+- [MAPA_FLUJO_PLAN.md](MAPA_FLUJO_PLAN.md) **v3**: correcciones de Tamara (D19-D24): la torre pasa a ser el tutorial, el spawn pasa a ser el Nexo, pregunta para saltear el tutorial, duelos sin prioridad; propuestas §17 (torre-tutorial y Nexo) y §18 (Archivo) pendientes de su sí. Dibujo `Docs/Capturas/mapa_propuesto.svg` actualizado.
+
 ## 2026-11-16 — Mapa por flujo, paso 0: posiciones medidas y dibujo del mapa propuesto (solo documentación)
 
 - Medidos en Unity los sitios reales, el desnivel de cada objetivo v2 y los objetos de práctica con posición fija; resultados en la bitácora de [MAPA_FLUJO_PLAN.md](MAPA_FLUJO_PLAN.md). Todos los sitios nuevos son llanos; los pinos son inflamables; dos objetos de `Path9` pisan la pista futura del laboratorio.
