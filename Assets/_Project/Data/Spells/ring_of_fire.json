@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "ring_of_fire",
+  "name": "Anillo de fuego",
+  "description": "El fuego se abre en un anillo alrededor del sello.",
+  "hint": "Se dice que los signos de dispersión alrededor del fuego lo reparten en círculo.",
+  "element": "fire",
+  "origin": "Book",
+  "difficulty": 2,
+  "book": "spells-fire-earth",
+  "howTo": "Dibujá el sigilo del fuego y tres signos de dispersión repartidos alrededor. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "fire",
+  "signs": [
+    {
+      "id": "dispersion",
+      "angle": 90,
+      "turn": 0
+    },
+    {
+      "id": "dispersion",
+      "angle": 210,
+      "turn": 0
+    },
+    {
+      "id": "dispersion",
+      "angle": 330,
+      "turn": 0
+    }
+  ]
+}

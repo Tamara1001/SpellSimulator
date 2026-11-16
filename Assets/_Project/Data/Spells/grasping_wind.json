@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "grasping_wind",
+  "name": "Viento que agarra",
+  "description": "Una corriente de aire que jala lo liviano hacia el sello.",
+  "hint": "Se dice que el viento rodeado de signos de succión que miran hacia adentro atrae las cosas.",
+  "element": "wind",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-wind-water",
+  "howTo": "Dibujá el sigilo del viento y tres signos de succión alrededor, mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "wind-directs-air",
+  "signs": [
+    {
+      "id": "pull",
+      "angle": 90,
+      "turn": 0
+    },
+    {
+      "id": "pull",
+      "angle": 210,
+      "turn": 0
+    },
+    {
+      "id": "pull",
+      "angle": 330,
+      "turn": 0
+    }
+  ]
+}

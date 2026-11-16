@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "id": "flame_shot",
+  "name": "Disparo de llama",
+  "description": "Un chorro de fuego dirigido hacia adelante, entre rayo y bola.",
+  "hint": "Se dice que una columna larga apunta el fuego y las regiones a los lados lo encierran para que llegue más lejos.",
+  "element": "fire",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-fire-earth",
+  "howTo": "Dibujá el sigilo del fuego abajo, una columna que apunte hacia arriba y regiones a ambos lados. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "fire",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 270,
+      "turn": 0
+    },
+    {
+      "id": "region",
+      "angle": 20,
+      "turn": 0
+    },
+    {
+      "id": "region",
+      "angle": 160,
+      "turn": 0
+    },
+    {
+      "id": "region",
+      "angle": 340,
+      "turn": 0
+    },
+    {
+      "id": "region",
+      "angle": 200,
+      "turn": 0
+    }
+  ]
+}

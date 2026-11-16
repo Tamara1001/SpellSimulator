@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "water_orb",
+  "name": "Esfera de agua",
+  "description": "Una esfera invisible que guarda el agua adentro.",
+  "hint": "Se dice que cuatro signos de esfera en las esquinas encierran el agua del centro.",
+  "element": "water",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-water-deep",
+  "howTo": "Dibujá el sigilo del agua, una columna a cada lado y un signo de esfera en cada esquina. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "water",
+  "signs": [
+    {
+      "id": "column",
+      "angle": 0,
+      "turn": 0
+    },
+    {
+      "id": "column",
+      "angle": 180,
+      "turn": 0
+    },
+    {
+      "id": "orb",
+      "angle": 45,
+      "turn": 0
+    },
+    {
+      "id": "orb",
+      "angle": 135,
+      "turn": 0
+    },
+    {
+      "id": "orb",
+      "angle": 225,
+      "turn": 0
+    },
+    {
+      "id": "orb",
+      "angle": 315,
+      "turn": 0
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "pyreball",
+  "name": "Bola de fuego flotante",
+  "description": "Una bola de llamas que levita sobre el sello.",
+  "hint": "Se dice que el fuego rodeado de signos de levitación no quema el suelo: flota.",
+  "element": "fire",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-fire-earth",
+  "howTo": "Dibujá el sigilo del fuego y tres signos de levitación repartidos alrededor, mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "fire",
+  "signs": [
+    {
+      "id": "levitation",
+      "angle": 90,
+      "turn": 0
+    },
+    {
+      "id": "levitation",
+      "angle": 210,
+      "turn": 0
+    },
+    {
+      "id": "levitation",
+      "angle": 330,
+      "turn": 0
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "wall_bend",
+  "name": "Pared doblada",
+  "description": "La tierra cercana se arrastra en una dirección.",
+  "hint": "Se dice que dos signos de succión junto al sigilo de la tierra la jalan hacia un lado.",
+  "element": "earth",
+  "origin": "Book",
+  "difficulty": 3,
+  "book": "spells-fire-earth",
+  "howTo": "Dibujá el sigilo de la tierra y dos signos de succión abajo, mirando al sigilo. Cerrá el anillo.",
+  "ring": {
+    "gapDeg": 34
+  },
+  "sigil": "earth",
+  "signs": [
+    {
+      "id": "pull",
+      "angle": 240,
+      "turn": 0
+    },
+    {
+      "id": "pull",
+      "angle": 300,
+      "turn": 0
+    }
+  ]
+}

@@ -5,6 +5,11 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-16 — Siete hechizos de la wiki de Witch Hat Atelier
+
+- Nuevos en `Data/Spells/`: `pyreball`, `ring_of_fire`, `flame_shot`, `wall_bend`, `grasping_wind`, `wind_wall` y `water_orb` (este usa el signo orb). Composición tomada de las páginas de la wiki (telepedia); ángulos, dificultad y textos son adaptación propia, y las regiones de `flame_shot` se simplificaron (la wiki muestra grupos de cinco). Sumados a los libros `spells-fire-earth`, `spells-wind-water` y `spells-water-deep` en `Lore/glifos.json`.
+- Sin hechizos nuevos con cool, entwine, focus ni gather: la wiki no muestra una composición clara que los use.
+
 ## 2026-11-16 — Seis signos sin efecto: cool, empower, entwine, focus, gather, orb
 
 - Entradas JSON nuevas en `Data/Dictionary/signs/13..18` (trazo derivado de los SVG del repo base `wha-spell-simulator`; significado de la wiki de Witch Hat Atelier, *Signs Explained*). `GlyphDictionary.asset` regenerado: las 6 clases del modelo ya se reconocen y cuentan en el plan.
