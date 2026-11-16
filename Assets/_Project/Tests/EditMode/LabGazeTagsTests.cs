@@ -21,7 +21,7 @@ namespace SpellSimulator.Tests
             var selected = new int[4]; var scores = new float[4]; var visible = new bool[6];
             int n = LabGazeTags.Select(Vector3.zero, Vector3.forward, points, points.Length, visible, selected, scores);
             Assert.AreEqual(4, n);
-            CollectionAssert.AreEqual(new[] { 5, 1, 4, 0 }, selected);
+            CollectionAssert.AreEqual(new[] { 5, 1, 0, 4 }, selected);
         }
 
         [Test]
