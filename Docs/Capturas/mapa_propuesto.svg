@@ -1,0 +1,208 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 780" font-family="Segoe UI, Arial, sans-serif" font-size="12">
+  <defs>
+    <clipPath id="valle"><circle cx="380" cy="390" r="372"/></clipPath>
+    <marker id="fl" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#3b2a14"/></marker>
+  </defs>
+  <rect width="1160" height="780" fill="#1e2530"/>
+
+  <!-- terreno: montañas (r 64-76 m) y valle jugable (r 68 m). Escala: 5 px = 1 m. Norte arriba. Centro (0,0) = px (380,390) -->
+  <circle cx="380" cy="390" r="372" fill="#8d7a6b"/>
+  <circle cx="380" cy="390" r="340" fill="#a9977f"/>
+  <circle cx="380" cy="390" r="318" fill="#7fb35a"/>
+  <g clip-path="url(#valle)">
+    <!-- bosque del norte (late game) y oeste -->
+    <ellipse cx="300" cy="150" rx="210" ry="95" fill="#5f9a48" opacity=".75"/>
+    <ellipse cx="130" cy="300" rx="80" ry="90" fill="#5f9a48" opacity=".6"/>
+    <!-- loma de la torre -->
+    <circle cx="380" cy="310" r="100" fill="#93c26a"/>
+    <circle cx="380" cy="310" r="45" fill="#a5cf7c"/>
+    <!-- pradera -->
+    <circle cx="520" cy="420" r="55" fill="#9ccc6f"/>
+    <!-- cascada, arroyo y lago -->
+    <path d="M-15 577 L95 525 L150 497 L190 480" stroke="#4aa3cf" stroke-width="11" fill="none" stroke-linecap="round"/>
+    <ellipse cx="210" cy="470" rx="80" ry="55" fill="#3f8fc4"/>
+    <ellipse cx="210" cy="470" rx="80" ry="55" fill="none" stroke="#dcc98f" stroke-width="4"/>
+    <text x="210" y="468" text-anchor="middle" fill="#e8f4ff" font-style="italic">Lago</text>
+    <text x="60" y="560" fill="#e8f4ff" font-size="10" font-style="italic">cascada</text>
+    <!-- piso de ceniza del fuego, llano del viento -->
+    <circle cx="290" cy="640" r="42" fill="#6f6a62"/>
+    <circle cx="510" cy="560" r="42" fill="#b9dba0"/>
+    <circle cx="480" cy="640" r="38" fill="#b59a6a"/>
+  </g>
+
+  <!-- CIRCUITO EXTERIOR (propuesta nueva): viento → santuario → círculo → duelo → atalaya → norte → cueva → cabaña → torre -->
+  <path d="M510 560 L600 580 L630 440 L600 345 L560 280 L565 170 L430 150 L340 160 L225 130 L240 220 L340 285"
+        stroke="#e08a2e" stroke-width="5" fill="none" stroke-dasharray="10 7" stroke-linejoin="round" opacity=".95"/>
+
+  <!-- CAMINOS aprobados (v2) -->
+  <g stroke="#c9a66b" stroke-width="9" fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M380 310 L380 420 L380 520 L380 620"/>                  <!-- columna vertebral -->
+    <path d="M380 420 L440 425 L470 428"/>                           <!-- spawn → laboratorio -->
+    <path d="M380 420 L320 440 L285 455"/>                           <!-- spawn → lago (existe) -->
+    <path d="M380 620 L300 555"/>                                    <!-- archivo → agua -->
+    <path d="M380 620 L325 635"/>                                    <!-- archivo → fuego -->
+    <path d="M380 620 L445 635"/>                                    <!-- archivo → tierra -->
+    <path d="M380 620 L475 575"/>                                    <!-- archivo → viento -->
+    <path d="M270 565 Q255 600 275 610"/>                            <!-- arco agua → fuego -->
+    <path d="M315 668 Q380 700 455 668"/>                            <!-- arco fuego → tierra -->
+    <path d="M495 605 Q510 595 510 590"/>                            <!-- arco tierra → viento -->
+    <path d="M380 265 L385 200 L425 160"/>                           <!-- torre → norte -->
+  </g>
+
+  <!-- faroles de la ruta (propuesta nueva): se encienden según el progreso -->
+  <g fill="#ffe48a" stroke="#7a5a12" stroke-width="1.5">
+    <circle cx="392" cy="365" r="4"/><circle cx="392" cy="465" r="4"/><circle cx="392" cy="565" r="4"/>
+    <circle cx="335" cy="590" r="4"/><circle cx="350" cy="635" r="4"/><circle cx="412" cy="635" r="4"/><circle cx="430" cy="603" r="4"/>
+  </g>
+
+  <!-- flechas del flujo lineal -->
+  <g stroke="#3b2a14" stroke-width="2.5" fill="none" marker-end="url(#fl)">
+    <path d="M366 330 L366 395"/><path d="M366 440 L366 495"/><path d="M366 545 L366 595"/>
+  </g>
+
+  <!-- peñascos -->
+  <g fill="#8c8c8c" stroke="#4d4d4d" stroke-width="1.5">
+    <path d="M585 340 l15 -22 l18 20 l-6 16 l-22 2z"/>   <!-- 2 (44,10) igual -->
+    <path d="M483 240 l14 -22 l18 20 l-6 16 l-22 2z"/>   <!-- 4 (23.5,30) igual -->
+    <path d="M600 525 l15 -22 l18 20 l-6 16 l-22 2z"/>   <!-- 3 → (47,-27) sitio viejo del lab -->
+    <path d="M145 310 l15 -22 l18 20 l-6 16 l-22 2z" stroke="#e08a2e" stroke-dasharray="4 3"/> <!-- 1 → oeste (tentativo) -->
+  </g>
+  <text x="640" y="532" fill="#22303c" font-size="10">peñasco 3</text>
+  <text x="120" y="340" fill="#22303c" font-size="10">peñasco 1 (?)</text>
+
+  <!-- ZONAS -->
+  <g stroke="#1b1b1b" stroke-width="2" text-anchor="middle" font-weight="700">
+    <!-- 1 Torre -->
+    <circle cx="380" cy="310" r="22" fill="#8E6B4A"/>
+    <!-- Spawn -->
+    <path d="M380 408 l10 12 l-10 12 l-10 -12z" fill="#ffffff"/>
+    <!-- Laboratorio + pista al este -->
+    <rect x="507" y="403" width="60" height="50" fill="#4F7FC4" opacity=".35" stroke-dasharray="5 4"/>
+    <circle cx="480" cy="428" r="26" fill="#4F7FC4"/>
+    <!-- 2 Entrenamiento (frente oeste/suroeste) -->
+    <circle cx="380" cy="520" r="28" fill="#D0563B"/>
+    <path d="M352 520 L318 530" stroke="#7a2a18" stroke-width="2.5" marker-end="url(#fl)"/>
+    <!-- 3 Archivo -->
+    <circle cx="380" cy="620" r="24" fill="#c9b458"/>
+    <circle cx="380" cy="620" r="15" fill="none" stroke-dasharray="4 3"/>
+    <!-- 4 Campos -->
+    <circle cx="270" cy="540" r="24" fill="#3A9BB5"/>
+    <circle cx="290" cy="640" r="24" fill="#e2572b"/>
+    <circle cx="480" cy="640" r="24" fill="#9C6B3C"/>
+    <circle cx="510" cy="560" r="24" fill="#bfe7c9"/>
+    <!-- 5 late game -->
+    <circle cx="600" cy="580" r="16" fill="#D9A82E"/>
+    <circle cx="630" cy="440" r="22" fill="#8A7FB8"/>
+    <circle cx="565" cy="168" r="18" fill="#5F8A55"/>
+    <circle cx="430" cy="150" r="13" fill="#C2853A"/>
+    <rect x="325" y="146" width="30" height="26" fill="#B5793E"/>
+    <rect x="225" y="207" width="30" height="26" fill="#6E8F35"/>
+    <circle cx="220" cy="130" r="22" fill="#5E5A66"/>
+    <!-- 6 Duelo (propuesta nueva) -->
+    <circle cx="560" cy="280" r="34" fill="#b8324a" stroke="#e08a2e" stroke-width="3" stroke-dasharray="7 5"/>
+    <circle cx="560" cy="280" r="20" fill="none" stroke="#ffd9a0"/>
+  </g>
+
+  <!-- portales (anillo violeta) -->
+  <g fill="none" stroke="#b46bff" stroke-width="3.5">
+    <circle cx="380" cy="310" r="28"/><circle cx="380" cy="620" r="30"/><circle cx="630" cy="440" r="28"/>
+    <circle cx="565" cy="168" r="24"/><circle cx="220" cy="130" r="28"/>
+  </g>
+
+  <!-- estandartes de color (paso 11) -->
+  <g stroke="#1b1b1b" stroke-width="1.2">
+    <path d="M248 508 v-26 h14 l-4 6 l4 6 h-14" fill="#3A9BB5"/>
+    <path d="M268 608 v-26 h14 l-4 6 l4 6 h-14" fill="#e2572b"/>
+    <path d="M502 608 v-26 h14 l-4 6 l4 6 h-14" fill="#9C6B3C"/>
+    <path d="M532 528 v-26 h14 l-4 6 l4 6 h-14" fill="#bfe7c9"/>
+  </g>
+
+  <!-- números de etapa -->
+  <g text-anchor="middle" font-weight="800" font-size="16" fill="#fff" stroke="#000" stroke-width=".6">
+    <text x="380" y="316">1</text><text x="380" y="526">2</text><text x="380" y="626">3</text>
+    <text x="270" y="546">4</text><text x="290" y="646">4</text><text x="480" y="646">4</text><text x="510" y="566" fill="#234">4</text>
+    <text x="600" y="585" font-size="13">5</text><text x="630" y="446">5</text><text x="565" y="174">5</text>
+    <text x="340" y="165" font-size="13">5</text><text x="240" y="226" font-size="13">5</text><text x="220" y="136">5</text>
+    <text x="560" y="287" font-size="18">6</text>
+  </g>
+
+  <!-- etiquetas -->
+  <g fill="#10202c" font-weight="600" font-size="11.5" text-anchor="middle" paint-order="stroke" stroke="#f3f6ea" stroke-width="3">
+    <text x="380" y="276">Torre</text>
+    <text x="352" y="408">Spawn</text>
+    <text x="490" y="392">Laboratorio (pista →)</text>
+    <text x="435" y="500">Entrenamiento</text>
+    <text x="380" y="660">Archivo</text>
+    <text x="232" y="580">Agua</text>
+    <text x="250" y="680">Fuego</text>
+    <text x="510" y="680">Tierra</text>
+    <text x="560" y="548">Viento</text>
+    <text x="640" y="606">Santuario</text>
+    <text x="662" y="478">Círculo</text>
+    <text x="560" y="328">Arena de duelo (?)</text>
+    <text x="610" y="145">Atalaya</text>
+    <text x="445" y="128">Puesto</text>
+    <text x="340" y="138">Cabaña norte</text>
+    <text x="178" y="100">Cueva</text>
+    <text x="200" y="248">Cabaña bosque</text>
+  </g>
+
+  <!-- brújula y escala -->
+  <g transform="translate(80,90)" fill="#f0f0f0" stroke="#f0f0f0">
+    <path d="M0 22 L0 -22 M-6 -12 L0 -24 L6 -12" fill="none" stroke-width="2.5"/>
+    <text x="0" y="-30" text-anchor="middle" stroke="none" font-weight="700">N</text>
+  </g>
+  <g transform="translate(40,740)" fill="#f0f0f0">
+    <rect x="0" y="0" width="100" height="5"/><text x="50" y="-5" text-anchor="middle">20 m</text>
+  </g>
+
+  <!-- LEYENDA -->
+  <g transform="translate(780,24)" fill="#e9edf2">
+    <text font-size="17" font-weight="800">Mapa propuesto — vista desde arriba</text>
+    <text y="20" fill="#aab4c0">Plan v2 (aprobado) + 3 ideas nuevas marcadas en naranja</text>
+
+    <text y="52" font-weight="700" font-size="13">Ruta de historia (lineal, nada se bloquea)</text>
+    <g font-size="12">
+      <circle cx="9" cy="72" r="9" fill="#8E6B4A"/><text x="26" y="76">1 · Torre: 4 elementos, círculo y columna</text>
+      <circle cx="9" cy="96" r="9" fill="#D0563B"/><text x="26" y="100">2 · Entrenamiento: sellos, runas, lienzos</text>
+      <circle cx="9" cy="120" r="9" fill="#c9b458"/><text x="26" y="124">3 · Archivo: 3 libros de signos + portal</text>
+      <circle cx="9" cy="144" r="9" fill="#3A9BB5"/><circle cx="20" cy="144" r="9" fill="#e2572b"/><circle cx="31" cy="144" r="9" fill="#9C6B3C"/><circle cx="42" cy="144" r="9" fill="#bfe7c9"/>
+      <text x="60" y="148">4 · Campos (cualquier orden)</text>
+      <circle cx="9" cy="168" r="9" fill="#8A7FB8"/><text x="26" y="172">5 · Late game: santuario, círculo, atalaya,</text>
+      <text x="26" y="188">    puesto, cabañas y cueva</text>
+      <circle cx="9" cy="210" r="9" fill="#b8324a" stroke="#e08a2e" stroke-width="2" stroke-dasharray="3 2"/><text x="26" y="214">6 · Arena de duelo (cierre de la historia)</text>
+    </g>
+
+    <text y="246" font-weight="700" font-size="13">Fuera de la ruta</text>
+    <circle cx="9" cy="264" r="9" fill="#4F7FC4"/><text x="26" y="268">Laboratorio: a 20 m del spawn, pista al este</text>
+
+    <text y="300" font-weight="700" font-size="13">Señales</text>
+    <path d="M0 318 h34" stroke="#c9a66b" stroke-width="8" stroke-linecap="round"/><text x="44" y="322">Camino de tierra (aprobado)</text>
+    <circle cx="14" cy="342" r="10" fill="none" stroke="#b46bff" stroke-width="3.5"/><text x="44" y="346">Portal (5: estudio, Archivo, círculo,</text>
+    <text x="44" y="362">atalaya, cueva) = atajos del circuito</text>
+    <path d="M8 392 v-20 h12 l-3 5 l3 5 h-12" fill="#e2572b" stroke="#111"/><text x="44" y="388">Estandarte de color por campo</text>
+
+    <text y="424" font-weight="700" font-size="13" fill="#f0a850">Ideas nuevas (a confirmar)</text>
+    <path d="M0 444 h34" stroke="#e08a2e" stroke-width="5" stroke-dasharray="8 5"/>
+    <text x="44" y="442">A · Circuito exterior: une todo el late</text>
+    <text x="44" y="458">game en una vuelta que termina en la torre</text>
+    <circle cx="14" cy="482" r="5" fill="#ffe48a" stroke="#7a5a12"/>
+    <text x="44" y="480">B · Faroles y estandartes que se encienden</text>
+    <text x="44" y="496">al leer cada libro (mundo que responde)</text>
+    <circle cx="14" cy="522" r="10" fill="#b8324a" stroke="#e08a2e" stroke-width="2" stroke-dasharray="3 2"/>
+    <text x="44" y="520">C · Arena de duelo en el noreste (hoy es</text>
+    <text x="44" y="536">una plataforma en el cielo, fuera del mapa)</text>
+
+    <text y="572" font-weight="700" font-size="13">Distancias (línea recta)</text>
+    <g font-size="11.5" fill="#c6cfda">
+      <text y="590">Spawn → Torre 22 m · → Laboratorio 20 m</text>
+      <text y="606">Spawn → Entrenamiento 20 m → Archivo 20 m</text>
+      <text y="622">Archivo → Agua 27 · Fuego 18 · Tierra 20 · Viento 29</text>
+      <text y="638">Viento → Santuario 18 → Círculo 29 → Duelo 35</text>
+      <text y="654">Duelo → Atalaya 22 → Puesto 27 → Cabaña N 18</text>
+      <text y="670">Cabaña N → Cueva 25 → Cabaña bosque 18 → Torre 33</text>
+      <text y="694" fill="#8f9aa8">Escala 5 px = 1 m · radio jugable 68 m</text>
+      <text y="710" fill="#8f9aa8">Posiciones «hoy» medidas en Unity (paso 0)</text>
+    </g>
+  </g>
+</svg>

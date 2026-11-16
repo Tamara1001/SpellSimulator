@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-16 — Mapa por flujo, paso 0: posiciones medidas y dibujo del mapa propuesto (solo documentación)
+
+- Medidos en Unity los sitios reales, el desnivel de cada objetivo v2 y los objetos de práctica con posición fija; resultados en la bitácora de [MAPA_FLUJO_PLAN.md](MAPA_FLUJO_PLAN.md). Todos los sitios nuevos son llanos; los pinos son inflamables; dos objetos de `Path9` pisan la pista futura del laboratorio.
+- Nuevas capturas: `Docs/Capturas/mapa_antes_aerea.png` y `Docs/Capturas/mapa_propuesto.svg` (vista desde arriba para que Tamara corrija antes de mover nada).
+- Sin cambios de código, escenas ni datos.
+
 ## 2026-11-16 — Plan de reorganización del mapa por flujo de aprendizaje (solo documentación)
 
 - Nuevo [MAPA_FLUJO_PLAN.md](MAPA_FLUJO_PLAN.md): plan aprobado por Tamara (torre → entrenamiento → Archivo → 4 campos de elemento → late game; laboratorio en la pradera), con tracker de pasos, protocolo «avanzá con el mapa», coordenadas v2, reparto de libros, riesgos y tabla de agentes/modelos. Junto con [MAPA_FLUJO_CRITICA.md](MAPA_FLUJO_CRITICA.md) (revisión externa) y [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias).

@@ -18,7 +18,7 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
 
 ### Tracker (orden v2; tildar al cerrar cada paso con su commit)
 
-- [ ] **0** Volcar posiciones reales (`Sites()`), alturas, `Path8/Path9`, inflamabilidad de pinos; capturas «antes»
+- [x] **0** Volcar posiciones reales (`Sites()`), alturas, `Path8/Path9`, inflamabilidad de pinos; capturas «antes»
 - [ ] **1** Mover el laboratorio a la pradera (20,−8) — **incluye tocar `TrackClear`/frente al este** (§12b-1)
 - [ ] **2** Mover el entrenamiento a (0,−26), frente O/SO; actualizar tests
 - [ ] **2b** Caminos completos (`ValleyShape.Paths`) **antes** de fijar sitios 3-6
@@ -38,6 +38,12 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
 ### Bitácora (anotar acá lo que se descubra al implementar; más reciente abajo)
 
 - 2026-11-16 — Plan escrito y aprobado; crítica externa volcada (v2). Aún sin implementar.
+- 2026-11-16 — **Paso 0 hecho.** `Sites()` medido en Unity: **todas las posiciones «hoy» de §4.1 coinciden** (única diferencia: peñasco 4 en (23.5, 30), no (22, 30); atalaya (37.3, 44.4)). Frente del laboratorio hoy: (−0.97, 0.26) = oeste.
+  - **Llanura de los objetivos v2** (desnivel en r = 10 m): laboratorio 0,49 · entrenamiento 0,60 · Archivo 0,49 · fuego 0,45 · tierra 0,49 · viento 0,70 · santuario 0,61 → todos planos, R3 descartado con las coordenadas v2. Agua (−22,−30): 2,98 (es la orilla; usar `FindLakeside`).
+  - **Árboles:** en todos los sitios nuevos del sur se pueden plantar árboles (81/81 puntos): hace falta el despeje del paso 6 **y también para el Archivo y el entrenamiento**. Los pinos **sí son inflamables** (`FlammableSetup` les pone el perfil `Arbol.asset`): el campo de fuego necesita el claro de r = 10 y el anillo de piedras.
+  - **`Practice/*_Path8`** (5 objetos) están en (17.5–18.9, 2.3–4.9): a ~10,7 m del laboratorio nuevo, no molestan. **`Practice/*_Path9`** (5 objetos) están en (27.4–29.5, −0.5…−3.5): **el barril y la caja caen sobre el borde norte de la pista al este** (z = −3). En el paso 1 hay que correrlos o angostar/correr la pista.
+  - **Duelo:** la arena (`Net/World/DuelArena.cs`) es una plataforma de 40 × 40 m **en el cielo, en (0, 100, 0)**, fuera del mapa: hoy el valle no tiene ningún lugar de duelo. El noreste (34, 22) es llano (desnivel 0,46) y queda libre al mudar el taller.
+  - Capturas: `Docs/Capturas/mapa_antes_aerea.png` (aérea «antes») y `Docs/Capturas/mapa_propuesto.svg` (dibujo del mapa propuesto, con 3 ideas nuevas **sin aprobar**: circuito exterior, faroles/estandartes que responden al progreso y arena de duelo en el noreste). La captura del mapa de la torre «antes» queda para el paso 9.
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),
 > [GLYPHS.md](GLYPHS.md), [ARCHITECTURE.md](ARCHITECTURE.md), [HARNESS.md](HARNESS.md).
