@@ -119,7 +119,7 @@ namespace SpellSimulator.Learning
                 Row("Z / X", "página anterior / siguiente") +
                 Row("Esc", "grimorio a pantalla / menú") +
                 Row("F3", "depuración") +
-                Row("M", "mapa de la torre a pantalla (apuntándolo)") +
+                Row("Tab", "vista completa (lienzo, pared, mapa)") +
                 Row("Retroceso", "reiniciar el mundo"),
                 "Mano principal",
                 Intro("La barra 1-2-3: el objeto equipado.") +
@@ -147,8 +147,7 @@ namespace SpellSimulator.Learning
                 Row("B", "arroja", 44) +
                 Row("Stick izq.", "clic: corre", 44) +
                 Row("Stick der.", "clic: da vuelta la hoja", 44) +
-                Row("Y", "reinicia el mundo", 44) +
-                Row("X", "mapa de la torre a pantalla", 44)),
+                Row("Y", "reinicia el mundo", 44)),
         };
 
         /// <summary>Texto de la pagina izquierda del indice de glifos.</summary>

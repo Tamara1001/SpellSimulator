@@ -3,14 +3,17 @@ using UnityEngine;
 namespace SpellSimulator.Lab
 {
     /// <summary>
-    /// Medidas puras del banco compacto del Laboratorio v4 (Docs/LABORATORIO_V4_PLAN.md, punto 1). El jugador se para en
-    /// <see cref="StandZ"/> (marco del laboratorio: +Z hacia la pista, +X a su derecha) y todo lo que se toca queda a ≤
-    /// <see cref="ReachMax"/> m en horizontal de ese punto:
-    /// - adelante (±<see cref="FrontHalfAngle"/>°) una mesa baja con el atril de dibujo, LANZAR y dos botones (no tapa la pista);
-    /// - a cada lado dos paneles casi verticales (<see cref="FacetTilt"/>°) que lo rodean en arco: izquierda el sello (adentro
-    ///   hechizo y signos, afuera tinta y afinado), derecha los objetos del campo (adentro) y el viento/fuego (afuera).
-    /// Los paneles son empinados para apilar filas en altura sin alejarse: profundidad util ≈ 0,24 m.
-    /// Marco de un panel (igual que el v3): +X a lo ancho, +Z subiendo la pendiente (s), +Y la normal (hacia el jugador).
+    /// Medidas puras de la consola frontal del Laboratorio v5 (Docs/LABORATORIO_V5_PLAN.md, punto A.3). El jugador se para en
+    /// <see cref="StandZ"/> (marco del laboratorio: +Z hacia la pista, +X a su derecha) y mira siempre hacia la pista: una consola
+    /// baja y abierta de tres paneles contiguos inclinados <see cref="Tilt"/>°, borde de abajo a <see cref="PanelBottom"/> m y de
+    /// arriba ≤ <see cref="TopMax"/> m (se ve la pista por encima):
+    /// - izquierda (<see cref="Left"/>): el sello, en 4 paginas con pestañas (Hechizo, Signos, Tinta, Afinado);
+    /// - centro (<see cref="Center"/>): botones abajo (Borrar dibujo, LANZAR, Reiniciar sello), el atril de dibujo y arriba la
+    ///   pantalla «Vas a lanzar»;
+    /// - derecha (<see cref="Right"/>): objetos del campo y entorno, en 4 paginas (Objetos, Posición, Entorno, Fuego).
+    /// Todo control queda a ≤ <see cref="ReachMax"/> m en horizontal del punto de pie y a ≤ 90° del frente (los laterales giran
+    /// ±63°: con el alcance de 0,7 m y controles de 9 cm para VR no entran en un frente mas angosto).
+    /// Marco de un panel: +X a lo ancho, +Z subiendo la pendiente (s), +Y la normal (hacia el jugador y arriba).
     /// </summary>
     public static class LabBenchLayout
     {
@@ -18,82 +21,95 @@ namespace SpellSimulator.Lab
         public const float StandZ = -0.2f;
         /// <summary>Distancia horizontal maxima (m) de cualquier control al punto donde se para el jugador.</summary>
         public const float ReachMax = 0.7f;
-        /// <summary>Profundidad util maxima (m) de cualquier parte del banco.</summary>
-        public const float MaxUsefulDepth = 0.6f;
-        /// <summary>Altura de la mesa (m sobre el piso).</summary>
-        public const float DeskTop = 0.86f;
+        /// <summary>Inclinacion de los paneles (° desde la horizontal).</summary>
+        public const float Tilt = 40f;
+        /// <summary>Altura del borde de abajo de los paneles y tope del borde de arriba (m sobre el piso).</summary>
+        public const float PanelBottom = 0.8f, TopMax = 1.25f;
+        /// <summary>Distancia horizontal (m) del jugador al borde de abajo de cada panel (medida sobre su eje).</summary>
+        public const float PanelNear = 0.34f;
+        /// <summary>Ancho de los paneles laterales y del central (m).</summary>
+        public const float SideWidth = 0.44f, CenterWidth = 0.4f;
+        /// <summary>Largo de la losa sobre la pendiente (m): laterales (controles + copete) y central (botones, atril, pantalla).</summary>
+        public const float SideLength = 0.66f, CenterLength = 0.68f;
+        /// <summary>Donde empieza el copete de los laterales (titulo y tira de ayuda, sin controles).</summary>
+        public const float CrestFrom = 0.53f;
+        /// <summary>Altura del ojo usada para medir la legibilidad (m).</summary>
+        public const float EyeHeight = 1.6f;
+
+        /// <summary>Paneles: 0 izquierda (sello), 1 centro (atril), 2 derecha (campo y entorno).</summary>
+        public const int PanelCount = 3;
+        public const int Left = 0, Center = 1, Right = 2;
 
         // ---------------------------------------------------------------- paneles laterales
-        /// <summary>Distancia horizontal (m) del jugador al borde de abajo de cada panel.</summary>
-        public const float FacetNear = 0.44f;
-        /// <summary>Inclinacion de los paneles (° desde la horizontal): casi verticales para apilar filas sin alejarse.</summary>
-        public const float FacetTilt = 76f;
-        /// <summary>Largo de la zona de controles sobre la pendiente (m) y alto del copete de arriba (titulo y ayuda).</summary>
-        public const float FacetSlope = 0.98f, CrestSlope = 0.15f;
-        /// <summary>Ancho de cada panel (m) y altura de su borde de abajo sobre el piso.</summary>
-        public const float FacetWidth = 0.5f, FacetBottom = 0.8f;
-        /// <summary>Mitad del angulo que ocupa la mesa de adelante (°).</summary>
-        public const float FrontHalfAngle = 36f;
-
-        /// <summary>Paneles: 0 izquierda afuera, 1 izquierda adentro, 2 derecha adentro, 3 derecha afuera.</summary>
-        public const int FacetCount = 4;
-        public const int LeftOuter = 0, LeftInner = 1, RightInner = 2, RightOuter = 3;
 
         /// <summary>Centro de cada fila de controles sobre la pendiente (de arriba hacia abajo; paso <see cref="RowPitch"/>).</summary>
-        public static readonly float[] RowS = { 0.9f, 0.74f, 0.58f, 0.42f, 0.26f, 0.1f };
+        public static readonly float[] RowS = { 0.45f, 0.29f, 0.13f };
         /// <summary>Paso entre filas (m): plaquita del rotulo arriba, control, ventanita de la lectura abajo.</summary>
         public const float RowPitch = 0.16f;
         /// <summary>Columnas de controles (paso = <see cref="LabPanelLayout.MinControlPitch"/>).</summary>
         public static readonly float[] ColumnX = { -LabPanelLayout.MinControlPitch * 0.5f, LabPanelLayout.MinControlPitch * 0.5f };
+        /// <summary>Paginas de cada lateral y pestañas (fila de abajo, junto al borde cercano).</summary>
+        public const int PagesPerPanel = 4;
+        public const float TabS = 0.024f, TabPitch = 0.105f, TabWidth = 0.095f, TabDepth = 0.045f;
         /// <summary>Botones de una fila de tres (+ Caja, Borrar…): paso y tamaño (m).</summary>
-        public const float ButtonPitch = 0.16f, ButtonWidth = 0.14f, ButtonDepth = 0.1f;
+        public const float ButtonPitch = 0.14f, ButtonWidth = 0.13f, ButtonDepth = 0.1f;
         /// <summary>Grillas de iconos (sigilos, signos, lista de objetos): columnas y paso de celda (m, colliders contiguos).</summary>
         public const int GridColumns = 5;
         public const float CellPitch = 0.085f;
-        /// <summary>Margen izquierdo de cada panel para el titulo del grupo (texto acostado a lo largo de la pendiente).</summary>
-        public const float SpineX = -FacetWidth * 0.5f + 0.021f;
+        /// <summary>Centro de la grilla de sigilos (2 filas), de signos (3 filas) y de la lista de objetos del campo.</summary>
+        public const float SigilGridS = 0.27f, SignGridS = 0.33f, SlotS = 0.29f;
+        /// <summary>Fila de controles debajo de la grilla de signos.</summary>
+        public const float SignRowS = 0.125f;
 
-        // ---------------------------------------------------------------- mesa de adelante
-        /// <summary>Mesa de adelante: borde cercano y profundidad (m).</summary>
-        public const float FrontNear = FacetNear, FrontDepth = 0.3f;
-        /// <summary>Atril de dibujo: centro (m, desde el jugador, altura sobre el piso), lado del papel e inclinacion (° desde la horizontal).</summary>
-        public static readonly Vector3 PadCenter = new Vector3(0f, DeskTop + 0.33f, 0.6f);
-        public const float PadSize = 0.3f, PadTilt = 55f;
-        /// <summary>LANZAR (centro sobre la mesa) y botones a sus costados (Borrar dibujo / Reiniciar sello).</summary>
-        public static readonly Vector3 LaunchCenter = new Vector3(0f, DeskTop, 0.5f);
-        public const float LaunchWidth = 0.24f, LaunchDepth = 0.12f, FrontButtonX = 0.2f, FrontButtonWidth = 0.12f;
-        /// <summary>Ancho de la mesa de adelante (m): termina donde empiezan los paneles de adentro.</summary>
-        public const float FrontWidth = 0.58f;
+        // ---------------------------------------------------------------- panel central
 
-        /// <summary>Mitad del angulo (°) que ocupa un panel visto desde el jugador.</summary>
-        public static float FacetHalfAngle => Mathf.Atan2(FacetWidth * 0.5f, FacetNear) * Mathf.Rad2Deg;
+        /// <summary>Fila de botones del centro: LANZAR al medio, Borrar dibujo y Reiniciar sello a los costados.</summary>
+        public const float ButtonsS = 0.06f, LaunchWidth = 0.15f, FrontButtonX = 0.14f, FrontButtonWidth = 0.11f, CenterButtonDepth = 0.09f;
+        /// <summary>Atril de dibujo: centro sobre la pendiente y lado del papel (m).</summary>
+        public const float PadS = 0.275f, PadSize = 0.3f;
+        /// <summary>Pantalla «Vas a lanzar»: desde/hasta sobre la pendiente y ancho (m; mas ancha que el panel, atras se abre lugar).</summary>
+        public const float ScreenFrom = 0.455f, ScreenTo = 0.665f, ScreenWidth = 0.56f;
+        /// <summary>Alto minimo de la letra de la pantalla (m) y distancia maxima de lectura desde el ojo.</summary>
+        public const float ScreenTextMin = 0.022f, ScreenReadMax = 0.9f;
 
-        /// <summary>Giro (° alrededor de Y, 0 = hacia la pista, + a la derecha) del panel <paramref name="facet"/>.</summary>
-        public static float FacetYaw(int facet)
+        /// <summary>Mitad del angulo (°) que ocupa un panel de ancho <paramref name="width"/> visto desde el jugador.</summary>
+        public static float HalfAngle(float width) => Mathf.Atan2(width * 0.5f, PanelNear) * Mathf.Rad2Deg;
+
+        /// <summary>Ancho de un panel.</summary>
+        public static float PanelWidth(int panel) => panel == Center ? CenterWidth : SideWidth;
+
+        /// <summary>Largo de la losa de un panel sobre la pendiente.</summary>
+        public static float PanelLength(int panel) => panel == Center ? CenterLength : SideLength;
+
+        /// <summary>Giro (° alrededor de Y, 0 = hacia la pista, + a la derecha) de un panel: los tres quedan contiguos.</summary>
+        public static float PanelYaw(int panel)
         {
-            float half = FacetHalfAngle;
-            float inner = FrontHalfAngle + half, outer = inner + 2f * half;
-            switch (facet)
-            {
-                case LeftOuter: return -outer;
-                case LeftInner: return -inner;
-                case RightInner: return inner;
-                default: return outer;
-            }
+            if (panel == Center) return 0f;
+            float yaw = HalfAngle(CenterWidth) + HalfAngle(SideWidth);
+            return panel == Left ? -yaw : yaw;
         }
-
-        /// <summary>Profundidad horizontal (m) de la zona de controles de un panel.</summary>
-        public static float FacetDepth => FacetSlope * Mathf.Cos(FacetTilt * Mathf.Deg2Rad);
 
         /// <summary>Punto (x a lo ancho, s sobre la pendiente) de un panel, relativo al jugador (y = altura sobre el piso).</summary>
-        public static Vector3 FacetPoint(int facet, float x, float s)
+        public static Vector3 PanelPoint(int panel, float x, float s)
         {
-            float t = FacetTilt * Mathf.Deg2Rad;
-            var local = new Vector3(x, FacetBottom + s * Mathf.Sin(t), FacetNear + s * Mathf.Cos(t));
-            return Quaternion.Euler(0f, FacetYaw(facet), 0f) * local;
+            float t = Tilt * Mathf.Deg2Rad;
+            var local = new Vector3(x, PanelBottom + s * Mathf.Sin(t), PanelNear + s * Mathf.Cos(t));
+            return Quaternion.Euler(0f, PanelYaw(panel), 0f) * local;
         }
+
+        /// <summary>Altura (m) del borde de arriba de una losa de largo <paramref name="length"/>.</summary>
+        public static float TopHeight(float length) => PanelBottom + length * Mathf.Sin(Tilt * Mathf.Deg2Rad);
+
+        /// <summary>X de la pestaña <paramref name="index"/> (0..<see cref="PagesPerPanel"/>-1), centradas.</summary>
+        public static float TabX(int index) => (index - (PagesPerPanel - 1) * 0.5f) * TabPitch;
 
         /// <summary>Distancia horizontal (m) de un punto relativo al jugador.</summary>
         public static float Reach(Vector3 relative) => new Vector2(relative.x, relative.z).magnitude;
+
+        /// <summary>Angulo horizontal (°, 0 = hacia la pista) de un punto relativo al jugador.</summary>
+        public static float Bearing(Vector3 relative) => Mathf.Atan2(relative.x, relative.z) * Mathf.Rad2Deg;
+
+        /// <summary>Distancia (m) del ojo (<see cref="EyeHeight"/>) a un punto relativo al jugador.</summary>
+        public static float EyeDistance(Vector3 relative) => Vector3.Distance(new Vector3(0f, EyeHeight, 0f), relative);
     }
 }

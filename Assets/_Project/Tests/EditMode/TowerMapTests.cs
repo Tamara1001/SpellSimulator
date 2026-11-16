@@ -8,7 +8,7 @@ using SpellSimulator.World.Map;
 
 namespace SpellSimulator.Tests
 {
-    /// <summary>Mapa de la torre (Docs/LABORATORIO_V3_PLAN.md (e)): proyección, catálogo de zonas y portales, marcadores, leyenda y pantalla completa.</summary>
+    /// <summary>Mapa de la torre (Docs/LABORATORIO_V3_PLAN.md (e)): proyección, catálogo de zonas y portales, marcadores, leyenda, sin viaje y vista completa (Tab).</summary>
     public class TowerMapTests
     {
         private const float Eps = 1e-5f;
@@ -175,10 +175,11 @@ namespace SpellSimulator.Tests
                     Assert.AreSame(map, marker.Owner);
                 }
                 Assert.IsFalse(map.GetMarker(0).IsPortal);
-                // Presionar un rombo no marca ninguna zona (viaja; sin portales en la escena solo avisa).
+                // Presionar un rombo solo resalta su fila de la leyenda (no es un botón de viaje); otra vez la desmarca.
+                map.GetPortalMarker(0).Press();
+                Assert.AreEqual(zones.Length, map.Selected);
                 map.GetPortalMarker(0).Press();
                 Assert.AreEqual(-1, map.Selected);
-                Assert.IsFalse(map.IsFullscreen);
             }
             finally
             {
@@ -220,27 +221,69 @@ namespace SpellSimulator.Tests
             Assert.Greater(MapProjection.LegendBarDepth, 0f);
         }
 
+        // ---------------------------------------------------------------- sin viaje y vista completa (Tab)
+
         [Test]
-        public void FitScale_LlenaLaVistaSinSalirse()
+        public void ElMapa_NoTeletransporta()
         {
-            var cases = new[]
+            // El viaje salió del mapa: ni TowerMap ni el marcador tienen una acción de viaje, y presionar un rombo no mueve a nadie.
+            Assert.IsNull(typeof(TowerMap).GetMethod("Travel"), "TowerMap no debe tener acción de viaje");
+            Assert.IsNull(typeof(TowerMap).GetEvent("TraveledFromMap"), "TowerMap no debe avisar viajes");
+            WorldZoneCatalog.Zone[] portals = MapTowerMap.LoadResolvedPortals();
+            var go = new GameObject("TowerMapNoTravel");
+            var witness = new GameObject("Witness");
+            try
             {
-                (MapProjection.FullscreenDistancePc, 60f, 16f / 9f),
-                (MapProjection.FullscreenDistancePc, 60f, 4f / 3f),
-                (MapProjection.FullscreenDistanceVr, MapProjection.FullscreenFovVr, MapProjection.FullscreenAspectVr),
-            };
-            foreach (var (distance, fov, aspect) in cases)
-            {
-                float s = MapProjection.FitScale(distance, fov, aspect);
-                float viewH = 2f * distance * Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad), viewW = viewH * aspect;
-                float h = MapProjection.BoardHeight * s, w = MapProjection.BoardWidth * s;
-                float fillH = viewH * MapProjection.FullscreenFill, fillW = viewW * MapProjection.FullscreenFill;
-                Assert.LessOrEqual(h, fillH + 1e-4f, "se sale a lo alto");
-                Assert.LessOrEqual(w, fillW + 1e-4f, "se sale a lo ancho");
-                Assert.IsTrue(Mathf.Abs(h - fillH) < 1e-4f || Mathf.Abs(w - fillW) < 1e-4f, "no llena la vista en ninguna dirección");
+                witness.transform.position = new Vector3(1f, 2f, 3f);
+                var map = go.AddComponent<TowerMap>();
+                map.Setup(MapTowerMap.LoadResolvedZones(), null, null);
+                map.SetupPortals(portals, null, null);
+                for (int i = 0; i < map.PortalMarkerCount; i++) map.GetPortalMarker(i).Press();
+                Assert.AreEqual(new Vector3(1f, 2f, 3f), witness.transform.position);
             }
-            // PC con 60° y 16:9 a 0,5 m: el cuadro se achica (≈ 0,47) para quedar cerca y no atravesar paredes.
-            Assert.Less(MapProjection.FitScale(MapProjection.FullscreenDistancePc, 60f, 16f / 9f), 1f);
+            finally
+            {
+                Object.DestroyImmediate(go);
+                Object.DestroyImmediate(witness);
+            }
+        }
+
+        [Test]
+        public void ElMapa_EsUnPanelEnfocable_ConElCuadroEntero()
+        {
+            var go = new GameObject("TowerMapPanel");
+            try
+            {
+                go.transform.SetPositionAndRotation(new Vector3(4f, 1.6f, 2f), Quaternion.LookRotation(Vector3.right)); // +Z hacia el muro
+                var map = go.AddComponent<TowerMap>();
+                Assert.IsInstanceOf<SpellSimulator.Interfaces.IFocusPanel>(map);
+                Assert.IsTrue(map.TryGetFocusFrame(out Vector3 center, out Vector3 normal, out Vector2 size));
+                AssertNear(new Vector2(MapProjection.BoardWidth, MapProjection.BoardHeight), size);
+                Assert.AreEqual(-1f, normal.x, Eps, "la normal mira hacia la habitación (−Z del cuadro)");
+                Assert.AreEqual(go.transform.position.x + MapProjection.FaceZ * go.transform.forward.x, center.x, Eps);
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+        }
+
+        [Test]
+        public void SurfaceFocus_FitDistance_EncuadraSinSalirse()
+        {
+            var cases = new[] { (60f, 16f / 9f), (60f, 4f / 3f), (90f, 1f) };
+            float fill = SpellSimulator.Player.SurfaceFocus.PanelFill;
+            foreach (var (fov, aspect) in cases)
+            {
+                float d = SpellSimulator.Player.SurfaceFocus.FitDistance(MapProjection.BoardWidth, MapProjection.BoardHeight, fov, aspect, fill);
+                float viewH = 2f * d * Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad), viewW = viewH * aspect;
+                Assert.LessOrEqual(MapProjection.BoardHeight, viewH * fill + 1e-4f, "se sale a lo alto");
+                Assert.LessOrEqual(MapProjection.BoardWidth, viewW * fill + 1e-4f, "se sale a lo ancho");
+                Assert.IsTrue(Mathf.Abs(MapProjection.BoardHeight - viewH * fill) < 1e-4f || Mathf.Abs(MapProjection.BoardWidth - viewW * fill) < 1e-4f,
+                    "no llena la vista en ninguna dirección");
+            }
+            // Un cuadro más grande exige más distancia.
+            Assert.Greater(SpellSimulator.Player.SurfaceFocus.FitDistance(3f, 2f, 60f, 1.78f), SpellSimulator.Player.SurfaceFocus.FitDistance(1.5f, 1f, 60f, 1.78f));
         }
 
         private static void AssertNear(Vector2 expected, Vector2 actual, float eps = Eps)

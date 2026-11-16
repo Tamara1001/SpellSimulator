@@ -68,8 +68,6 @@ namespace SpellSimulator.Player
         public bool IsTogglingDebug { get; private set; }
         /// <summary>Fijar el grimorio abierto a la camara: B.</summary>
         public bool IsTogglingBookFocus { get; private set; }
-        /// <summary>Mapa de la torre a pantalla completa (alterna, apuntandolo): M en PC, boton X (izquierdo) en VR.</summary>
-        public bool IsTogglingMap { get; private set; }
         /// <summary>Slot de la barra de objetos: teclas 1 a 4 (0 a 3; 1-2 mano derecha, 3-4 mano izquierda). -1 si no se apreto ninguna.</summary>
         public int HotbarKey { get; private set; } = -1;
         private InputAction[] hotbarActions;
@@ -82,7 +80,6 @@ namespace SpellSimulator.Player
         private InputAction rotateAction;
         private InputAction debugAction;
         private InputAction bookFocusAction;
-        private InputAction mapAction;
         private InputAction[] widthActions;
         private InputAction proneAction;
         private InputAction pinAction;
@@ -177,10 +174,6 @@ namespace SpellSimulator.Player
             debugAction.AddBinding("<Keyboard>/f3");
             bookFocusAction = new InputAction("BookFocus", InputActionType.Button);
             // B eliminada: el grimorio a pantalla completa ahora es Esc (lo maneja Grimoire).
-            // Mapa de la torre a pantalla completa. Tab no sirve (es la vista completa del lienzo): M, y en VR el boton X.
-            mapAction = new InputAction("Map", InputActionType.Button);
-            mapAction.AddBinding("<Keyboard>/m");
-            mapAction.AddBinding("<XRController>{LeftHand}/primaryButton");
             hotbarActions = new InputAction[3];
             for (int i = 0; i < hotbarActions.Length; i++)
             {
@@ -250,7 +243,6 @@ namespace SpellSimulator.Player
             rotateAction.Enable();
             debugAction.Enable();
             bookFocusAction.Enable();
-            mapAction.Enable();
             foreach (var w in widthActions) w.Enable();
             foreach (var h in hotbarActions) h.Enable();
             pinAction.Enable();
@@ -284,7 +276,6 @@ namespace SpellSimulator.Player
             rotateAction.Disable();
             debugAction.Disable();
             bookFocusAction.Disable();
-            mapAction.Disable();
             foreach (var w in widthActions) w.Disable();
             foreach (var h in hotbarActions) h.Disable();
             pinAction.Disable();
@@ -328,14 +319,12 @@ namespace SpellSimulator.Player
             IsTogglingProne = proneAction.triggered;
             IsPressingEscapeRaw = escapeAction.triggered;
             // Con la vista completa activa Esc la cierra (lo hace el interactor) y NO abre el grimorio.
-            IsPressingEscape = IsPressingEscapeRaw && !FocusMode.CanvasView && FocusMode.CanvasViewExitFrame != Time.frameCount
-                && !FocusMode.PanelViewOwnsEscape; // el mapa a pantalla completa se cierra con Esc (lo hace TowerMap)
+            IsPressingEscape = IsPressingEscapeRaw && !FocusMode.CanvasView && FocusMode.CanvasViewExitFrame != Time.frameCount;
             IsZooming = zoomAction.IsPressed();
             IsRemoteGrabbing = remoteAction.IsPressed();
             IsRotateHeld = rotateAction.IsPressed();
             IsTogglingDebug = debugAction.triggered;
             IsTogglingBookFocus = bookFocusAction.triggered;
-            IsTogglingMap = mapAction.triggered;
             WidthPreset = -1;
             for (int i = 0; i < widthActions.Length; i++) if (widthActions[i].triggered) WidthPreset = i;
             HotbarKey = -1;
@@ -376,7 +365,7 @@ namespace SpellSimulator.Player
             LookValue = Vector2.zero;
             IsJumping = IsInteracting = IsSecondaryUsingTool = IsReloading = IsCyclingInk = IsResettingWorld = false;
             IsRunning = IsTogglingProne = IsZooming = IsRemoteGrabbing = IsRotateHeld = IsTogglingDebug = false;
-            IsTogglingBookFocus = IsPinning = IsCrouching = IsThrowing = IsFlipping = IsTogglingFocus = IsTogglingMap = false;
+            IsTogglingBookFocus = IsPinning = IsCrouching = IsThrowing = IsFlipping = IsTogglingFocus = false;
             WidthPreset = -1;
             HotbarKey = -1;
             Scroll = 0f;

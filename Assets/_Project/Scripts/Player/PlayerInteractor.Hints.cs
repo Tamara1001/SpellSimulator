@@ -35,6 +35,7 @@ namespace SpellSimulator.Player
         // Superficie mirada que admite vista completa (V): un lienzo, o una parte de una superficie del ambiente.
         private DrawingCanvas viewCanvas;
         private bool viewSurface;
+        private IFocusPanel viewPanel;
         private Vector3 viewPoint, viewNormal;
 
         private static readonly string[] HoverHintTable = BuildHoverHintTable();
@@ -68,7 +69,7 @@ namespace SpellSimulator.Player
             if (manipulable != null) return manipulable.HelpText ?? "";
             if (hoveredPressable != null)
             {
-                if (hoveredPressable.PressWithClick) return "";
+                if (hoveredPressable.PressWithClick) return viewPanel != null ? HoverHintTable[2] : "";
                 // Se rearma si cambia lo mirado o su texto (puerta: Abrir/Cerrar). Los textos son constantes cacheadas:
                 // comparar referencias no aloca.
                 string p = hoveredPressable.GetPressPrompt();
@@ -83,7 +84,7 @@ namespace SpellSimulator.Player
             hintPressable = null;
             int mask = 0;
             if (currentHovered != null) mask |= 1;
-            if (viewCanvas != null || viewSurface) mask |= 2;
+            if (viewCanvas != null || viewSurface || viewPanel != null) mask |= 2;
             if (hoveredInkSource != null && !(hoveredInkSource is InkSupply)) mask |= 4;
             if ((mask & 4) != 0 && hoveredInkSource is World.Inkwell well) return InkwellHint(mask, well);
             return HoverHintTable[mask];
@@ -115,6 +116,13 @@ namespace SpellSimulator.Player
         {
             if (PlatformDetector.IsVR) return;
             Collider c = hit.collider;
+            // Cuadro fijo del mundo (mapa de la torre): Tab lo encuadra entero.
+            IFocusPanel panel = c.GetComponentInParent<IFocusPanel>();
+            if (panel != null)
+            {
+                viewPanel = panel;
+                return;
+            }
             DrawingCanvas canvas = c.GetComponentInParent<DrawingCanvas>();
             if (canvas != null)
             {
@@ -141,6 +149,23 @@ namespace SpellSimulator.Player
             HoverHints = "";
         }
 
+        /// <summary>
+        /// Dentro de la vista completa de un cuadro del mundo (mapa de la torre): apunta con el cursor y solo reconoce lo del propio
+        /// cuadro (sus botones con clic). Nada se agarra ni se manipula, y el modo dibujo no cambia.
+        /// </summary>
+        private void HandlePanelHover()
+        {
+            ClearHover();
+            Camera cam = cameraTransform.GetComponent<Camera>();
+            if (cam == null) return;
+            Ray ray = FocusMode.GetRay(cam);
+            if (!PickHit(ray.origin, ray.direction, out RaycastHit hit)) return;
+            if (hit.collider.GetComponentInParent<IFocusPanel>() == null) return;
+            hoverHit = hit;
+            hoverDistance = hit.distance;
+            hoveredPressable = hit.collider.GetComponentInParent<IPressable>();
+        }
+
         // ---------------------------------------------------------------- mirar
 
         private void HandleHover()
@@ -159,6 +184,7 @@ namespace SpellSimulator.Player
             hoveredManipulable = null;
             viewCanvas = null;
             viewSurface = false;
+            viewPanel = null;
             if (PickHit(origin.position, direction, out RaycastHit hit))
             {
                 end = hit.point;

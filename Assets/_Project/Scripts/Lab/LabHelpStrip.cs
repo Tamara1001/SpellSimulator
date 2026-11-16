@@ -4,6 +4,13 @@ using UnityEngine;
 
 namespace SpellSimulator.Lab
 {
+    /// <summary>Pieza del laboratorio con una ayuda propia para la tira de ayuda (LabHelpStrip): titulo y explicacion en dos renglones.</summary>
+    public interface ILabHelp
+    {
+        /// <summary>Texto ya armado (LabHelpStrip.Line), cacheado por la pieza.</summary>
+        string HelpLine { get; }
+    }
+
     /// <summary>
     /// Tira de ayuda en el mundo de una consola del laboratorio (Docs/LABORATORIO_V3_PLAN.md, (c).6): muestra la ayuda corta
     /// (<see cref="LabSealVarDef.Help"/>) del control apuntado o agarrado. Va en el mundo porque la HUD de UI Toolkit no se ve

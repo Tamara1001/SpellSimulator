@@ -40,6 +40,12 @@ namespace SpellSimulator.Lab
         public const int RowCount = 6;
         public const int RowRecipe = 0, RowSigil = 1, RowSigns = 2, RowInk = 3, RowPaper = 4, RowSource = 5;
 
+        /// <summary>
+        /// Pantalla del atril (v5, punto A.4): el hechizo va grande arriba (<see cref="RowRecipe"/>) y debajo solo estas filas
+        /// (4 datos). El papel del campo se ve en la pista y en el panel derecho; el resumen completo (<see cref="Build(in LabSealSpec, StringBuilder)"/>) lo conserva.
+        /// </summary>
+        public static readonly int[] ScreenRows = { RowSigil, RowSigns, RowInk, RowSource };
+
         private static readonly string[] RowLabels = { "Hechizo", "Sigilo", "Signos", "Tinta", "Papel", "Se lanza" };
         // Grupo (color) de cada fila: 1 hechizo, 2 signos, 3 papel y tinta, 5 papel de prueba; 0 = neutro.
         private static readonly int[] RowGroups = { 1, 1, 2, 3, 5, 0 };

@@ -43,7 +43,7 @@ SpellSimulator/
 │   │   │   ├── Glyphs/           #   GlyphDictionary, GlyphEntry, GlyphDictionaryAsset
 │   │   │   ├── Input/Tools/      #   IDrawingTool, PenTool, EraserTool, RagTool
 │   │   │   ├── Interfaces/       #   IInteractable, IUsable, HandType
-│   │   │   ├── Lab/              #   Laboratorio: LabCatalog/LabVariableDef, LabParameterMath, LabCsv, LabMetricsMath, LabOverlayMath, LabSealBenchMath, LabBenchLayout, LabLensVisibility, LabGlyphIcons, LabPalette (puros); LabSealBench, LabField, LabFieldSlot, LabSketchPad, LabGlyphGrid, LabLensGate, LabBenchDisplay; LabParameters, LabDial, LabStepPlate, LabMaterializeButton, LabResetButton, LabSpawner, LabWindZone, LabMeasurements, LabSessionLog, LabCsvWriter, LabCounters, LabOverlay, InkLenses
+│   │   │   ├── Lab/              #   Laboratorio: LabCatalog/LabVariableDef, LabParameterMath, LabCsv, LabMetricsMath, LabOverlayMath, LabSealBenchMath, LabBenchLayout, LabLensVisibility, LabGlyphIcons, LabPalette (puros); LabSealBench, LabField, LabFieldSlot, LabSketchPad (+ LabSketchPreview, puro), LabPageSet, LabPageTab, LabGlyphGrid, LabLensGate, LabBenchDisplay; LabParameters, LabDial, LabStepPlate, LabMaterializeButton, LabResetButton, LabSpawner, LabWindZone, LabMeasurements, LabSessionLog, LabCsvWriter, LabCounters, LabOverlay, InkLenses
 │   │   │   ├── Output/           #   SpellOutputController, SpellManifestation, MagicField, ElementLook, SealFrame, SealFeedback; Bodies/EarthShapes (muros, puentes, estacas), RockSpell, RockMath
 │   │   │   ├── Parsing/          #   RingDetector, StrokeGrouper, SymbolCandidate, SealParser
 │   │   │   ├── Player/           #   PlatformDetector, PlayerInputReader, PlayerMovement, PlayerLook, PlayerInteractor, ObjectMover, FocusMode, InkSupply, Haptics

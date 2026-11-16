@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace SpellSimulator.Tests
 {
-    /// <summary>Logica pura del Laboratorio v4: visibilidad con lentes, alcance del banco compacto e iconos de glifos.</summary>
+    /// <summary>Logica pura del Laboratorio v4: visibilidad con lentes e iconos de glifos (el alcance de la consola v5 esta en LabV5Tests).</summary>
     public class LabV4Tests
     {
         // ---------------------------------------------------------------- datos solo con lentes
@@ -47,52 +47,6 @@ namespace SpellSimulator.Tests
         {
             Assert.IsTrue(LabLensVisibility.IsVisible(true, 5.5f, 20f, false, 6f));
             Assert.IsFalse(LabLensVisibility.IsVisible(true, 5.5f, 20f, false));
-        }
-
-        // ---------------------------------------------------------------- banco compacto
-
-        [Test]
-        public void Banco_TodoControlAlAlcance()
-        {
-            float gridHalf = (LabBenchLayout.GridColumns - 1) * 0.5f * LabBenchLayout.CellPitch;
-            float[] xs = { LabBenchLayout.ColumnX[0], LabBenchLayout.ColumnX[1], -gridHalf, gridHalf, -LabBenchLayout.ButtonPitch, LabBenchLayout.ButtonPitch, 0f };
-            for (int facet = 0; facet < LabBenchLayout.FacetCount; facet++)
-                foreach (float s in LabBenchLayout.RowS)
-                    foreach (float x in xs)
-                    {
-                        Vector3 p = LabBenchLayout.FacetPoint(facet, x, s);
-                        Assert.LessOrEqual(LabBenchLayout.Reach(p), LabBenchLayout.ReachMax + 1e-4f, $"panel {facet}, x {x}, s {s}");
-                        Assert.That(p.y, Is.InRange(0.8f, 1.8f), "altura comoda");
-                    }
-            Assert.LessOrEqual(LabBenchLayout.Reach(LabBenchLayout.PadCenter), LabBenchLayout.ReachMax, "atril de dibujo");
-            Vector3 side = LabBenchLayout.LaunchCenter + new Vector3(LabBenchLayout.FrontButtonX, 0f, 0f);
-            Assert.LessOrEqual(LabBenchLayout.Reach(side), LabBenchLayout.ReachMax, "botones de adelante");
-        }
-
-        [Test]
-        public void Banco_ProfundidadUtilYSeparacion()
-        {
-            Assert.LessOrEqual(LabBenchLayout.FacetDepth, LabBenchLayout.MaxUsefulDepth);
-            Assert.LessOrEqual(LabBenchLayout.FrontDepth, LabBenchLayout.MaxUsefulDepth);
-            Assert.GreaterOrEqual(LabBenchLayout.ColumnX[1] - LabBenchLayout.ColumnX[0], LabPanelLayout.MinControlPitch - 1e-5f);
-            for (int i = 1; i < LabBenchLayout.RowS.Length; i++)
-                Assert.GreaterOrEqual(LabBenchLayout.RowS[i - 1] - LabBenchLayout.RowS[i], LabBenchLayout.RowPitch - 1e-5f);
-            Assert.GreaterOrEqual(LabBenchLayout.CellPitch, 0.085f - 1e-5f, "blancos de VR ≥ 8,5 cm");
-            Assert.LessOrEqual(LabBenchLayout.RowS[0] + LabBenchLayout.RowPitch * 0.5f, LabBenchLayout.FacetSlope + 1e-5f);
-            Assert.GreaterOrEqual(LabBenchLayout.RowS[LabBenchLayout.RowS.Length - 1] - LabBenchLayout.RowPitch * 0.5f, 0f);
-        }
-
-        [Test]
-        public void Banco_PanelesEnArcoSinPisarseNiTaparLaPista()
-        {
-            float half = LabBenchLayout.FacetHalfAngle;
-            float li = LabBenchLayout.FacetYaw(LabBenchLayout.LeftInner), lo = LabBenchLayout.FacetYaw(LabBenchLayout.LeftOuter);
-            float ri = LabBenchLayout.FacetYaw(LabBenchLayout.RightInner), ro = LabBenchLayout.FacetYaw(LabBenchLayout.RightOuter);
-            Assert.AreEqual(-ri, li, 1e-4f);
-            Assert.AreEqual(-ro, lo, 1e-4f);
-            Assert.GreaterOrEqual(ri - half, LabBenchLayout.FrontHalfAngle - 1e-3f, "la mesa de adelante queda libre: se ve la pista");
-            Assert.GreaterOrEqual(ro - ri, 2f * half - 1e-3f, "los paneles no se pisan");
-            Assert.Less(ro + half, 180f, "queda un hueco atras para entrar");
         }
 
         // ---------------------------------------------------------------- iconos de glifos

@@ -15,12 +15,12 @@ namespace SpellSimulator.EditorTools.Map
     /// el estante está en 292° y la estación de viento en 324°.
     /// Pinta el valle (montañas, pradera, loma, caminos, lago y arroyo), un marcador numerado por zona del catálogo
     /// (Data/WorldZones.json, posiciones resueltas con <see cref="ValleyShape"/> y <see cref="MapStructures.TryGetSite"/>), el
-    /// rombo por portal (sección «portals» del catálogo, presionarlo hace viajar), el rótulo fijo «Vos estás aquí» en la
+    /// rombo por portal (sección «portals» del catálogo; solo informa, no viaja), el rótulo fijo «Vos estás aquí» en la
     /// torre y la columna de texto (título, zona apuntada y leyenda) que maneja <see cref="TowerMap"/>. La leyenda tiene una
     /// fila por entrada con una chapa del color del marcador (con su número; los portales, un rombo), el nombre en letra
     /// grande y oscura, y una barra de resaltado que se enciende con la entrada apuntada o marcada.
     /// Texto legible: tamaño fijo, ≥ 6 mm sobre lo que tiene debajo, sin sombras ni ZTest Always.
-    /// El cuadro NO es estático: se mueve delante de la cámara en pantalla completa (TowerMap).
+    /// La vista completa (Tab, PC) la da SurfaceFocus.ShowPanel: el cuadro queda fijo en la pared.
     /// </summary>
     public static class MapTowerMap
     {
@@ -84,7 +84,7 @@ namespace SpellSimulator.EditorTools.Map
 
             var boardMesh = MapBuilder.SaveMesh(BoardMesh().Build("TowerMap_Board"));
             var board = MapBuilder.Place(RootName, map, boardMesh, material, position, rotation);
-            // No estático: TowerMap lo trae delante de la cámara en pantalla completa (con static batching no se movería).
+            // No estático: los marcadores crecen al apuntarlos (TowerMap) y no deben quedar fusionados con static batching.
             board.isStatic = false;
             var collider = board.AddComponent<BoxCollider>();
             // Solo hasta la cara del pergamino: los marcadores sobresalen y el rayo los toca antes que al cuadro.
@@ -240,7 +240,7 @@ namespace SpellSimulator.EditorTools.Map
             {
                 float y = MapProjection.LegendRowCenterY(zones.Length, rowH);
                 Text(holder, "PortalsHeader", new Vector3(ColumnX, y, nameZ), new Vector2(ColumnWidth, rowH),
-                    LegendHeaderFontSize * k, LegendAccent, "<b>Portales</b> <size=75%>(tocá el rombo para viajar)</size>",
+                    LegendHeaderFontSize * k, LegendAccent, "<b>Portales</b> <size=75%>(cruzalos para viajar)</size>",
                     TextAlignmentOptions.MidlineLeft, false);
             }
             return bars;

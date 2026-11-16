@@ -9,9 +9,10 @@ using SpellSimulator.Compiler;
 namespace SpellSimulator.Lab
 {
     /// <summary>
-    /// Textos del banco (Laboratorio v4, puntos 5, 8 y 10):
-    /// - cartel «Vas a lanzar» (se ve siempre): una fila por dato con el rotulo en el color de su grupo
-    ///   (<see cref="LabSealSummary.BuildRow"/>), rearmado solo cuando cambia una variable o el dibujo del atril;
+    /// Textos del banco (Laboratorio v4, puntos 5, 8 y 10; v5, punto A.4):
+    /// - pantalla «Vas a lanzar» sobre el atril (se ve siempre): el hechizo grande y debajo 4 datos
+    ///   (<see cref="LabSealSummary.ScreenRows"/>) con el rotulo en el color de su grupo (<see cref="LabSealSummary.BuildRow"/>),
+    ///   rearmada solo cuando cambia una variable o el dibujo del atril;
     /// - datos de reconocimiento SOLO CON LENTES (los oculta/muestra <see cref="LabLensGate"/>, aca solo se escribe el texto):
     ///   banda de resultado del ultimo lanzamiento (valido/invalido, elemento, calidad %, motivo, estado previsto) y lectura del
     ///   atril de dibujo (trazos y si el anillo esta cerrado);
@@ -35,8 +36,10 @@ namespace SpellSimulator.Lab
         [SerializeField, Tooltip("Banco de sellos (vacio = LabSealBench.Current).")]
         private LabSealBench bench;
 
-        [Header("Cartel «Vas a lanzar»")]
-        [SerializeField, Tooltip("Una fila por dato (LabSealSummary.RowCount), de arriba hacia abajo.")]
+        [Header("Pantalla «Vas a lanzar»")]
+        [SerializeField, Tooltip("Nombre del hechizo, grande (fila RowRecipe).")]
+        private TMP_Text spellText;
+        [SerializeField, Tooltip("Una fila por dato de LabSealSummary.ScreenRows, de arriba hacia abajo.")]
         private TMP_Text[] rowTexts;
 
         [Header("Solo con lentes")]
@@ -74,11 +77,12 @@ namespace SpellSimulator.Lab
             bandColorId = BaseColorId;
             if (resultBand != null && resultBand.sharedMaterial != null && !resultBand.sharedMaterial.HasProperty(BaseColorId)
                 && resultBand.sharedMaterial.HasProperty(ColorId)) bandColorId = ColorId;
-            // Rotulo de cada fila en el color oscuro de su grupo (se arma una vez).
-            rowPrefixes = new string[LabSealSummary.RowCount];
+            // Rotulo de cada fila de la pantalla en el color oscuro de su grupo (se arma una vez).
+            int[] screen = LabSealSummary.ScreenRows;
+            rowPrefixes = new string[screen.Length];
             for (int i = 0; i < rowPrefixes.Length; i++)
-                rowPrefixes[i] = "<b><color=#" + ColorUtility.ToHtmlStringRGB(LabPalette.Dark(LabPalette.Group(LabSealSummary.RowGroup(i)))) + ">"
-                                 + LabSealSummary.RowLabel(i) + "</color></b>   ";
+                rowPrefixes[i] = "<b><color=#" + ColorUtility.ToHtmlStringRGB(LabPalette.Dark(LabPalette.Group(LabSealSummary.RowGroup(screen[i])))) + ">"
+                                 + LabSealSummary.RowLabel(screen[i]) + "</color></b>   ";
         }
 
         private void OnEnable() => Subscribe();
@@ -154,13 +158,30 @@ namespace SpellSimulator.Lab
         private void RefreshSummary()
         {
             summaryDirty = false;
-            if (rowTexts == null) return;
             LabSealSpec spec = bench.Spec;
             bool drawing = bench.UsesDrawing;
-            for (int i = 0; i < rowTexts.Length && i < LabSealSummary.RowCount; i++)
+            if (spellText != null)
+            {
+                // Con dibujo a mano el hechizo lo decide el dibujo: el nombre de la receta no aplica.
+                if (drawing) spellText.SetText("Tu dibujo del atril");
+                else
+                {
+                    LabSealSummary.BuildRow(spec, LabSealSummary.RowRecipe, row, nameOf, false);
+                    spellText.SetText(row);
+                }
+            }
+            if (rowTexts == null) return;
+            int[] screen = LabSealSummary.ScreenRows;
+            for (int i = 0; i < rowTexts.Length && i < screen.Length; i++)
             {
                 if (rowTexts[i] == null) continue;
-                LabSealSummary.BuildRow(spec, i, row, nameOf, drawing);
+                LabSealSummary.BuildRow(spec, screen[i], row, nameOf, drawing);
+                // Con dibujo a mano los controles no describen lo que se lanza: sigilo y signos los decide el dibujo, la tinta la lapicera.
+                if (drawing && screen[i] != LabSealSummary.RowSource)
+                {
+                    row.Clear();
+                    row.Append(screen[i] == LabSealSummary.RowInk ? "la de tu lapicera" : "los de tu dibujo");
+                }
                 sb.Clear();
                 sb.Append(rowPrefixes[i]).Append(row);
                 rowTexts[i].SetText(sb);

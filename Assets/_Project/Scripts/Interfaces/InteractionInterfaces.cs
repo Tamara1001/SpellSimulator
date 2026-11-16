@@ -128,6 +128,16 @@ namespace SpellSimulator.Interfaces
         bool Focused { get; }
         void SetFocus(UnityEngine.Transform camera, bool on);
     }
+
+    /// <summary>
+    /// Cuadro fijo del mundo (el mapa de la torre) que se mira a vista completa con Tab (PC): la camara lo encuadra de frente
+    /// (<c>SurfaceFocus.ShowPanel</c>) y dentro de esa vista el cursor puede tocar sus botones (IPressable con clic).
+    /// </summary>
+    public interface IFocusPanel
+    {
+        /// <summary>Centro del cuadro (mundo), normal hacia donde se lo mira y tamano (ancho, alto) en metros del mundo.</summary>
+        bool TryGetFocusFrame(out UnityEngine.Vector3 center, out UnityEngine.Vector3 normal, out UnityEngine.Vector2 size);
+    }
 }
 
 namespace SpellSimulator.Interfaces

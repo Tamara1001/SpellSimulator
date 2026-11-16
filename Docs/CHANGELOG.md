@@ -5,6 +5,27 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-15 — Mapa de la torre v5: vista completa con Tab y sin viaje
+
+- Tamara probó el v4 en VR. Plan en `LABORATORIO_V5_PLAN.md` (sección B). Se reusa el sistema de vista completa que ya existía en vez de uno propio del mapa.
+- **Tab = vista completa, como cualquier superficie.** `TowerMap` pasa a ser un `IFocusPanel` (interfaz nueva en `InteractionInterfaces.cs`); apuntarlo muestra «Tab: Vista completa» y Tab llama a `SurfaceFocus.ShowPanel(centro, normal, ancho, alto)`, que encuadra el cuadro entero de frente (misma cámara fija, mismo `FocusMode.EnterCanvasView`) con `SurfaceFocus.FitDistance` (lógica pura, la usa también el lienzo). Tab, V o Esc cierran. En VR no hay vista completa: se apunta con el rayo en la pared.
+- Dentro de esa vista el cursor toca los marcadores: `PlayerInteractor.HandlePanelHover` apunta solo a lo del propio cuadro y `HandleClickPress` deja pasar el clic únicamente en el panel (el modo dibujo sigue bloqueado y ninguna herramienta actúa).
+- **Eliminado todo lo de la v4:** tecla M / botón X de VR (`IsTogglingMap`), `FocusMode.PanelView*`, el cuadro que «se rotaba y venía a la cámara» (`TowerMap.OpenView/CloseView`, `MapProjection.Fullscreen*` y `FitScale`), el clic en el cuadro para abrirlo y el manejo especial de Esc.
+- **El mapa no teletransporta:** se quitó `TowerMap.Travel` y el evento `TraveledFromMap`. Los rombos de portal siguen como información (resaltan su fila de la leyenda; «Portales (cruzalos para viajar)»). `Portal.TeleportLocalPlayerHere` queda para el cruce normal.
+- Tests: `ElMapa_NoTeletransporta`, `ElMapa_EsUnPanelEnfocable_ConElCuadroEntero`, `SurfaceFocus_FitDistance_EncuadraSinSalirse` (reemplaza `FitScale`). `HarnessPlaySmoke`: «presionar los rombos no teletransporta» y «Tab abre la vista completa de frente» reemplazan el chequeo de portales.
+- Docs: `GAME_DESIGN.md` (controles), `KNOWN_ISSUES.md` (KI-135), `GrimoireTexts` (Tab en lugar de M/X).
+
+## 2026-11-15 — Laboratorio v5: atril = lienzo normal, vista previa viva, consola frontal y cartel de la entrada
+
+- Tamara probó el v4 en VR. Plan en `LABORATORIO_V5_PLAN.md` (sección A). Regla: reusar lo que ya existe.
+- **Atril = lienzo normal** (`LabSketchPad` reescrito): un `DrawingCanvas` (clon de PaperCanvas, collider sólido, sin `PhysicalCanvas`) bajo un `ISealGate` siempre bloqueado. Se dibuja con la lapicera equipada (`PhysicalTool`: mismo input, trazo, estabilizador, deshacer y goma) y Tab abre su vista completa (`SurfaceFocus.ShowCanvas`) como cualquier lienzo. Se borró el dibujo propio (`IManipulable`, `PenTool` y cursor propios). Gasta tinta y se replica en red como cualquier lienzo (KI-138).
+- **Vista previa viva**: sin dibujo a mano, el sello de los controles se dibuja en el atril (`LabSketchPad.ShowPreview`, trazos con dueño `LabSketchPreview.PreviewOwner`) y en el papel del campo; el primer trazo a mano saca la vista previa (`LabSketchPreview`, puro) y «Borrar dibujo» la repone. LANZAR lanza lo que haya.
+- **Consola frontal baja y abierta** (`LabBenchLayout` reescrito, `MapLab`): tres paneles contiguos a 40°, borde de abajo 0,8 m y de arriba ≤ 1,25 m, gabinete bajo y marco fino de latón; izquierda el sello y derecha campo/entorno, cada uno en 4 páginas con pestañas (`LabPageSet`, `LabPageTab`); centro botones, atril y pantalla. Todo a ≤ 0,7 m y ≤ 90° del frente (los laterales giran ±63°: en 100° no entraban, KI-138).
+- **Pantalla «Vas a lanzar»** sobre el atril (pergamino en marco de madera): hechizo grande + 4 datos (`LabSealSummary.ScreenRows`), letra ≥ 2,2 cm a 0,89 m del ojo, texto a 6 mm. Con dibujo a mano dice «Tu dibujo del atril». Banda de resultado, lectura del atril y mediciones (`LabLensCounters`, antes en el pizarrón) siguen solo con lentes.
+- **Cartel de la entrada**: el pizarrón verde se cambió por `CanvasDesigns.Sign` (el cartel de madera de todo el mundo) de cara a la torre, con los 4 pasos.
+- Tests: `LabV5Tests` (alcance, alturas, contigüidad, pestañas, pantalla legible, vista previa); se quitaron los de banco de `LabV4Tests`. `HarnessPlaySmoke`: atril como lienzo normal (lapicera lo ve, Tab, no se lanza solo), vista previa en atril y campo, el primer trazo la limpia, «Borrar dibujo» la repone, páginas, cartel hacia la torre; controles enlazados contando páginas ocultas.
+- **Sin compilar ni probar** (lo hace el agente principal). Docs: `GAME_DESIGN.md`, `STRUCTURE.md`, `KNOWN_ISSUES.md` (KI-138).
+
 ## 2026-11-15 — Laboratorio v4: banco al alcance, objetos del campo, atril de dibujo y datos con lentes
 
 - Tamara probó el v3 en VR (12 puntos). Plan y decisiones en `LABORATORIO_V4_PLAN.md`.

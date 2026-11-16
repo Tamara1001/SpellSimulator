@@ -139,22 +139,26 @@ el sello queda preparado y se lanza al cerrarlo con la pluma (el tamaño de la e
 potencia). Un **signo** se estampa del tamaño del anillo que ya hay en el papel, apuntando a su centro.
 
 ## Laboratorio y lentes de tinta
-Banco en arco (Laboratorio v4) en la pradera sureste, con una pista de pasto enfrente. El jugador se para en el centro y
-todo queda al alcance de la mano (≤ 0,7 m). **Adelante**: el atril de dibujo (se dibuja a mano con clic o gatillo
-sostenido, sin gastar tinta y sin que se lance solo), **LANZAR** (lanza el dibujo del atril o, si está vacío, el sello
-armado con los controles), «Borrar dibujo» y «↺ Reiniciar sello». **Izquierda**: el sello, con lo importante arriba —
-1 Hechizo (receta y grilla de sigilos), 2 Signos (grilla de signos, cantidad, ángulo, sentido), 3 Papel y tinta,
-4 Afinado. **Derecha**: objetos del campo — «+ Caja» (hasta 4), «Borrar elegido», «Borrar todo», casillas P (papel de
-prueba) y 1–4 (cajas) para elegir, y los controles del elegido (atajo de posición, tamaño, lado, distancia, giro, altura,
-inclinación; las cajas solo lado, distancia y giro); un aro luminoso marca el elegido. Más afuera: «+ Viento»,
-«+ Fuego», «↺ Reiniciar entorno», viento (dirección y velocidad, en vivo), fuego (semilla, merma, generaciones) y masa de
-la caja elegida. El papel puede ir de pie, en el piso, de frente, hacia atrás o a un lado. Perillas, deslizadores y
-selectores se manejan con clic/gatillo y arrastre (rueda: un paso; doble clic: valor inicial); apuntar cualquier pieza
-muestra su ayuda arriba del panel. El cartel «Vas a lanzar» resume el sello. Las **lentes de tinta** (soporte en la
-repisa, E / grip) muestran los datos: etiquetas en el mundo y, de cerca y mirándolos, el resultado del último
-lanzamiento (válido, elemento, calidad, estado previsto), la lectura del atril y las mediciones del pizarrón. Cada
-cambio queda en un **registro CSV** de la sesión. El reinicio del mundo borra lo materializado. Solo en modo Libre.
-Controles del juego: no cambian.
+Consola frontal (Laboratorio v5) en la pradera sureste, con una pista de pasto enfrente; a la entrada, un cartel de
+madera de cara a la torre explica qué es y cómo se usa en 4 pasos. El jugador se para en el centro mirando a la pista:
+la consola es baja (0,8–1,25 m, inclinada 40°) y abierta, se ve la pista por encima, y todo queda al alcance de la mano
+(≤ 0,7 m). **Centro**: el atril de dibujo, un lienzo normal — se dibuja con la **lapicera equipada de siempre** (mismos
+controles, trazo, deshacer y goma; gasta tinta como cualquier lienzo) y **Tab** abre su vista completa en PC; nunca se
+lanza solo. Mientras no se dibuje a mano, el atril y el papel del campo muestran en vivo la **vista previa** del sello de
+los controles; el primer trazo a mano la reemplaza. Abajo: «Borrar dibujo» (vuelve a la vista previa), **LANZAR** (lanza
+el dibujo a mano o, si no hay, el sello de los controles, desde el papel del campo) y «Reiniciar sello». Arriba del
+atril, la pantalla **«Vas a lanzar»**: el hechizo grande y 4 datos (sigilo, signos, tinta, de dónde sale).
+**Izquierda**: el sello en 4 páginas con pestañas abajo — Hechizo (receta y grilla de sigilos), Signos (grilla, cantidad,
+ángulo), Tinta (tinta, pluma, disparo, sentido, tamaño, llenado) y Afinado. **Derecha**: el campo en 4 páginas — Objetos
+(«+ Caja» hasta 4, «Borrar elegido», «Borrar todo», casillas P = papel y 1–4 = cajas, atajo y tamaño del papel), Posición
+(lado, distancia, giro, altura, inclinación; las cajas solo lado, distancia y giro), Entorno («+ Viento», «+ Fuego»,
+«Reiniciar entorno», dirección y velocidad del viento, masa de la caja) y Fuego (semilla, merma, generaciones); un aro
+luminoso marca el elegido. Perillas, deslizadores, selectores y pestañas se manejan con clic/gatillo (y arrastre; rueda:
+un paso; doble clic: valor inicial); apuntar cualquier pieza muestra su ayuda arriba del panel. Las **lentes de tinta**
+(soporte en la repisa, E / grip) muestran los datos: etiquetas en el mundo y, de cerca y mirándolos, el resultado del
+último lanzamiento (válido, elemento, calidad, estado previsto), la lectura del atril y las mediciones. Cada cambio queda
+en un **registro CSV** de la sesión. El reinicio del mundo borra lo materializado. Solo en modo Libre.
+Controles del juego: no cambian (el atril usa la lapicera y Tab como cualquier lienzo).
 
 ## Audio (M5)
 Música ambiental suave (pads + campanitas), viento y pájaros de fondo, cascada que se oye al acercarse. Cada acción
@@ -204,8 +208,7 @@ Esquema (ADR-032/033). Se repasa en el grimorio (Tab → Controles).
 | Menú | Grimorio en la mano / a pantalla y menú | T / Esc | Botón de menú izquierdo |
 | | Botones del grimorio | Apuntar + clic izquierdo | Apuntar + gatillo |
 | | Panel de depuración / reiniciar el mundo | F3 / Retroceso | — / Y |
-| | Mapa de la torre a pantalla completa (apuntándolo; también clic en el cuadro) / cerrarlo | M / M o Esc | X (izquierdo) o gatillo en el cuadro / X |
-| | Viajar a un portal desde el mapa | Clic en su rombo | Gatillo en su rombo |
+| | Mapa de la torre a pantalla completa (apuntándolo, como cualquier superficie) / cerrarlo; con el cursor se tocan sus marcadores | Tab / Tab, V o Esc | — (en VR se lee apuntando con el rayo) |
 
 **Inventario:** la mano principal (derecha por defecto; se cambia en Opciones) tiene 3 slots (lápiz, goma, estampas, tinta...) y la
 secundaria uno solo: lo que se agarra con E (lienzo, caja, el grimorio) y se arrastra por el mundo, siempre visible en la barra.

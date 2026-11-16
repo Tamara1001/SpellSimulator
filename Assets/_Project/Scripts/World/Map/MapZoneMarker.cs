@@ -5,8 +5,8 @@ namespace SpellSimulator.World.Map
 {
     /// <summary>
     /// Marcador del mapa de la torre: el círculo numerado de una zona o el rombo de un portal. Apuntarlo (mouse en PC, rayo
-    /// en VR) muestra el nombre y el uso en el panel del cuadro; presionarlo (clic o gatillo) marca la zona en la leyenda o,
-    /// si es un portal, lleva al jugador hasta ese portal. El resaltado, el panel y el viaje los maneja <see cref="TowerMap"/>,
+    /// en VR) muestra el nombre y el uso en el panel del cuadro; presionarlo (clic o gatillo) marca la entrada en la leyenda
+    /// (también el rombo de un portal: es solo información, no viaja). El resaltado y el panel los maneja <see cref="TowerMap"/>,
     /// que sigue lo apuntado por el PlayerInteractor en ambas plataformas.
     /// </summary>
     [RequireComponent(typeof(BoxCollider))]
@@ -21,7 +21,7 @@ namespace SpellSimulator.World.Map
         [SerializeField, Tooltip("Índice de la zona (o del portal) en el catálogo del mapa.")]
         private int index;
 
-        [SerializeField, Tooltip("True si es el rombo de un portal (presionarlo hace viajar).")]
+        [SerializeField, Tooltip("True si es el rombo de un portal (solo información: no viaja).")]
         private bool portal;
 
         [SerializeField, Tooltip("Nombre de la zona o del portal (para el aviso de interacción).")]
@@ -47,7 +47,7 @@ namespace SpellSimulator.World.Map
         public void Press()
         {
             if (owner == null) return;
-            if (portal) owner.Travel(index);
+            if (portal) owner.SelectPortal(index);
             else owner.Select(index);
         }
 

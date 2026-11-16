@@ -19,7 +19,8 @@ namespace SpellSimulator.Lab
     /// (Clear + AddStroke + Redraw) y lo lanza con <see cref="SpellCaster.Cast"/> (nunca OnStrokeFinished: sin auto-lanzamiento
     /// ni gasto de tinta). v4: el papel es un objeto del campo con posicion libre (X, distancia, giro, altura, inclinacion,
     /// tamaño; LabSealBenchMath.PaperPose) y si el atril de dibujo
-    /// (<see cref="LabSketchPad"/>) tiene trazos, LANZAR usa ese dibujo en vez del sello sintetizado por los controles.
+    /// (<see cref="LabSketchPad"/>) tiene un dibujo a mano, LANZAR usa ese dibujo en vez del sello sintetizado por los controles.
+    /// v5: sin dibujo a mano, el sello de los controles se ve como vista previa en el atril y en el papel del campo.
     /// Riesgo 2: el papel de prueba no se agarra ni se dibuja (colliders y PhysicalCanvas apagados), no se graba en recordSeals
     /// y en red el banco no hace nada. Sin allocations por frame: la vista previa se rehace solo cuando cambio algo (≤ 10 Hz).
     /// </summary>
@@ -108,7 +109,7 @@ namespace SpellSimulator.Lab
         public float TrackStart => trackStart;
         /// <summary>Atril de dibujo (puede ser null).</summary>
         public LabSketchPad SketchPad => sketchPad;
-        /// <summary>True si el atril de dibujo tiene trazos (LANZAR usara el dibujo).</summary>
+        /// <summary>True si el atril tiene un dibujo a mano (LANZAR usara el dibujo; la vista previa de los controles no cuenta).</summary>
         public bool UsesDrawing => sketchPad != null && sketchPad.HasDrawing;
         /// <summary>Resultado del ultimo lanzamiento (HasResult = false antes del primero): valido, elemento, calidad en % y motivo (spell.status).</summary>
         public LabSealResult UltimoResultado =>
@@ -306,8 +307,8 @@ namespace SpellSimulator.Lab
         }
 
         /// <summary>
-        /// Ubica el papel y dibuja en el lo que se va a lanzar, sin lanzarlo: el dibujo del atril si tiene trazos; si no, el sello
-        /// sintetizado (tinta y grosor de los controles).
+        /// Ubica el papel y dibuja en el lo que se va a lanzar, sin lanzarlo: el dibujo a mano del atril si lo hay; si no, el sello
+        /// sintetizado (tinta y grosor de los controles), que tambien se ve como vista previa en el atril.
         /// </summary>
         public void Rebuild()
         {
@@ -326,6 +327,13 @@ namespace SpellSimulator.Lab
             Vector2 iso = canvas.UvToIsotropic;
             float width = PenWidth(spec.penWidthIndex);
             var ink = (InkKind)(int)spec.ink;
+            // v5: la misma vista previa en el atril cercano (ancho proporcional a su tamaño); antes de convertir los puntos.
+            if (sketchPad != null && sketchPad.Canvas != null)
+            {
+                float paperSide = Mathf.Max(1e-3f, Mathf.Min(canvas.WorldSize.x, canvas.WorldSize.y));
+                float padSide = Mathf.Min(sketchPad.Canvas.WorldSize.x, sketchPad.Canvas.WorldSize.y);
+                sketchPad.ShowPreview(strokes, width * padSide / paperSide, ink);
+            }
             for (int k = 0; k < strokes.Count; k++)
             {
                 List<Vector2> points = strokes[k];

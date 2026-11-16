@@ -158,6 +158,14 @@ namespace SpellSimulator.Player
             // Vista completa de algo que no se agarro: solo se dibuja, se cambia de herramienta o se sale.
             if (SurfaceFocus.IsActive)
             {
+                if (SurfaceFocus.IsPanel)
+                {
+                    // Cuadro del mundo (mapa): solo apuntar y tocar sus botones con clic; ninguna herramienta actua sobre el.
+                    HandlePanelHover();
+                    HandleClickPress();
+                    if (inputReader.IsTogglingFocus || inputReader.IsFlipping) SurfaceFocus.Close();
+                    return;
+                }
                 ClearHover();
                 HandleHotbarKeys();
                 HandleWheel();
@@ -250,7 +258,8 @@ namespace SpellSimulator.Player
             bool clicking = inputReader.IsUsingTool;
             bool pressed = clicking && !wasClicking;
             wasClicking = clicking;
-            if (!pressed || FocusMode.Active || hoveredPressable == null || !hoveredPressable.PressWithClick) return;
+            // En la vista completa de un cuadro del mundo (mapa) el clic sobre sus botones SI vale; en el modo dibujo no.
+            if (!pressed || (FocusMode.Active && !SurfaceFocus.IsPanel) || hoveredPressable == null || !hoveredPressable.PressWithClick) return;
             hoveredPressable.Press();
             // Corre antes que HandleUsage en el mismo frame: marca el clic para que la herramienta no lo use.
             clickConsumedByPressable = true;
@@ -405,6 +414,8 @@ namespace SpellSimulator.Player
             // Sin nada agarrado: vista completa de lo que se mira.
             if (viewCanvas != null) SurfaceFocus.ShowCanvas(cameraTransform, viewCanvas);
             else if (viewSurface) SurfaceFocus.ShowRegion(cameraTransform, viewPoint, viewNormal);
+            else if (viewPanel != null && viewPanel.TryGetFocusFrame(out Vector3 center, out Vector3 normal, out Vector2 size))
+                SurfaceFocus.ShowPanel(cameraTransform, center, normal, size.x, size.y);
         }
 
         /// <summary>Esc con la vista completa activa: la cierra (la de un lienzo agarrado o la de lo que se miraba).</summary>

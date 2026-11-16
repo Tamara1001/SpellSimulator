@@ -40,8 +40,7 @@ namespace SpellSimulator.Player
             if (IsVR || Keyboard.current == null || FocusMode.Active) return;
 
             // PC: Escape libera el cursor (para el Inspector o salir), click lo vuelve a capturar.
-            // Con un panel a pantalla completa (mapa de la torre) Esc lo cierra y el cursor sigue capturado.
-            if (Keyboard.current.escapeKey.wasPressedThisFrame) { if (!FocusMode.PanelViewOwnsEscape) SetCursorLocked(false); }
+            if (Keyboard.current.escapeKey.wasPressedThisFrame) SetCursorLocked(false);
             else if (Cursor.lockState != CursorLockMode.Locked && Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
                 SetCursorLocked(true);
         }

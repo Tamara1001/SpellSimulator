@@ -3,8 +3,8 @@ using UnityEngine;
 namespace SpellSimulator.World.Map
 {
     /// <summary>
-    /// Proyección del valle al cuadro del mapa de la torre (Docs/LABORATORIO_V3_PLAN.md (e)) y medidas del cuadro, de la
-    /// leyenda y de la vista a pantalla completa. Lógica pura: la usan el generador del Editor (MapTowerMap),
+    /// Proyección del valle al cuadro del mapa de la torre (Docs/LABORATORIO_V3_PLAN.md (e)) y medidas del cuadro y de la
+    /// leyenda. Lógica pura: la usan el generador del Editor (MapTowerMap),
     /// <see cref="TowerMap"/> y los tests.
     /// Marco del cuadro: +X a la derecha de quien lo mira, +Y arriba, −Z hacia la habitación; z = 0 es la cara del muro.
     /// En el dibujo, arriba es el norte (+Z del mundo) y a la derecha el este (+X del mundo).
@@ -122,32 +122,6 @@ namespace SpellSimulator.World.Map
             return new Vector2(
                 Mathf.Clamp(table.x, TableCenter.x - half, TableCenter.x + half),
                 Mathf.Clamp(table.y, TableCenter.y - half, TableCenter.y + half));
-        }
-
-        // ---------------------------------------------------------------- pantalla completa
-
-        /// <summary>PC: distancia (m) del cuadro a la cámara en pantalla completa (más cerca que cualquier pared de la torre).</summary>
-        public const float FullscreenDistancePc = 0.5f;
-
-        /// <summary>VR: distancia (m) del panel a la cabeza, campo vertical (grados) y proporción supuestos para encuadrarlo.</summary>
-        public const float FullscreenDistanceVr = 0.8f, FullscreenFovVr = 70f, FullscreenAspectVr = 1f;
-
-        /// <summary>Fracción de la vista que ocupa el cuadro (deja un borde para verlo entero).</summary>
-        public const float FullscreenFill = 0.92f;
-
-        /// <summary>Si la cámara se aleja más de esto (m) de donde se abrió la pantalla completa, se cierra sola.</summary>
-        public const float FullscreenMaxDrift = 1.5f;
-
-        /// <summary>
-        /// Escala del cuadro para que, a <paramref name="distance"/> de una cámara con campo vertical
-        /// <paramref name="verticalFovDeg"/> y proporción <paramref name="aspect"/>, ocupe <paramref name="fill"/> de la vista
-        /// sin salirse ni a lo alto ni a lo ancho.
-        /// </summary>
-        public static float FitScale(float distance, float verticalFovDeg, float aspect, float fill = FullscreenFill)
-        {
-            float viewHeight = 2f * Mathf.Max(distance, 1e-3f) * Mathf.Tan(Mathf.Clamp(verticalFovDeg, 1f, 179f) * 0.5f * Mathf.Deg2Rad);
-            float viewWidth = viewHeight * Mathf.Max(aspect, 1e-3f);
-            return Mathf.Min(viewHeight * fill / BoardHeight, viewWidth * fill / BoardWidth);
         }
     }
 }

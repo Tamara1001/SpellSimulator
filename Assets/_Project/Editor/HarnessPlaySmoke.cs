@@ -526,30 +526,106 @@ namespace SpellSimulator.EditorTools
                 Check(bench.Spec.paperPose == LabSealSpec.FreePaperPose && lift > 0.1f && lift < 0.4f,
                     $"laboratorio v4: pose libre en el piso (atajo personalizado, centro a {lift:0.00} m del suelo)");
 
-                // Dibujo del atril vs. sintetico: con trazos LANZAR usa el dibujo; vacio, los controles.
+                // Atril v5: lienzo normal (la lapicera lo ve, Tab abre su vista completa, nunca se lanza solo), vista previa de los
+                // controles en el atril y en el papel del campo, el primer trazo a mano la limpia y «Borrar dibujo» la repone.
                 var pad = bench.SketchPad;
-                Check(pad != null && pad.Canvas != null, "laboratorio v4: atril de dibujo (LabSketchPad) con lienzo");
+                Check(pad != null && pad.Canvas != null, "laboratorio v5: atril de dibujo (LabSketchPad) con lienzo");
                 if (pad != null && pad.Canvas != null)
                 {
+                    var padCol = pad.Canvas.GetComponent<Collider>();
+                    var gate = pad.Canvas.GetComponentInParent<SpellSimulator.Interfaces.ISealGate>();
+                    var penTool = Object.FindFirstObjectByType<PhysicalTool>();
+                    bool penSees = false;
+                    if (penTool != null)
+                    {
+                        Vector3 normal = pad.Canvas.FaceNormal;
+                        penSees = penTool.TryShootRay(new Ray(pad.Canvas.WorldCenter + normal * 0.4f, -normal), 1f, out _, out var seen) && seen == pad.Canvas;
+                    }
+                    Check(padCol != null && padCol.enabled && !padCol.isTrigger && pad.Canvas.GetComponent<PhysicalCanvas>() == null
+                          && gate != null && gate.SealBlocked && penSees,
+                        $"laboratorio v5: el atril es un lienzo normal (collider solido, no se agarra, compuerta bloqueada, la lapicera lo ve: {penSees})");
+                    var cam = Camera.main;
+                    bool tabView = false;
+                    if (cam != null)
+                    {
+                        tabView = SurfaceFocus.ShowCanvas(cam.transform, pad.Canvas) && SurfaceFocus.IsActive;
+                        SurfaceFocus.Close();
+                        int closeFrame = Time.frameCount;
+                        while (Time.frameCount < closeFrame + 2) yield return null;
+                    }
+                    Check(tabView, "laboratorio v5: Tab (SurfaceFocus.ShowCanvas) abre la vista completa del atril");
+
                     bench.ResetSpec();
                     bench.ApplyRecipe("gust");
                     bench.SetVar(LabSealVarId.Tremor, 0f);
                     bench.SetVar(LabSealVarId.PaperPose, 0f);
                     pad.Clear();
-                    bench.Rebuild(); // el sello sintetico queda en el papel: se copia al atril como si fuera un dibujo
+                    bench.Rebuild();
+                    int fieldStrokes = bench.Canvas.Session.Strokes.Count;
+                    bool previewBoth = !pad.HandDrawn && fieldStrokes > 0 && pad.Canvas.Session.Strokes.Count == fieldStrokes
+                                       && !LabSketchPreview.HasHandStroke(pad.Canvas.Session.Strokes);
+                    Check(previewBoth, $"laboratorio v5: vista previa de los controles en el atril y en el papel del campo ({fieldStrokes} trazos)");
+
+                    // Dibujo a mano (como la lapicera: trazos sin dueño de vista previa) = el sello sintetico copiado.
+                    var copies = new List<SpellSimulator.Core.Stroke>(fieldStrokes);
                     foreach (var stroke in bench.Canvas.Session.Strokes)
-                        pad.Canvas.Session.AddStroke(new SpellSimulator.Core.Stroke(new List<Vector2>(stroke.Points)) { Width = stroke.Width, Ink = stroke.Ink });
-                    pad.Canvas.Redraw();
+                        copies.Add(new SpellSimulator.Core.Stroke(new List<Vector2>(stroke.Points)) { Width = stroke.Width, Ink = stroke.Ink });
+                    foreach (var stroke in copies) pad.Canvas.Session.AddStroke(stroke);
+                    bool handClears = pad.HasDrawing && pad.Canvas.Session.Strokes.Count == copies.Count;
+                    Check(handClears, "laboratorio v5: el primer trazo a mano limpia la vista previa del atril");
+
+                    // El atril nunca se lanza solo al cerrar el anillo (compuerta): el lanzador no compila nada.
+                    var padCaster = Object.FindFirstObjectByType<SpellSimulator.Casting.SpellCaster>();
+                    int autoCasts = 0;
+                    System.Action<SpellSimulator.Compiler.SpellIR, SpellSimulator.Canvas.DrawingCanvas> onCast = (castSpell, castCanvas) => { if (castCanvas == pad.Canvas) autoCasts++; };
+                    if (padCaster != null)
+                    {
+                        padCaster.SpellCompiled += onCast;
+                        padCaster.OnStrokeFinished(pad.Canvas);
+                        for (float end = Time.realtimeSinceStartup + 0.5f; Time.realtimeSinceStartup < end;) yield return null;
+                        padCaster.SpellCompiled -= onCast;
+                    }
+                    Check(padCaster != null && autoCasts == 0 && !padCaster.IsCharging(pad.Canvas), "laboratorio v5: el atril no se lanza solo al cerrar el anillo");
+
                     bench.Launch();
                     bool fromDrawing = bench.LastLaunchFromDrawing, drawingValid = bench.LastCastValid;
                     pad.Clear();
                     bench.Launch();
                     bool fromControls = !bench.LastLaunchFromDrawing;
-                    Check(fromDrawing && fromControls, "laboratorio v4: LANZAR usa el dibujo del atril si tiene trazos y si no, el sello de los controles");
-                    string drawReport = $"laboratorio v4: el dibujo copiado del sello gust lanza {(drawingValid ? "valido" : "INVALIDO")}";
+                    bool previewBack = !pad.HandDrawn && pad.Canvas.Session.Strokes.Count > 0;
+                    Check(fromDrawing && fromControls && previewBack,
+                        "laboratorio v5: LANZAR usa el dibujo a mano si lo hay; «Borrar dibujo» vuelve a la vista previa y a los controles");
+                    string drawReport = $"laboratorio v5: el dibujo copiado del sello gust lanza {(drawingValid ? "valido" : "INVALIDO")}";
                     passed.Append(drawReport).Append("; ");
                     Debug.Log("[PlaySmoke] " + drawReport);
                 }
+
+                // Consola v5: dos laterales con 4 paginas; se ve una por vez y las pestañas las cambian.
+                var pageSets = Object.FindObjectsByType<LabPageSet>(FindObjectsSortMode.None);
+                bool pagesOk = pageSets.Length == 2;
+                foreach (var set in pageSets)
+                {
+                    int start = set.CurrentPage;
+                    bool onlyOne = set.PageCount == LabBenchLayout.PagesPerPanel && start == set.InitialPage;
+                    for (int i = 0; i < set.PageCount; i++) onlyOne &= set.Page(i) != null && set.Page(i).activeSelf == (i == start);
+                    set.Show(1);
+                    onlyOne &= set.Page(1).activeSelf && !set.Page(start).activeSelf;
+                    set.Show(start);
+                    pagesOk &= onlyOne;
+                }
+                Check(pagesOk, $"laboratorio v5: {pageSets.Length} paneles con paginas (una visible, las pestañas cambian de pagina)");
+
+                // Cartel «Laboratorio» de la entrada: estetica de los carteles del mundo, de cara a la torre.
+                var labSign = GameObject.Find("Sign_Lab");
+                bool signFacesTower = false;
+                if (labSign != null)
+                {
+                    Vector2 towerXZ = SpellSimulator.World.Map.ValleyShape.TowerCenter;
+                    Vector3 toTower = new Vector3(towerXZ.x - labSign.transform.position.x, 0f, towerXZ.y - labSign.transform.position.z);
+                    // CanvasDesigns.Sign: el texto se lee desde -Z.
+                    signFacesTower = toTower.sqrMagnitude > 1f && Vector3.Dot(-labSign.transform.forward, toTower.normalized) > 0.9f;
+                }
+                Check(signFacesTower, "laboratorio v5: el cartel «Laboratorio» de la entrada mira hacia la torre");
                 bench.ResetSpec();
                 bench.SetVar(LabSealVarId.PaperPose, 0f);
                 world.ResetWorld();
@@ -615,19 +691,40 @@ namespace SpellSimulator.EditorTools
             var towerMap = Object.FindFirstObjectByType<SpellSimulator.World.Map.TowerMap>();
             Check(towerMap != null && towerMap.ZoneCount > 0 && towerMap.MarkerCount == towerMap.ZoneCount,
                 $"mapa de la torre: {(towerMap != null ? towerMap.MarkerCount : 0)} marcadores = zonas");
-            int mapPortalsFound = 0;
+            // Mapa: los rombos de portal son informacion (nadie se teletransporta) y Tab abre la vista completa del cuadro.
+            var mapCam = Camera.main;
+            Vector3 beforeMap = mapCam != null ? mapCam.transform.position : Vector3.zero;
             if (towerMap != null)
-                for (int i = 0; i < towerMap.PortalCount; i++)
-                    if (SpellSimulator.World.Portal.Find(towerMap.GetPortal(i).id) != null) mapPortalsFound++;
-            Check(towerMap != null && towerMap.PortalCount >= 4 && towerMap.PortalMarkerCount == towerMap.PortalCount && mapPortalsFound == towerMap.PortalCount,
-                $"mapa de la torre: {mapPortalsFound}/{(towerMap != null ? towerMap.PortalCount : 0)} rombos de portal con su portal en la escena");
+                for (int i = 0; i < towerMap.PortalMarkerCount; i++) towerMap.GetPortalMarker(i).Press();
+            yield return null;
+            bool noTeleport = mapCam != null && (mapCam.transform.position - beforeMap).sqrMagnitude < 1e-6f
+                && towerMap != null && towerMap.PortalMarkerCount >= 4;
+            Check(noTeleport, "mapa de la torre: presionar los rombos de portal no teletransporta");
+            bool tabOpens = false, tabClosed = false;
+            if (towerMap != null && mapCam != null && !SpellSimulator.Player.PlatformDetector.IsVR
+                && towerMap.TryGetFocusFrame(out Vector3 mapCenter, out Vector3 mapNormal, out Vector2 mapSize))
+            {
+                Vector3 camBefore = mapCam.transform.position;
+                // Se mide en el mismo frame: despues el jugador del smoke mueve la camara antes del LateUpdate de SurfaceFocus.
+                SpellSimulator.Player.SurfaceFocus.ShowPanel(mapCam.transform, mapCenter, mapNormal, mapSize.x, mapSize.y);
+                tabOpens = SpellSimulator.Player.SurfaceFocus.IsActive && SpellSimulator.Player.SurfaceFocus.IsPanel
+                    && Vector3.Distance(mapCam.transform.position, mapCenter) > 0.5f && Vector3.Dot(mapCam.transform.forward, mapNormal) < -0.99f;
+                if (!tabOpens)
+                    Debug.Log($"[Smoke] mapa Tab: activo {SpellSimulator.Player.SurfaceFocus.IsActive}, panel {SpellSimulator.Player.SurfaceFocus.IsPanel}, " +
+                              $"distancia {Vector3.Distance(mapCam.transform.position, mapCenter):F2}, dot {Vector3.Dot(mapCam.transform.forward, mapNormal):F3}, tam {mapSize}");
+                SpellSimulator.Player.SurfaceFocus.Close();
+                yield return null;
+                tabClosed = !SpellSimulator.Player.SurfaceFocus.IsActive && (mapCam.transform.position - camBefore).sqrMagnitude < 1e-4f;
+            }
+            Check(tabOpens && tabClosed, $"mapa de la torre: Tab abre la vista completa de frente (abrio {tabOpens}, cerro {tabClosed})");
             var trainingTarget = GameObject.Find("PaperCanvas");
             var labBench = GameObject.Find("LabBench");
             Check(trainingTarget != null && labBench != null && Vector3.Distance(trainingTarget.transform.position, labBench.transform.position) > 12f,
                 "entrenamiento base reubicado a mas de 12 m del banco del laboratorio");
 
             // Controles: todos enlazados y uno (velocidad del viento) cambia su variable por su delegado set (rueda = un paso).
-            var bindings = Object.FindObjectsByType<LabControlBinding>(FindObjectsSortMode.None);
+            // Incluye las paginas ocultas de la consola v5 (se enlazan en el primer frame, con todo activo).
+            var bindings = Object.FindObjectsByType<LabControlBinding>(FindObjectsInactive.Include, FindObjectsSortMode.None);
             int bound = 0;
             LabControlBinding speedBinding = null;
             foreach (var binding in bindings)

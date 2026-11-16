@@ -7,26 +7,26 @@ using SpellSimulator.Player;
 namespace SpellSimulator.World.Map
 {
     /// <summary>
-    /// Mapa del valle colgado en la planta baja de la torre (Docs/LABORATORIO_V3_PLAN.md (e)). Guarda las zonas y los portales
-    /// del catálogo (Data/WorldZones.json, con la posición ya resuelta por el generador MapTowerMap), crea un
-    /// <see cref="MapZoneMarker"/> por zona (círculo numerado) y por portal (rombo) y maneja la columna de texto: la entrada
-    /// apuntada muestra su nombre y su uso; la zona presionada queda resaltada en la leyenda; el rombo presionado lleva al
-    /// jugador hasta ese portal (<see cref="Portal.TeleportLocalPlayerHere"/>).
+    /// Mapa del valle colgado en la planta baja de la torre. Guarda las zonas y los portales del catálogo
+    /// (Data/WorldZones.json, con la posición ya resuelta por el generador MapTowerMap), crea un <see cref="MapZoneMarker"/>
+    /// por zona (círculo numerado) y por portal (rombo) y maneja la columna de texto: la entrada apuntada muestra su nombre y
+    /// su uso; la presionada queda resaltada en la leyenda. Los rombos de portal son solo información: el mapa NO teletransporta
+    /// (para viajar hay que cruzar el portal).
     ///
-    /// Pantalla completa: apuntando el cuadro, M (PC) o X (VR) lo trae delante de la cámara, escalado para llenar la vista
-    /// (PC) o como un panel grande frente al jugador (VR); M/X o Esc lo devuelven a la pared (también si el jugador se aleja).
-    /// Clic o gatillo sobre el cuadro también lo abre. Se apunta igual que en la pared (mira central en PC, rayo en VR).
+    /// Vista completa: es un <see cref="IFocusPanel"/>, igual que cualquier superficie que se mira. Apuntándolo en PC, Tab
+    /// (<see cref="SurfaceFocus.ShowPanel"/>) encuadra el cuadro entero de frente y el cursor toca los marcadores; Tab, V o Esc
+    /// cierran. En VR no hay vista completa: se apunta con el rayo directo en la pared.
     ///
     /// Sigue lo apuntado por el PlayerInteractor; los textos se arman una vez y en Update solo se asignan cuando cambia lo
     /// que se muestra (cero allocations por frame).
     /// </summary>
-    public class TowerMap : MonoBehaviour, IPressable
+    public class TowerMap : MonoBehaviour, IFocusPanel
     {
         /// <summary>Cada cuánto se vuelve a buscar el interactor del jugador si todavía no existe (s).</summary>
         private const float InteractorRetrySeconds = 1f;
 
-        private const string HintPc = "Apuntá un número o un rombo.\nClic en un número: lo resalta en la lista.\nClic en un rombo: viajás a ese portal.\nM: pantalla completa (M o Esc cierra).";
-        private const string HintVr = "Apuntá un número o un rombo con el rayo.\nGatillo en un número: lo resalta.\nGatillo en un rombo: viajás al portal.\nX: pantalla completa.";
+        private const string HintPc = "Apuntá un número o un rombo.\nClic: lo resalta en la lista.\nTab: vista completa (Tab o Esc cierra).\nLos rombos son portales: cruzalos para viajar.";
+        private const string HintVr = "Apuntá un número o un rombo con el rayo.\nGatillo: lo resalta en la lista.\nLos rombos son portales: cruzalos para viajar.";
 
         [SerializeField, Tooltip("Zonas con la posición ya resuelta (las guarda MapTowerMap desde Data/WorldZones.json).")]
         private WorldZoneCatalog.Zone[] zones = Array.Empty<WorldZoneCatalog.Zone>();
@@ -49,7 +49,6 @@ namespace SpellSimulator.World.Map
         private string[] infoLines = Array.Empty<string>();
 
         private PlayerInteractor interactor;
-        private PlayerInputReader input;
         private float nextInteractorSearch;
         private GameObject lastHoveredObject;
         private MapZoneMarker hovered;
@@ -58,35 +57,18 @@ namespace SpellSimulator.World.Map
         private int shownBar = int.MinValue;
         private bool shownHintVr;
 
-        // Pantalla completa: pose en la pared para volver y desde dónde se abrió.
-        private bool fullscreen;
-        private Transform viewCamera;
-        private Vector3 openCameraPosition;
-        private Vector3 homePosition;
-        private Quaternion homeRotation;
-        private Vector3 homeScale;
-
         public int ZoneCount => zones != null ? zones.Length : 0;
         public int MarkerCount => markers != null ? markers.Length : 0;
         public int PortalCount => portals != null ? portals.Length : 0;
         public int PortalMarkerCount => portalMarkers != null ? portalMarkers.Length : 0;
 
-        /// <summary>Zona marcada en la leyenda (−1 = ninguna).</summary>
+        /// <summary>Entrada marcada en la leyenda: una zona (0..ZoneCount−1) o un portal (ZoneCount + índice). −1 = ninguna.</summary>
         public int Selected => selected;
-
-        /// <summary>True mientras el mapa está a pantalla completa.</summary>
-        public bool IsFullscreen => fullscreen;
 
         public WorldZoneCatalog.Zone GetZone(int i) => zones[i];
         public MapZoneMarker GetMarker(int i) => markers[i];
         public WorldZoneCatalog.Zone GetPortal(int i) => portals[i];
         public MapZoneMarker GetPortalMarker(int i) => portalMarkers[i];
-
-        /// <summary>Un portal se tocó en el mapa y el jugador viajó hasta él (id del portal).</summary>
-        public static event Action<string> TraveledFromMap;
-
-        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
-        private static void ResetStatics() => TraveledFromMap = null;
 
         /// <summary>
         /// Crea (o recrea) un marcador por zona sobre el pergamino, en <see cref="MapProjection.WorldToTable"/>. Lo llama el
@@ -144,40 +126,27 @@ namespace SpellSimulator.World.Map
             selected = selected == index ? -1 : index;
         }
 
-        /// <summary>
-        /// Lleva al jugador local hasta el portal <paramref name="portalIndex"/> del mapa (el mismo teletransporte que el cruce
-        /// de un portal abierto). Cierra la pantalla completa antes de viajar.
-        /// </summary>
-        public void Travel(int portalIndex)
+        /// <summary>Marca un portal en la leyenda (solo información: no viaja); presionar el mismo otra vez lo desmarca.</summary>
+        public void SelectPortal(int portalIndex)
         {
             if (portalIndex < 0 || portalIndex >= PortalCount) return;
-            WorldZoneCatalog.Zone entry = portals[portalIndex];
-            Portal target = Portal.Find(entry.id);
-            if (target == null)
-            {
-                Hud.Notify("map", "Ese portal no responde", 2f);
-                return;
-            }
-            if (fullscreen) CloseView();
-            if (!target.TeleportLocalPlayerHere())
-            {
-                Hud.Notify("map", "Ese portal no responde", 2f);
-                return;
-            }
-            Hud.Notify("map", "Viajaste a: " + entry.name, 2.5f);
-            TraveledFromMap?.Invoke(entry.id);
+            int entry = ZoneCount + portalIndex;
+            selected = selected == entry ? -1 : entry;
         }
 
-        // ---------------------------------------------------------------- IPressable (el cuadro)
+        // ---------------------------------------------------------------- IFocusPanel (Tab: vista completa)
 
-        public bool PressWithClick => true;
-
-        public string GetPressPrompt() => "Mapa del valle";
-
-        /// <summary>Clic o gatillo sobre el cuadro (fuera de los marcadores): lo abre a pantalla completa.</summary>
-        public void Press()
+        /// <summary>
+        /// Encuadre de la vista completa: el centro del pergamino, la normal hacia la habitación (el frente del cuadro es −Z) y
+        /// el tamaño del cuadro entero (con la escala del objeto).
+        /// </summary>
+        public bool TryGetFocusFrame(out Vector3 center, out Vector3 normal, out Vector2 size)
         {
-            if (!fullscreen) OpenView();
+            center = transform.TransformPoint(new Vector3(0f, 0f, MapProjection.FaceZ));
+            normal = -transform.forward;
+            float k = transform.lossyScale.x;
+            size = new Vector2(MapProjection.BoardWidth * k, MapProjection.BoardHeight * k);
+            return true;
         }
 
         // ---------------------------------------------------------------- ciclo
@@ -192,15 +161,9 @@ namespace SpellSimulator.World.Map
             ForceShow();
         }
 
-        private void OnDisable()
-        {
-            if (fullscreen) CloseView();
-        }
-
         private void Update()
         {
             TrackHover();
-            HandleView();
             int info = hovered != null ? EntryOf(hovered) : selected;
             if (info != shownInfo || (info < 0 && PlatformDetector.IsVR != shownHintVr)) ShowInfo(info);
             int bar = hovered != null ? EntryOf(hovered) : selected;
@@ -217,8 +180,6 @@ namespace SpellSimulator.World.Map
                 nextInteractorSearch = Time.unscaledTime + InteractorRetrySeconds;
                 interactor = FindAnyObjectByType<PlayerInteractor>();
                 if (interactor == null) return;
-                input = interactor.GetComponent<PlayerInputReader>();
-                if (input == null) input = FindAnyObjectByType<PlayerInputReader>();
             }
 
             GameObject go = interactor.HoveredObject;
@@ -231,69 +192,6 @@ namespace SpellSimulator.World.Map
                 hovered = marker;
                 hovered.SetHighlighted(true);
             }
-        }
-
-        // ---------------------------------------------------------------- pantalla completa
-
-        private void HandleView()
-        {
-            if (fullscreen)
-            {
-                bool close = viewCamera == null || (input != null && (input.IsTogglingMap || input.IsPressingEscapeRaw));
-                if (!close && (viewCamera.position - openCameraPosition).sqrMagnitude > MapProjection.FullscreenMaxDrift * MapProjection.FullscreenMaxDrift)
-                    close = true;
-                if (close) CloseView();
-                return;
-            }
-            // Solo se abre apuntando el cuadro o uno de sus marcadores.
-            if (input != null && input.IsTogglingMap && (hovered != null || lastHoveredObject == gameObject)) OpenView();
-        }
-
-        private void OpenView()
-        {
-            Camera cam = Camera.main;
-            if (cam == null) return;
-            viewCamera = cam.transform;
-            openCameraPosition = viewCamera.position;
-            homePosition = transform.position;
-            homeRotation = transform.rotation;
-            homeScale = transform.localScale;
-
-            Vector3 forward;
-            float distance, scale;
-            if (PlatformDetector.IsVR)
-            {
-                // Panel grande frente al jugador, vertical y a la altura de los ojos (no se inclina con la cabeza).
-                forward = Vector3.ProjectOnPlane(viewCamera.forward, Vector3.up);
-                if (forward.sqrMagnitude < 1e-4f) forward = Vector3.ProjectOnPlane(viewCamera.up, Vector3.up);
-                forward.Normalize();
-                distance = MapProjection.FullscreenDistanceVr;
-                scale = MapProjection.FitScale(distance, MapProjection.FullscreenFovVr, MapProjection.FullscreenAspectVr);
-            }
-            else
-            {
-                // Pegado a la cámara y escalado para llenar la pantalla: se apunta con la mira moviendo la vista.
-                forward = viewCamera.forward;
-                distance = MapProjection.FullscreenDistancePc;
-                scale = MapProjection.FitScale(distance, cam.fieldOfView, cam.aspect);
-            }
-            // El frente del cuadro (−Z) mira a la cámara: su +Z apunta en la dirección de la vista.
-            Vector3 up = PlatformDetector.IsVR ? Vector3.up : viewCamera.up;
-            transform.SetPositionAndRotation(viewCamera.position + forward * distance, Quaternion.LookRotation(forward, up));
-            transform.localScale = homeScale * scale;
-            Physics.SyncTransforms();
-            fullscreen = true;
-            FocusMode.EnterPanelView();
-        }
-
-        private void CloseView()
-        {
-            fullscreen = false;
-            viewCamera = null;
-            transform.SetPositionAndRotation(homePosition, homeRotation);
-            transform.localScale = homeScale;
-            Physics.SyncTransforms();
-            FocusMode.ExitPanelView();
         }
 
         // ---------------------------------------------------------------- textos
@@ -335,7 +233,7 @@ namespace SpellSimulator.World.Map
             for (int i = 0; i < p; i++)
             {
                 WorldZoneCatalog.Zone portal = portals[i];
-                infoLines[n + i] = $"<b><color={portal.HtmlColor}>Portal:</color>  {portal.name}</b>\n<size=85%>{portal.use}</size>";
+                infoLines[n + i] = $"<b><color={portal.HtmlColor}>Portal:</color>  {portal.name}</b>\n<size=85%>{portal.use}\nEl mapa no teletransporta.</size>";
             }
         }
 

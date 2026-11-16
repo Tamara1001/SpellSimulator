@@ -7,12 +7,16 @@ namespace SpellSimulator.Player
     /// Vista completa (V) de algo que se MIRA sin agarrarlo: un lienzo grande o una parte de una superficie del ambiente
     /// (pared de la torre, arbol...). En vez de mover el objeto, acerca la camara de forma frontal y congela la vista
     /// (<see cref="FocusMode.EnterCanvasView"/>): el mouse es el puntero y las herramientas apuntan con el rayo del cursor.
-    /// Al salir (V o Esc) la camara vuelve a su pose. Solo PC. Se crea solo en la camara la primera vez que se usa.
+    /// Al salir (Tab, V o Esc) la camara vuelve a su pose. Solo PC. Se crea solo en la camara la primera vez que se usa.
+    /// Tambien encuadra un cuadro fijo del mundo (<see cref="ShowPanel"/>, el mapa de la torre): ahi el cursor puede tocar sus botones.
     /// </summary>
     public class SurfaceFocus : MonoBehaviour
     {
         public const float Fill = 0.7f;
         public const float RegionWidth = 1.2f;
+
+        /// <summary>Fraccion de la vista que ocupa un cuadro fijo del mundo (mapa): un poco mas que un lienzo, para leer la leyenda.</summary>
+        public const float PanelFill = 0.9f;
 
         private static SurfaceFocus instance;
 
@@ -24,15 +28,56 @@ namespace SpellSimulator.Player
         private Quaternion fixedRotation;
         private float fov, aspect, near;
         private bool active;
+        private bool panel;
 
         public static bool IsActive => instance != null && instance.active;
+
+        /// <summary>True si la vista activa es la de un cuadro fijo del mundo (<see cref="ShowPanel"/>): se puede apuntar y tocar sus botones.</summary>
+        public static bool IsPanel => instance != null && instance.active && instance.panel;
+
+        /// <summary>
+        /// Distancia (m) a la que hay que poner una camara de campo vertical <paramref name="verticalFovDeg"/> y proporcion
+        /// <paramref name="aspect"/> para que un rectangulo de <paramref name="width"/> x <paramref name="height"/> ocupe
+        /// <paramref name="fill"/> de la vista sin salirse ni a lo alto ni a lo ancho. Logica pura (la usan el lienzo, el panel y los tests).
+        /// </summary>
+        public static float FitDistance(float width, float height, float verticalFovDeg, float aspect, float fill = Fill)
+        {
+            float tan = Mathf.Tan(Mathf.Clamp(verticalFovDeg, 1f, 179f) * 0.5f * Mathf.Deg2Rad);
+            fill = Mathf.Max(fill, 1e-3f);
+            return Mathf.Max(height / fill / (2f * tan), width / fill / (2f * tan * Mathf.Max(aspect, 1e-3f)));
+        }
 
         /// <summary>Vista completa de un lienzo: encuadra toda la superficie, de frente por el lado donde esta el jugador.</summary>
         public static bool ShowCanvas(Transform cameraTransform, DrawingCanvas target)
         {
             if (PlatformDetector.IsVR || target == null || !Prepare(cameraTransform)) return false;
             instance.canvas = target;
+            instance.panel = false;
             instance.Begin();
+            return true;
+        }
+
+        /// <summary>
+        /// Vista completa de un cuadro fijo del mundo (el mapa de la torre): lo encuadra de frente, a <paramref name="normal"/> de
+        /// su <paramref name="center"/>, para que entre entero (<paramref name="width"/> x <paramref name="height"/> en metros del mundo).
+        /// Es la misma vista que la de un lienzo, pero el cursor puede tocar los botones del cuadro (<see cref="IsPanel"/>).
+        /// </summary>
+        public static bool ShowPanel(Transform cameraTransform, Vector3 center, Vector3 normal, float width, float height)
+        {
+            if (PlatformDetector.IsVR || width <= 0f || height <= 0f || !Prepare(cameraTransform)) return false;
+            SurfaceFocus s = instance;
+            s.canvas = null;
+            normal = normal.sqrMagnitude < 1e-6f ? Vector3.forward : normal.normalized;
+            float distance = FitDistance(width, height, s.fov, s.aspect, PanelFill);
+            distance = Mathf.Max(distance, Mathf.Max(0.3f, s.near * 2f));
+            // Si hay algo en el medio se acerca para no quedar adentro (los gatillos no cuentan).
+            if (Physics.Raycast(center + normal * 0.02f, normal, out RaycastHit block, distance, ~0, QueryTriggerInteraction.Ignore))
+                distance = Mathf.Max(block.distance * 0.85f, Mathf.Max(0.3f, s.near * 2f));
+            Vector3 up = Mathf.Abs(normal.y) < 0.7f ? Vector3.up : cameraTransform.up;
+            s.fixedPosition = center + normal * distance;
+            s.fixedRotation = Quaternion.LookRotation(-normal, up);
+            s.panel = true;
+            s.Begin();
             return true;
         }
 
@@ -42,6 +87,7 @@ namespace SpellSimulator.Player
             if (PlatformDetector.IsVR || !Prepare(cameraTransform)) return false;
             SurfaceFocus s = instance;
             s.canvas = null;
+            s.panel = false;
             float tan = Mathf.Tan(s.fov * 0.5f * Mathf.Deg2Rad);
             float distance = RegionWidth / Fill / (2f * tan);
             distance = Mathf.Max(distance, Mathf.Max(0.3f, s.near * 2f));
@@ -92,6 +138,7 @@ namespace SpellSimulator.Player
         private void End()
         {
             active = false;
+            panel = false;
             canvas = null;
             if (cam != null) cam.SetLocalPositionAndRotation(savedLocalPosition, savedLocalRotation);
             FocusMode.ExitCanvasView();
@@ -122,8 +169,7 @@ namespace SpellSimulator.Player
                 if (Vector3.Dot(normal, viewer - center) < 0f) normal = -normal;
 
                 Vector2 size = canvas.WorldSize;
-                float tan = Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad);
-                float distance = Mathf.Max(size.y / Fill / (2f * tan), size.x / Fill / (2f * tan * aspect));
+                float distance = FitDistance(size.x, size.y, fov, aspect);
                 distance = Mathf.Clamp(distance, Mathf.Max(0.1f, near * 2f), 60f);
 
                 Vector3 up = Vector3.ProjectOnPlane(canvas.transform.up, normal);
