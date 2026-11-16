@@ -1,7 +1,7 @@
 # Plan: mapa del modo Libre ordenado por flujo de aprendizaje
 
-> **Estado: APROBADO por Tamara (2026-11-16), en implementación** (pasos 0 y 1 hechos). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
-> **v3 (2026-11-16, correcciones de Tamara al dibujo): D19-D24 y §17-§18. La torre pasa a ser el tutorial, el spawn pasa a llamarse Nexo y el Archivo se redefine. §17 y §18 son PROPUESTA hasta que Tamara las confirme.**
+> **Estado: APROBADO por Tamara (2026-11-16), en implementación** (pasos 0, 1 y N hechos). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
+> **v3 (2026-11-16, correcciones de Tamara al dibujo): D19-D24 y §17-§18. La torre pasa a ser el tutorial, el spawn pasa a llamarse Nexo y el Archivo se redefine. §17 y §18 APROBADAS por Tamara el 2026-11-16 (D25-D27).**
 > La revisión crítica externa está en [MAPA_FLUJO_CRITICA.md](MAPA_FLUJO_CRITICA.md) y ya está volcada en §12b.
 
 ## 🚀 «Avanzá con el mapa» — protocolo para quien retome (persona o Claude)
@@ -20,9 +20,9 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
 
 - [x] **0** Volcar posiciones reales (`Sites()`), alturas, `Path8/Path9`, inflamabilidad de pinos; capturas «antes»
 - [x] **1** Mover el laboratorio a la pradera (20,−8) — sitio y frente fijos (este); se quitó `TrackClear`/`LaboratoryFront`
-- [ ] **2** Mover el entrenamiento a (0,−26), frente O/SO; actualizar tests
+- [ ] **2** *(sigue este)* Mover el entrenamiento a (0,−26), frente O/SO; actualizar tests
 - [ ] **2b** Caminos completos (`ValleyShape.Paths`) **antes** de fijar sitios 3-6
-- [ ] **N** *(v3, §17)* Nexo: reaparición al morir, tablero con mapa y guía, pregunta «¿saltear el tutorial?» al empezar en modo Libre
+- [x] **N** *(v3, §17)* Nexo: reaparición, tablero con el mapa, pregunta «¿saltear el tutorial?» al entrar a Modo Sandbox (la guía de «siguiente etapa» y el portal del Nexo llegan con los pasos 9 y T)
 - [ ] **T1-T4** *(v3, §17)* Torre-tutorial, un commit por nivel: terraza (movilidad) → piso 2 (objetos) → piso 1 (objetos mágicos) → planta baja (abrir la puerta). **Reemplaza a 9b y 13.**
 - [ ] **3** Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
 - [ ] **4** Campo de agua (orilla real vía `FindLakeside`, ≈ −22,−30)
@@ -34,7 +34,8 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
 - [ ] ~~**9b** Libro «El círculo y la columna» en la torre (D16)~~ → absorbido por T4 (v3)
 - [ ] **10** Casitas (libros de hechizos combinados; mientras tanto `spells-siege` a la cabaña del bosque) + camino torre→norte
 - [ ] ~~**13** Rework de la torre (A nichos, B estantes, C terraza)~~ → reemplazado por T1-T4; la idea B (estantes que se llenan) pasa al Archivo (§18)
-- [ ] **11** Estandartes de color por elemento (malla emisiva sin luz)
+- [ ] **11** Estandartes de color por elemento (malla emisiva sin luz) **y faroles de la ruta, que se encienden al leer cada libro** (D27)
+- [ ] **11b** Circuito exterior: camino que une el late game en una vuelta (viento → santuario → círculo → atalaya → puesto → cabaña norte → cueva → cabaña del bosque → torre) (D26)
 - [ ] **12** Docs finales (`GAME_DESIGN`, `STRUCTURE`, `ROADMAP`, `STATUS`, `KNOWN_ISSUES`, `CHANGELOG`) + prueba manual en PC y Quest
 
 ### Bitácora (anotar acá lo que se descubra al implementar; más reciente abajo)
@@ -50,6 +51,11 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
   - Sorpresa: en la escena **no hay ningún objeto de práctica en la pradera** (los `Practice/*_Path8/_Path9` de `MapOverrides.json` no aparecen entre x 10..42, z −22..4): el aviso del paso 0 sobre la pista no aplica.
   - `MapBuilder.Build()` reescribe en `MapOverrides.json` un rect de UI que depende del tamaño de la ventana de Game (527×296 → 789×444): es ruido, se descarta con `git checkout`.
 - 2026-11-16 — **Correcciones de Tamara al dibujo (v3):** D19-D24 en §3, propuesta en §17 (torre-tutorial, Nexo, salteo) y §18 (Archivo). La arena de duelo se saca del dibujo (poca prioridad).
+- 2026-11-16 — **Paso N hecho.** `SpawnRules` (lógica pura: terraza, nexo, caída) + `PlayerSpawn` en el jugador + pregunta «¿Saltear el tutorial?» en el menú (`MainMenu.Tutorial.cs`) + tablero del mapa sobre postes en el Nexo (3.6, −2.4). 604 tests EditMode y smoke en verde (2 chequeos nuevos). Capturas `pasoN_nexo_tablero.png` y `pasoN_terraza_inicio.png`.
+  - **El jugador no muere en modo Libre** (solo hay vida en el Duelo y en los muñecos). Hoy la única reaparición real es **caerse del mundo** (y < −8 m) → Nexo. Cualquier muerte futura tiene que llamar a `PlayerSpawn.Respawn()`. *Pregunta abierta para Tamara: ¿el jugador recibe daño en Libre?*
+  - La pregunta se hace **una vez por sesión**, solo al tocar «Modo Sandbox» en el menú de PC. El harness, la red y **VR** (que no tiene menú) siguen entrando sin preguntar y aparecen donde los deja la escena (planta baja de la torre). Falta en T1: una forma de saltear **dentro del mundo** (sirve para VR) y que quien se une en red aparezca en el Nexo.
+  - En la terraza hay un poste del techo justo al sur del pedestal: el punto de inicio es (2, −2) respecto del centro, mirando al sur.
+  - El tablero conserva el nombre `TowerMap` en código y los textos del grimorio siguen diciendo «mapa de la torre»: renombrar en el paso 9.
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),
 > [GLYPHS.md](GLYPHS.md), [ARCHITECTURE.md](ARCHITECTURE.md), [HARNESS.md](HARNESS.md).
@@ -112,6 +118,9 @@ con un mapa **compacto y caminable**, **sin bloquear nada** (todo sigue accesibl
 | D22 | Duelos (v3) | **Poca prioridad**: no se define ni se dibuja zona de duelos por ahora. La arena sigue en el cielo como está. |
 | D23 | **Saltear el tutorial** (v3) | Al empezar una partida en modo Libre/sandbox se pregunta si se quiere **saltear el tutorial**; si sí, aparece directo en el Nexo. (Sirve para testear.) |
 | D24 | Sitio del laboratorio | Fijo en (20, −8), pista al este, a 20 m del Nexo (paso 1, hecho). |
+| D25 | Aprobación v3 | Tamara aprobó §17 (torre-tutorial en los 4 niveles actuales, Nexo, salteo) y §18 (Archivo: «Primeros hechizos» + estantes que se llenan **alcanza**; los libros de hechizos siguen en sus campos). **Orden:** Nexo y salteo → entrenamiento y caminos → torre-tutorial (un nivel por commit) → Archivo y el resto. |
+| D26 | Circuito exterior | **Sí** («me encantó»): un camino que une el late game en una vuelta que termina en la torre, con los portales como atajos. Paso 11b. |
+| D27 | Mundo que responde | **Sí**: faroles en la ruta y estandartes de cada campo que se encienden al leer cada libro, sin bloquear nada (mallas activadas por `DiscoveryState`, sin `Update`). Paso 11. |
 
 ---
 
@@ -568,7 +577,7 @@ Reglas: un solo agente con Unity abierto a la vez (candado `Logs/unity.lock`); l
 
 ---
 
-## 17. Torre-tutorial, Nexo y salteo (v3 — PROPUESTA, falta el sí de Tamara)
+## 17. Torre-tutorial, Nexo y salteo (v3 — APROBADA, D25)
 
 **Idea:** la torre ya tiene 4 niveles unidos por rampas (terraza + 3 pisos, `TowerBuilder.Floors = 3`). Se usan tal cual, **sin agregar pisos**: un tema por nivel, de arriba hacia abajo. Cada bajada está tapada por algo que se saca **de más de una forma**; nunca hay una única solución.
 
@@ -585,7 +594,7 @@ Reglas: un solo agente con Unity abierto a la vez (candado `Logs/unity.lock`); l
 - **Lo que NO cambia:** controles, glifos conocidos al empezar (`starting`), estructura y rampas de la torre.
 - **Trabajo:** paso **N** (Nexo + reaparición + salteo: lógica chica, primero porque sirve para testear) y pasos **T1-T4** (un nivel por commit; lógica pura del progreso del tutorial en clase estática + test; un chequeo de smoke por nivel).
 
-## 18. Qué es el Archivo (v3 — PROPUESTA, falta el sí de Tamara)
+## 18. Qué es el Archivo (v3 — APROBADA, D25)
 
 Una **biblioteca al aire libre** (rotonda de columnas con techo en anillo, r ≈ 9 m, sin paredes: cómoda en VR y barata en Quest) en (0, −46), centro del anillo de campos. Es **el lugar al que se vuelve**.
 

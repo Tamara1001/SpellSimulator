@@ -464,6 +464,11 @@ namespace SpellSimulator.EditorTools.Map
                 // Nace dentro de la torre, un paso despues de la puerta, mirando el atril con el libro de los cuatro elementos.
                 player.transform.position = TowerOrigin() + new Vector3(0f, 1.7f, -3.6f);
                 player.transform.rotation = Quaternion.Euler(0f, -52f, 0f);
+                // Tutorial / nexo / reaparicion (Docs/MAPA_FLUJO_PLAN.md, paso N): quien lo ubica en juego es PlayerSpawn.
+                if (player.GetComponent<Player.PlayerSpawn>() == null) player.AddComponent<Player.PlayerSpawn>();
+                // PlayerSpawn reemplaza al Respawnable del jugador (que lo devolvia a su pose inicial en la torre).
+                var playerRespawnable = player.GetComponent<World.Respawnable>();
+                if (playerRespawnable != null) Object.DestroyImmediate(playerRespawnable);
             }
 
             // Escritorio de la biblioteca: un papel horizontal que emite por la cara con tinta (hacia arriba).

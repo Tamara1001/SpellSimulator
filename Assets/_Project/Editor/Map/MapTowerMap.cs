@@ -76,10 +76,12 @@ namespace SpellSimulator.EditorTools.Map
             Transform old = map.Find(RootName);
             if (old != null) Object.DestroyImmediate(old.gameObject);
 
-            float face = TowerBuilder.InnerRadius * Mathf.Cos(180f / TowerBuilder.Sides * Mathf.Deg2Rad);
-            Vector3 outward = TowerBuilder.Polar(1f, WallAngle, 0f);
-            Vector3 position = towerOrigin + outward * face + Vector3.up * CenterHeight;
-            // +Z hacia el muro: el frente (−Z) mira a la habitación y el texto de TMP se lee desde adentro.
+            // Tablero del nexo (Docs/MAPA_FLUJO_PLAN.md, D20): ya no cuelga en la torre; está sobre dos postes al lado del cruce
+            // de caminos. +Z se aleja del nexo: el frente (−Z) mira a quien llega y el texto de TMP se lee desde ahí.
+            Vector2 site = SpawnRules.MapBoard;
+            Vector2 away = (site - ValleyShape.Spawn).normalized;
+            Vector3 outward = new Vector3(away.x, 0f, away.y);
+            Vector3 position = MapBuilder.Ground(site.x, site.y) + Vector3.up * CenterHeight;
             Quaternion rotation = Quaternion.LookRotation(outward);
 
             var boardMesh = MapBuilder.SaveMesh(BoardMesh().Build("TowerMap_Board"));
@@ -118,7 +120,7 @@ namespace SpellSimulator.EditorTools.Map
 
             // Textos sobre la pintura del mapa: por encima de la capa más alta (lago).
             float mapTextZ = MapProjection.FaceZ - MapProjection.PaintTop - MapProjection.TextLift;
-            Vector2 here = MapProjection.WorldToTable(ValleyShape.TowerCenter.x, ValleyShape.TowerCenter.y);
+            Vector2 here = MapProjection.WorldToTable(ValleyShape.Spawn.x, ValleyShape.Spawn.y);
             Text(board.transform, "YouAreHere", new Vector3(here.x, here.y - 0.05f, mapTextZ), new Vector2(0.24f, 0.04f),
                 HereFontSize, HereColor, "<b>Vos estás aquí</b>", TextAlignmentOptions.Center, false);
             Vector2 compass = CompassAt();
@@ -265,6 +267,14 @@ namespace SpellSimulator.EditorTools.Map
             b.Box(Matrix4x4.Translate(new Vector3(0f, -Height * 0.5f + FrameBar * 0.5f, barZ)), new Vector3(Width, FrameBar, FrameDepth), Wood);
             b.Box(Matrix4x4.Translate(new Vector3(-Width * 0.5f + FrameBar * 0.5f, 0f, barZ)), new Vector3(FrameBar, innerH, FrameDepth), Wood);
             b.Box(Matrix4x4.Translate(new Vector3(Width * 0.5f - FrameBar * 0.5f, 0f, barZ)), new Vector3(FrameBar, innerH, FrameDepth), Wood);
+            // Respaldo, dos postes hasta el suelo y un alero: el tablero está al aire libre, en el nexo.
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0f, 0.02f)), new Vector3(Width, Height, 0.04f), WoodDark);
+            float postTop = Height * 0.5f + 0.16f, postBottom = -CenterHeight - 0.3f;
+            foreach (float px in new[] { -1f, 1f })
+                b.Box(Matrix4x4.Translate(new Vector3(px * (Width * 0.5f + 0.07f), (postTop + postBottom) * 0.5f, 0f)),
+                    new Vector3(0.12f, postTop - postBottom, 0.12f), Wood, WoodDark);
+            b.Box(Matrix4x4.TRS(new Vector3(0f, postTop + 0.03f, -0.06f), Quaternion.Euler(-14f, 0f, 0f), Vector3.one),
+                new Vector3(Width + 0.5f, 0.05f, 0.42f), WoodDark);
             // Cordel y clavo arriba (el cuadro "cuelga").
             Vector3 nail = new Vector3(0f, Height * 0.5f + 0.12f, -0.03f);
             foreach (float sx in new[] { -1f, 1f })

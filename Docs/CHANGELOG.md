@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-16 — Mapa por flujo, paso N: Nexo, reaparición y pregunta para saltear el tutorial
+
+- Nuevo `World/Map/SpawnRules` (lógica pura + `SpawnRulesTests`): el tutorial empieza en la terraza de la torre, el salteo y la reaparición llevan al Nexo (0, −6). Nuevo `Player/PlayerSpawn` en el jugador: `Begin(skip)`, `Respawn()` y vuelta al Nexo si se cae del mundo.
+- Menú: al tocar «Modo Sandbox» por primera vez en la sesión se pregunta «¿Saltear el tutorial?» (`UI/MainMenu.Tutorial.cs`; teclado, mando y mouse). El harness, la red y VR entran como antes.
+- El tablero del mapa sale de la pared de la torre y queda sobre dos postes junto al Nexo; «Vos estás aquí» apunta al Nexo.
+- `HarnessPlaySmoke`: 2 chequeos nuevos (terraza/nexo/reaparición y tablero junto al Nexo). 604 tests EditMode en verde.
+- [MAPA_FLUJO_PLAN.md](MAPA_FLUJO_PLAN.md): Tamara aprobó la torre-tutorial, el Nexo y el Archivo (D25), el circuito exterior (D26) y los faroles/estandartes que responden al progreso (D27). [GAME_DESIGN.md](GAME_DESIGN.md) pendiente de actualizar al cerrar la torre-tutorial (paso 12).
+
 ## 2026-11-16 — Mapa por flujo, paso 1: el laboratorio se muda a la pradera
 
 - `MapStructures`: el laboratorio queda fijo en (20, −8), a 20 m del nexo, con la pista hacia el este (`LaboratorySite`, `LaboratoryFacing`). Se quitaron `LaboratoryFront` y `TrackClear` (elegían el frente; con el sitio fijo ya no hacen falta). `ValleyShape.Paths`: el camino del nexo termina en el borde de la plataforma.

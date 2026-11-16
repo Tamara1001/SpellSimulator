@@ -48,7 +48,7 @@ namespace SpellSimulator.UI
         private const float FadeSeconds = 0.45f;
         private const float BlendSeconds = 1.6f;
 
-        private enum State { Playing, Menu, Credits, Info, Net }
+        private enum State { Playing, Menu, Credits, Info, Net, Tutorial }
 
         public static MainMenu Instance { get; private set; }
 
@@ -132,7 +132,7 @@ namespace SpellSimulator.UI
             quit = menu.Q<Button>("quit");
             creditsBack = menu.Q<Button>("credits-back");
 
-            sandbox.clicked += EnterSandbox;
+            sandbox.clicked += OnSandboxClicked;
             info.clicked += OpenInfo;
             credits.clicked += OpenCredits;
             quit.clicked += Quit;
@@ -424,6 +424,11 @@ namespace SpellSimulator.UI
                 if (back) CloseNet();
                 return;
             }
+            if (state == State.Tutorial)
+            {
+                HandleTutorialKeys(back, submit, move);
+                return;
+            }
             if (revealAt > 0f) return;
             Button focused = Focused();
             if (move != 0)
@@ -434,7 +439,7 @@ namespace SpellSimulator.UI
             }
             else if (submit)
             {
-                if (focused == sandbox) EnterSandbox();
+                if (focused == sandbox) OnSandboxClicked();
                 else if (focused == multiplayer) OpenNet();
                 else if (focused == info) OpenInfo();
                 else if (focused == credits) OpenCredits();

@@ -660,7 +660,49 @@ namespace SpellSimulator.EditorTools
             // (Scripts/Lab/LabGazeTags, las comprueba su propio bloque). Aca solo se apagan las lentes.
             LabOverlay.Visible = false;
             for (float end = Time.realtimeSinceStartup + 0.3f; Time.realtimeSinceStartup < end;) yield return null;
+            // --- Nexo y tutorial (paso N): el jugador puede empezar en la terraza o en el nexo, y reaparece en el nexo.
+            var spawn = Object.FindFirstObjectByType<SpellSimulator.Player.PlayerSpawn>();
+            bool spawnOk = spawn != null;
+            if (spawn != null)
+            {
+                Vector3 spawnBack = spawn.transform.position;
+                Quaternion spawnBackRot = spawn.transform.rotation;
+                var spawnBody = spawn.GetComponent<Rigidbody>();
+                spawn.Begin(false);
+                Vector3 onTerrace = spawn.transform.position;
+                bool terraceFloor = Physics.Raycast(onTerrace, Vector3.down, out RaycastHit terraceHit, 3f, ~0, QueryTriggerInteraction.Ignore)
+                    && terraceHit.collider.GetComponentInParent<SpellSimulator.Player.PlayerSpawn>() == null;
+                spawn.Begin(true);
+                Vector3 atNexus = spawn.transform.position;
+                spawnBody.position = new Vector3(0f, SpellSimulator.World.Map.SpawnRules.FallHeight - 5f, 60f);
+                spawn.transform.position = spawnBody.position;
+                Physics.SyncTransforms();
+                for (float end = Time.realtimeSinceStartup + 3f; spawnBody.position.y < 0f && Time.realtimeSinceStartup < end;) yield return null;
+                Vector3 respawned = spawnBody.position;
+                Vector2 nexus = SpellSimulator.World.Map.ValleyShape.Spawn;
+                spawnOk = terraceFloor && onTerrace.y > 12f
+                    && Vector2.Distance(new Vector2(atNexus.x, atNexus.z), nexus) < 0.5f
+                    && Vector2.Distance(new Vector2(respawned.x, respawned.z), nexus) < 1.5f;
+                if (!spawnOk) Debug.LogWarning($"[Smoke] spawn: terraza {onTerrace} piso={terraceFloor}, nexo {atNexus}, reaparicion {respawned}");
+                spawnBody.linearVelocity = Vector3.zero;
+                spawnBody.position = spawnBack;
+                spawn.transform.SetPositionAndRotation(spawnBack, spawnBackRot);
+                Physics.SyncTransforms();
+                // La camara sigue al jugador con suavizado: esperar a que se quede quieta antes de los chequeos que la miden.
+                var settleCam = Camera.main;
+                Vector3 settleLast = settleCam != null ? settleCam.transform.position : Vector3.zero;
+                int settleStill = 0;
+                for (float end = Time.realtimeSinceStartup + 4f; settleCam != null && settleStill < 10 && Time.realtimeSinceStartup < end;)
+                {
+                    yield return null;
+                    settleStill = (settleCam.transform.position - settleLast).sqrMagnitude < 1e-8f ? settleStill + 1 : 0;
+                    settleLast = settleCam.transform.position;
+                }
+            }
+            Check(spawnOk, "nexo: el tutorial empieza en la terraza, el salteo deja en el nexo y una caida reaparece en el nexo");
             var towerMap = Object.FindFirstObjectByType<SpellSimulator.World.Map.TowerMap>();
+            Check(towerMap != null && Vector2.Distance(new Vector2(towerMap.transform.position.x, towerMap.transform.position.z),
+                SpellSimulator.World.Map.ValleyShape.Spawn) < 8f, "nexo: el tablero del mapa esta junto al nexo");
             Check(towerMap != null && towerMap.ZoneCount > 0 && towerMap.MarkerCount == towerMap.ZoneCount,
                 $"mapa de la torre: {(towerMap != null ? towerMap.MarkerCount : 0)} marcadores = zonas");
             // Mapa: los rombos de portal son informacion (nadie se teletransporta) y Tab abre la vista completa del cuadro.
