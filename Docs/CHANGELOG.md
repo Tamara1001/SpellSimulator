@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-17 — Prueba con hechizos reales de la tela y las trabas, y notas sin borde violeta
+
+- Nueva herramienta `HarnessSpellTest` (`SpellSimulator/Harness/Run Spell Test (torre)`, resultado en `Logs/harness-spelltest.txt`): pone el papel del banco del laboratorio frente a la tela y a cada traba y lanza recetas reales con `SpellCaster.Cast`.
+- Resultado: **gust** suelta tela y pestillo de 0,8 a 1,8 m (~0,5 s); **updraft, water_jet, wind_breath y gust** levantan el contrapeso; **earth_spike / stone_wall / thrown_rock con Crush** rompen la piedra (hasta 2,5 m). **wind_fan y wind_breath no mueven la tela ni el pestillo** (su flujo es más suave).
+- Bug corregido: `TutorialCloth.Rearm` movía el transform pero no el cuerpo físico, y la tela rearmada se volvía a soltar sola. Ahora mueve también el `Rigidbody` y sincroniza.
+- Ajuste de umbrales: tela 18 kg (abre a 0,3 m o 1,0 m/s), pestillo 2,5 kg.
+- Notas flotantes: sin borde violeta; tarjeta crema con marco fino de madera.
+
 ## 2026-11-17 — Torre-tutorial T4: la planta baja (abrir la puerta)
 
 - `TowerDoor.Locked/Lock/Unlock`: con el tutorial activo la puerta arranca cerrada y trabada (E no hace nada, «Puerta trabada»). `TowerTutorial.Begin` la traba y rearma las trabas; `Skip` la abre de golpe.

@@ -53,11 +53,14 @@ namespace SpellSimulator.World
             impulse = 0f;
             playerTouch = -10f;
             transform.SetPositionAndRotation(home, homeRotation);
+            body.position = home;
+            body.rotation = homeRotation;
             transform.localScale = scale;
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.zero;
             body.useGravity = false;
             box.enabled = true;
+            Physics.SyncTransforms();
         }
 
         private void OnCollisionStay(Collision c)

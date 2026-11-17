@@ -8,9 +8,9 @@ namespace SpellSimulator.World.Map
     public static class ClothRules
     {
         /// <summary>Distancia (m) a la que la tela, apartada de su lugar por el viento, se suelta.</summary>
-        public const float OpenDistance = 0.55f;
+        public const float OpenDistance = 0.3f;
         /// <summary>Rapidez (m/s) a partir de la cual se suelta (un golpe o una rafaga fuerte).</summary>
-        public const float OpenSpeed = 2.2f;
+        public const float OpenSpeed = 1.0f;
         /// <summary>Impulso de choque (N·s) de un objeto lanzado que la suelta: un papel o una pluma no alcanzan, una caja si.</summary>
         public const float OpenImpulse = 6f;
 

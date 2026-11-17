@@ -311,7 +311,7 @@ namespace SpellSimulator.EditorTools.Map
             var col = go.AddComponent<BoxCollider>();
             col.size = new Vector3(width, ClothHeight, 0.12f);
             var rb = go.AddComponent<Rigidbody>();
-            rb.mass = 40f;
+            rb.mass = 18f;
             rb.useGravity = false;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
             go.AddComponent<TutorialCloth>();
@@ -345,7 +345,7 @@ namespace SpellSimulator.EditorTools.Map
             bar.Box(Matrix4x4.identity, new Vector3(0.12f, 0.12f, 0.95f), Wood, WoodDark);
             bar.Box(Matrix4x4.Translate(new Vector3(0f, 0f, 0.55f)), new Vector3(0.2f, 0.2f, 0.06f), Iron);
             bar.Box(Matrix4x4.Translate(new Vector3(0f, 0f, -0.55f)), new Vector3(0.2f, 0.2f, 0.06f), Iron);
-            LatchBody(latches, material, "DoorLatch_Bar", bar, o + TowerBuilder.Polar(4.6f, LatchAngle, 1.45f), LatchAngle, new Vector3(0.14f, 0.14f, 0.95f), 6f, false);
+            LatchBody(latches, material, "DoorLatch_Bar", bar, o + TowerBuilder.Polar(4.6f, LatchAngle, 1.45f), LatchAngle, new Vector3(0.14f, 0.14f, 0.95f), 2.5f, false);
 
             // Contrapeso: un bloque de hierro colgado de una soga hasta el techo; hay que subirlo (columna de agua o de aire).
             var weight = new LowPolyMesh();
@@ -432,8 +432,14 @@ namespace SpellSimulator.EditorTools.Map
         {
             const float width = 0.92f, height = 0.34f;
             var b = new LowPolyMesh();
-            b.Box(Matrix4x4.identity, new Vector3(width, height, 0.02f), new Color(0.95f, 0.89f, 0.72f));
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0f, 0.004f)), new Vector3(width + 0.05f, height + 0.05f, 0.018f), Magic * 0.5f);
+            b.Box(Matrix4x4.identity, new Vector3(width, height, 0.02f), new Color(0.97f, 0.93f, 0.8f));
+            // Marco de madera fino (cuatro listones) y una cinta arriba: sin borde de color.
+            Color trim = new Color(0.4f, 0.27f, 0.16f);
+            const float t = 0.022f;
+            b.Box(Matrix4x4.Translate(new Vector3(0f, height * 0.5f, 0.004f)), new Vector3(width + t * 2f, t, 0.03f), trim);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, -height * 0.5f, 0.004f)), new Vector3(width + t * 2f, t, 0.03f), trim);
+            b.Box(Matrix4x4.Translate(new Vector3(width * 0.5f, 0f, 0.004f)), new Vector3(t, height, 0.03f), trim);
+            b.Box(Matrix4x4.Translate(new Vector3(-width * 0.5f, 0f, 0.004f)), new Vector3(t, height, 0.03f), trim);
             Vector3 look = viewer - at;
             look.y = 0f;
             // El texto se lee desde -Z.
