@@ -52,7 +52,12 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
 - [x] **T2** Piso 2: mover objetos (baranda en el hueco de la rampa, pila de cajas y barril, rearmado)
 - [x] **T3** Piso 1: objetos mágicos (tinta, papel, primer hechizo, tomo I de viento)
 - [x] **T4** Planta baja: agua, tierra, columna y abrir la puerta con un hechizo. **T1-T4 reemplazan a 9b y 13.**
-- [ ] **3** *(sigue este)* Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
+- [ ] **R-tutoriales v2** *(sigue este, antes del Archivo; plan aprobado por Tamara el 2026-11-17 tras probar T1-T4 a mano y ver que no funcionaban)*:
+  - [x] **R1** Terraza: viga y muro cruzan de borde a borde (no se rodean por el centro), reja magica en la rampa que se apaga al agacharse y saltar, 2 faroles testigo, 4 carteles en orden
+  - [ ] **R2** Piso 2: ejercicios opcionales (flotar en un aro, girar un lienzo hasta encajar, tirar a una diana) + cartel de «dejar flotando»; la pila sigue destrabando
+  - [ ] **R3** Piso 1: lienzo agarrable con guia de apunte (rayo) + plantilla fantasma del circulo y el signo de viento + cartel de 3 pasos con dibujos (verificar antes si el lienzo admite guia)
+  - [ ] **R4** Planta baja: UNA solucion guiada (lienzo con plantilla de rafaga apuntando a la puerta); agua y tierra como atajos sin cartel; los tutoriales viejos de aire y agua se mudan al Archivo (`motion`/`shape`)
+- [ ] **3** Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
 - [ ] **4** Campo de agua (orilla real vía `FindLakeside`, ≈ −22,−30)
 - [ ] **5** Campo de tierra (20,−50) + santuario (44,−38) + peñascos 1 y 3 al este/norte
 - [ ] **6** Campos de fuego (−18,−50) y viento (26,−34): aplanado, sin pinos en r=10, props

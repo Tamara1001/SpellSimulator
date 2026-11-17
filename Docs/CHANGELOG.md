@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-17 — Tutoriales v2, R1: la terraza ya no se saltea
+
+- **Bug:** la viga y el muro nacían en el centro de la terraza y se les daba la vuelta por el medio. Ahora cruzan de borde a borde (del parapeto a la baranda del hueco, pasando por el centro): hay que agacharse bajo la viga y saltar el muro.
+- **Reja magica** (`TerraceGate`) tapa la rampa entre las barandas y se apaga cuando `TerraceRules` detecta las dos acciones (agachado bajo la viga, en el aire sobre el muro). Dos faroles testigo se encienden al cumplir cada una; `Begin()` la vuelve a poner.
+- **Carteles** en orden y antes de lo que explican, mas grandes y con numero de paso («1 · Caminar», «2 · Agacharse», «3 · Saltar», «4 · Bajar»). `Note()` acepta ancho/alto.
+- `PlayerMovement.IsLow` / `IsGrounded` publicos; `TerraceRules` (puro) + 5 tests; `HarnessTerraceReach` (inunda la terraza con una capsula de jugador: solo agachado, solo saltando o sin reja la bajada no se alcanza como corresponde). 623 EditMode y smoke en verde (+1 chequeo). Sin probar a mano.
+
 ## 2026-11-17 — Prueba con hechizos reales de la tela y las trabas, y notas sin borde violeta
 
 - Nueva herramienta `HarnessSpellTest` (`SpellSimulator/Harness/Run Spell Test (torre)`, resultado en `Logs/harness-spelltest.txt`): pone el papel del banco del laboratorio frente a la tela y a cada traba y lanza recetas reales con `SpellCaster.Cast`.

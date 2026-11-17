@@ -696,6 +696,15 @@ namespace SpellSimulator.EditorTools
                 Physics.SyncTransforms();
                 bool rearmed = pileBodies.Length > 0 && Piled();
                 Check(piled && railed && cleared && rearmed, $"tutorial piso 2: la pila tapa el descanso, hay baranda y se rearma (pila {piled}, baranda {railed}, despejada {cleared}, rearmada {rearmed})");
+                // Terraza (v2): la reja de la bajada solo se apaga cuando se hicieron las dos acciones (agacharse y saltar) y el rearme la vuelve a poner.
+                bool gateUp = tutorial != null && tutorial.TerraceGateUp && !tutorial.Crouched && !tutorial.JumpedWall;
+                if (tutorial != null) tutorial.MarkTerraceDone(true, false);
+                bool halfDone = tutorial != null && tutorial.TerraceGateUp && tutorial.Crouched;
+                if (tutorial != null) tutorial.MarkTerraceDone(false, true);
+                bool gateDown = tutorial != null && !tutorial.TerraceGateUp;
+                spawn.Begin(false);
+                bool gateBack = tutorial != null && tutorial.TerraceGateUp && !tutorial.Crouched && !tutorial.JumpedWall;
+                Check(gateUp && halfDone && gateDown && gateBack, $"tutorial terraza: la reja de la bajada se apaga al agacharse y saltar, y se rearma (puesta {gateUp}, con una sola {halfDone}, apagada {gateDown}, rearmada {gateBack})");
                 // Piso 1 (T3): la tela pesada tapa la bajada (un rayo tangente la toca), el libro del viento esta, y al soltarla el paso queda libre y se rearma.
                 var cloth = pileRoot != null ? pileRoot.GetComponentInChildren<SpellSimulator.World.TutorialCloth>(true) : null;
                 float floor1 = SpellSimulator.EditorTools.Map.TowerBuilder.FloorHeight;

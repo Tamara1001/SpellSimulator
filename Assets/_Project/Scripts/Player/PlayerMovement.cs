@@ -46,6 +46,10 @@ namespace SpellSimulator.Player
         private bool prone;
 
         private bool isGrounded;
+        /// <summary>Agachado o tumbado (lo lee el tutorial de la terraza).</summary>
+        public bool IsLow => stanceT > 0.5f;
+        /// <summary>Con los pies en el piso (lo lee el tutorial de la terraza).</summary>
+        public bool IsGrounded => isGrounded;
         private Vector3 groundNormal = Vector3.up;
         private bool hasInput;
         private bool readyToJump = true;

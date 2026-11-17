@@ -33,8 +33,35 @@ namespace SpellSimulator.World
 
         private static readonly System.Collections.Generic.List<TutorialCloth> cloths = new System.Collections.Generic.List<TutorialCloth>(2);
 
+        [SerializeField, Tooltip("Reja magica que tapa la rampa de la terraza y los testigos de agacharse y saltar (su luz se enciende al hacerlo).")]
+        private GameObject terraceGate, crouchGlow, jumpGlow;
+
         private readonly TutorialProgress progress = new TutorialProgress();
         private float checkTimer;
+        private bool crouched, jumped;
+        private Transform movementOwner;
+        private SpellSimulator.Player.PlayerMovement movement;
+
+        /// <summary>Ya se agacho bajo la viga / ya salto el muro (la reja de la terraza se apaga con las dos).</summary>
+        public bool Crouched => crouched;
+        public bool JumpedWall => jumped;
+        public bool TerraceGateUp => terraceGate != null && terraceGate.activeSelf;
+
+        /// <summary>Lo llama el generador del mapa (MapTutorial): reja y testigos de la terraza.</summary>
+        public void ConfigureTerrace(GameObject gate, GameObject crouchLight, GameObject jumpLight)
+        {
+            terraceGate = gate;
+            crouchGlow = crouchLight;
+            jumpGlow = jumpLight;
+        }
+
+        /// <summary>Marca las dos acciones de la terraza como hechas (para el smoke y el salteo).</summary>
+        public void MarkTerraceDone(bool crouch, bool jump)
+        {
+            crouched |= crouch;
+            jumped |= jump;
+            Apply();
+        }
 
         public static TowerTutorial Instance { get; private set; }
 
@@ -90,6 +117,8 @@ namespace SpellSimulator.World
         public void Begin()
         {
             progress.Begin();
+            crouched = false;
+            jumped = false;
             if (props != null)
             {
                 props.GetComponentsInChildren(rearm);
@@ -119,6 +148,7 @@ namespace SpellSimulator.World
         private void Update()
         {
             if (!progress.Active) return;
+            if (!(crouched && jumped)) WatchTerrace();
             checkTimer += Time.deltaTime;
             if (checkTimer < CheckPeriod) return;
             checkTimer = 0f;
@@ -139,8 +169,28 @@ namespace SpellSimulator.World
             Completed?.Invoke();
         }
 
+        /// <summary>Cada cuadro, mientras falte alguna: ¿se agacho bajo la viga o salto el muro? Cuentas baratas, sin allocations.</summary>
+        private void WatchTerrace()
+        {
+            IPlayerContext local = PlayerRegistry.Local;
+            if (local == null || local.Root == null) return;
+            if (movementOwner != local.Root)
+            {
+                movementOwner = local.Root;
+                movement = local.Root.GetComponentInChildren<SpellSimulator.Player.PlayerMovement>();
+            }
+            if (movement == null) return;
+            Vector3 p = transform.InverseTransformPoint(local.Root.position);
+            bool c = !crouched && TerraceRules.Crouched(p, movement.IsLow);
+            bool j = !jumped && TerraceRules.Jumped(p, movement.IsGrounded);
+            if (c || j) MarkTerraceDone(c, j);
+        }
+
         private void Apply()
         {
+            if (terraceGate != null) terraceGate.SetActive(progress.Active && !(crouched && jumped));
+            if (crouchGlow != null) crouchGlow.SetActive(crouched);
+            if (jumpGlow != null) jumpGlow.SetActive(jumped);
             if (activeOnly != null && activeOnly.activeSelf != progress.Active) activeOnly.SetActive(progress.Active);
             for (int i = 0; i < glows.Length; i++)
             {

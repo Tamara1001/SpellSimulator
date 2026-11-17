@@ -25,7 +25,9 @@ namespace SpellSimulator.EditorTools.Map
         /// ancho de la terraza: primero una viga baja (BeamAngle: hay que agacharse) y despues un muro bajo (JumpWallAngle: hay que saltar).
         /// </summary>
         public const float HoleFrom = 72f, HoleTo = 270f;
-        public const float FenceAngle = 180f, BeamAngle = 20f, JumpWallAngle = 320f;
+        public const float FenceAngle = 180f, BeamAngle = TerraceRules.BeamAngle, JumpWallAngle = TerraceRules.JumpWallAngle;
+        /// <summary>La viga y el muro van de la baranda del hueco (al otro lado del centro) hasta el parapeto: no se les da la vuelta por el medio.</summary>
+        public const float ObstacleFrom = -3f;
         public const float LowWallHeight = 0.7f, BeamClearance = 1.3f, FenceHeight = 2.4f;
 
         /// <summary>
@@ -68,6 +70,7 @@ namespace SpellSimulator.EditorTools.Map
             activeOnly.transform.SetParent(root.transform, false);
             Barrier(activeOnly.transform, material);
             SkipLever(activeOnly.transform, material);
+            TerraceGate(activeOnly.transform, material, out var gate, out var crouchGlow, out var jumpGlow);
 
             GameObject[] glows = Lamps(root.transform, material);
             Terrace(root.transform, material);
@@ -79,6 +82,7 @@ namespace SpellSimulator.EditorTools.Map
 
             var tutorial = root.AddComponent<TowerTutorial>();
             tutorial.Configure(activeOnly, glows, props);
+            tutorial.ConfigureTerrace(gate, crouchGlow, jumpGlow);
             var doorGo = GameObject.Find("TowerDoor");
             tutorial.ConfigureDoor(doorGo != null ? doorGo.GetComponent<TowerDoor>() : null, latches, stone);
             // En la escena queda apagado: solo se enciende al elegir «Hacer el tutorial».
@@ -156,6 +160,60 @@ namespace SpellSimulator.EditorTools.Map
             Note(parent, material, "Note_Tutorial_Skip", at + Vector3.up * 1.95f, spawn, "<b>E</b>  saltear tutorial");
         }
 
+        // ---------------------------------------------------------------- reja de la terraza
+
+        /// <summary>
+        /// Reja de luz que tapa la rampa entre las barandas del hueco (se apaga al agacharse bajo la viga y saltar el muro) y dos faroles testigo,
+        /// uno junto a la viga y otro junto al muro, que se encienden al hacer cada cosa.
+        /// </summary>
+        private static void TerraceGate(Transform parent, Material material, out GameObject gate, out GameObject crouchGlow, out GameObject jumpGlow)
+        {
+            float y = TowerBuilder.TerraceY;
+            float a = TerraceRules.GateAngle;
+            var b = new LowPolyMesh();
+            const float bottom = -0.4f, top = 3f, r0 = TowerBuilder.RampInner - 0.1f, r1 = TowerBuilder.InnerRadius + 0.05f;
+            int bars = 9;
+            for (int i = 0; i <= bars; i++)
+            {
+                float r = Mathf.Lerp(r0, r1, i / (float)bars);
+                b.Box(Matrix4x4.Translate(TowerBuilder.Polar(r, a, y + (bottom + top) * 0.5f)), new Vector3(0.05f, top - bottom, 0.05f), Magic);
+            }
+            foreach (float h in new[] { 0.3f, 1.2f, 2.1f, top - 0.1f })
+            {
+                Vector3 p0 = TowerBuilder.Polar(r0, a, y + h), p1 = TowerBuilder.Polar(r1, a, y + h);
+                b.Box(Matrix4x4.TRS((p0 + p1) * 0.5f, Quaternion.LookRotation(p1 - p0), Vector3.one), new Vector3(0.04f, 0.04f, (p1 - p0).magnitude), Magic);
+            }
+            var go = MapBuilder.Place("TerraceGate", parent, MapBuilder.SaveMesh(b.Build("Tutorial_TerraceGate")), material, parent.position, Quaternion.identity);
+            go.isStatic = false;
+            var col = new GameObject("GateCollider");
+            col.transform.SetParent(go.transform, false);
+            col.transform.localPosition = TowerBuilder.Polar((r0 + r1) * 0.5f, a, y + 0.5f);
+            col.transform.localRotation = Quaternion.Euler(0f, -a, 0f);
+            col.AddComponent<BoxCollider>().size = new Vector3(r1 - r0 + 0.1f, 6f, 0.3f);
+            gate = go;
+
+            crouchGlow = CheckLamp(parent, material, "TerraceCheck_Crouch", TowerBuilder.Polar(6.2f, BeamAngle + 2.5f, y + 1.75f));
+            jumpGlow = CheckLamp(parent, material, "TerraceCheck_Jump", TowerBuilder.Polar(6.2f, JumpWallAngle + 3f, y + LowWallHeight + 0.5f));
+        }
+
+        /// <summary>Farolito apagado con su luz como hijo (se enciende al cumplir la accion). Devuelve la luz.</summary>
+        private static GameObject CheckLamp(Transform parent, Material material, string name, Vector3 local)
+        {
+            var body = new LowPolyMesh();
+            body.Box(Matrix4x4.Translate(new Vector3(0f, 0.12f, 0f)), new Vector3(0.2f, 0.03f, 0.2f), Iron);
+            body.Box(Matrix4x4.Translate(new Vector3(0f, -0.12f, 0f)), new Vector3(0.2f, 0.03f, 0.2f), Iron);
+            body.Box(Matrix4x4.identity, new Vector3(0.14f, 0.21f, 0.14f), GlassOff);
+            var glow = new LowPolyMesh();
+            glow.Box(Matrix4x4.identity, new Vector3(0.17f, 0.22f, 0.17f), TowerBuilder.LanternGlow);
+            Vector3 at = parent.position + local;
+            var lamp = MapBuilder.Place(name, parent, MapBuilder.SaveMesh(body.Build("Tutorial_" + name)), material, at, Quaternion.identity);
+            lamp.isStatic = false;
+            var lit = MapBuilder.Place("Glow", lamp.transform, MapBuilder.SaveMesh(glow.Build("Tutorial_" + name + "Glow")), material, at, Quaternion.identity);
+            lit.isStatic = false;
+            lit.SetActive(false);
+            return lit;
+        }
+
         private static Vector3 SpawnPoint(Transform parent) =>
             parent.position + new Vector3(SpawnRules.TerraceOffset.x, TowerBuilder.TerraceY, SpawnRules.TerraceOffset.y);
 
@@ -219,11 +277,12 @@ namespace SpellSimulator.EditorTools.Map
             Collider(parent, "Tutorial_Fence", wallMid, FenceAngle, y + FenceHeight * 0.5f, new Vector3(wallLen, FenceHeight, 0.2f));
 
             // Camino del este, primera parte: una viga que cruza TODA la terraza, del centro al parapeto (hay que agacharse).
-            float span = TowerBuilder.TerraceRadius, spanMid = span * 0.5f;
+            float span = TowerBuilder.TerraceRadius - ObstacleFrom, spanMid = (TowerBuilder.TerraceRadius + ObstacleFrom) * 0.5f;
             Matrix4x4 beam = Radial(spanMid, BeamAngle, y);
             const float beamThick = 0.2f;
             b.Box(beam * Matrix4x4.Translate(new Vector3(0f, BeamClearance + beamThick * 0.5f, 0f)), new Vector3(span, beamThick, 0.22f), Wood, WoodDark);
-            b.Box(beam * Matrix4x4.Translate(new Vector3(-span * 0.5f + 0.06f, (BeamClearance + beamThick) * 0.5f, 0f)), new Vector3(0.12f, BeamClearance + beamThick, 0.12f), WoodDark);
+            foreach (float end in new[] { -span * 0.5f + 0.06f, span * 0.5f - 0.06f })
+                b.Box(beam * Matrix4x4.Translate(new Vector3(end, (BeamClearance + beamThick) * 0.5f, 0f)), new Vector3(0.12f, BeamClearance + beamThick, 0.12f), WoodDark);
             for (int i = 0; i < 8; i++)
                 b.Box(beam * Matrix4x4.Translate(new Vector3(-span * 0.5f + 0.5f + i * 0.8f, BeamClearance + beamThick + 0.33f, 0f)), new Vector3(0.3f, 0.6f, 0.05f),
                     LowPolyMesh.Jitter(Wood, 0.08f, i * 7));
@@ -239,9 +298,15 @@ namespace SpellSimulator.EditorTools.Map
 
             // Tres notas, cada una sobre lo que explica y de cara a quien llega por el camino del este (viga primero, muro despues).
             Vector3 spawn = SpawnPoint(parent);
-            Note(parent, material, "Note_Tutorial_Move", spawn + new Vector3(0f, 1.75f, -2.4f), spawn, "<b>WASD</b>  ·  mouse");
-            Note(parent, material, "Note_Tutorial_Crouch", o + TowerBuilder.Polar(5.6f, BeamAngle - 6f, y + 0.95f), o + TowerBuilder.Polar(5.6f, BeamAngle + 40f, y), "<b>C</b>  agacharse");
-            Note(parent, material, "Note_Tutorial_Jump", o + TowerBuilder.Polar(5.6f, JumpWallAngle + 7f, y + 1.55f), o + TowerBuilder.Polar(5.6f, JumpWallAngle + 40f, y), "<b>Espacio</b>  saltar");
+            // Se recorre en orden: caminar, viga (agacharse), muro (saltar), reja de la bajada. Cada cartel esta ANTES de lo que explica.
+            Note(parent, material, "Note_Tutorial_Move", spawn + new Vector3(0f, 1.9f, -2.4f), spawn,
+                "<b>1 · Caminar</b>\n<b>WASD</b> mover · <b>mouse</b> mirar\nSeguí el balcón hacia el este", 1.5f, 0.6f);
+            Note(parent, material, "Note_Tutorial_Crouch", o + TowerBuilder.Polar(5.9f, BeamAngle + 14f, y + 2.15f), o + TowerBuilder.Polar(5.9f, BeamAngle + 60f, y),
+                "<b>2 · Agacharse</b>\nMantené <b>C</b> y pasá\nbajo la viga", 1.3f, 0.6f);
+            Note(parent, material, "Note_Tutorial_Jump", o + TowerBuilder.Polar(5.9f, JumpWallAngle + 14f, y + 2.15f), o + TowerBuilder.Polar(5.9f, JumpWallAngle + 60f, y),
+                "<b>3 · Saltar</b>\nApretá <b>Espacio</b> para\npasar sobre el muro", 1.3f, 0.6f);
+            Note(parent, material, "Note_Tutorial_Gate", o + TowerBuilder.Polar(3.9f, TerraceRules.GateAngle + 24f, y + 2.3f), o + TowerBuilder.Polar(5.5f, 310f, y),
+                "<b>4 · Bajar</b>\nLa reja se apaga cuando\nte agachaste y saltaste", 1.3f, 0.6f);
         }
 
         // ---------------------------------------------------------------- nivel 2: mover objetos
@@ -428,9 +493,8 @@ namespace SpellSimulator.EditorTools.Map
         /// Nota flotante: una tarjeta de pergamino con dos o tres palabras, centrada en <paramref name="at"/> y de cara a viewer.
         /// Es un cuerpo fisico sin gravedad (World.FloatingNote): el viento o un golpe la mueven y vuelve sola a su lugar.
         /// </summary>
-        private static void Note(Transform parent, Material material, string name, Vector3 at, Vector3 viewer, string text)
+        private static void Note(Transform parent, Material material, string name, Vector3 at, Vector3 viewer, string text, float width = 0.92f, float height = 0.34f)
         {
-            const float width = 0.92f, height = 0.34f;
             var b = new LowPolyMesh();
             b.Box(Matrix4x4.identity, new Vector3(width, height, 0.02f), new Color(0.97f, 0.93f, 0.8f));
             // Marco de madera fino (cuatro listones) y una cinta arriba: sin borde de color.
@@ -460,8 +524,8 @@ namespace SpellSimulator.EditorTools.Map
             label.alignment = TMPro.TextAlignmentOptions.Center;
             label.enableAutoSizing = true;
             label.fontSizeMin = 0.4f;
-            label.fontSizeMax = 1.4f;
-            label.textWrappingMode = TMPro.TextWrappingModes.NoWrap;
+            label.fontSizeMax = height > 0.4f ? 1.1f : 1.4f;
+            label.textWrappingMode = height > 0.4f ? TMPro.TextWrappingModes.Normal : TMPro.TextWrappingModes.NoWrap;
             label.color = new Color(0.14f, 0.08f, 0.04f);
             label.text = text;
         }
