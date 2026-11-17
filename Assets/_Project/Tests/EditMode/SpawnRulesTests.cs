@@ -19,7 +19,7 @@ namespace SpellSimulator.Tests
         {
             Vector3 p = SpawnRules.Start(false, out float yaw);
             Vector2 tower = ValleyShape.TowerCenter;
-            Assert.Less(Vector2.Distance(new Vector2(p.x, p.z), tower), TowerBuilder.InnerRadius - 1f, "tiene que caer dentro de la terraza");
+            Assert.Less(Vector2.Distance(new Vector2(p.x, p.z), tower), TowerBuilder.TerraceRadius - 0.6f, "tiene que caer dentro de la terraza");
             Assert.Greater(p.y, ValleyShape.Height(tower.x, tower.y) + TowerBuilder.TerraceY);
             Assert.AreEqual(180f, yaw, 0.01f);
         }

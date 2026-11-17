@@ -87,9 +87,12 @@ namespace SpellSimulator.Tests
             Assert.Less(MapTutorial.LowWallHeight, 0.75f);
             Assert.Greater(MapTutorial.BeamClearance, 1.2f);
             Assert.Less(MapTutorial.BeamClearance, 1.9f);
-            // Los dos caen sobre piso macizo de la terraza (el hueco de la rampa va de 312 a 150 grados).
-            foreach (float angle in new[] { MapTutorial.LowWallAngle, MapTutorial.BeamAngle })
-                Assert.That(angle, Is.InRange(155f, 305f));
+            // El murete va en el balcon (macizo en toda la vuelta) y la viga en el arco macizo del anillo (fuera del hueco).
+            Assert.IsFalse(MapTutorial.BeamAngle > MapTutorial.HoleFrom && MapTutorial.BeamAngle < MapTutorial.HoleTo, "la viga no puede quedar sobre el hueco");
+            // Las rampas arrancan todas en el mismo angulo: descanso de 90 grados entre la que llega y la que sigue.
+            foreach (float start in TowerBuilder.RampStart) Assert.AreEqual(TowerBuilder.RampStart[0], start);
+            Assert.AreEqual(90f, 360f - TowerBuilder.RampTurn, 0.01f);
+            Assert.That(MapTutorial.PileAngle, Is.InRange(TowerBuilder.RampTurn + 10f, 350f), "la pila va en el descanso");
         }
     }
 }

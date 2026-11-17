@@ -38,7 +38,11 @@ namespace SpellSimulator.EditorTools.Map
         public const float RampInner = 2.9f;
         public const float RampOuter = InnerRadius - 0.05f;
         public const float RampTurn = 270f;
-        public static readonly float[] RampStart = { 0f, 300f, 240f };
+        /// <summary>
+        /// Todas arrancan en el mismo angulo: cada rampa queda justo encima de la de abajo y en cada piso hay un descanso de
+        /// 90 grados (unos 6 m) entre la rampa que llega (270) y la que sigue (0). Antes eran { 0, 300, 240 } y el descanso media 30.
+        /// </summary>
+        public static readonly float[] RampStart = { 0f, 0f, 0f };
         /// <summary>Altura libre sobre la rampa (el jugador mide ~2.1 m; prueba manual 2026-10-07: chocaba con 2.0).</summary>
         public const float Headroom = 3f;
         public const float FloorThickness = 0.3f;

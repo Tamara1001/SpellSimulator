@@ -685,7 +685,7 @@ namespace SpellSimulator.EditorTools
                 float floor2 = SpellSimulator.EditorTools.Map.TowerBuilder.FloorHeight * 2f;
                 Vector3 towerAt = tutorial != null ? tutorial.transform.position : Vector3.zero;
                 Vector3 landing = towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(3.9f, SpellSimulator.EditorTools.Map.MapTutorial.PileAngle, floor2 + 0.5f);
-                bool Piled() { foreach (var c in Physics.OverlapBox(landing, new Vector3(0.9f, 0.3f, 0.3f))) if (c.attachedRigidbody != null && c.transform.IsChildOf(pileRoot)) return true; return false; }
+                bool Piled() { foreach (var c in Physics.OverlapSphere(landing, 0.9f)) if (c.attachedRigidbody != null && c.transform.IsChildOf(pileRoot)) return true; return false; }
                 bool piled = pileBodies.Length >= 5 && Piled();
                 bool railed = Physics.Raycast(towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(2.3f, 100f, floor2 + 0.5f),
                     SpellSimulator.EditorTools.Map.TowerBuilder.Polar(1f, 100f, 0f), out RaycastHit railHit, 1.2f, ~0, QueryTriggerInteraction.Ignore) && railHit.collider.name.StartsWith("Tutorial_Rail");
