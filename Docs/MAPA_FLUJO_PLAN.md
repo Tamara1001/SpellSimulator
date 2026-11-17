@@ -110,6 +110,7 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
   - La alquimia sigue en el piso 2 (se muda con el Archivo, paso 3).
 - **Tras T2 (2026-11-17, sin commitear, sin verificar):** feedback de Tamara → rampas todas en `RampStart 0` (descanso de 90°) y carteles reemplazados por **notas flotantes** (`FloatingNote`, física con resorte, 2-3 palabras). Decisión nueva: *menos texto, menos carteles, más intuitivo*. Ver el bloque «Traspaso» arriba para el estado y los pasos de verificación.
   - `HarnessTestRunner.RunEditMode()` llamado en el mismo comando que `MapBuilder.Build()` se queda en RUNNING: lanzarlo en un comando aparte.
+- 2026-11-17 — **Rampas alineadas y notas flotantes verificadas** (commit `15e6243`): Build OK (6 `FloatingNote`), 612 EditMode y smoke en PASS. Capturas `Docs/Capturas/nota_*.png`: los textos se leen desde −Z (el lado «de atrás» es la tarjeta violeta lisa). `EditorApplication.delayCall` no corrió con el Editor en segundo plano: llamar `MapBuilder.Build()` directo desde `RunCommand` (el namespace es `SpellSimulator.EditorTools.Map`). **Pendiente:** push de `rework-mapa` (el clasificador de permisos lo bloqueó) y T3.
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),
 > [GLYPHS.md](GLYPHS.md), [ARCHITECTURE.md](ARCHITECTURE.md), [HARNESS.md](HARNESS.md).
