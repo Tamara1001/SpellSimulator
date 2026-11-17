@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-17 — Torre-tutorial T3: el piso 1 (objetos mágicos)
+
+- `TutorialCloth` + `ClothRules` (lógica pura + 5 tests): tela pesada (cuerpo con resorte, 40 kg) que tapa la bajada del piso 1. Se suelta, vuela y desaparece cuando algo que no es el jugador la aparta (viento dibujado en papel, pared o piso; ≥ 0,55 m de su lugar o ≥ 2,2 m/s) o la golpea un objeto lanzado (impulso ≥ 6 N·s). El jugador no la mueve (para él es un muro). `TowerTutorial.Begin` la rearma.
+- `MapTutorial.MagicFloor`: misma baranda del hueco que el piso 2 (`HoleRail`, compartida), la tela con su viga y 3 notas flotantes («pluma + tinta», «E leer el libro», «círculo + viento»).
+- Libro nuevo `wind-primer` «Tomo I: el viento» (`glifos.json`, primero de la lista: círculo mágico, viento y columna) sobre la mesa central del piso 1. Pluma, tinta, papel (mesa de estudio, mesa de dibujo, caballete) ya estaban.
+- `HarnessPlaySmoke`: chequeo nuevo (tela, libro, liberación y rearme). 617 EditMode y smoke en verde. Sin probar a mano: el umbral de apertura por viento real no está medido.
+
 ## 2026-11-17 — (EN CURSO, sin commitear) Rampas alineadas y notas flotantes
 
 - Todas las rampas de la torre salen del mismo ángulo (`RampStart 0`): descanso de 90° entre una y otra.

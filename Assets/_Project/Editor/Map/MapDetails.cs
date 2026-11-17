@@ -278,6 +278,7 @@ namespace SpellSimulator.EditorTools.Map
             var spots = new (string id, Vector3 at, float yaw, float tilt)[]
             {
                 ("elements", new Vector3(-1.293f, 1.168f, -2.605f), -52f, -25f),
+                ("wind-primer", new Vector3(MapTutorial.WindBook.x, floor + 0.86f, MapTutorial.WindBook.z), 20f, 0f),
                 ("variants", new Vector3(-0.6f, 0.86f, 0.22f), 15f, 0f),
                 ("motion", new Vector3(0.9f, floor + 0.86f, 0.2f), 60f, 0f),
                 ("shape", new Vector3(0.25f, floor + 0.86f, 0.75f), 95f, 0f),

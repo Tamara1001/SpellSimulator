@@ -26,6 +26,8 @@ namespace SpellSimulator.World
 
         private static readonly System.Collections.Generic.List<Respawnable> rearm = new System.Collections.Generic.List<Respawnable>(16);
 
+        private static readonly System.Collections.Generic.List<TutorialCloth> cloths = new System.Collections.Generic.List<TutorialCloth>(2);
+
         private readonly TutorialProgress progress = new TutorialProgress();
         private float checkTimer;
 
@@ -68,6 +70,12 @@ namespace SpellSimulator.World
                 props.GetComponentsInChildren(rearm);
                 for (int i = 0; i < rearm.Count; i++) rearm[i].Respawn("se rearma el tutorial");
                 rearm.Clear();
+            }
+            if (props != null)
+            {
+                props.GetComponentsInChildren(true, cloths);
+                for (int i = 0; i < cloths.Count; i++) cloths[i].Rearm();
+                cloths.Clear();
             }
             checkTimer = 0f;
             Apply();

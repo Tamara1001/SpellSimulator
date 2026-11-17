@@ -696,6 +696,22 @@ namespace SpellSimulator.EditorTools
                 Physics.SyncTransforms();
                 bool rearmed = pileBodies.Length > 0 && Piled();
                 Check(piled && railed && cleared && rearmed, $"tutorial piso 2: la pila tapa el descanso, hay baranda y se rearma (pila {piled}, baranda {railed}, despejada {cleared}, rearmada {rearmed})");
+                // Piso 1 (T3): la tela pesada tapa la bajada (un rayo tangente la toca), el libro del viento esta, y al soltarla el paso queda libre y se rearma.
+                var cloth = pileRoot != null ? pileRoot.GetComponentInChildren<SpellSimulator.World.TutorialCloth>(true) : null;
+                float floor1 = SpellSimulator.EditorTools.Map.TowerBuilder.FloorHeight;
+                Vector3 clothFrom = towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(3.9f, SpellSimulator.EditorTools.Map.MapTutorial.ClothAngle + 12f, floor1 + 1.2f);
+                Vector3 clothDir = SpellSimulator.EditorTools.Map.TowerBuilder.Polar(1f, SpellSimulator.EditorTools.Map.MapTutorial.ClothAngle - 90f, 0f);
+                bool ClothBlocks() => Physics.Raycast(clothFrom, clothDir, out RaycastHit ch, 1.5f, ~0, QueryTriggerInteraction.Ignore) && ch.collider.GetComponentInParent<SpellSimulator.World.TutorialCloth>() != null;
+                bool hung = cloth != null && !cloth.IsOpen && ClothBlocks();
+                bool windBook = false;
+                foreach (var lb in Object.FindObjectsByType<SpellSimulator.Learning.LibraryBook>(FindObjectsSortMode.None)) if (lb.BookId == "wind-primer") windBook = true;
+                if (cloth != null) cloth.ForceOpen();
+                Physics.SyncTransforms();
+                bool freed = cloth != null && cloth.IsOpen && !ClothBlocks();
+                spawn.Begin(false);
+                Physics.SyncTransforms();
+                bool rehung = cloth != null && !cloth.IsOpen && ClothBlocks();
+                Check(hung && windBook && freed && rehung, $"tutorial piso 1: la tela tapa la bajada, esta el tomo I y al soltarla se libera y se rearma (colgada {hung}, libro {windBook}, libre {freed}, rearmada {rehung})");
                 if (lever != null) lever.Press(); else spawn.Begin(true);
                 bool barrierDown = tutorial != null && !tutorial.IsActive && !tutorial.BarrierUp;
                 barrierDown &= !Physics.CheckSphere(outside, 0.2f, ~0, QueryTriggerInteraction.Ignore);

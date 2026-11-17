@@ -50,8 +50,8 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
 - [x] **TS** *(D30)* Silueta nueva de la torre: base en talud, terraza de 7 m en voladizo, techo más alto
 - [x] **T1** Terraza: movilidad básica, barrera mágica, palanca de salteo, faroles de nivel
 - [x] **T2** Piso 2: mover objetos (baranda en el hueco de la rampa, pila de cajas y barril, rearmado)
-- [ ] **T3** *(sigue este)* Piso 1: objetos mágicos (tinta, papel, primer hechizo, tomo I de viento)
-- [ ] **T4** Planta baja: agua, tierra, columna y abrir la puerta con un hechizo. **T1-T4 reemplazan a 9b y 13.**
+- [x] **T3** Piso 1: objetos mágicos (tinta, papel, primer hechizo, tomo I de viento)
+- [ ] **T4** *(sigue este)* Planta baja: agua, tierra, columna y abrir la puerta con un hechizo. **T1-T4 reemplazan a 9b y 13.**
 - [ ] **3** Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
 - [ ] **4** Campo de agua (orilla real vía `FindLakeside`, ≈ −22,−30)
 - [ ] **5** Campo de tierra (20,−50) + santuario (44,−38) + peñascos 1 y 3 al este/norte
@@ -112,6 +112,10 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
   - `HarnessTestRunner.RunEditMode()` llamado en el mismo comando que `MapBuilder.Build()` se queda en RUNNING: lanzarlo en un comando aparte.
 - 2026-11-17 — **Rampas alineadas y notas flotantes verificadas** (commit `15e6243`): Build OK (6 `FloatingNote`), 612 EditMode y smoke en PASS. Capturas `Docs/Capturas/nota_*.png`: los textos se leen desde −Z (el lado «de atrás» es la tarjeta violeta lisa). `EditorApplication.delayCall` no corrió con el Editor en segundo plano: llamar `MapBuilder.Build()` directo desde `RunCommand` (el namespace es `SpellSimulator.EditorTools.Map`). **Pendiente:** push de `rework-mapa` (el clasificador de permisos lo bloqueó) y T3.
 - 2026-11-17 — **Terraza: agacharse y saltar obligatorios** (pedido de Tamara). Un único camino, el del este, con dos obstáculos en serie que cruzan **toda** la terraza (del centro al parapeto, sin rodeo): viga a 1,3 m en `BeamAngle` 20° (agachado mide 1,1 m, de pie 2,1 m) y muro de 0,7 m en `JumpWallAngle` 320° (el escalón automático sube 0,35 m; el salto llega a 0,83 m). El camino del oeste queda cerrado por una valla de 2,4 m (`FenceAngle` 180°). Notas: «C agacharse» y «Espacio saltar». 612 EditMode y smoke en verde. Capturas `terraza_*.png`.
+- 2026-11-17 — **T3 hecho.** Piso 1: baranda del hueco (misma que el piso 2, `HoleRail`), tela pesada en `ClothAngle` 300° colgada de una viga (`TutorialCloth`, hijo de `TutorialProps`, así `Begin` la rearma) y 3 notas. Libro nuevo `wind-primer` (Tomo I) en `MapTutorial.WindBook` sobre la mesa central.
+  - Hoy el piso 1 ya tenía todo lo demás (mesa de estudio con plumas/tinteros, mesa de dibujo, caballete): no se agregó papel nuevo. Siguen ahí los libros `motion`/`shape`, el portal del estudio y los cofres (se van con el Archivo / T4: limpieza pendiente anotada por Tamara).
+  - **Sin medir:** que un viento real (papel, pared o piso) alcance los umbrales de `ClothRules`. El smoke suelta la tela con `ForceOpen`. Probar a mano y ajustar `OpenDistance`/`OpenSpeed`/resorte. Dibujado en el piso, el viento sube: la tela se levanta y también se suelta.
+  - 617 EditMode y smoke en verde. Capturas `piso1_tela.png`, `piso1_mesa.png`, `piso1_centro.png`.
 - **Pendiente anotado por Tamara:** limpiar los muebles y cosas viejas que quedan en la torre (alquimia, estudio, mobiliario del piso 1 y planta baja) y dejarla coherente; encaja con T3/T4 y el paso 3 (la alquimia se muda al Archivo).
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),

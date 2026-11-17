@@ -11,7 +11,8 @@ namespace SpellSimulator.EditorTools.Map
     ///   de salteo, que solo existen mientras el tutorial esta activo;
     /// - un farol por nivel (se enciende al pasarlo; malla emisiva, sin luz);
     /// - nivel 1, la terraza (movilidad basica): barandas en el hueco, un murete para saltar, una viga para pasar agachado y tres notas flotantes;
-    /// - nivel 2, el piso 2 (mover objetos): baranda en el hueco de la rampa, una pila de cajas y un barril sobre el descanso y dos notas.
+    /// - nivel 2, el piso 2 (mover objetos): baranda en el hueco de la rampa, una pila de cajas y un barril sobre el descanso y dos notas;
+/// - nivel 3, el piso 1 (objetos magicos): la misma baranda, una tela pesada que tapa la bajada (se vuela con viento) y tres notas.
     /// Angulos como en TowerBuilder: 0 = este, 90 = norte, 270 = sur (puerta).
     /// </summary>
     public static class MapTutorial
@@ -33,6 +34,12 @@ namespace SpellSimulator.EditorTools.Map
         /// </summary>
         public const float PileAngle = 300f, RailEnd = 318f, RailHeight = 1f;
         public const string PropsName = "TutorialProps";
+
+        /// <summary>
+        /// Piso 1: igual que el piso 2 (misma baranda), pero la bajada la tapa una tela pesada colgada de una viga en ClothAngle, de pared a baranda.
+        /// </summary>
+        public const float ClothAngle = 300f, ClothHeight = 2.85f, ClothLift = 0.1f;
+        public const string ClothName = "TutorialCloth";
 
         private static readonly Color Wood = new Color(0.5f, 0.33f, 0.2f);
         private static readonly Color WoodDark = new Color(0.3f, 0.19f, 0.12f);
@@ -60,13 +67,14 @@ namespace SpellSimulator.EditorTools.Map
             var props = new GameObject(PropsName).transform;
             props.SetParent(root.transform, false);
             ObjectsFloor(root.transform, props, material);
+            MagicFloor(root.transform, props, material);
 
             var tutorial = root.AddComponent<TowerTutorial>();
             tutorial.Configure(activeOnly, glows, props);
             // En la escena queda apagado: solo se enciende al elegir «Hacer el tutorial».
             activeOnly.SetActive(false);
             EditorUtility.SetDirty(tutorial);
-            Debug.Log("[Mapa] torre-tutorial: barrera, palanca de salteo, 4 faroles, terraza y piso 2");
+            Debug.Log("[Mapa] torre-tutorial: barrera, palanca de salteo, 4 faroles, terraza, piso 2 y piso 1");
             return tutorial;
         }
 
@@ -236,10 +244,7 @@ namespace SpellSimulator.EditorTools.Map
 
             // Baranda en el borde interior del hueco (el piso no tenia: desde el centro se bajaba por cualquier lado), que sigue
             // por el descanso hasta pasar la pila, y un tramo que cierra el anillo donde el piso se corta sobre el hueco.
-            Rails(b, parent, "Tutorial_Rail", TowerBuilder.RampInner, HoleFrom, RailEnd, y);
-            RailSegment(b, parent, "Tutorial_Rail_End", TowerBuilder.Polar(TowerBuilder.RampInner, HoleFrom, y), TowerBuilder.Polar(TowerBuilder.InnerRadius, HoleFrom, y));
-            var rail = MapBuilder.Place("Tutorial_Rail", parent, MapBuilder.SaveMesh(b.Build("Tutorial_Rail")), material, o, Quaternion.identity);
-            rail.isStatic = true;
+            HoleRail(b, parent, material, "Tutorial_Rail", y, o);
 
             // La pila: dos cajas grandes que cruzan el descanso, dos chicas arriba y un barril detras.
             float yaw = TowerBuilder.TangentYaw(PileAngle);
@@ -254,6 +259,68 @@ namespace SpellSimulator.EditorTools.Map
             Note(parent, material, "Note_Tutorial_Grab", o + TowerBuilder.Polar(3.5f, PileAngle + 3f, y + 2.05f), viewer, "<b>E</b>  agarrar  ·  <b>E</b>  soltar");
             Note(parent, material, "Note_Tutorial_Throw", o + TowerBuilder.Polar(4.35f, PileAngle + 3f, y + 1.6f), viewer, "<b>Q</b>  arrojar");
         }
+
+        /// <summary>Baranda del borde interior del hueco de la rampa en un piso (la misma en el piso 2 y en el piso 1).</summary>
+        private static void HoleRail(LowPolyMesh b, Transform parent, Material material, string name, float y, Vector3 origin)
+        {
+            Rails(b, parent, name, TowerBuilder.RampInner, HoleFrom, RailEnd, y);
+            RailSegment(b, parent, name + "_End", TowerBuilder.Polar(TowerBuilder.RampInner, HoleFrom, y), TowerBuilder.Polar(TowerBuilder.InnerRadius, HoleFrom, y));
+            var rail = MapBuilder.Place(name, parent, MapBuilder.SaveMesh(b.Build(name)), material, origin, Quaternion.identity);
+            rail.isStatic = true;
+        }
+
+        // ---------------------------------------------------------------- nivel 3: objetos magicos
+
+        private static void MagicFloor(Transform parent, Transform props, Material material)
+        {
+            float y = TowerBuilder.FloorHeight;
+            Vector3 o = parent.position;
+            var rails = new LowPolyMesh();
+            HoleRail(rails, parent, material, "Tutorial_Rail_1", y, o);
+
+            // La tela: un panel de pared a baranda (hueco de 4 cm a cada lado), colgado de una viga fija. Cuerpo fisico con resorte.
+            float inner = TowerBuilder.RampInner + 0.07f, outer = TowerBuilder.InnerRadius - 0.06f, width = outer - inner;
+            float mid = (inner + outer) * 0.5f;
+            var cloth = new LowPolyMesh();
+            Color sack = new Color(0.82f, 0.68f, 0.4f), sackDark = new Color(0.64f, 0.5f, 0.3f);
+            const int folds = 6;
+            for (int i = 0; i < folds; i++)
+            {
+                float w = width / folds;
+                float x = -width * 0.5f + w * (i + 0.5f);
+                float dz = (i % 2 == 0 ? 0.03f : -0.03f);
+                float h = ClothHeight - (i % 3) * 0.07f;
+                cloth.Box(Matrix4x4.Translate(new Vector3(x, (ClothHeight - h) * -0.5f, dz)),
+                    new Vector3(w * 0.96f, h, 0.05f), i % 2 == 0 ? sack : sackDark);
+            }
+            cloth.Box(Matrix4x4.Translate(new Vector3(0f, ClothHeight * 0.5f - 0.02f, 0f)), new Vector3(width, 0.04f, 0.09f), WoodDark);
+            Vector3 center = o + TowerBuilder.Polar(mid, ClothAngle, y + ClothLift + ClothHeight * 0.5f);
+            Quaternion rot = Quaternion.Euler(0f, -ClothAngle, 0f);
+            var go = MapBuilder.Place(ClothName, props, MapBuilder.SaveMesh(cloth.Build("Tutorial_Cloth")), material, center, rot);
+            go.isStatic = false;
+            var col = go.AddComponent<BoxCollider>();
+            col.size = new Vector3(width, ClothHeight, 0.12f);
+            var rb = go.AddComponent<Rigidbody>();
+            rb.mass = 40f;
+            rb.useGravity = false;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            go.AddComponent<TutorialCloth>();
+
+            // Viga de la que cuelga (fija, sin collider: la tela la cubre).
+            var beam = new LowPolyMesh();
+            Matrix4x4 at = Radial(mid, ClothAngle, y + ClothLift + ClothHeight + 0.05f);
+            beam.Box(at, new Vector3(TowerBuilder.InnerRadius - TowerBuilder.RampInner + 0.1f, 0.14f, 0.16f), Wood, WoodDark);
+            MapBuilder.Place("Tutorial_ClothBeam", parent, MapBuilder.SaveMesh(beam.Build("Tutorial_ClothBeam")), material, o, Quaternion.identity).isStatic = true;
+
+            // Tres notas: tinta y papel (la mesa de estudio), el libro, y la tela. Se ven desde donde llega la rampa de arriba (angulo 0).
+            Vector3 viewer = o + TowerBuilder.Polar(3.9f, 345f, y);
+            Note(parent, material, "Note_Tutorial_Ink", o + new Vector3(-0.5f, y + 1.75f, 2.1f), o + new Vector3(0f, y, -1f), "<b>pluma</b>  +  tinta");
+            Note(parent, material, "Note_Tutorial_Book", o + new Vector3(WindBook.x, y + 1.5f, WindBook.z), o + new Vector3(0f, y, -1f), "<b>E</b>  leer el libro");
+            Note(parent, material, "Note_Tutorial_Cloth", o + TowerBuilder.Polar(3.35f, ClothAngle + 14f, y + 2.0f), viewer, "círculo  +  viento");
+        }
+
+        /// <summary>Lugar (local a la torre, en planta) del libro «Tomo I: el viento» del piso 1; lo usa MapDetails.LibraryBooks.</summary>
+        public static readonly Vector3 WindBook = new Vector3(0.6f, 0f, 0.5f);
 
         /// <summary>Baranda en arco, a ese radio, entre dos angulos (un tramo cada 12 grados).</summary>
         private static void Rails(LowPolyMesh b, Transform parent, string name, float radius, float from, float to, float y)
