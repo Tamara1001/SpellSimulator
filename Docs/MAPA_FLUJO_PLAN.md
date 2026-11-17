@@ -1,6 +1,6 @@
 # Plan: mapa del modo Libre ordenado por flujo de aprendizaje
 
-> **Estado: APROBADO por Tamara (2026-11-16), en implementación** (pasos 0, 1 y N hechos). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
+> **Estado: APROBADO por Tamara (2026-11-16), en implementación** (pasos 0, 1, N y 2 hechos; **el trabajo va en la rama `rework-mapa`**, ver protocolo). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
 > **v3 (2026-11-16, correcciones de Tamara al dibujo): D19-D24 y §17-§18. La torre pasa a ser el tutorial, el spawn pasa a llamarse Nexo y el Archivo se redefine. §17 y §18 APROBADAS por Tamara el 2026-11-16 (D25-D27).**
 > La revisión crítica externa está en [MAPA_FLUJO_CRITICA.md](MAPA_FLUJO_CRITICA.md) y ya está volcada en §12b.
 
@@ -12,7 +12,7 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
 2. Mirá el **tracker** de abajo: el primer paso sin tildar, respetando el orden v2, es el que sigue.
 3. Hacé **solo ese paso** (o los que dependan solo de él), con su criterio de «listo» de §11. Los pasos de arte con **Opus** van a un subagente con especificación cerrada (tabla §14.4b); los subagentes **no compilan**: compilá y verificá vos.
 4. Verificá: compilación limpia + tests EditMode + `HarnessPlaySmoke` (+ capturas en `Docs/Capturas/`).
-5. Un commit chico en `main`, en español, con trailer `Co-Authored-By`. **No pushear salvo que Tamara lo pida.** No commitear ruido del Editor (`git checkout -- <archivo>`).
+5. Un commit chico **en la rama `rework-mapa`** (pedido de Tamara del 2026-11-16: no en `main`), en español, con trailer `Co-Authored-By`, y **`git push` de la rama después de cada commit**. `main` no se toca hasta que Tamara pida mergear. No commitear ruido del Editor (`git checkout -- <archivo>`).
 6. **Tildá el paso en el tracker**, anotá posiciones reales / sorpresas en «Bitácora» (abajo) y, si cambió una decisión, agregá una fila en §3. Actualizá `Docs/CHANGELOG.md` (y `KNOWN_ISSUES.md` si descubriste un bug).
 7. Si dudás de diseño o de controles: **preguntale a Tamara antes** (ver CLAUDE.md). Rediseños nuevos fuera de este plan: media página y esperar el sí.
 
@@ -20,8 +20,8 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
 
 - [x] **0** Volcar posiciones reales (`Sites()`), alturas, `Path8/Path9`, inflamabilidad de pinos; capturas «antes»
 - [x] **1** Mover el laboratorio a la pradera (20,−8) — sitio y frente fijos (este); se quitó `TrackClear`/`LaboratoryFront`
-- [ ] **2** *(sigue este)* Mover el entrenamiento a (0,−26), frente O/SO; actualizar tests
-- [ ] **2b** Caminos completos (`ValleyShape.Paths`) **antes** de fijar sitios 3-6
+- [x] **2** Mover el entrenamiento — quedó en **(−6, −25)** con frente al **suroeste** (ver bitácora)
+- [ ] **2b** *(sigue este)* Caminos completos (`ValleyShape.Paths`) **antes** de fijar sitios 3-6
 - [x] **N** *(v3, §17)* Nexo: reaparición, tablero con el mapa, pregunta «¿saltear el tutorial?» al entrar a Modo Sandbox (la guía de «siguiente etapa» y el portal del Nexo llegan con los pasos 9 y T)
 - [ ] **T1-T4** *(v3, §17)* Torre-tutorial, un commit por nivel: terraza (movilidad) → piso 2 (objetos) → piso 1 (objetos mágicos) → planta baja (abrir la puerta). **Reemplaza a 9b y 13.**
 - [ ] **3** Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
@@ -56,6 +56,11 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
   - La pregunta se hace **una vez por sesión**, solo al tocar «Modo Sandbox» en el menú de PC. El harness, la red y **VR** (que no tiene menú) siguen entrando sin preguntar y aparecen donde los deja la escena (planta baja de la torre). Falta en T1: una forma de saltear **dentro del mundo** (sirve para VR) y que quien se une en red aparezca en el Nexo.
   - En la terraza hay un poste del techo justo al sur del pedestal: el punto de inicio es (2, −2) respecto del centro, mirando al sur.
   - El tablero conserva el nombre `TowerMap` en código y los textos del grimorio siguen diciendo «mapa de la torre»: renombrar en el paso 9.
+- 2026-11-16 — **Paso 2 hecho.** Entrenamiento en **(−6, −25)** (no en (0, −26)) y frente al **suroeste** (rumbo 225°). Motivos, medidos con la distribución real de `TrainingLayout`:
+  - Con el atril en (0, −26) las mesas y el caballete quedan sobre la línea x = 0, que es por donde va el camino Nexo→Archivo. Corrido 6 m al oeste, el caballete queda en (2.1, −26.8): **el camino del paso 2b tiene que pasar al este de x ≈ 4,5 entre z = −22 y z = −30** (una curva suave por detrás de las mesas).
+  - Con frente al oeste los tiros que pasan de largo caen en el futuro campo de agua (−22, −30). Al suroeste pasan por el hueco entre agua (−22, −30) y fuego (−18, −50). Muñeco A en (−12.4, −31.4), a 9,7 m del campo de agua.
+  - Queda a 20 m del Nexo y a 15 m del peñasco 3 (que igual se muda en el paso 3/5). Sin árboles en 12 m. 604 tests EditMode y smoke en verde. Capturas `paso2_entrenamiento_aerea.png` y `paso2_entrenamiento_desde_nexo.png`.
+- 2026-11-16 — **Rama:** a pedido de Tamara el rework va en `rework-mapa` (pusheada). `main` quedó en `a5ce81c`, igual que el remoto.
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),
 > [GLYPHS.md](GLYPHS.md), [ARCHITECTURE.md](ARCHITECTURE.md), [HARNESS.md](HARNESS.md).

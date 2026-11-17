@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-16 — Mapa por flujo, paso 2: el entrenamiento se muda al sur del Nexo
+
+- `ValleyShape.TrainingOrigin` pasa de (16, −46) a (−6, −25) y `TrainingForward` a rumbo 225° (suroeste): queda a 20 m del Nexo, con las mesas del lado del camino al Archivo y los tiros hacia el hueco entre los futuros campos de agua y fuego. `WorldZones.json` con la posición nueva; escena regenerada.
+- 604 tests EditMode y smoke en verde. Detalle y motivos en la bitácora de [MAPA_FLUJO_PLAN.md](MAPA_FLUJO_PLAN.md).
+- El rework del mapa pasa a la rama `rework-mapa` (se pushea después de cada commit); `main` no se toca hasta mergear.
+
 ## 2026-11-16 — Mapa por flujo, paso N: Nexo, reaparición y pregunta para saltear el tutorial
 
 - Nuevo `World/Map/SpawnRules` (lógica pura + `SpawnRulesTests`): el tutorial empieza en la terraza de la torre, el salteo y la reaparición llevan al Nexo (0, −6). Nuevo `Player/PlayerSpawn` en el jugador: `Begin(skip)`, `Respawn()` y vuelta al Nexo si se cae del mundo.

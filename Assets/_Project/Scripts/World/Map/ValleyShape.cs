@@ -39,16 +39,15 @@ namespace SpellSimulator.World.Map
         public static readonly Vector2 Spawn = new Vector2(0f, -6f);
 
         /// <summary>
-        /// Entrenamiento base (blancos, munecos, atril de papel y mesas): al sur de la torre, en el lugar que marco Tamara en
-        /// el mapa (entre el sitio viejo de la cabaña del sur (12, -40) y el entrenamiento anterior (23, -45), algo mas al
-        /// oeste y al sur). La cabaña y el puesto de suministros se mudaron al norte para dejarle lugar (MapStructures).
-        /// Lejos del Laboratorio (47, -27) y de su pista. Es el punto del atril; el frente mira al sudeste, hacia la ladera
-        /// (nada que apuntar: ni torre ni estructuras). Distribucion de los objetos: <see cref="TrainingLayout"/>.
-        /// FieldCenter NO cambia (lo usan torre, circulo, santuario...).
+        /// Entrenamiento base (blancos, munecos, atril de papel y mesas): etapa 2 del recorrido (Docs/MAPA_FLUJO_PLAN.md, paso 2),
+        /// a 20 m al sur-suroeste del nexo. Es el punto del atril; el frente mira al suroeste, hacia el hueco entre el lago y el
+        /// bosque del sur (nada que apuntar: ni torre ni estructuras ni los campos de agua y fuego). Las mesas y el caballete quedan
+        /// detras (al noreste), del lado del camino nexo-Archivo. Distribucion de los objetos: <see cref="TrainingLayout"/>.
+        /// Antes estaba en (16, -46) con rumbo 150. FieldCenter NO cambia (lo usan torre, circulo, santuario...).
         /// </summary>
-        public static readonly Vector2 TrainingOrigin = new Vector2(16f, -46f);
-        /// <summary>Frente (unitario, XZ) del entrenamiento: 150 grados de rumbo (x = sen, z = cos).</summary>
-        public static readonly Vector2 TrainingForward = new Vector2(0.5f, -0.8660254f);
+        public static readonly Vector2 TrainingOrigin = new Vector2(-6f, -25f);
+        /// <summary>Frente (unitario, XZ) del entrenamiento: 225 grados de rumbo (x = sen, z = cos).</summary>
+        public static readonly Vector2 TrainingForward = new Vector2(-0.70710678f, -0.70710678f);
         /// <summary>Radio del aplanado del entrenamiento (plano hasta 70 % y suave hasta el borde).</summary>
         public const float TrainingFlatRadius = 8f;
 
