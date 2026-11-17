@@ -85,7 +85,7 @@ descubre. El grimorio muestra cada glifo dibujándose solo, con su explicación.
 ## Mover objetos a gusto (M6)
 **E** agarra en la mano (herramientas, lienzos, estampas: quedan delante de la vista y las herramientas se ven sostenidas).
 **G** (mantener) es el modo "mover": sujeta lo apuntado a distancia como en Garry's Mod; la rueda lo acerca o aleja, **clic
-derecho + mouse** lo gira (la vista se congela), **Shift + rueda** lo inclina y **T** lo deja flotando donde está. Sirve para
+derecho + mouse** lo gira (la vista se congela), **Shift + rueda** lo inclina y **E** otra vez lo deja flotando donde está (**T** abre el grimorio). Sirve para
 juntar las mitades de un sello partido o apilar cajas con precisión. **X** hace zoom para ver de cerca; **1–4** cambian el grosor de la
 pluma (muy fino a grueso) para sellos chicos o enormes.
 

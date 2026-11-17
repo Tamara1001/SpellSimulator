@@ -22,6 +22,15 @@ namespace SpellSimulator.EditorTools.Map
         public const int Floors = 3;
         public const float TerraceY = FloorHeight * Floors;
         public const float ParapetHeight = 1f;
+        /// <summary>
+        /// Silueta (rework 2026-11-17): la torre es mas ancha abajo y arriba que en el medio. El interior no cambia (cilindro de
+        /// InnerRadius): abajo hay un talud de piedra hasta BaseRadius y arriba la terraza vuela sobre mensulas hasta TerraceRadius.
+        /// </summary>
+        public const float TerraceRadius = 7f, TerraceOuter = TerraceRadius + 0.5f;
+        public const float BaseRadius = 7.4f, BaseTop = 1.4f;
+        /// <summary>Postes del techo: sobre el muro (macizo en toda la vuelta), uno cada 36 grados.</summary>
+        public const float PostRadius = 5.2f, RoofPostHeight = 3.8f;
+        public const int RoofPosts = 10;
         public const int Sides = 20;
         public const float Row = 0.75f;
 
@@ -171,16 +180,28 @@ namespace SpellSimulator.EditorTools.Map
                 if (r + 1 < rows && IsOpening(s, r + 1))
                     b.Quad(Polar(InnerRadius, a0, y1), Polar(InnerRadius, a1, y1), Polar(OuterRadius, a1, y1), Polar(OuterRadius, a0, y1), StoneB);
             }
-            // Zocalo: base de piedra un poco mas ancha, cortada en la puerta y baja (prueba manual: subia 60 cm en la
-            // entrada y solo se podia pasar saltando).
+            // Talud: la base se abre hasta BaseRadius y sube hasta justo debajo de las ventanas de la planta baja. En la puerta
+            // se corta y deja un zaguan entre dos mejillas de piedra (sin escalon: la entrada sigue a nivel del piso).
             for (int s = 0; s < Sides; s++)
             {
                 if (s == DoorSegment) continue;
                 float a0 = s * step - step * 0.5f, a1 = a0 + step;
-                const float top = 0.25f, r0 = OuterRadius + 0.35f, r1 = OuterRadius + 0.15f;
-                Color plinth = LowPolyMesh.Jitter(StoneB * 0.92f, 0.06f, s * 7);
-                b.Quad(Polar(r0, a0, -1.5f), Polar(r1, a0, top), Polar(r1, a1, top), Polar(r0, a1, -1.5f), plinth);
-                b.Quad(Polar(r1, a0, top), Polar(OuterRadius, a0, top), Polar(OuterRadius, a1, top), Polar(r1, a1, top), plinth);
+                Color plinth = LowPolyMesh.Jitter(StoneB * 0.9f, 0.06f, s * 7);
+                Color ledge = LowPolyMesh.Jitter(StoneA, 0.05f, s * 11);
+                const float lip = OuterRadius + 0.3f;
+                b.Quad(Polar(BaseRadius, a0, -1.5f), Polar(lip, a0, BaseTop - 0.25f), Polar(lip, a1, BaseTop - 0.25f), Polar(BaseRadius, a1, -1.5f), plinth);
+                b.Quad(Polar(lip, a0, BaseTop - 0.25f), Polar(lip, a0, BaseTop), Polar(lip, a1, BaseTop), Polar(lip, a1, BaseTop - 0.25f), ledge);
+                b.Quad(Polar(lip, a0, BaseTop), Polar(OuterRadius, a0, BaseTop), Polar(OuterRadius, a1, BaseTop), Polar(lip, a1, BaseTop), ledge);
+                // Mejillas del zaguan: cierran el talud a los lados de la puerta (dos caras: se ven desde el paso).
+                foreach (float edge in new[] { a0, a1 })
+                {
+                    bool door = Wrap(s + (edge == a0 ? -1 : 1)) == DoorSegment;
+                    if (!door) continue;
+                    Vector3 c0 = Polar(OuterRadius, edge, -1.5f), c1 = Polar(OuterRadius, edge, BaseTop), c2 = Polar(lip, edge, BaseTop),
+                        c3 = Polar(lip, edge, BaseTop - 0.25f), c4 = Polar(BaseRadius, edge, -1.5f);
+                    b.Tri(c0, c1, c2, StoneB); b.Tri(c0, c2, c3, StoneB); b.Tri(c0, c3, c4, StoneB);
+                    b.Tri(c2, c1, c0, StoneB); b.Tri(c3, c2, c0, StoneB); b.Tri(c4, c3, c0, StoneB);
+                }
             }
             return b;
         }
@@ -263,48 +284,46 @@ namespace SpellSimulator.EditorTools.Map
             for (int s = 0; s < Sides; s++)
             {
                 float a0 = s * step - step * 0.5f, a1 = a0 + step;
+                Color c = LowPolyMesh.Jitter(StoneA, 0.08f, s * 17);
+                Color slab = LowPolyMesh.Jitter(StoneA, 0.06f, s * 29 + 5);
+                // Balcon: el piso de la terraza sigue por encima del muro y vuela hasta TerraceRadius (toda la vuelta).
+                b.Quad(Polar(InnerRadius, a0, y0), Polar(InnerRadius, a1, y0), Polar(TerraceOuter, a1, y0), Polar(TerraceOuter, a0, y0), slab);
+                // Mensula: cornisa en voladizo desde el muro hasta el borde del balcon, con un escalon de piedra oscura.
+                b.Quad(Polar(OuterRadius, a0, y0 - 2.2f), Polar(TerraceOuter - 0.5f, a0, y0 - 0.6f), Polar(TerraceOuter - 0.5f, a1, y0 - 0.6f), Polar(OuterRadius, a1, y0 - 2.2f), StoneB);
+                b.Quad(Polar(TerraceOuter - 0.5f, a0, y0 - 0.6f), Polar(TerraceOuter, a0, y0 - 0.35f), Polar(TerraceOuter, a1, y0 - 0.35f), Polar(TerraceOuter - 0.5f, a1, y0 - 0.6f), StoneB * 0.85f);
                 // Parapeto con almenas: un segmento si, uno no, mas alto.
                 float top = (s & 1) == 0 ? y1 + 0.9f : y1;
-                Color c = LowPolyMesh.Jitter(StoneA, 0.08f, s * 17);
-                b.Quad(Polar(OuterRadius + 0.2f, a0, y0), Polar(OuterRadius + 0.2f, a0, top), Polar(OuterRadius + 0.2f, a1, top), Polar(OuterRadius + 0.2f, a1, y0), c);
-                b.Quad(Polar(InnerRadius, a1, y0), Polar(InnerRadius, a1, top), Polar(InnerRadius, a0, top), Polar(InnerRadius, a0, y0), InnerB);
-                b.Quad(Polar(InnerRadius, a0, top), Polar(InnerRadius, a1, top), Polar(OuterRadius + 0.2f, a1, top), Polar(OuterRadius + 0.2f, a0, top), StoneA);
+                b.Quad(Polar(TerraceOuter, a0, y0 - 0.35f), Polar(TerraceOuter, a0, top), Polar(TerraceOuter, a1, top), Polar(TerraceOuter, a1, y0 - 0.35f), c);
+                b.Quad(Polar(TerraceRadius, a1, y0), Polar(TerraceRadius, a1, top), Polar(TerraceRadius, a0, top), Polar(TerraceRadius, a0, y0), InnerB);
+                b.Quad(Polar(TerraceRadius, a0, top), Polar(TerraceRadius, a1, top), Polar(TerraceOuter, a1, top), Polar(TerraceOuter, a0, top), StoneA);
                 if ((s & 1) == 0)
                 {
-                    b.Quad(Polar(InnerRadius, a0, y1), Polar(InnerRadius, a0, top), Polar(OuterRadius + 0.2f, a0, top), Polar(OuterRadius + 0.2f, a0, y1), StoneB);
-                    b.Quad(Polar(OuterRadius + 0.2f, a1, y1), Polar(OuterRadius + 0.2f, a1, top), Polar(InnerRadius, a1, top), Polar(InnerRadius, a1, y1), StoneB);
+                    b.Quad(Polar(TerraceRadius, a0, y1), Polar(TerraceRadius, a0, top), Polar(TerraceOuter, a0, top), Polar(TerraceOuter, a0, y1), StoneB);
+                    b.Quad(Polar(TerraceOuter, a1, y1), Polar(TerraceOuter, a1, top), Polar(TerraceRadius, a1, top), Polar(TerraceRadius, a1, y1), StoneB);
                 }
-                // Cornisa: anillo saliente bajo el parapeto.
-                b.Quad(Polar(OuterRadius, a0, y0 - 0.4f), Polar(OuterRadius + 0.2f, a0, y0), Polar(OuterRadius + 0.2f, a1, y0), Polar(OuterRadius, a1, y0 - 0.4f), StoneB);
             }
-            // Postes que sostienen el techo: seis, cada 24 grados, en el arco macizo de la terraza (centrado en 231).
-            // La rampa de arriba entra por 240 y el hueco del piso de la terraza va de 312 a 150: FloorHole descarta
-            // cualquier angulo en hueco, asi ningun poste queda en el aire.
-            const float postCenter = 231f;
-            for (int p = 0; p < 6; p++)
-            {
-                float angle = postCenter + (p - 2.5f) * 24f;
-                if (FloorHole(Floors, angle)) continue;
-                var m = Matrix4x4.Translate(Polar(3.6f, angle, TerraceY));
-                b.Frustum(m, 0.18f, 0.18f, 0f, 3.6f, 6, WoodDark);
-            }
+            // Postes que sostienen el techo: sobre el muro (macizo en toda la vuelta), asi el centro de la terraza queda libre.
+            for (int p = 0; p < RoofPosts; p++)
+                b.Frustum(Matrix4x4.Translate(Polar(PostRadius, p * 360f / RoofPosts, TerraceY)), 0.16f, 0.16f, 0f, RoofPostHeight, 6, WoodDark);
             return b;
         }
 
         private static LowPolyMesh RoofMesh()
         {
             var b = new LowPolyMesh();
-            float y = TerraceY + 3.6f;
-            b.Frustum(Matrix4x4.identity, 4.6f, 4.9f, y - 0.4f, y, 12, Gold, true, true);     // aro dorado
-            b.Frustum(Matrix4x4.identity, 5.4f, 3.2f, y, y + 1.6f, 12, RoofDark, false, true);  // alero
-            // Cono de teja roja en tres franjas (la del medio mas oscura) y una aguja dorada.
-            b.Frustum(Matrix4x4.identity, 3.2f, 2.2f, y + 1.6f, y + 3.4f, 12, Roof, false);
-            b.Frustum(Matrix4x4.identity, 2.2f, 1.2f, y + 3.4f, y + 5.4f, 12, RoofDark, false);
-            b.Frustum(Matrix4x4.identity, 1.2f, 0f, y + 5.4f, y + 7.5f, 12, Roof, false);
-            b.Frustum(Matrix4x4.identity, 0.12f, 0f, y + 7.2f, y + 9.6f, 6, Gold, false);        // aguja
-            var orb = Matrix4x4.Translate(new Vector3(0f, y + 8.2f, 0f));
+            float y = TerraceY + RoofPostHeight;
+            b.Frustum(Matrix4x4.identity, 5.0f, 5.5f, y - 0.4f, y, 12, Gold, true, true);     // aro dorado sobre los postes
+            b.Frustum(Matrix4x4.identity, 8.1f, 4.6f, y, y + 2.2f, 12, RoofDark, false, true);  // alero: cubre el balcon
+            // Cono alto de teja roja en cuatro franjas (alternadas) y una aguja dorada.
+            b.Frustum(Matrix4x4.identity, 4.6f, 3.3f, y + 2.2f, y + 5f, 12, Roof, false);
+            b.Frustum(Matrix4x4.identity, 3.3f, 2.1f, y + 5f, y + 8f, 12, RoofDark, false);
+            b.Frustum(Matrix4x4.identity, 2.1f, 1.0f, y + 8f, y + 11f, 12, Roof, false);
+            b.Frustum(Matrix4x4.identity, 1.0f, 0f, y + 11f, y + 14f, 12, RoofDark, false);
+            b.Frustum(Matrix4x4.identity, 0.12f, 0f, y + 13.6f, y + 16.2f, 6, Gold, false);      // aguja
+            var orb = Matrix4x4.Translate(new Vector3(0f, y + 14.7f, 0f));
             b.Frustum(orb, 0.3f, 0f, 0f, 0.35f, 8, Gold, false, true);
             b.Frustum(orb, 0.3f, 0f, 0f, -0.35f, 8, Gold, false);
+            y += 6.5f;   // la bandera sube con la aguja
             // Bandera en la aguja, sobre la esfera: triangulo de dos caras hacia el este.
             Vector3 f0 = new Vector3(0.03f, y + 8.75f, 0f), f1 = new Vector3(0.03f, y + 9.4f, 0f), tip = new Vector3(1.3f, y + 9.0f, 0.06f);
             b.Tri(f0, f1, tip, Cloth);

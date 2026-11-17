@@ -672,7 +672,17 @@ namespace SpellSimulator.EditorTools
                 Vector3 onTerrace = spawn.transform.position;
                 bool terraceFloor = Physics.Raycast(onTerrace, Vector3.down, out RaycastHit terraceHit, 3f, ~0, QueryTriggerInteraction.Ignore)
                     && terraceHit.collider.GetComponentInParent<SpellSimulator.Player.PlayerSpawn>() == null;
-                spawn.Begin(true);
+                // Torre-tutorial (T1): la barrera se pone al empezar, la palanca saltea y la barrera se apaga.
+                var tutorial = SpellSimulator.World.TowerTutorial.Instance;
+                var lever = Object.FindFirstObjectByType<SpellSimulator.World.TutorialSkipLever>();
+                bool barrierUp = tutorial != null && tutorial.IsActive && tutorial.BarrierUp && lever != null;
+                // Un punto por fuera del muro, a la altura de la terraza: ahi solo esta la barrera.
+                Vector3 outside = tutorial != null ? tutorial.transform.position + new Vector3(0f, 15f, -(SpellSimulator.World.Map.TutorialRules.BarrierRadius + 0.15f)) : Vector3.zero;
+                bool caged = tutorial != null && Physics.CheckSphere(outside, 0.2f, ~0, QueryTriggerInteraction.Ignore);
+                if (lever != null) lever.Press(); else spawn.Begin(true);
+                bool barrierDown = tutorial != null && !tutorial.IsActive && !tutorial.BarrierUp;
+                barrierDown &= !Physics.CheckSphere(outside, 0.2f, ~0, QueryTriggerInteraction.Ignore);
+                Check(barrierUp && caged && barrierDown, $"tutorial: la barrera encierra la torre y la palanca saltea (puesta {barrierUp}, encierra {caged}, apagada {barrierDown})");
                 Vector3 atNexus = spawn.transform.position;
                 spawnBody.position = new Vector3(0f, SpellSimulator.World.Map.SpawnRules.FallHeight - 5f, 60f);
                 spawn.transform.position = spawnBody.position;

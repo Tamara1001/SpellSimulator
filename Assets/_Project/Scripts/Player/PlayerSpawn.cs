@@ -50,6 +50,13 @@ namespace SpellSimulator.Player
         {
             Vector3 position = SpawnRules.Start(skipTutorial, out float yaw);
             Place(position, yaw);
+            if (skipTutorial) TutorialSeen = true;
+            World.TowerTutorial tutorial = World.TowerTutorial.Instance;
+            if (tutorial != null)
+            {
+                if (skipTutorial) tutorial.Skip();
+                else tutorial.Begin();
+            }
             Debug.Log(skipTutorial ? "[Spawn] tutorial salteado: el jugador aparece en el nexo" : "[Spawn] el jugador empieza el tutorial en la terraza", this);
         }
 

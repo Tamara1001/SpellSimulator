@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-17 — Torre nueva (silueta) y torre-tutorial T1: la terraza
+
+- `TowerBuilder`: la torre es más ancha abajo y arriba que en el medio y más alta. Talud de piedra en la base (hasta 7,4 m, con zaguán en la puerta), terraza en voladizo de 7 m sobre ménsulas, 10 postes sobre el muro y techo cónico más alto. El interior no cambia.
+- Torre-tutorial, nivel 1: `World/Map/TutorialRules` + `TutorialProgress` (lógica pura, `TutorialRulesTests`), `World/TowerTutorial` y `TutorialSkipLever`, generador `Editor/Map/MapTutorial`. Barrera mágica que encierra la torre mientras el tutorial está activo, palanca «Saltear el tutorial» en la terraza, tres carteles de movilidad, un murete para saltar, una viga para pasar agachado y un farol por nivel.
+- `PlayerSpawn.Begin` arranca o corta el tutorial; el punto de inicio de la terraza se movió al norte del pedestal. `HarnessPlaySmoke`: chequeo nuevo de barrera y palanca.
+- [GAME_DESIGN.md](GAME_DESIGN.md): «dejar flotando» es **E** (decía T). [MAPA_FLUJO_PLAN.md](MAPA_FLUJO_PLAN.md): D29, D30 y tracker T1-T4.
+
 ## 2026-11-16 — Mapa por flujo, paso 2b: caminos completos
 
 - `ValleyShape.Paths`: 10 tramos (antes 3). Columna torre→Nexo→Archivo con curva por detrás del entrenamiento, ramas al borde de los cuatro campos, arco fuego→tierra por el sur y camino torre→norte hacia la cabaña y el puesto. Los árboles ya no crecen sobre esos caminos.

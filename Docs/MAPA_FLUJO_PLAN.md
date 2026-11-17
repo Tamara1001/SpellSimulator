@@ -1,6 +1,6 @@
 # Plan: mapa del modo Libre ordenado por flujo de aprendizaje
 
-> **Estado: APROBADO por Tamara (2026-11-16), en implementación** (pasos 0, 1, N, 2 y 2b hechos; **el trabajo va en la rama `rework-mapa`**, ver protocolo). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
+> **Estado: APROBADO por Tamara (2026-11-16), en implementación** (pasos 0, 1, N, 2, 2b, torre nueva y T1 hechos; **el trabajo va en la rama `rework-mapa`**, ver protocolo). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
 > **v3 (2026-11-16, correcciones de Tamara al dibujo): D19-D24 y §17-§18. La torre pasa a ser el tutorial, el spawn pasa a llamarse Nexo y el Archivo se redefine. §17 y §18 APROBADAS por Tamara el 2026-11-16 (D25-D27).**
 > La revisión crítica externa está en [MAPA_FLUJO_CRITICA.md](MAPA_FLUJO_CRITICA.md) y ya está volcada en §12b.
 
@@ -24,7 +24,11 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
 - [x] **2b** Caminos completos (`ValleyShape.Paths`) **antes** de fijar sitios 3-6 (y peñasco 3 mudado a (47, −27))
 - [ ] **V** *(v3, D28)* Vida del jugador en modo Libre: recibe daño, al morir reaparece en el Nexo, y un interruptor desbloqueable apaga el daño (**falta decidir dónde se desbloquea**)
 - [x] **N** *(v3, §17)* Nexo: reaparición, tablero con el mapa, pregunta «¿saltear el tutorial?» al entrar a Modo Sandbox (la guía de «siguiente etapa» y el portal del Nexo llegan con los pasos 9 y T)
-- [ ] **T1-T4** *(siguen estos)* *(v3, §17)* Torre-tutorial, un commit por nivel: terraza (movilidad) → piso 2 (objetos) → piso 1 (objetos mágicos) → planta baja (abrir la puerta). **Reemplaza a 9b y 13.**
+- [x] **TS** *(D30)* Silueta nueva de la torre: base en talud, terraza de 7 m en voladizo, techo más alto
+- [x] **T1** Terraza: movilidad básica, barrera mágica, palanca de salteo, faroles de nivel
+- [ ] **T2** *(sigue este)* Piso 2: mover objetos (agarrar, dejar flotando con E, rotar, arrojar)
+- [ ] **T3** Piso 1: objetos mágicos (tinta, papel, primer hechizo, tomo I de viento)
+- [ ] **T4** Planta baja: agua, tierra, columna y abrir la puerta con un hechizo. **T1-T4 reemplazan a 9b y 13.**
 - [ ] **3** Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
 - [ ] **4** Campo de agua (orilla real vía `FindLakeside`, ≈ −22,−30)
 - [ ] **5** Campo de tierra (20,−50) + santuario (44,−38) + peñascos 1 y 3 al este/norte
@@ -69,6 +73,13 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
   - **Peñasco 3** mudado de (−6, −40) a (47, −27) (sitio viejo del laboratorio): estaba sobre el Archivo. El peñasco 1 (20, −28) queda a 9,5 m del camino al viento: se muda en el paso 5/6.
   - Tests nuevos en `ValleyShapeTests` (caminos en seco, dentro del área, sin pisar el entrenamiento; llegan al borde de cada zona sin atravesarla).
 - 2026-11-16 — **D28 (Tamara):** el jugador recibe daño en Libre, con un interruptor desbloqueable para apagarlo. Paso V nuevo en el tracker; falta decidir dónde se desbloquea.
+- 2026-11-17 — **Torre nueva (TS) y T1 hechos.**
+  - **Silueta:** `TowerBuilder` suma `TerraceRadius` (7), `TerraceOuter` (7,5), `BaseRadius` (7,4), `BaseTop` (1,4) y `RoofPosts`. El talud se corta en la puerta y deja un zaguán a nivel del piso. Los postes del techo pasaron de 6 (a r = 3,6, en medio de la terraza) a 10 sobre el muro (r = 5,2): el centro de la terraza queda libre. El techo sube de 9,6 a 16,2 m sobre el aro.
+  - **T1:** `TutorialRules`/`TutorialProgress` (lógica pura + tests), `TowerTutorial` + `TutorialSkipLever` (escena) y `MapTutorial` (generador). La barrera es un prisma de 20 colliders a r = 8 m (por fuera del balcón y del talud) + rejas de luz en el parapeto y en la entrada; solo existe mientras el tutorial está activo. Un nivel se da por pasado por **altura** (llegar al piso de abajo) y el último al pisar el **vano de la puerta**: no hay triggers.
+  - **Hoy el tutorial se «termina» bajando y saliendo por la puerta, que sigue abierta**: la traba de la puerta llega en T4, y las trabas de los pisos 2 y 1 en T2/T3.
+  - El murete y la viga cruzan del borde del centro al parapeto; se rodean por el disco central (a propósito: «siempre hay más de un camino»).
+  - Carteles con teclas de PC fijas; la versión VR de los textos queda para cuando se haga el movimiento VR.
+  - **Antigravity sí acepta este repo** (lista `EXTRA` de `agy-jaula.mjs`); §14.4 lo ponía en duda.
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),
 > [GLYPHS.md](GLYPHS.md), [ARCHITECTURE.md](ARCHITECTURE.md), [HARNESS.md](HARNESS.md).
@@ -134,6 +145,8 @@ con un mapa **compacto y caminable**, **sin bloquear nada** (todo sigue accesibl
 | D25 | Aprobación v3 | Tamara aprobó §17 (torre-tutorial en los 4 niveles actuales, Nexo, salteo) y §18 (Archivo: «Primeros hechizos» + estantes que se llenan **alcanza**; los libros de hechizos siguen en sus campos). **Orden:** Nexo y salteo → entrenamiento y caminos → torre-tutorial (un nivel por commit) → Archivo y el resto. |
 | D26 | Circuito exterior | **Sí** («me encantó»): un camino que une el late game en una vuelta que termina en la torre, con los portales como atajos. Paso 11b. |
 | D28 | Daño en modo Libre | **Sí, el jugador recibe daño** y al morir reaparece en el Nexo; tiene que ser **sencillo conseguir una forma de desactivar el daño / la posibilidad de morir**: un activable que se desbloquea (Tamara sugiere el laboratorio, el Archivo o una zona de late game). Paso V. Hasta entonces solo se «muere» al caerse del mundo. |
+| D29 | Respuestas de Tamara sobre el tutorial (2026-11-17) | **PC primero** (VR después). «Dejar flotando» es **E** (T abre el grimorio). **Libros por tomos**: un tomo por elemento (el I se lee en la torre) y, aparte, los libros de hechizos; pisa a D7/D16 en el paso 7 *(interpretación de Claude: tomo I = lo básico del elemento, tomos siguientes en su campo)*. **Barrera mágica** que encierra la torre durante el tutorial. Elegir «Hacer el tutorial» otra vez **rearma** las trabas. **Fuego se aprende afuera** (es más difícil de controlar). |
+| D30 | Forma de la torre (2026-11-17) | Recomendación de Tamara: **base y parte de arriba más anchas que el centro, y más alta**. Se resolvió **sin piso extra** (ella lo dejó a criterio): talud de piedra en la base (radio 7,4 m), terraza en voladizo de **7 m** de radio sobre ménsulas y techo cónico más alto. El interior (pisos, rampas, ventanas) no cambia. Si el tutorial queda apretado en 4 niveles, sumar un piso sigue siendo opción. |
 | D27 | Mundo que responde | **Sí**: faroles en la ruta y estandartes de cada campo que se encienden al leer cada libro, sin bloquear nada (mallas activadas por `DiscoveryState`, sin `Update`). Paso 11. |
 
 ---
