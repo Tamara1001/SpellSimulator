@@ -5,6 +5,11 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-17 — Torre-tutorial T2: el piso 2 (mover objetos)
+
+- `MapTutorial`: baranda en el borde del hueco de la rampa del piso 2, pila de dos cajas grandes, dos chicas y un barril que tapa el descanso, y carteles «4 · Mover objetos» y «5 · El paso está tapado». `TowerTutorial.Begin` devuelve la pila a su lugar al rehacer el tutorial.
+- `HarnessPlaySmoke`: chequeo nuevo (la pila tapa, hay baranda, se despeja y se rearma). 612 EditMode y smoke en verde.
+
 ## 2026-11-17 — Torre nueva (silueta) y torre-tutorial T1: la terraza
 
 - `TowerBuilder`: la torre es más ancha abajo y arriba que en el medio y más alta. Talud de piedra en la base (hasta 7,4 m, con zaguán en la puerta), terraza en voladizo de 7 m sobre ménsulas, 10 postes sobre el muro y techo cónico más alto. El interior no cambia.

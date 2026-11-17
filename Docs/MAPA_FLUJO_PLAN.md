@@ -1,6 +1,6 @@
 # Plan: mapa del modo Libre ordenado por flujo de aprendizaje
 
-> **Estado: APROBADO por Tamara (2026-11-16), en implementación** (pasos 0, 1, N, 2, 2b, torre nueva y T1 hechos; **el trabajo va en la rama `rework-mapa`**, ver protocolo). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
+> **Estado: APROBADO por Tamara (2026-11-16), en implementación** (pasos 0, 1, N, 2, 2b, torre nueva, T1 y T2 hechos; **el trabajo va en la rama `rework-mapa`**, ver protocolo). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
 > **v3 (2026-11-16, correcciones de Tamara al dibujo): D19-D24 y §17-§18. La torre pasa a ser el tutorial, el spawn pasa a llamarse Nexo y el Archivo se redefine. §17 y §18 APROBADAS por Tamara el 2026-11-16 (D25-D27).**
 > La revisión crítica externa está en [MAPA_FLUJO_CRITICA.md](MAPA_FLUJO_CRITICA.md) y ya está volcada en §12b.
 
@@ -26,8 +26,8 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
 - [x] **N** *(v3, §17)* Nexo: reaparición, tablero con el mapa, pregunta «¿saltear el tutorial?» al entrar a Modo Sandbox (la guía de «siguiente etapa» y el portal del Nexo llegan con los pasos 9 y T)
 - [x] **TS** *(D30)* Silueta nueva de la torre: base en talud, terraza de 7 m en voladizo, techo más alto
 - [x] **T1** Terraza: movilidad básica, barrera mágica, palanca de salteo, faroles de nivel
-- [ ] **T2** *(sigue este)* Piso 2: mover objetos (agarrar, dejar flotando con E, rotar, arrojar)
-- [ ] **T3** Piso 1: objetos mágicos (tinta, papel, primer hechizo, tomo I de viento)
+- [x] **T2** Piso 2: mover objetos (baranda en el hueco de la rampa, pila de cajas y barril, rearmado)
+- [ ] **T3** *(sigue este)* Piso 1: objetos mágicos (tinta, papel, primer hechizo, tomo I de viento)
 - [ ] **T4** Planta baja: agua, tierra, columna y abrir la puerta con un hechizo. **T1-T4 reemplazan a 9b y 13.**
 - [ ] **3** Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
 - [ ] **4** Campo de agua (orilla real vía `FindLakeside`, ≈ −22,−30)
@@ -80,6 +80,12 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
   - El murete y la viga cruzan del borde del centro al parapeto; se rodean por el disco central (a propósito: «siempre hay más de un camino»).
   - Carteles con teclas de PC fijas; la versión VR de los textos queda para cuando se haga el movimiento VR.
   - **Antigravity sí acepta este repo** (lista `EXTRA` de `agy-jaula.mjs`); §14.4 lo ponía en duda.
+- 2026-11-17 — **T2 hecho.** Piso 2 (y = 9): la rampa de arriba llega en 240° y la de abajo sale en 210°; entre las dos hay un descanso de ~1,8 m.
+  - **Los pisos no tenían baranda:** desde el disco central se bajaba al hueco de la rampa por cualquier lado, así que ninguna traba servía. `MapTutorial` agrega una baranda de 1 m en el borde interior del hueco (12°→231°) y un tramo que cierra el anillo. **Para T3 y T4 hay que repetirla en el piso 1 y revisar la planta baja.**
+  - La rampa de arriba tiene costado macizo: un cartel puesto detrás no se ve al llegar. Los carteles 4 y 5 quedaron del lado del centro, a la vista desde el pie de la rampa.
+  - La pila son 5 objetos de `MovablesSetup.Prop` bajo `TowerTutorial/TutorialProps`; `TowerTutorial.Begin` los devuelve a su lugar (rearmado). Por pedido de Tamara los carteles **no** sugieren trepar la pila.
+  - La alquimia sigue en el piso 2 (se muda con el Archivo, paso 3).
+  - `HarnessTestRunner.RunEditMode()` llamado en el mismo comando que `MapBuilder.Build()` se queda en RUNNING: lanzarlo en un comando aparte.
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),
 > [GLYPHS.md](GLYPHS.md), [ARCHITECTURE.md](ARCHITECTURE.md), [HARNESS.md](HARNESS.md).

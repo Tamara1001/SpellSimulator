@@ -679,6 +679,23 @@ namespace SpellSimulator.EditorTools
                 // Un punto por fuera del muro, a la altura de la terraza: ahi solo esta la barrera.
                 Vector3 outside = tutorial != null ? tutorial.transform.position + new Vector3(0f, 15f, -(SpellSimulator.World.Map.TutorialRules.BarrierRadius + 0.15f)) : Vector3.zero;
                 bool caged = tutorial != null && Physics.CheckSphere(outside, 0.2f, ~0, QueryTriggerInteraction.Ignore);
+                // Piso 2 (T2): la pila tapa el descanso, la baranda cierra el hueco y «Hacer el tutorial» otra vez rearma la pila.
+                var pileRoot = tutorial != null ? tutorial.transform.Find(SpellSimulator.EditorTools.Map.MapTutorial.PropsName) : null;
+                var pileBodies = pileRoot != null ? pileRoot.GetComponentsInChildren<Rigidbody>() : new Rigidbody[0];
+                float floor2 = SpellSimulator.EditorTools.Map.TowerBuilder.FloorHeight * 2f;
+                Vector3 towerAt = tutorial != null ? tutorial.transform.position : Vector3.zero;
+                Vector3 landing = towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(3.9f, SpellSimulator.EditorTools.Map.MapTutorial.PileAngle, floor2 + 0.5f);
+                bool Piled() { foreach (var c in Physics.OverlapBox(landing, new Vector3(0.9f, 0.3f, 0.3f))) if (c.attachedRigidbody != null && c.transform.IsChildOf(pileRoot)) return true; return false; }
+                bool piled = pileBodies.Length >= 5 && Piled();
+                bool railed = Physics.Raycast(towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(2.3f, 100f, floor2 + 0.5f),
+                    SpellSimulator.EditorTools.Map.TowerBuilder.Polar(1f, 100f, 0f), out RaycastHit railHit, 1.2f, ~0, QueryTriggerInteraction.Ignore) && railHit.collider.name.StartsWith("Tutorial_Rail");
+                foreach (var body in pileBodies) { body.position += Vector3.up * 40f; body.transform.position = body.position; }
+                Physics.SyncTransforms();
+                bool cleared = pileBodies.Length > 0 && !Piled();
+                spawn.Begin(false);
+                Physics.SyncTransforms();
+                bool rearmed = pileBodies.Length > 0 && Piled();
+                Check(piled && railed && cleared && rearmed, $"tutorial piso 2: la pila tapa el descanso, hay baranda y se rearma (pila {piled}, baranda {railed}, despejada {cleared}, rearmada {rearmed})");
                 if (lever != null) lever.Press(); else spawn.Begin(true);
                 bool barrierDown = tutorial != null && !tutorial.IsActive && !tutorial.BarrierUp;
                 barrierDown &= !Physics.CheckSphere(outside, 0.2f, ~0, QueryTriggerInteraction.Ignore);

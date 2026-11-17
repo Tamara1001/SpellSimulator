@@ -21,6 +21,10 @@ namespace SpellSimulator.World
         private GameObject activeOnly;
         [SerializeField, Tooltip("Luz de cada farol de nivel (se enciende al pasar el nivel).")]
         private GameObject[] glows = Array.Empty<GameObject>();
+        [SerializeField, Tooltip("Padre de los objetos de las trabas (cajas, barril...): vuelven a su lugar al empezar el tutorial.")]
+        private Transform props;
+
+        private static readonly System.Collections.Generic.List<Respawnable> rearm = new System.Collections.Generic.List<Respawnable>(16);
 
         private readonly TutorialProgress progress = new TutorialProgress();
         private float checkTimer;
@@ -37,10 +41,11 @@ namespace SpellSimulator.World
         public bool BarrierUp => activeOnly != null && activeOnly.activeSelf;
 
         /// <summary>Lo llama el generador del mapa (MapTutorial).</summary>
-        public void Configure(GameObject activeOnlyRoot, GameObject[] levelGlows)
+        public void Configure(GameObject activeOnlyRoot, GameObject[] levelGlows, Transform propsRoot)
         {
             activeOnly = activeOnlyRoot;
             glows = levelGlows;
+            props = propsRoot;
         }
 
         private void Awake()
@@ -54,10 +59,16 @@ namespace SpellSimulator.World
             if (Instance == this) Instance = null;
         }
 
-        /// <summary>Empieza (o rearma) el tutorial: barrera puesta y faroles apagados.</summary>
+        /// <summary>Empieza (o rearma) el tutorial: barrera puesta, faroles apagados y trabas en su lugar.</summary>
         public void Begin()
         {
             progress.Begin();
+            if (props != null)
+            {
+                props.GetComponentsInChildren(rearm);
+                for (int i = 0; i < rearm.Count; i++) rearm[i].Respawn("se rearma el tutorial");
+                rearm.Clear();
+            }
             checkTimer = 0f;
             Apply();
         }

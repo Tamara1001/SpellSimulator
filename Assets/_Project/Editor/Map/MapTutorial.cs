@@ -10,7 +10,8 @@ namespace SpellSimulator.EditorTools.Map
     /// - la barrera magica (prisma de colliders por fuera del muro + rejas de luz en la terraza y en la puerta) y la palanca
     ///   de salteo, que solo existen mientras el tutorial esta activo;
     /// - un farol por nivel (se enciende al pasarlo; malla emisiva, sin luz);
-    /// - nivel 1, la terraza (movilidad basica): carteles, un murete para saltar y una viga para pasar agachado.
+    /// - nivel 1, la terraza (movilidad basica): carteles, un murete para saltar y una viga para pasar agachado;
+    /// - nivel 2, el piso 2 (mover objetos): baranda en el hueco de la rampa y una pila de cajas y un barril sobre el descanso.
     /// Angulos como en TowerBuilder: 0 = este, 90 = norte, 270 = sur (puerta).
     /// </summary>
     public static class MapTutorial
@@ -20,6 +21,14 @@ namespace SpellSimulator.EditorTools.Map
         /// <summary>Angulos (grados) del murete y de la viga de la terraza: entre los postes del techo, camino a la rampa (150).</summary>
         public const float LowWallAngle = 192f, BeamAngle = 206f;
         public const float LowWallHeight = 0.55f, BeamClearance = 1.3f;
+
+        /// <summary>
+        /// Piso 2: la rampa de arriba llega en 240 y la de abajo sale en 210; entre las dos queda un descanso de piso macizo.
+        /// La pila tapa el descanso en PileAngle y la baranda cierra el borde del hueco hasta RailEnd, asi que para bajar hay
+        /// que mover la pila.
+        /// </summary>
+        public const float PileAngle = 223f, RailStart = 12f, RailEnd = 231f, RailHeight = 1f;
+        public const string PropsName = "TutorialProps";
 
         private static readonly Color Wood = new Color(0.5f, 0.33f, 0.2f);
         private static readonly Color WoodDark = new Color(0.3f, 0.19f, 0.12f);
@@ -44,13 +53,16 @@ namespace SpellSimulator.EditorTools.Map
 
             GameObject[] glows = Lamps(root.transform, material);
             Terrace(root.transform, material);
+            var props = new GameObject(PropsName).transform;
+            props.SetParent(root.transform, false);
+            ObjectsFloor(root.transform, props, material);
 
             var tutorial = root.AddComponent<TowerTutorial>();
-            tutorial.Configure(activeOnly, glows);
+            tutorial.Configure(activeOnly, glows, props);
             // En la escena queda apagado: solo se enciende al elegir «Hacer el tutorial».
             activeOnly.SetActive(false);
             EditorUtility.SetDirty(tutorial);
-            Debug.Log("[Mapa] torre-tutorial: barrera, palanca de salteo, 4 faroles y nivel de la terraza");
+            Debug.Log("[Mapa] torre-tutorial: barrera, palanca de salteo, 4 faroles, terraza y piso 2");
             return tutorial;
         }
 
@@ -197,6 +209,60 @@ namespace SpellSimulator.EditorTools.Map
                 "2 · Obstáculos", "Pasá la viga <b>agachado</b> (C)\ny <b>saltá</b> el murete (Espacio)…\no rodealos por el centro.\n<size=75%>Siempre hay más de un camino.</size>");
             Sign(parent, material, "Sign_Tutorial_Ramp", o + TowerBuilder.Polar(2.35f, 164f, y), o + TowerBuilder.Polar(3.9f, 176f, y),
                 "3 · La rampa", "Bajá por la rampa al piso de abajo.\nLa <b>barrera mágica</b> encierra la torre\nhasta que salgas por la puerta.");
+        }
+
+        // ---------------------------------------------------------------- nivel 2: mover objetos
+
+        private static void ObjectsFloor(Transform parent, Transform props, Material material)
+        {
+            float y = TowerBuilder.FloorHeight * 2f;
+            Vector3 o = parent.position;
+            var b = new LowPolyMesh();
+
+            // Baranda en el borde interior del hueco de la rampa (el piso no tenia: desde el centro se bajaba por cualquier lado).
+            const float span = 12f;
+            for (float a = RailStart; a < RailEnd - 0.01f; a += span)
+            {
+                float a1 = Mathf.Min(a + span, RailEnd), mid = (a + a1) * 0.5f;
+                Vector3 p0 = TowerBuilder.Polar(TowerBuilder.RampInner, a, y), p1 = TowerBuilder.Polar(TowerBuilder.RampInner, a1, y);
+                RailSegment(b, parent, $"Tutorial_Rail_{Mathf.RoundToInt(mid)}", p0, p1);
+            }
+            // Y un tramo que cierra el anillo donde el piso se corta sobre el hueco (caida de 3 m a la rampa).
+            RailSegment(b, parent, "Tutorial_Rail_End", TowerBuilder.Polar(TowerBuilder.RampInner, RailStart, y), TowerBuilder.Polar(TowerBuilder.InnerRadius, RailStart, y));
+            var rail = MapBuilder.Place("Tutorial_Rail", parent, MapBuilder.SaveMesh(b.Build("Tutorial_Rail")), material, o, Quaternion.identity);
+            rail.isStatic = true;
+
+            // La pila: dos cajas grandes que cruzan el descanso, dos chicas arriba y un barril detras.
+            float yaw = TowerBuilder.TangentYaw(PileAngle);
+            MovablesSetup.Prop(props, material, "TutorialCrate_A", MovablesSetup.Kind.BigBox, o + TowerBuilder.Polar(3.38f, PileAngle, y + 0.02f), yaw + 4f);
+            MovablesSetup.Prop(props, material, "TutorialCrate_B", MovablesSetup.Kind.BigBox, o + TowerBuilder.Polar(4.3f, PileAngle, y + 0.02f), yaw - 6f);
+            MovablesSetup.Prop(props, material, "TutorialBox_A", MovablesSetup.Kind.SmallBox, o + TowerBuilder.Polar(3.4f, PileAngle, y + 0.84f), yaw + 20f);
+            MovablesSetup.Prop(props, material, "TutorialBox_B", MovablesSetup.Kind.SmallBox, o + TowerBuilder.Polar(4.28f, PileAngle, y + 0.84f), yaw - 15f);
+            MovablesSetup.Prop(props, material, "TutorialBarrel", MovablesSetup.Kind.Barrel, o + TowerBuilder.Polar(4.25f, PileAngle - 9f, y + 0.02f), 0f);
+
+            // Los dos se leen al bajar de la rampa, por encima de la baranda (la rampa de arriba tiene costado macizo: detras no se ven).
+            Vector3 viewer = o + TowerBuilder.Polar(3.7f, 246f, y);
+            Sign(parent, material, "Sign_Tutorial_Grab", o + TowerBuilder.Polar(1.7f, 258f, y), viewer,
+                "4 · Mover objetos", "<b>E</b> agarra lo que mirás\n<b>E</b> otra vez lo deja <b>flotando</b>\n<b>Q</b> lo arroja · <b>rueda</b> lo acerca\n<b>Clic derecho + mouse</b> lo gira");
+            Sign(parent, material, "Sign_Tutorial_Pile", o + TowerBuilder.Polar(2.6f, 229f, y), viewer,
+                "5 · El paso está tapado", "Corré las cajas, apilalas a un lado,\narrojalas o dejalas flotando.\n<size=75%>Hay más de una forma: vos elegís.</size>");
+        }
+
+        /// <summary>Tramo de baranda de p0 a p1 (locales a la torre): dos postes, pasamanos y travesaño, con un collider.</summary>
+        private static void RailSegment(LowPolyMesh b, Transform parent, string name, Vector3 p0, Vector3 p1)
+        {
+            Vector3 d = p1 - p0, mid = (p0 + p1) * 0.5f;
+            Quaternion rot = Quaternion.LookRotation(d.normalized);
+            foreach (Vector3 p in new[] { p0, p1 })
+                b.Box(Matrix4x4.Translate(p + Vector3.up * RailHeight * 0.5f), new Vector3(0.08f, RailHeight, 0.08f), WoodDark);
+            b.Box(Matrix4x4.TRS(mid + Vector3.up * (RailHeight - 0.03f), rot, Vector3.one), new Vector3(0.1f, 0.06f, d.magnitude), Wood);
+            b.Box(Matrix4x4.TRS(mid + Vector3.up * (RailHeight * 0.5f), rot, Vector3.one), new Vector3(0.05f, 0.05f, d.magnitude), Wood);
+            var go = new GameObject(name);
+            go.transform.SetParent(parent, false);
+            go.transform.localPosition = mid + Vector3.up * RailHeight * 0.5f;
+            go.transform.localRotation = rot;
+            go.AddComponent<BoxCollider>().size = new Vector3(0.1f, RailHeight, d.magnitude + 0.08f);
+            go.isStatic = true;
         }
 
         /// <summary>Marco local con +X a lo largo del radio en ese angulo, centrado a esa distancia del eje de la torre.</summary>
