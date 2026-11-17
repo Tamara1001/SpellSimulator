@@ -16,6 +16,29 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
 6. **Tildá el paso en el tracker**, anotá posiciones reales / sorpresas en «Bitácora» (abajo) y, si cambió una decisión, agregá una fila en §3. Actualizá `Docs/CHANGELOG.md` (y `KNOWN_ISSUES.md` si descubriste un bug).
 7. Si dudás de diseño o de controles: **preguntale a Tamara antes** (ver CLAUDE.md). Rediseños nuevos fuera de este plan: media página y esperar el sí.
 
+### ▶ Traspaso — mensaje para retomar: **«Continuar con el rework del mapa»** (2026-11-17)
+
+Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d2b` (T2, verde: 612 EditMode + smoke; nunca probado a mano).
+
+**Hay trabajo SIN COMPILAR NI COMMITEAR en el working tree** (respuesta al feedback de Tamara: «poco espacio entre una rampa y otra» y «los carteles no convencen: que floten, menos texto, menos carteles, más intuitivo»):
+- `TowerBuilder.RampStart = { 0, 0, 0 }` (antes `{0,300,240}`): todas las rampas alineadas → descanso de 90° (antes 30°).
+- `FloatingNote.cs` (nuevo, + `.meta`): tarjeta con Rigidbody sin gravedad atada a su punto con resorte, vaivén, reacciona a viento/golpes.
+- `MapTutorial.cs`: se eliminó `Sign(...)`; ahora `Note(...)` con textos de 2-3 palabras («WASD · mouse», «Espacio», «C», «E saltear tutorial», «E agarrar · E soltar», «Q arrojar»). Constantes nuevas: `HoleFrom 72, HoleTo 270, LowWallAngle 180, BeamAngle 20, PileAngle 300, RailEnd 318`. Palanca de salteo en `Polar(6.35,118°)`.
+- `SpawnRules.TerraceOffset = (−1.04, 5.9)` (balcón norte); tests `SpawnRulesTests`/`TutorialRulesTests` y `HarnessPlaySmoke` (`Piled()` con `OverlapSphere`) ajustados.
+
+**Qué hacer primero (en este orden):**
+1. `Unity_ManageEditor GetProjectRoot` (confirmar SpellSimulator) → `AssetDatabase.Refresh()` → esperar compilación (loop de sleep + `error CS` en `%LOCALAPPDATA%\Unity\Editor\Editor.log`). Corregir errores.
+2. `MapBuilder.Build()` + guardar escena; capturas de cada piso y cada nota (cámara temporal + `RenderPipeline.SubmitRenderRequest`) → `Docs/Capturas/` y **mandárselas a Tamara con SendUserFile**.
+3. Revisar riesgos: faroles `Lamps` (usan `RampStart[i]−14`, ahora todos a 346°), ventanas/cortinas (`RampClear`), `FloorHole`, postes del techo, alquimia/estudio/mobiliario sobre rampas o huecos, que ninguna nota quede tapada ni flote dentro de un muro.
+4. `RunEditMode()` en comando aparte (esperar 612 PASS; ajustar tests afectados por `RampStart`) y `HarnessPlaySmoke.Run()`.
+5. Si el giro de rampas rompe demasiado: revertir `RampStart` a `{0f,300f,240f}` y ampliar el descanso de otra forma.
+6. `git checkout -- Assets/_Project/Data/MapOverrides.json` (ruido de Build); commit en español + `git push` en `rework-mapa`. **No commitear** `OpenXRPackageSettings.asset`, `SpellSimulator.slnx`, `LiberationSans SDF - Fallback.asset` ni `Docs/Capturas/lab_*.png`. Anotar en bitácora y `CHANGELOG.md`.
+7. Seguir con **T3** (piso 1), **T4**, **V**, 3…12 según el tracker. Las notas flotantes reemplazan a los carteles también en pisos 1 y planta baja (cortas, pocas); repetir la baranda del hueco en el piso 1.
+
+**Preguntas abiertas para Tamara:** dónde se desbloquea el interruptor de «sin daño/sin morir» (laboratorio, Archivo o late game); si quiere intercambiar el orden de las notas 4 y 5 del piso 2; VR sin locomoción en el proyecto (se prioriza PC).
+
+**Reglas de Tamara vigentes:** nada de sellos/runas/portales en la torre; fuego se aprende afuera; dejar flotando = **E**; carteles NO sugieren trepar la pila; mandarle capturas de cada piso/nota; rediseños → media página y esperar el sí; `main` no se toca. Procesos: usar agy-jaula/Codex/obrero para lecturas largas; no pasar secrets a externos.
+
 ### Tracker (orden v2; tildar al cerrar cada paso con su commit)
 
 - [x] **0** Volcar posiciones reales (`Sites()`), alturas, `Path8/Path9`, inflamabilidad de pinos; capturas «antes»
@@ -85,6 +108,7 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
   - La rampa de arriba tiene costado macizo: un cartel puesto detrás no se ve al llegar. Los carteles 4 y 5 quedaron del lado del centro, a la vista desde el pie de la rampa.
   - La pila son 5 objetos de `MovablesSetup.Prop` bajo `TowerTutorial/TutorialProps`; `TowerTutorial.Begin` los devuelve a su lugar (rearmado). Por pedido de Tamara los carteles **no** sugieren trepar la pila.
   - La alquimia sigue en el piso 2 (se muda con el Archivo, paso 3).
+- **Tras T2 (2026-11-17, sin commitear, sin verificar):** feedback de Tamara → rampas todas en `RampStart 0` (descanso de 90°) y carteles reemplazados por **notas flotantes** (`FloatingNote`, física con resorte, 2-3 palabras). Decisión nueva: *menos texto, menos carteles, más intuitivo*. Ver el bloque «Traspaso» arriba para el estado y los pasos de verificación.
   - `HarnessTestRunner.RunEditMode()` llamado en el mismo comando que `MapBuilder.Build()` se queda en RUNNING: lanzarlo en un comando aparte.
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),

@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-17 — (EN CURSO, sin commitear) Rampas alineadas y notas flotantes
+
+- Todas las rampas de la torre salen del mismo ángulo (`RampStart 0`): descanso de 90° entre una y otra.
+- Los carteles del tutorial pasan a notas flotantes (`FloatingNote`) con 2-3 palabras; reaccionan a empujes y viento.
+- Sin compilar ni verificar: ver «Traspaso» en `Docs/MAPA_FLUJO_PLAN.md`.
+
 ## 2026-11-17 — Torre-tutorial T2: el piso 2 (mover objetos)
 
 - `MapTutorial`: baranda en el borde del hueco de la rampa del piso 2, pila de dos cajas grandes, dos chicas y un barril que tapa el descanso, y carteles «4 · Mover objetos» y «5 · El paso está tapado». `TowerTutorial.Begin` devuelve la pila a su lugar al rehacer el tutorial.
