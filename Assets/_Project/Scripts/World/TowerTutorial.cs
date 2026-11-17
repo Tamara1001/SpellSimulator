@@ -26,6 +26,11 @@ namespace SpellSimulator.World
 
         private static readonly System.Collections.Generic.List<Respawnable> rearm = new System.Collections.Generic.List<Respawnable>(16);
 
+        [SerializeField, Tooltip("Puerta de la torre y lo que la destraba (padre de pestillo y contrapeso, piedra rompible).")]
+        private TowerDoor door;
+        [SerializeField] private Transform doorLatches;
+        [SerializeField] private Breakable doorStone;
+
         private static readonly System.Collections.Generic.List<TutorialCloth> cloths = new System.Collections.Generic.List<TutorialCloth>(2);
 
         private readonly TutorialProgress progress = new TutorialProgress();
@@ -48,6 +53,26 @@ namespace SpellSimulator.World
             activeOnly = activeOnlyRoot;
             glows = levelGlows;
             props = propsRoot;
+        }
+
+        /// <summary>Lo llama el generador del mapa (MapTutorial): la puerta y sus tres trabas.</summary>
+        public void ConfigureDoor(TowerDoor towerDoor, Transform latches, Breakable stone)
+        {
+            door = towerDoor;
+            doorLatches = latches;
+            doorStone = stone;
+        }
+
+        /// <summary>True si alguna de las tres trabas de la puerta cedio (pestillo suelto, contrapeso subido o piedra rota).</summary>
+        public bool DoorLatchReleased()
+        {
+            if (doorStone != null && doorStone.IsBroken) return true;
+            if (doorLatches == null) return false;
+            doorLatches.GetComponentsInChildren(true, cloths);
+            bool released = false;
+            for (int i = 0; i < cloths.Count; i++) if (cloths[i].IsOpen) released = true;
+            cloths.Clear();
+            return released;
         }
 
         private void Awake()
@@ -77,6 +102,8 @@ namespace SpellSimulator.World
                 for (int i = 0; i < cloths.Count; i++) cloths[i].Rearm();
                 cloths.Clear();
             }
+            if (doorStone != null) doorStone.Restore();
+            if (door != null) door.Lock();
             checkTimer = 0f;
             Apply();
         }
@@ -85,6 +112,7 @@ namespace SpellSimulator.World
         public void Skip()
         {
             progress.Skip();
+            if (door != null && door.Locked) door.Unlock(true, true);
             Apply();
         }
 
@@ -94,6 +122,7 @@ namespace SpellSimulator.World
             checkTimer += Time.deltaTime;
             if (checkTimer < CheckPeriod) return;
             checkTimer = 0f;
+            if (door != null && door.Locked && DoorLatchReleased()) door.Unlock(true, false);
             IPlayerContext local = PlayerRegistry.Local;
             if (local == null || local.Root == null) return;
             int before = progress.Passed;

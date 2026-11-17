@@ -528,7 +528,7 @@ namespace SpellSimulator.EditorTools.Map
             // Biblioteca (planta baja). Estantes altos donde la rampa deja altura (228 junto al atril, 292 al lado de la
             // puerta) y uno bajo bajo la rampa (143). El sureste queda para la estacion de viento y el oeste para la de agua.
             tris += Shelf(props, material, 228f, 0f);
-            tris += Shelf(props, material, 292f, 0f);
+            // (el estante de 292 grados se quito: ahi van las trabas de la puerta de la torre-tutorial, ver MapTutorial.DoorLocks)
             tris += Shelf(props, material, 143f, 0f, null, 3);
             // Estudio (primer piso): estantes donde la rampa de arriba deja altura y fuera del hueco de la de abajo.
             tris += Shelf(props, material, 285f, FloorHeight);

@@ -712,6 +712,37 @@ namespace SpellSimulator.EditorTools
                 Physics.SyncTransforms();
                 bool rehung = cloth != null && !cloth.IsOpen && ClothBlocks();
                 Check(hung && windBook && freed && rehung, $"tutorial piso 1: la tela tapa la bajada, esta el tomo I y al soltarla se libera y se rearma (colgada {hung}, libro {windBook}, libre {freed}, rearmada {rehung})");
+                // Planta baja (T4): la puerta arranca trabada (E no la abre); cada traba (pestillo, contrapeso, piedra) la destraba; saltear la abre.
+                var towerDoor = Find("TowerDoor") != null ? Find("TowerDoor").GetComponent<TowerDoor>() : null;
+                bool locked = towerDoor != null && towerDoor.Locked && !towerDoor.IsOpen;
+                if (towerDoor != null) towerDoor.Press();
+                bool pressIgnored = towerDoor != null && !towerDoor.IsOpen;
+                bool noneYet = tutorial != null && !tutorial.DoorLatchReleased();
+                var latchRoot = pileRoot != null ? pileRoot.Find(SpellSimulator.EditorTools.Map.MapTutorial.DoorLatchesName) : null;
+                var latchBodies = latchRoot != null ? latchRoot.GetComponentsInChildren<SpellSimulator.World.TutorialCloth>(true) : new SpellSimulator.World.TutorialCloth[0];
+                int latchesOk = 0;
+                foreach (var l in latchBodies)
+                {
+                    l.ForceOpen();
+                    if (tutorial.DoorLatchReleased()) latchesOk++;
+                    spawn.Begin(false);
+                }
+                var stoneGo = tutorial != null ? tutorial.transform.parent != null ? Find(SpellSimulator.EditorTools.Map.MapTutorial.DoorStoneName) : null : null;
+                bool stoneBreaks = false;
+                if (stoneGo != null)
+                {
+                    Vector3 inward = tutorial.transform.position - stoneGo.transform.position;
+                    inward.y = 0f;
+                    SpellSimulator.World.MeshBreaker.Break(stoneGo.transform.position + inward.normalized * 0.4f + Vector3.up * 0.5f, 0.55f, false);
+                    stoneBreaks = tutorial.DoorLatchReleased();
+                    spawn.Begin(false);
+                }
+                bool relocked = towerDoor != null && towerDoor.Locked && !tutorial.DoorLatchReleased();
+                tutorial.Skip();
+                bool skipOpens = towerDoor != null && !towerDoor.Locked && towerDoor.IsOpen;
+                Check(locked && pressIgnored && noneYet && latchBodies.Length == 2 && latchesOk == 2 && stoneBreaks && relocked && skipOpens,
+                    $"tutorial planta baja: la puerta arranca trabada y la destraban pestillo, contrapeso y piedra (trabada {locked}, E ignorada {pressIgnored}, sin soltar {noneYet}, trabas {latchBodies.Length}/{latchesOk}, piedra {stoneBreaks}, rearme {relocked}, salteo abre {skipOpens})");
+                spawn.Begin(false);
                 if (lever != null) lever.Press(); else spawn.Begin(true);
                 bool barrierDown = tutorial != null && !tutorial.IsActive && !tutorial.BarrierUp;
                 barrierDown &= !Physics.CheckSphere(outside, 0.2f, ~0, QueryTriggerInteraction.Ignore);

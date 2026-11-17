@@ -51,8 +51,8 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
 - [x] **T1** Terraza: movilidad básica, barrera mágica, palanca de salteo, faroles de nivel
 - [x] **T2** Piso 2: mover objetos (baranda en el hueco de la rampa, pila de cajas y barril, rearmado)
 - [x] **T3** Piso 1: objetos mágicos (tinta, papel, primer hechizo, tomo I de viento)
-- [ ] **T4** *(sigue este)* Planta baja: agua, tierra, columna y abrir la puerta con un hechizo. **T1-T4 reemplazan a 9b y 13.**
-- [ ] **3** Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
+- [x] **T4** Planta baja: agua, tierra, columna y abrir la puerta con un hechizo. **T1-T4 reemplazan a 9b y 13.**
+- [ ] **3** *(sigue este)* Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
 - [ ] **4** Campo de agua (orilla real vía `FindLakeside`, ≈ −22,−30)
 - [ ] **5** Campo de tierra (20,−50) + santuario (44,−38) + peñascos 1 y 3 al este/norte
 - [ ] **6** Campos de fuego (−18,−50) y viento (26,−34): aplanado, sin pinos en r=10, props
@@ -116,6 +116,9 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
   - Hoy el piso 1 ya tenía todo lo demás (mesa de estudio con plumas/tinteros, mesa de dibujo, caballete): no se agregó papel nuevo. Siguen ahí los libros `motion`/`shape`, el portal del estudio y los cofres (se van con el Archivo / T4: limpieza pendiente anotada por Tamara).
   - **Sin medir:** que un viento real (papel, pared o piso) alcance los umbrales de `ClothRules`. El smoke suelta la tela con `ForceOpen`. Probar a mano y ajustar `OpenDistance`/`OpenSpeed`/resorte. Dibujado en el piso, el viento sube: la tela se levanta y también se suelta.
   - 617 EditMode y smoke en verde. Capturas `piso1_tela.png`, `piso1_mesa.png`, `piso1_centro.png`.
+- 2026-11-17 — **T4 hecho.** Puerta trabada con tres trabas (pestillo / contrapeso / piedra rompible) a 283° / 294° / 306°; se quitó el estante de 292°. El contrapeso es un `TutorialCloth` con `liftOnly` (sube 0,7 m). La puerta se vuelve a trabar en `Begin` y `Skip` la abre. 618 EditMode y smoke en verde; capturas `planta_baja_*.png`.
+  - **Sin medir:** que un hechizo real de agua/viento levante el contrapeso o corra el pestillo, y que la tierra con Crush rompa la piedra (el smoke usa `ForceOpen` y `MeshBreaker.Break`). Tampoco se hizo la «lección de la columna» aparte: el libro `elements` y el Tomo I (que trae la columna) la cubren por ahora.
+  - **Torre sin probar a mano:** T1-T4 siguen verificados solo por código y capturas. Falta limpiar el resto de muebles viejos (portal del estudio, `motion`/`shape`, alquimia) al hacer el Archivo.
 - **Pendiente anotado por Tamara:** limpiar los muebles y cosas viejas que quedan en la torre (alquimia, estudio, mobiliario del piso 1 y planta baja) y dejarla coherente; encaja con T3/T4 y el paso 3 (la alquimia se muda al Archivo).
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),

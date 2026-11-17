@@ -23,6 +23,13 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
+        public void Counterweight_ReleasesOnlyWhenLifted()
+        {
+            Assert.IsFalse(ClothRules.ShouldRelease(ClothRules.LiftDistance - 0.1f));
+            Assert.IsTrue(ClothRules.ShouldRelease(ClothRules.LiftDistance));
+        }
+
+        [Test]
         public void Player_NeverOpensIt() => Assert.IsFalse(ClothRules.ShouldOpen(2f, 5f, 50f, true));
     }
 }

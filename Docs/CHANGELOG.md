@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-17 — Torre-tutorial T4: la planta baja (abrir la puerta)
+
+- `TowerDoor.Locked/Lock/Unlock`: con el tutorial activo la puerta arranca cerrada y trabada (E no hace nada, «Puerta trabada»). `TowerTutorial.Begin` la traba y rearma las trabas; `Skip` la abre de golpe.
+- Tres trabas en el muro al este de la puerta (`MapTutorial.DoorLocks`): **pestillo** (barra con resorte que corre el viento o un golpe), **contrapeso** (bloque colgado que hay que subir 0,7 m: columna de agua o de aire; `TutorialCloth` con `liftOnly`) y **piedra** (`Breakable`: la tierra con Crush la rompe, Wall Breaker). Cualquiera destraba y abre la puerta con su giro.
+- Se quitó el estante de 292° de la planta baja (ahí van las trabas). Dos notas: «puerta trabada» y «viento · agua · tierra».
+- Smoke nuevo (trabada, E ignorada, cada traba la destraba, rearme, salteo abre). 618 EditMode y smoke en verde. Sin medir con hechizos reales.
+
 ## 2026-11-17 — Torre-tutorial T3: el piso 1 (objetos mágicos)
 
 - `TutorialCloth` + `ClothRules` (lógica pura + 5 tests): tela pesada (cuerpo con resorte, 40 kg) que tapa la bajada del piso 1. Se suelta, vuela y desaparece cuando algo que no es el jugador la aparta (viento dibujado en papel, pared o piso; ≥ 0,55 m de su lugar o ≥ 2,2 m/s) o la golpea un objeto lanzado (impulso ≥ 6 N·s). El jugador no la mueve (para él es un muro). `TowerTutorial.Begin` la rearma.

@@ -14,6 +14,12 @@ namespace SpellSimulator.World.Map
         /// <summary>Impulso de choque (N·s) de un objeto lanzado que la suelta: un papel o una pluma no alcanzan, una caja si.</summary>
         public const float OpenImpulse = 6f;
 
+        /// <summary>Altura (m) que hay que subir un contrapeso para soltar la traba de la puerta (lo levanta una columna de agua o de aire).</summary>
+        public const float LiftDistance = 0.7f;
+
+        /// <summary>True si el contrapeso, subido <paramref name="rise"/> metros, suelta la traba.</summary>
+        public static bool ShouldRelease(float rise) => rise >= LiftDistance;
+
         /// <summary>True si la tela colgada debe soltarse. Con el jugador tocandola nunca: ahi hace de muro.</summary>
         public static bool ShouldOpen(float displacement, float speed, float impulse, bool playerTouching)
         {

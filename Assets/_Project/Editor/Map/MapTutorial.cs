@@ -41,6 +41,13 @@ namespace SpellSimulator.EditorTools.Map
         public const float ClothAngle = 300f, ClothHeight = 2.85f, ClothLift = 0.1f;
         public const string ClothName = "TutorialCloth";
 
+        /// <summary>
+        /// Planta baja: la puerta empieza trabada y se destraba de tres formas, en el muro al este de la puerta (270): un pestillo que el viento
+        /// corre, un contrapeso que una columna (agua o aire) levanta, o una piedra que la tierra con Crush rompe.
+        /// </summary>
+        public const float LatchAngle = 283f, WeightAngle = 294f, StoneAngle = 306f;
+        public const string DoorLatchesName = "DoorLatches", DoorStoneName = "TutorialDoorStone";
+
         private static readonly Color Wood = new Color(0.5f, 0.33f, 0.2f);
         private static readonly Color WoodDark = new Color(0.3f, 0.19f, 0.12f);
         private static readonly Color Stone = new Color(0.62f, 0.58f, 0.52f);
@@ -68,13 +75,16 @@ namespace SpellSimulator.EditorTools.Map
             props.SetParent(root.transform, false);
             ObjectsFloor(root.transform, props, material);
             MagicFloor(root.transform, props, material);
+            DoorLocks(root.transform, props, material, out var stone, out var latches);
 
             var tutorial = root.AddComponent<TowerTutorial>();
             tutorial.Configure(activeOnly, glows, props);
+            var doorGo = GameObject.Find("TowerDoor");
+            tutorial.ConfigureDoor(doorGo != null ? doorGo.GetComponent<TowerDoor>() : null, latches, stone);
             // En la escena queda apagado: solo se enciende al elegir «Hacer el tutorial».
             activeOnly.SetActive(false);
             EditorUtility.SetDirty(tutorial);
-            Debug.Log("[Mapa] torre-tutorial: barrera, palanca de salteo, 4 faroles, terraza, piso 2 y piso 1");
+            Debug.Log("[Mapa] torre-tutorial: barrera, palanca de salteo, 4 faroles, terraza, piso 2, piso 1 y la puerta");
             return tutorial;
         }
 
@@ -321,6 +331,56 @@ namespace SpellSimulator.EditorTools.Map
 
         /// <summary>Lugar (local a la torre, en planta) del libro «Tomo I: el viento» del piso 1; lo usa MapDetails.LibraryBooks.</summary>
         public static readonly Vector3 WindBook = new Vector3(0.6f, 0f, 0.5f);
+
+        // ---------------------------------------------------------------- nivel 4: la puerta
+
+        private static void DoorLocks(Transform parent, Transform props, Material material, out Breakable stone, out Transform latches)
+        {
+            Vector3 o = parent.position;
+            latches = new GameObject(DoorLatchesName).transform;
+            latches.SetParent(props, false);
+
+            // Pestillo: una barra de madera sobre dos soportes, a la altura de la mano. Es un cuerpo con resorte: el viento la corre.
+            var bar = new LowPolyMesh();
+            bar.Box(Matrix4x4.identity, new Vector3(0.12f, 0.12f, 0.95f), Wood, WoodDark);
+            bar.Box(Matrix4x4.Translate(new Vector3(0f, 0f, 0.55f)), new Vector3(0.2f, 0.2f, 0.06f), Iron);
+            bar.Box(Matrix4x4.Translate(new Vector3(0f, 0f, -0.55f)), new Vector3(0.2f, 0.2f, 0.06f), Iron);
+            LatchBody(latches, material, "DoorLatch_Bar", bar, o + TowerBuilder.Polar(4.6f, LatchAngle, 1.45f), LatchAngle, new Vector3(0.14f, 0.14f, 0.95f), 6f, false);
+
+            // Contrapeso: un bloque de hierro colgado de una soga hasta el techo; hay que subirlo (columna de agua o de aire).
+            var weight = new LowPolyMesh();
+            weight.Box(Matrix4x4.identity, new Vector3(0.34f, 0.34f, 0.34f), Iron, Iron * 1.2f);
+            weight.Box(Matrix4x4.Translate(new Vector3(0f, 1.1f, 0f)), new Vector3(0.04f, 2.2f, 0.04f), WoodDark);
+            LatchBody(latches, material, "DoorLatch_Weight", weight, o + TowerBuilder.Polar(4.5f, WeightAngle, 1.0f), WeightAngle, new Vector3(0.34f, 0.34f, 0.34f), 3f, true);
+
+            // Traba de piedra: un bloque contra el muro. La tierra con Crush (Wall Breaker) lo rompe.
+            var rock = new LowPolyMesh();
+            rock.Box(Matrix4x4.Translate(new Vector3(0f, 0.45f, 0f)), new Vector3(0.7f, 0.9f, 0.5f), Stone, Stone * 1.1f);
+            rock.Box(Matrix4x4.TRS(new Vector3(0f, 0.55f, 0f), Quaternion.Euler(0f, 12f, 0f), Vector3.one), new Vector3(0.6f, 0.7f, 0.42f), Stone * 0.9f);
+            var mesh = MapBuilder.SaveMesh(rock.Build("Tutorial_DoorStone"));
+            var go = MapBuilder.Place(DoorStoneName, parent, mesh, material, o + TowerBuilder.Polar(4.5f, StoneAngle, 0f), Quaternion.Euler(0f, -StoneAngle + 90f, 0f));
+            go.AddComponent<MeshCollider>().sharedMesh = mesh;
+            stone = go.AddComponent<Breakable>();
+            GameObjectUtility.SetStaticEditorFlags(go, (StaticEditorFlags)~0 & ~StaticEditorFlags.BatchingStatic);
+
+            // Dos notas: la puerta y lo que la abre.
+            Vector3 viewer = o + new Vector3(0f, 0f, 0f);
+            Note(parent, material, "Note_Tutorial_Door", o + TowerBuilder.Polar(4.2f, TutorialRules.DoorAngle + 3f, 2.55f), viewer, "puerta  trabada");
+            Note(parent, material, "Note_Tutorial_Locks", o + TowerBuilder.Polar(4.1f, WeightAngle, 2.35f), viewer, "viento · agua · tierra");
+        }
+
+        private static void LatchBody(Transform parent, Material material, string name, LowPolyMesh mesh, Vector3 at, float angle, Vector3 colliderSize, float mass, bool liftOnly)
+        {
+            var go = MapBuilder.Place(name, parent, MapBuilder.SaveMesh(mesh.Build("Tutorial_" + name)), material, at, Quaternion.Euler(0f, -angle, 0f));
+            go.isStatic = false;
+            go.AddComponent<BoxCollider>().size = colliderSize;
+            var rb = go.AddComponent<Rigidbody>();
+            rb.mass = mass;
+            rb.useGravity = false;
+            rb.interpolation = RigidbodyInterpolation.Interpolate;
+            var cloth = go.AddComponent<TutorialCloth>();
+            cloth.SetLiftOnly(liftOnly);
+        }
 
         /// <summary>Baranda en arco, a ese radio, entre dos angulos (un tramo cada 12 grados).</summary>
         private static void Rails(LowPolyMesh b, Transform parent, string name, float radius, float from, float to, float y)

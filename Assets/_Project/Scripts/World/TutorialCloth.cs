@@ -16,6 +16,8 @@ namespace SpellSimulator.World
         [SerializeField, Tooltip("Resorte que la devuelve a su lugar (1/s2) y freno del movimiento (1/s).")] private Vector2 spring = new Vector2(8f, 2.5f);
         [SerializeField, Tooltip("Segundos que vuela suelta antes de achicarse y desaparecer.")] private float flyTime = 1.4f;
 
+        [SerializeField, Tooltip("Contrapeso: solo se suelta al subir (ClothRules.LiftDistance), no por empuje lateral.")] private bool liftOnly;
+
         private const float PlayerHold = 0.2f, Shrink = 0.35f;
 
         private Rigidbody body;
@@ -26,6 +28,9 @@ namespace SpellSimulator.World
         private bool opened;
 
         public bool IsOpen => opened;
+
+        /// <summary>Lo llama el generador del mapa: contrapeso que solo se suelta al subir.</summary>
+        public void SetLiftOnly(bool value) => liftOnly = value;
         /// <summary>Cuantas veces se soltó (para el smoke).</summary>
         public int Releases { get; private set; }
 
@@ -93,7 +98,9 @@ namespace SpellSimulator.World
 
             body.AddForce((home - body.position) * spring.x - body.linearVelocity * spring.y, ForceMode.Acceleration);
             float displacement = (body.position - home).magnitude;
-            if (ClothRules.ShouldOpen(displacement, body.linearVelocity.magnitude, impulse, false)) Open();
+            bool release = liftOnly ? ClothRules.ShouldRelease(body.position.y - home.y)
+                : ClothRules.ShouldOpen(displacement, body.linearVelocity.magnitude, impulse, false);
+            if (release) Open();
             impulse = 0f;
         }
 

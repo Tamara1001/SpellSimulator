@@ -34,6 +34,23 @@ namespace SpellSimulator.World
         /// <summary>Estado pedido (la animacion puede no haber terminado).</summary>
         public bool IsOpen => open;
 
+        /// <summary>Trabada (torre-tutorial): E no hace nada hasta que se destraba.</summary>
+        public bool Locked { get; private set; }
+
+        /// <summary>La cierra de golpe y la traba.</summary>
+        public void Lock()
+        {
+            Locked = true;
+            SetOpen(false, true);
+        }
+
+        /// <summary>La destraba; si abrir es true, gira hasta quedar abierta (o salta si immediate).</summary>
+        public void Unlock(bool openIt, bool immediate)
+        {
+            Locked = false;
+            if (openIt) SetOpen(true, immediate);
+        }
+
         /// <summary>True mientras gira.</summary>
         public bool IsMoving => moving;
 
@@ -60,12 +77,19 @@ namespace SpellSimulator.World
         private void OnEnable() => MagicWorld.WorldReset += ResetToInitial;
         private void OnDisable() => MagicWorld.WorldReset -= ResetToInitial;
 
-        public string GetPressPrompt() => open ? ClosePrompt : OpenPrompt;
+        public string GetPressPrompt() => Locked ? "Puerta trabada" : open ? ClosePrompt : OpenPrompt;
 
-        public void Press() => SetOpen(!open, false);
+        public void Press()
+        {
+            if (!Locked) SetOpen(!open, false);
+        }
 
         /// <summary>Reinicio del mundo: abierta y quieta.</summary>
-        public void ResetToInitial() => SetOpen(startOpen, true);
+        public void ResetToInitial()
+        {
+            Locked = false;
+            SetOpen(startOpen, true);
+        }
 
         /// <summary>Abre o cierra; immediate salta al final sin animar.</summary>
         public void SetOpen(bool value, bool immediate)
