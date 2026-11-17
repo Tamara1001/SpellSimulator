@@ -705,6 +705,16 @@ namespace SpellSimulator.EditorTools
                 spawn.Begin(false);
                 bool gateBack = tutorial != null && tutorial.TerraceGateUp && !tutorial.Crouched && !tutorial.JumpedWall;
                 Check(gateUp && halfDone && gateDown && gateBack, $"tutorial terraza: la reja de la bajada se apaga al agacharse y saltar, y se rearma (puesta {gateUp}, con una sola {halfDone}, apagada {gateDown}, rearmada {gateBack})");
+                // Piso 2 (v2): 3 ejercicios opcionales (flotar, de canto, diana) que encienden su farol y el rearme los apaga; y el lienzo de practica existe.
+                var exercises = tutorial != null ? tutorial.GetComponentsInChildren<SpellSimulator.World.TutorialExercise>(true) : new SpellSimulator.World.TutorialExercise[0];
+                bool threeKinds = exercises.Length == 3;
+                bool noneDone = true, allDone = true, rearmedEx = true;
+                foreach (var ex in exercises) noneDone &= !ex.Done;
+                foreach (var ex in exercises) ex.Complete();
+                foreach (var ex in exercises) allDone &= ex.Done;
+                spawn.Begin(false);
+                foreach (var ex in exercises) rearmedEx &= !ex.Done;
+                Check(threeKinds && noneDone && allDone && rearmedEx, $"tutorial piso 2: ejercicios opcionales (3 ejercicios {threeKinds}, apagados {noneDone}, se cumplen {allDone}, rearme {rearmedEx})");
                 // Piso 1 (T3): la tela pesada tapa la bajada (un rayo tangente la toca), el libro del viento esta, y al soltarla el paso queda libre y se rearma.
                 var cloth = pileRoot != null ? pileRoot.GetComponentInChildren<SpellSimulator.World.TutorialCloth>(true) : null;
                 float floor1 = SpellSimulator.EditorTools.Map.TowerBuilder.FloorHeight;

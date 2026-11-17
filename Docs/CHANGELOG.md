@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-17 — Tutoriales v2, R2: ejercicios opcionales en el piso 2
+
+- Tres estaciones **opcionales** (no traban la bajada; la pila sigue siendo lo que se despeja): marco donde dejar un lienzo **flotando** (`E` dos veces), marco donde dejarlo **de canto** (girándolo) y una **diana** para arrojar una caja con `Q`. Cada una enciende un farolito; el rearme del tutorial los apaga.
+- Mesita con un lienzo de práctica (copia de `PaperCanvas`) y cartel «Opcional» que explica el gesto.
+- Nuevo `TutorialExercise` + `TutorialExerciseRules` (reglas puras, 3 tests EditMode → 626). Smoke: +1 chequeo (3 ejercicios, se cumplen, rearme).
+- `Note()` acepta tamaño de letra máximo y reduce el mínimo para que los textos largos no se salgan de la tarjeta.
+
 ## 2026-11-17 — Tutoriales v2, R1: la terraza ya no se saltea
 
 - **Bug:** la viga y el muro nacían en el centro de la terraza y se les daba la vuelta por el medio. Ahora cruzan de borde a borde (del parapeto a la baranda del hueco, pasando por el centro): hay que agacharse bajo la viga y saltar el muro.
