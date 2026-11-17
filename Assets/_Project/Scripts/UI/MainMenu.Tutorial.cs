@@ -51,8 +51,11 @@ namespace SpellSimulator.UI
             tutorialAsked = true;
             if (skip) PlayerSpawn.TutorialSeen = true;
             PlayerSpawn spawn = FindFirstObjectByType<PlayerSpawn>();
-            if (spawn != null) spawn.Begin(skip);
-            EnterSandbox();
+            // Si ubicar al jugador falla (escena desactualizada, objeto faltante), igual se le entrega el control:
+            // sin esto la entrada quedaba cerrada (no se podia mover ni apretar E).
+            try { if (spawn != null) spawn.Begin(skip); }
+            catch (System.Exception e) { Debug.LogException(e, this); }
+            finally { EnterSandbox(); }
         }
 
         private void HandleTutorialKeys(bool back, bool submit, int move)
