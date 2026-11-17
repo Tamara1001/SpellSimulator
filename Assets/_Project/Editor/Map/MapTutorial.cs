@@ -19,12 +19,13 @@ namespace SpellSimulator.EditorTools.Map
         public const string RootName = "TowerTutorial";
 
         /// <summary>
-        /// Terraza: el hueco de la rampa va de HoleFrom a HoleTo (la rampa llega arriba en 270, al sur). Se empieza en el balcon,
-        /// al norte, y hay dos caminos hasta la rampa: por el oeste (un murete que se salta) o por el este (una viga que se pasa agachado).
+        /// Terraza: el hueco de la rampa va de HoleFrom a HoleTo (la rampa llega arriba en 270, al sur). Se empieza en el balcon, al norte.
+        /// El camino del oeste esta cerrado por una valla alta (FenceAngle); el del este es un recorrido en serie que cruza todo el
+        /// ancho de la terraza: primero una viga baja (BeamAngle: hay que agacharse) y despues un muro bajo (JumpWallAngle: hay que saltar).
         /// </summary>
         public const float HoleFrom = 72f, HoleTo = 270f;
-        public const float LowWallAngle = 180f, BeamAngle = 20f;
-        public const float LowWallHeight = 0.55f, BeamClearance = 1.3f;
+        public const float FenceAngle = 180f, BeamAngle = 20f, JumpWallAngle = 320f;
+        public const float LowWallHeight = 0.7f, BeamClearance = 1.3f, FenceHeight = 2.4f;
 
         /// <summary>
         /// Piso 2: la rampa de arriba llega en 0 y la de abajo sale en 270; entre las dos queda un descanso de 90 grados.
@@ -191,30 +192,38 @@ namespace SpellSimulator.EditorTools.Map
             Rails(b, parent, "Tutorial_TerraceRailOut", TowerBuilder.InnerRadius, HoleFrom, HoleTo - 12f, y);
             RailSegment(b, parent, "Tutorial_TerraceRailEnd", TowerBuilder.Polar(TowerBuilder.RampInner, HoleFrom, y), TowerBuilder.Polar(TowerBuilder.InnerRadius, HoleFrom, y));
 
-            // Camino del oeste: un murete que cruza el balcon (se salta).
+            // Camino del oeste: una valla alta de tablas que cierra el balcon (no se salta ni se pasa).
             float wallLen = TowerBuilder.TerraceRadius - TowerBuilder.InnerRadius, wallMid = (TowerBuilder.TerraceRadius + TowerBuilder.InnerRadius) * 0.5f;
-            b.Box(Radial(wallMid, LowWallAngle, y) * Matrix4x4.Translate(new Vector3(0f, LowWallHeight * 0.5f, 0f)), new Vector3(wallLen, LowWallHeight, 0.3f), Stone, Stone * 1.08f);
-            Collider(parent, "Tutorial_LowWall", wallMid, LowWallAngle, y + LowWallHeight * 0.5f, new Vector3(wallLen, LowWallHeight, 0.3f));
+            Matrix4x4 fence = Radial(wallMid, FenceAngle, y);
+            b.Box(fence * Matrix4x4.Translate(new Vector3(0f, FenceHeight * 0.5f, 0f)), new Vector3(wallLen, FenceHeight, 0.16f), Wood, WoodDark);
+            for (int i = 0; i < 4; i++)
+                b.Box(fence * Matrix4x4.Translate(new Vector3(-wallLen * 0.5f + 0.15f + i * (wallLen - 0.3f) / 3f, FenceHeight * 0.5f, 0f)), new Vector3(0.14f, FenceHeight + 0.1f, 0.26f), WoodDark);
+            Collider(parent, "Tutorial_Fence", wallMid, FenceAngle, y + FenceHeight * 0.5f, new Vector3(wallLen, FenceHeight, 0.2f));
 
-            // Camino del este: una viga con tablas colgando, del borde del centro al parapeto (se pasa agachado).
-            float beamLen = TowerBuilder.TerraceRadius - TowerBuilder.RampInner, beamMid = (TowerBuilder.TerraceRadius + TowerBuilder.RampInner) * 0.5f;
-            Matrix4x4 beam = Radial(beamMid, BeamAngle, y);
+            // Camino del este, primera parte: una viga que cruza TODA la terraza, del centro al parapeto (hay que agacharse).
+            float span = TowerBuilder.TerraceRadius, spanMid = span * 0.5f;
+            Matrix4x4 beam = Radial(spanMid, BeamAngle, y);
             const float beamThick = 0.2f;
-            b.Box(beam * Matrix4x4.Translate(new Vector3(0f, BeamClearance + beamThick * 0.5f, 0f)), new Vector3(beamLen + 0.2f, beamThick, 0.22f), Wood, WoodDark);
-            b.Box(beam * Matrix4x4.Translate(new Vector3(-beamLen * 0.5f + 0.06f, (BeamClearance + beamThick) * 0.5f, 0f)), new Vector3(0.12f, BeamClearance + beamThick, 0.12f), WoodDark);
+            b.Box(beam * Matrix4x4.Translate(new Vector3(0f, BeamClearance + beamThick * 0.5f, 0f)), new Vector3(span, beamThick, 0.22f), Wood, WoodDark);
+            b.Box(beam * Matrix4x4.Translate(new Vector3(-span * 0.5f + 0.06f, (BeamClearance + beamThick) * 0.5f, 0f)), new Vector3(0.12f, BeamClearance + beamThick, 0.12f), WoodDark);
             for (int i = 0; i < 8; i++)
-                b.Box(beam * Matrix4x4.Translate(new Vector3(-beamLen * 0.5f + 0.4f + i * 0.47f, BeamClearance + beamThick + 0.33f, 0f)), new Vector3(0.3f, 0.6f, 0.05f),
+                b.Box(beam * Matrix4x4.Translate(new Vector3(-span * 0.5f + 0.5f + i * 0.8f, BeamClearance + beamThick + 0.33f, 0f)), new Vector3(0.3f, 0.6f, 0.05f),
                     LowPolyMesh.Jitter(Wood, 0.08f, i * 7));
-            Collider(parent, "Tutorial_Beam", beamMid, BeamAngle, y + BeamClearance + 0.5f, new Vector3(beamLen + 0.2f, 1f, 0.22f));
+            Collider(parent, "Tutorial_Beam", spanMid, BeamAngle, y + BeamClearance + 0.5f, new Vector3(span, 1f, 0.22f));
+
+            // Segunda parte: un muro bajo que tambien cruza toda la terraza (hay que saltar).
+            Matrix4x4 jump = Radial(spanMid, JumpWallAngle, y);
+            b.Box(jump * Matrix4x4.Translate(new Vector3(0f, LowWallHeight * 0.5f, 0f)), new Vector3(span, LowWallHeight, 0.3f), Stone, Stone * 1.08f);
+            Collider(parent, "Tutorial_JumpWall", spanMid, JumpWallAngle, y + LowWallHeight * 0.5f, new Vector3(span, LowWallHeight, 0.3f));
 
             var props = MapBuilder.Place("Tutorial_Terrace", parent, MapBuilder.SaveMesh(b.Build("Tutorial_Terrace")), material, o, Quaternion.identity);
             props.isStatic = true;
 
-            // Tres notas, cada una sobre lo que explica.
+            // Tres notas, cada una sobre lo que explica y de cara a quien llega por el camino del este (viga primero, muro despues).
             Vector3 spawn = SpawnPoint(parent);
             Note(parent, material, "Note_Tutorial_Move", spawn + new Vector3(0f, 1.75f, -2.4f), spawn, "<b>WASD</b>  ·  mouse");
-            Note(parent, material, "Note_Tutorial_Jump", o + TowerBuilder.Polar(wallMid, LowWallAngle - 4f, y + 1.55f), o + TowerBuilder.Polar(wallMid, LowWallAngle - 40f, y), "<b>Espacio</b>");
-            Note(parent, material, "Note_Tutorial_Crouch", o + TowerBuilder.Polar(5.6f, BeamAngle + 5f, y + 0.95f), o + TowerBuilder.Polar(5.6f, BeamAngle + 40f, y), "<b>C</b>");
+            Note(parent, material, "Note_Tutorial_Crouch", o + TowerBuilder.Polar(5.6f, BeamAngle - 6f, y + 0.95f), o + TowerBuilder.Polar(5.6f, BeamAngle + 40f, y), "<b>C</b>  agacharse");
+            Note(parent, material, "Note_Tutorial_Jump", o + TowerBuilder.Polar(5.6f, JumpWallAngle + 7f, y + 1.55f), o + TowerBuilder.Polar(5.6f, JumpWallAngle + 40f, y), "<b>Espacio</b>  saltar");
         }
 
         // ---------------------------------------------------------------- nivel 2: mover objetos

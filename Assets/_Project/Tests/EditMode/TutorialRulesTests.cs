@@ -81,14 +81,19 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
-        public void TerraceObstacles_CanBeJumpedCrouchedOrWalkedAround()
+        public void TerraceObstacles_RequireJumpingAndCrouching()
         {
-            // Salto: v = 5 m/s y g = 15 m/s2 (PlayerMovement) dan 0,83 m. Agachado mide 1,1 m; de pie, 2,1 m.
-            Assert.Less(MapTutorial.LowWallHeight, 0.75f);
-            Assert.Greater(MapTutorial.BeamClearance, 1.2f);
-            Assert.Less(MapTutorial.BeamClearance, 1.9f);
-            // El murete va en el balcon (macizo en toda la vuelta) y la viga en el arco macizo del anillo (fuera del hueco).
-            Assert.IsFalse(MapTutorial.BeamAngle > MapTutorial.HoleFrom && MapTutorial.BeamAngle < MapTutorial.HoleTo, "la viga no puede quedar sobre el hueco");
+            // Salto: v = 5 m/s y g = 15 m/s2 (PlayerMovement) dan 0,83 m; el escalon automatico es de 0,35 m. Agachado mide 1,1 m; de pie, 2,1 m.
+            Assert.Greater(MapTutorial.LowWallHeight, 0.35f + 0.1f, "el muro no se sube de escalon: hay que saltar");
+            Assert.Less(MapTutorial.LowWallHeight, 0.75f, "el muro se salta");
+            Assert.Greater(MapTutorial.BeamClearance, 1.2f, "agachado (1,1 m) pasa");
+            Assert.Less(MapTutorial.BeamClearance, 1.9f, "de pie no pasa");
+            Assert.Greater(MapTutorial.FenceHeight, 1.5f, "la valla del oeste no se salta");
+            // Viga y muro van en el arco macizo del anillo (fuera del hueco), en ese orden desde el balcon.
+            foreach (float a in new[] { MapTutorial.BeamAngle, MapTutorial.JumpWallAngle })
+                Assert.IsFalse(a > MapTutorial.HoleFrom && a < MapTutorial.HoleTo, "no puede quedar sobre el hueco");
+            Assert.Less(MapTutorial.JumpWallAngle, MapTutorial.BeamAngle + 360f);
+            Assert.Greater(MapTutorial.JumpWallAngle, MapTutorial.HoleTo + 20f, "el muro queda antes de la rampa (270)");
             // Las rampas arrancan todas en el mismo angulo: descanso de 90 grados entre la que llega y la que sigue.
             foreach (float start in TowerBuilder.RampStart) Assert.AreEqual(TowerBuilder.RampStart[0], start);
             Assert.AreEqual(90f, 360f - TowerBuilder.RampTurn, 0.01f);
