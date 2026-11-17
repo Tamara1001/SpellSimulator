@@ -51,11 +51,30 @@ namespace SpellSimulator.World.Map
         /// <summary>Radio del aplanado del entrenamiento (plano hasta 70 % y suave hasta el borde).</summary>
         public const float TrainingFlatRadius = 8f;
 
-        /// <summary>Caminos de tierra: polilineas en XZ.</summary>
+        /// <summary>
+        /// Caminos de tierra: polilineas en XZ (Docs/MAPA_FLUJO_PLAN.md, paso 2b). Se definen ANTES que los sitios: MapStructures
+        /// exige que cada estructura quede lejos de todo camino y CanPlantTree no planta arboles encima. Por eso cada rama
+        /// termina en el BORDE de su zona (a radio + ~3,5 m del centro), no en el centro.
+        /// Centros previstos: Archivo (0, -46) r 9; agua (-22, -30) r 5; fuego (-18, -50) r 8; tierra (20, -50) r 6; viento (26, -34) r 8.
+        /// </summary>
         public static readonly Vector2[][] Paths =
         {
-            new[] { new Vector2(0f, -14f), Spawn, new Vector2(0f, 5f) },
+            // Columna vertebral: torre -> nexo -> (curva al este, por detras de las mesas del entrenamiento) -> Archivo.
+            new[] { new Vector2(0f, 5f), Spawn, new Vector2(0f, -13f), new Vector2(4f, -19f), new Vector2(5.5f, -26f), new Vector2(4f, -32f), new Vector2(1f, -37f) },
+            // Nexo -> orilla este del lago.
             new[] { Spawn, new Vector2(-12f, -10f), new Vector2(-21f, -14f) },
+            // Archivo -> cruce del oeste -> campo de agua (entra por el sur, lejos de la linea de tiro del entrenamiento).
+            new[] { new Vector2(-9f, -46f), new Vector2(-14f, -43f), new Vector2(-19f, -41f), new Vector2(-21.5f, -38.5f) },
+            // Arco fuego -> tierra, por el sur del Archivo.
+            new[] { new Vector2(-12f, -55.5f), new Vector2(-5f, -58f), new Vector2(5f, -58f), new Vector2(12.5f, -56.5f) },
+            // Archivo -> campo de tierra.
+            new[] { new Vector2(9f, -46f), new Vector2(10.8f, -48.1f) },
+            // Archivo -> campo de viento, y enlace tierra -> viento.
+            new[] { new Vector2(8.2f, -42.2f), new Vector2(18.7f, -37.4f) },
+            new[] { new Vector2(17.4f, -40.9f), new Vector2(18.7f, -37.4f) },
+            // Torre -> norte: baja de la meseta y se abre hacia la cabaña del norte y el puesto de suministros.
+            new[] { new Vector2(1f, 26f), new Vector2(1f, 35f), new Vector2(1f, 41.5f), new Vector2(-1.8f, 42.8f) },
+            new[] { new Vector2(1f, 41.5f), new Vector2(4.5f, 44f) },
             // Nexo -> laboratorio: termina en el borde de la plataforma (centro (20, -8), radio 5,2).
             new[] { Spawn, new Vector2(8f, -7f), new Vector2(14.2f, -7.7f) }
         };

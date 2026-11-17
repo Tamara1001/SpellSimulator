@@ -69,6 +69,45 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
+        public void Paths_StayOnDryPlayableGroundAndOffTheTraining()
+        {
+            Vector2[] props = { TrainingLayout.TestProps, TrainingLayout.DummyA, TrainingLayout.DummyB, TrainingLayout.ToolTable, TrainingLayout.StampTable,
+                TrainingLayout.Contraptions, TrainingLayout.GiantStand, TrainingLayout.GiantPaper, TrainingLayout.Easel, Vector2.zero };
+            foreach (Vector2[] path in ValleyShape.Paths)
+                for (int i = 0; i + 1 < path.Length; i++)
+                    for (float t = 0f; t <= 1f; t += 0.1f)
+                    {
+                        Vector2 p = Vector2.Lerp(path[i], path[i + 1], t);
+                        Assert.Less(p.magnitude, 61f, $"el camino sale del area jugable en {p}");
+                        // 1 = borde del agua: el camino del nexo (el de siempre) termina mojandose los pies en la orilla (0,83 en su ultimo punto); ninguno entra mas.
+                        Assert.Greater(ValleyShape.LakeFactor(p.x, p.y), 0.8f, $"el camino se mete en el lago en {p}");
+                        Assert.Greater(ValleyShape.RiverDistance(p.x, p.y), ValleyShape.RiverHalfWidth + 1f, $"el camino cruza el arroyo en {p}");
+                        foreach (Vector2 local in props)
+                            Assert.Greater(Vector2.Distance(p, TrainingLayout.ToWorld(local)), ValleyShape.PathWidth * 0.5f + 1.5f,
+                                $"el camino pisa el entrenamiento ({local}) en {p}");
+                    }
+        }
+
+        [Test]
+        public void Paths_LinkTheLearningRoute()
+        {
+            // Nexo -> entrenamiento (a la vista del camino) -> Archivo, y una rama al borde de cada campo.
+            Assert.Less(ValleyShape.PathDistance(ValleyShape.Spawn.x, ValleyShape.Spawn.y), 0.01f);
+            Assert.Less(ValleyShape.PathDistance(ValleyShape.TrainingOrigin.x, ValleyShape.TrainingOrigin.y), 13f);
+            (string name, Vector2 center, float radius)[] zones =
+            {
+                ("Archivo", new Vector2(0f, -46f), 9f), ("agua", new Vector2(-22f, -30f), 5f), ("fuego", new Vector2(-18f, -50f), 8f),
+                ("tierra", new Vector2(20f, -50f), 6f), ("viento", new Vector2(26f, -34f), 8f),
+            };
+            foreach (var (name, center, radius) in zones)
+            {
+                float d = ValleyShape.PathDistance(center.x, center.y);
+                Assert.Greater(d, radius - 1.5f, $"un camino atraviesa la zona de {name}");
+                Assert.Less(d, radius + 4.5f, $"ningun camino llega al borde de {name}");
+            }
+        }
+
+        [Test]
         public void SpawnAndFieldAreClearOfTrees()
         {
             Assert.IsFalse(ValleyShape.CanPlantTree(ValleyShape.Spawn.x, ValleyShape.Spawn.y));

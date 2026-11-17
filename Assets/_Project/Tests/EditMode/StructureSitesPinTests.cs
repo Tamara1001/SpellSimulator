@@ -27,7 +27,7 @@ namespace SpellSimulator.Tests
             ("SupplyStall", 10f, 48f),    // mudado al norte (estaba en (8, -22))
             ("Crag_1", 20f, -28f),
             ("Crag_2", 44f, 10f),
-            ("Crag_3", -6f, -40f),
+            ("Crag_3", 47f, -27f),      // mudado al sitio viejo del laboratorio (antes (-6, -40), sobre el Archivo)
             ("Crag_4", 23.5f, 30f),
             ("EarthWorkshop", 40f, 30f),
             ("WaterLab", -44.189f, 1.338f),

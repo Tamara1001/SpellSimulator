@@ -137,7 +137,8 @@ namespace SpellSimulator.EditorTools.Map
             Add("StoneCircle", Find(new Vector2(50f, -10f), 6f, 5.8f, 0.8f, false, taken), ValleyShape.FieldCenter, 5.8f, false);
             Add("Shrine", Find(new Vector2(34f, -36f), 6f, 3.8f, 0.6f, false, taken), ValleyShape.FieldCenter, 3.8f, false);
             Add("SupplyStall", Find(SupplyStallPreferred, 5f, 2.8f, 0.4f, false, taken), ValleyShape.Spawn, 2.8f, false);
-            Vector2[] crags = { new Vector2(20f, -28f), new Vector2(44f, 10f), new Vector2(-6f, -40f), new Vector2(22f, 30f) };
+            // El peñasco 3 estaba en (-6, -40), encima del Archivo y sus caminos: se mudo al sitio viejo del laboratorio (Docs/MAPA_FLUJO_PLAN.md, D15).
+            Vector2[] crags = { new Vector2(20f, -28f), new Vector2(44f, 10f), new Vector2(47f, -27f), new Vector2(22f, 30f) };
             for (int i = 0; i < crags.Length; i++)
                 Add("Crag_" + (i + 1), Find(crags[i], 7f, 6f, 1.8f, false, taken), ValleyShape.FieldCenter, 6f, false);
 

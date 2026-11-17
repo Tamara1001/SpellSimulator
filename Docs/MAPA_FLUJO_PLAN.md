@@ -1,6 +1,6 @@
 # Plan: mapa del modo Libre ordenado por flujo de aprendizaje
 
-> **Estado: APROBADO por Tamara (2026-11-16), en implementación** (pasos 0, 1, N y 2 hechos; **el trabajo va en la rama `rework-mapa`**, ver protocolo). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
+> **Estado: APROBADO por Tamara (2026-11-16), en implementación** (pasos 0, 1, N, 2 y 2b hechos; **el trabajo va en la rama `rework-mapa`**, ver protocolo). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
 > **v3 (2026-11-16, correcciones de Tamara al dibujo): D19-D24 y §17-§18. La torre pasa a ser el tutorial, el spawn pasa a llamarse Nexo y el Archivo se redefine. §17 y §18 APROBADAS por Tamara el 2026-11-16 (D25-D27).**
 > La revisión crítica externa está en [MAPA_FLUJO_CRITICA.md](MAPA_FLUJO_CRITICA.md) y ya está volcada en §12b.
 
@@ -21,9 +21,10 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
 - [x] **0** Volcar posiciones reales (`Sites()`), alturas, `Path8/Path9`, inflamabilidad de pinos; capturas «antes»
 - [x] **1** Mover el laboratorio a la pradera (20,−8) — sitio y frente fijos (este); se quitó `TrackClear`/`LaboratoryFront`
 - [x] **2** Mover el entrenamiento — quedó en **(−6, −25)** con frente al **suroeste** (ver bitácora)
-- [ ] **2b** *(sigue este)* Caminos completos (`ValleyShape.Paths`) **antes** de fijar sitios 3-6
+- [x] **2b** Caminos completos (`ValleyShape.Paths`) **antes** de fijar sitios 3-6 (y peñasco 3 mudado a (47, −27))
+- [ ] **V** *(v3, D28)* Vida del jugador en modo Libre: recibe daño, al morir reaparece en el Nexo, y un interruptor desbloqueable apaga el daño (**falta decidir dónde se desbloquea**)
 - [x] **N** *(v3, §17)* Nexo: reaparición, tablero con el mapa, pregunta «¿saltear el tutorial?» al entrar a Modo Sandbox (la guía de «siguiente etapa» y el portal del Nexo llegan con los pasos 9 y T)
-- [ ] **T1-T4** *(v3, §17)* Torre-tutorial, un commit por nivel: terraza (movilidad) → piso 2 (objetos) → piso 1 (objetos mágicos) → planta baja (abrir la puerta). **Reemplaza a 9b y 13.**
+- [ ] **T1-T4** *(siguen estos)* *(v3, §17)* Torre-tutorial, un commit por nivel: terraza (movilidad) → piso 2 (objetos) → piso 1 (objetos mágicos) → planta baja (abrir la puerta). **Reemplaza a 9b y 13.**
 - [ ] **3** Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
 - [ ] **4** Campo de agua (orilla real vía `FindLakeside`, ≈ −22,−30)
 - [ ] **5** Campo de tierra (20,−50) + santuario (44,−38) + peñascos 1 y 3 al este/norte
@@ -61,6 +62,13 @@ Si Tamara o un compañero dice **«avanzá con el mapa»**, hacé esto, en este 
   - Con frente al oeste los tiros que pasan de largo caen en el futuro campo de agua (−22, −30). Al suroeste pasan por el hueco entre agua (−22, −30) y fuego (−18, −50). Muñeco A en (−12.4, −31.4), a 9,7 m del campo de agua.
   - Queda a 20 m del Nexo y a 15 m del peñasco 3 (que igual se muda en el paso 3/5). Sin árboles en 12 m. 604 tests EditMode y smoke en verde. Capturas `paso2_entrenamiento_aerea.png` y `paso2_entrenamiento_desde_nexo.png`.
 - 2026-11-16 — **Rama:** a pedido de Tamara el rework va en `rework-mapa` (pusheada). `main` quedó en `a5ce81c`, igual que el remoto.
+- 2026-11-16 — **Paso 2b hecho.** `ValleyShape.Paths` pasa de 3 tramos a 10: columna torre→Nexo→Archivo (con curva al este por detrás del entrenamiento), Nexo→lago, Nexo→laboratorio, Archivo→cruce oeste→agua, arco fuego→tierra por el sur, Archivo→tierra, Archivo→viento, enlace tierra→viento y torre→norte con horquilla a la cabaña del norte y al puesto.
+  - **El anillo es más compacto de lo que parecía en el dibujo:** con Archivo r = 9 y fuego r = 8 a 18 m entre centros, los bordes casi se tocan; lo mismo tierra y viento. Por eso las «ramas» a fuego y tierra miden 2-4 m, y el arco agua→fuego es el mismo cruce del oeste.
+  - La rama al agua **entra por el sur** (−21.5, −38.5), no en línea recta desde el Archivo: la recta pasaba a 5 m por detrás del muñeco A, en plena línea de tiro del entrenamiento.
+  - Margen obligatorio de `MapStructures.Clear`: un camino tiene que quedar a más de 3,2 m + radio del centro de cada estructura que usa `Find`. Por eso los caminos terminan a ~7 m de las cabañas y a ~9,4 m del futuro campo de tierra (20, −50). Sitios fijos a mano (laboratorio; después Archivo, fuego, viento) no tienen ese límite.
+  - **Peñasco 3** mudado de (−6, −40) a (47, −27) (sitio viejo del laboratorio): estaba sobre el Archivo. El peñasco 1 (20, −28) queda a 9,5 m del camino al viento: se muda en el paso 5/6.
+  - Tests nuevos en `ValleyShapeTests` (caminos en seco, dentro del área, sin pisar el entrenamiento; llegan al borde de cada zona sin atravesarla).
+- 2026-11-16 — **D28 (Tamara):** el jugador recibe daño en Libre, con un interruptor desbloqueable para apagarlo. Paso V nuevo en el tracker; falta decidir dónde se desbloquea.
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),
 > [GLYPHS.md](GLYPHS.md), [ARCHITECTURE.md](ARCHITECTURE.md), [HARNESS.md](HARNESS.md).
@@ -125,6 +133,7 @@ con un mapa **compacto y caminable**, **sin bloquear nada** (todo sigue accesibl
 | D24 | Sitio del laboratorio | Fijo en (20, −8), pista al este, a 20 m del Nexo (paso 1, hecho). |
 | D25 | Aprobación v3 | Tamara aprobó §17 (torre-tutorial en los 4 niveles actuales, Nexo, salteo) y §18 (Archivo: «Primeros hechizos» + estantes que se llenan **alcanza**; los libros de hechizos siguen en sus campos). **Orden:** Nexo y salteo → entrenamiento y caminos → torre-tutorial (un nivel por commit) → Archivo y el resto. |
 | D26 | Circuito exterior | **Sí** («me encantó»): un camino que une el late game en una vuelta que termina en la torre, con los portales como atajos. Paso 11b. |
+| D28 | Daño en modo Libre | **Sí, el jugador recibe daño** y al morir reaparece en el Nexo; tiene que ser **sencillo conseguir una forma de desactivar el daño / la posibilidad de morir**: un activable que se desbloquea (Tamara sugiere el laboratorio, el Archivo o una zona de late game). Paso V. Hasta entonces solo se «muere» al caerse del mundo. |
 | D27 | Mundo que responde | **Sí**: faroles en la ruta y estandartes de cada campo que se encienden al leer cada libro, sin bloquear nada (mallas activadas por `DiscoveryState`, sin `Update`). Paso 11. |
 
 ---

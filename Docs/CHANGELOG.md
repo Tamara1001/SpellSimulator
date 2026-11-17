@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-16 — Mapa por flujo, paso 2b: caminos completos
+
+- `ValleyShape.Paths`: 10 tramos (antes 3). Columna torre→Nexo→Archivo con curva por detrás del entrenamiento, ramas al borde de los cuatro campos, arco fuego→tierra por el sur y camino torre→norte hacia la cabaña y el puesto. Los árboles ya no crecen sobre esos caminos.
+- `MapStructures`: el peñasco 3 se muda de (−6, −40) a (47, −27), el sitio viejo del laboratorio (estaba sobre el futuro Archivo). `StructureSitesPinTests` actualizado.
+- `ValleyShapeTests`: 2 tests nuevos de caminos. EditMode y smoke en verde.
+- [MAPA_FLUJO_PLAN.md](MAPA_FLUJO_PLAN.md): D28 (el jugador recibe daño en modo Libre, con interruptor desbloqueable) y paso V nuevo.
+
 ## 2026-11-16 — Mapa por flujo, paso 2: el entrenamiento se muda al sur del Nexo
 
 - `ValleyShape.TrainingOrigin` pasa de (16, −46) a (−6, −25) y `TrainingForward` a rumbo 225° (suroeste): queda a 20 m del Nexo, con las mesas del lado del camino al Archivo y los tiros hacia el hueco entre los futuros campos de agua y fuego. `WorldZones.json` con la posición nueva; escena regenerada.
