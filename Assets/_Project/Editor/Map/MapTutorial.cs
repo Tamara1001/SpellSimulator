@@ -20,34 +20,34 @@ namespace SpellSimulator.EditorTools.Map
         public const string RootName = "TowerTutorial";
 
         /// <summary>
-        /// Terraza: el hueco de la rampa va de HoleFrom a HoleTo (la rampa llega arriba en 270, al sur). Se empieza en el balcon, al norte.
+        /// Terraza: el hueco de la rampa va de HoleFrom a HoleTo (la rampa llega arriba en 180, al oeste). Se empieza en el balcon, al norte.
         /// El camino del oeste esta cerrado por una valla alta (FenceAngle); el del este es un recorrido en serie que cruza todo el
         /// ancho de la terraza: primero una viga baja (BeamAngle: hay que agacharse) y despues un muro bajo (JumpWallAngle: hay que saltar).
         /// </summary>
-        public const float HoleFrom = 72f, HoleTo = 270f;
-        public const float FenceAngle = 180f, BeamAngle = TerraceRules.BeamAngle, JumpWallAngle = TerraceRules.JumpWallAngle;
+        public const float HoleFrom = 48f, HoleTo = 180f;
+        public const float FenceAngle = 115f, BeamAngle = TerraceRules.BeamAngle, JumpWallAngle = TerraceRules.JumpWallAngle;
         /// <summary>La viga y el muro van de la baranda del hueco (al otro lado del centro) hasta el parapeto: no se les da la vuelta por el medio.</summary>
         public const float ObstacleFrom = -3f;
         public const float LowWallHeight = 0.7f, BeamClearance = 1.3f, FenceHeight = 2.4f;
 
         /// <summary>
-        /// Piso 2: la rampa de arriba llega en 0 y la de abajo sale en 270; entre las dos queda un descanso de 90 grados.
+        /// Piso 2: la rampa de arriba llega en 0 (este) y la de abajo sale en 180 (oeste); la plaza sur queda entre las dos.
         /// La pila tapa el descanso en PileAngle y la baranda cierra el borde del hueco hasta RailEnd: para bajar hay que mover la pila.
         /// </summary>
-        public const float PileAngle = 300f, RailEnd = 318f, RailHeight = 1f;
+        public const float PileAngle = 198f, RailEnd = 205f, RailHeight = 1f;
         public const string PropsName = "TutorialProps";
 
         /// <summary>
         /// Piso 1: igual que el piso 2 (misma baranda), pero la bajada la tapa una tela pesada colgada de una viga en ClothAngle, de pared a baranda.
         /// </summary>
-        public const float ClothAngle = 300f, ClothHeight = 2.85f, ClothLift = 0.1f;
+        public const float ClothAngle = 195f, ClothHeight = 2.85f, ClothLift = 0.1f;
         public const string ClothName = "TutorialCloth";
 
         /// <summary>
         /// Planta baja: la puerta empieza trabada y se destraba de tres formas, en el muro al este de la puerta (270): un pestillo que el viento
         /// corre, un contrapeso que una columna (agua o aire) levanta, o una piedra que la tierra con Crush rompe.
         /// </summary>
-        public const float LatchAngle = 283f, WeightAngle = 294f, StoneAngle = 306f;
+        public const float LatchAngle = 258f, WeightAngle = 282f, StoneAngle = 294f;
         public const string DoorLatchesName = "DoorLatches", DoorStoneName = "TutorialDoorStone";
 
         private static readonly Color Wood = new Color(0.5f, 0.33f, 0.2f);
@@ -146,7 +146,7 @@ namespace SpellSimulator.EditorTools.Map
             b.Box(Matrix4x4.Translate(new Vector3(0f, 0.93f, 0f)), new Vector3(0.38f, 0.06f, 0.38f), Iron);
             b.Box(Matrix4x4.TRS(new Vector3(0f, 1.14f, -0.06f), Quaternion.Euler(-22f, 0f, 0f), Vector3.one), new Vector3(0.05f, 0.42f, 0.05f), Iron);
             b.Box(Matrix4x4.Translate(new Vector3(0f, 1.36f, -0.14f)), new Vector3(0.13f, 0.13f, 0.13f), LeverRed);
-            Vector3 at = parent.position + TowerBuilder.Polar(6.35f, 118f, TowerBuilder.TerraceY);
+            Vector3 at = parent.position + TowerBuilder.Polar(7.4f, 102f, TowerBuilder.TerraceY);
             Vector3 spawn = SpawnPoint(parent);
             Vector3 toSpawn = spawn - at;
             toSpawn.y = 0f;
@@ -262,7 +262,7 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 o = parent.position;
             var b = new LowPolyMesh();
 
-            // Barandas del hueco: borde interior (centro), borde exterior (balcon) y el corte del anillo. La rampa llega en 270:
+            // Barandas del hueco: borde interior (centro), borde exterior (balcon) y el corte del anillo. La rampa llega en 180 (oeste):
             // los ultimos grados quedan abiertos para entrar desde el anillo o desde el balcon.
             Rails(b, parent, "Tutorial_TerraceRailIn", TowerBuilder.RampInner, HoleFrom, HoleTo - 8f, y);
             Rails(b, parent, "Tutorial_TerraceRailOut", TowerBuilder.InnerRadius, HoleFrom, HoleTo - 12f, y);
@@ -323,16 +323,16 @@ namespace SpellSimulator.EditorTools.Map
 
             // La pila: dos cajas grandes que cruzan el descanso, dos chicas arriba y un barril detras.
             float yaw = TowerBuilder.TangentYaw(PileAngle);
-            MovablesSetup.Prop(props, material, "TutorialCrate_A", MovablesSetup.Kind.BigBox, o + TowerBuilder.Polar(3.38f, PileAngle, y + 0.02f), yaw + 4f);
-            MovablesSetup.Prop(props, material, "TutorialCrate_B", MovablesSetup.Kind.BigBox, o + TowerBuilder.Polar(4.3f, PileAngle, y + 0.02f), yaw - 6f);
-            MovablesSetup.Prop(props, material, "TutorialBox_A", MovablesSetup.Kind.SmallBox, o + TowerBuilder.Polar(3.4f, PileAngle, y + 0.84f), yaw + 20f);
-            MovablesSetup.Prop(props, material, "TutorialBox_B", MovablesSetup.Kind.SmallBox, o + TowerBuilder.Polar(4.28f, PileAngle, y + 0.84f), yaw - 15f);
-            MovablesSetup.Prop(props, material, "TutorialBarrel", MovablesSetup.Kind.Barrel, o + TowerBuilder.Polar(4.25f, PileAngle - 9f, y + 0.02f), 0f);
+            MovablesSetup.Prop(props, material, "TutorialCrate_A", MovablesSetup.Kind.BigBox, o + TowerBuilder.Polar(5.05f, PileAngle, y + 0.02f), yaw + 4f);
+            MovablesSetup.Prop(props, material, "TutorialCrate_B", MovablesSetup.Kind.BigBox, o + TowerBuilder.Polar(5.85f, PileAngle, y + 0.02f), yaw - 6f);
+            MovablesSetup.Prop(props, material, "TutorialBox_A", MovablesSetup.Kind.SmallBox, o + TowerBuilder.Polar(5.07f, PileAngle, y + 0.84f), yaw + 20f);
+            MovablesSetup.Prop(props, material, "TutorialBox_B", MovablesSetup.Kind.SmallBox, o + TowerBuilder.Polar(5.83f, PileAngle, y + 0.84f), yaw - 15f);
+            MovablesSetup.Prop(props, material, "TutorialBarrel", MovablesSetup.Kind.Barrel, o + TowerBuilder.Polar(5.5f, PileAngle - 9f, y + 0.02f), 0f);
 
             // Dos notas sobre la pila, a la vista al bajar de la rampa (que llega en 0).
             Vector3 viewer = o + TowerBuilder.Polar(3.9f, 345f, y);
-            Note(parent, material, "Note_Tutorial_Grab", o + TowerBuilder.Polar(3.5f, PileAngle + 3f, y + 2.05f), viewer, "<b>E</b>  agarrar  ·  <b>E</b>  soltar");
-            Note(parent, material, "Note_Tutorial_Throw", o + TowerBuilder.Polar(4.35f, PileAngle + 3f, y + 1.6f), viewer, "<b>Q</b>  arrojar");
+            Note(parent, material, "Note_Tutorial_Grab", o + TowerBuilder.Polar(5.2f, PileAngle + 3f, y + 2.05f), viewer, "<b>E</b>  agarrar  ·  <b>E</b>  soltar");
+            Note(parent, material, "Note_Tutorial_Throw", o + TowerBuilder.Polar(5.9f, PileAngle + 3f, y + 1.6f), viewer, "<b>Q</b>  arrojar");
 
             Exercises(parent, props, material, y, o);
         }
@@ -362,7 +362,7 @@ namespace SpellSimulator.EditorTools.Map
             // 1) Marco para dejar el lienzo flotando; 2) el mismo gesto, pero de canto (girando el lienzo con el mouse y F); 3) diana.
             Frame(parent, material, props, "Exercise_Float", 30f, y, TutorialExercise.Kind.Float, "Note_Tutorial_Float", "<b>1</b>  dejalo flotando acá");
             Frame(parent, material, props, "Exercise_Upright", 46f, y, TutorialExercise.Kind.Upright, "Note_Tutorial_Upright", "<b>2</b>  de canto, girá el lienzo");
-            Target(parent, material, props, 62f, y);
+            Target(parent, material, props, 315f, y);
         }
 
         private static void Frame(Transform parent, Material material, Transform props, string name, float angle, float y, TutorialExercise.Kind kind, string noteName, string text)
@@ -391,7 +391,7 @@ namespace SpellSimulator.EditorTools.Map
 
         private static void Target(Transform parent, Material material, Transform props, float angle, float y)
         {
-            Vector3 at = parent.position + TowerBuilder.Polar(4.82f, angle, y + 1.3f);
+            Vector3 at = parent.position + TowerBuilder.Polar(TowerBuilder.InnerRadius - 0.1f, angle, y + 1.3f);
             Quaternion rot = Quaternion.LookRotation(TowerBuilder.Polar(1f, angle, 0f));
             var b = new LowPolyMesh();
             b.Box(Matrix4x4.identity, new Vector3(0.9f, 0.9f, 0.1f), WoodDark);
@@ -400,11 +400,11 @@ namespace SpellSimulator.EditorTools.Map
             var plate = MapBuilder.Place("Exercise_Target", parent, MapBuilder.SaveMesh(b.Build("Tutorial_Target")), material, at, rot);
             plate.isStatic = true;
             plate.AddComponent<BoxCollider>().size = new Vector3(0.9f, 0.9f, 0.1f);
-            var glow = CheckLamp(parent, material, "Exercise_Target_Lamp", TowerBuilder.Polar(4.5f, angle, y + 2.2f));
+            var glow = CheckLamp(parent, material, "Exercise_Target_Lamp", TowerBuilder.Polar(5.6f, angle, y + 2.2f));
             plate.AddComponent<TutorialExercise>().Configure(TutorialExercise.Kind.Hit, glow);
-            MovablesSetup.Prop(props, material, "TutorialBox_C", MovablesSetup.Kind.SmallBox, parent.position + TowerBuilder.Polar(4.6f, angle - 10f, y + 0.02f), 0f);
+            MovablesSetup.Prop(props, material, "TutorialBox_C", MovablesSetup.Kind.SmallBox, parent.position + TowerBuilder.Polar(5.4f, angle - 10f, y + 0.02f), 0f);
             Vector3 viewer = parent.position + TowerBuilder.Polar(3.9f, 345f, y);
-            Note(parent, material, "Note_Tutorial_Target", parent.position + TowerBuilder.Polar(4.5f, angle, y + 2.55f), viewer, "<b>3</b>  <b>Q</b>  arrojá la caja a la diana", 1.1f, 0.34f);
+            Note(parent, material, "Note_Tutorial_Target", parent.position + TowerBuilder.Polar(5.6f, angle, y + 2.55f), viewer, "<b>3</b>  <b>Q</b>  arrojá la caja a la diana", 1.1f, 0.34f);
         }
 
         /// <summary>Baranda del borde interior del hueco de la rampa en un piso (la misma en el piso 2 y en el piso 1).</summary>
@@ -499,28 +499,28 @@ namespace SpellSimulator.EditorTools.Map
             bar.Box(Matrix4x4.identity, new Vector3(0.12f, 0.12f, 0.95f), Wood, WoodDark);
             bar.Box(Matrix4x4.Translate(new Vector3(0f, 0f, 0.55f)), new Vector3(0.2f, 0.2f, 0.06f), Iron);
             bar.Box(Matrix4x4.Translate(new Vector3(0f, 0f, -0.55f)), new Vector3(0.2f, 0.2f, 0.06f), Iron);
-            LatchBody(latches, material, "DoorLatch_Bar", bar, o + TowerBuilder.Polar(4.6f, LatchAngle, 1.45f), LatchAngle, new Vector3(0.14f, 0.14f, 0.95f), 2.5f, false);
+            LatchBody(latches, material, "DoorLatch_Bar", bar, o + TowerBuilder.Polar(5.85f, LatchAngle, 1.45f), LatchAngle, new Vector3(0.14f, 0.14f, 0.95f), 2.5f, false);
 
             // Contrapeso: un bloque de hierro colgado de una soga hasta el techo; hay que subirlo (columna de agua o de aire).
             var weight = new LowPolyMesh();
             weight.Box(Matrix4x4.identity, new Vector3(0.34f, 0.34f, 0.34f), Iron, Iron * 1.2f);
             weight.Box(Matrix4x4.Translate(new Vector3(0f, 1.1f, 0f)), new Vector3(0.04f, 2.2f, 0.04f), WoodDark);
-            LatchBody(latches, material, "DoorLatch_Weight", weight, o + TowerBuilder.Polar(4.5f, WeightAngle, 1.0f), WeightAngle, new Vector3(0.34f, 0.34f, 0.34f), 3f, true);
+            LatchBody(latches, material, "DoorLatch_Weight", weight, o + TowerBuilder.Polar(5.8f, WeightAngle, 1.0f), WeightAngle, new Vector3(0.34f, 0.34f, 0.34f), 3f, true);
 
             // Traba de piedra: un bloque contra el muro. La tierra con Crush (Wall Breaker) lo rompe.
             var rock = new LowPolyMesh();
             rock.Box(Matrix4x4.Translate(new Vector3(0f, 0.45f, 0f)), new Vector3(0.7f, 0.9f, 0.5f), Stone, Stone * 1.1f);
             rock.Box(Matrix4x4.TRS(new Vector3(0f, 0.55f, 0f), Quaternion.Euler(0f, 12f, 0f), Vector3.one), new Vector3(0.6f, 0.7f, 0.42f), Stone * 0.9f);
             var mesh = MapBuilder.SaveMesh(rock.Build("Tutorial_DoorStone"));
-            var go = MapBuilder.Place(DoorStoneName, parent, mesh, material, o + TowerBuilder.Polar(4.5f, StoneAngle, 0f), Quaternion.Euler(0f, -StoneAngle + 90f, 0f));
+            var go = MapBuilder.Place(DoorStoneName, parent, mesh, material, o + TowerBuilder.Polar(5.8f, StoneAngle, 0f), Quaternion.Euler(0f, -StoneAngle + 90f, 0f));
             go.AddComponent<MeshCollider>().sharedMesh = mesh;
             stone = go.AddComponent<Breakable>();
             GameObjectUtility.SetStaticEditorFlags(go, (StaticEditorFlags)~0 & ~StaticEditorFlags.BatchingStatic);
 
             // Dos notas: la puerta y lo que la abre.
             Vector3 viewer = o + new Vector3(0f, 0f, 0f);
-            Note(parent, material, "Note_Tutorial_Door", o + TowerBuilder.Polar(4.2f, TutorialRules.DoorAngle + 3f, 2.55f), viewer, "puerta  trabada");
-            Note(parent, material, "Note_Tutorial_Locks", o + TowerBuilder.Polar(4.1f, WeightAngle, 2.35f), viewer, "viento · agua · tierra");
+            Note(parent, material, "Note_Tutorial_Door", o + TowerBuilder.Polar(5.5f, TutorialRules.DoorAngle + 3f, 2.55f), viewer, "puerta  trabada");
+            Note(parent, material, "Note_Tutorial_Locks", o + TowerBuilder.Polar(5.4f, WeightAngle, 2.35f), viewer, "viento · agua · tierra");
         }
 
         private static void LatchBody(Transform parent, Material material, string name, LowPolyMesh mesh, Vector3 at, float angle, Vector3 colliderSize, float mass, bool liftOnly)

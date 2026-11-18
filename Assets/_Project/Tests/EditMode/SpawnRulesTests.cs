@@ -15,13 +15,16 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
-        public void Tutorial_StartsOnTheTerraceLookingSouth()
+        public void Tutorial_StartsOnTheNorthBalconyLookingEastSoutheast()
         {
             Vector3 p = SpawnRules.Start(false, out float yaw);
             Vector2 tower = ValleyShape.TowerCenter;
             Assert.Less(Vector2.Distance(new Vector2(p.x, p.z), tower), TowerBuilder.TerraceRadius - 0.6f, "tiene que caer dentro de la terraza");
             Assert.Greater(p.y, ValleyShape.Height(tower.x, tower.y) + TowerBuilder.TerraceY);
-            Assert.AreEqual(180f, yaw, 0.01f);
+            Assert.AreEqual(115f, yaw, 0.01f);
+            // Balcon norte (r = 6,8 m): fuera del hueco de la rampa (que llega hasta InnerRadius) y dentro del parapeto.
+            Assert.Greater(Vector2.Distance(new Vector2(p.x, p.z), tower), TowerBuilder.InnerRadius, "el balcon queda por fuera del muro");
+            Assert.Greater(p.z, tower.y, "al norte de la torre");
         }
 
         [Test]

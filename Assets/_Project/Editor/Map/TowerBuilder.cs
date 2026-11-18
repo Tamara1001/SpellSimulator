@@ -15,7 +15,7 @@ namespace SpellSimulator.EditorTools.Map
     /// </summary>
     public static class TowerBuilder
     {
-        public const float OuterRadius = 5.5f;
+        public const float OuterRadius = 6.8f;
         public const float Wall = 0.6f;
         public const float InnerRadius = OuterRadius - Wall;
         public const float FloorHeight = 4.5f;
@@ -26,21 +26,21 @@ namespace SpellSimulator.EditorTools.Map
         /// Silueta (rework 2026-11-17): la torre es mas ancha abajo y arriba que en el medio. El interior no cambia (cilindro de
         /// InnerRadius): abajo hay un talud de piedra hasta BaseRadius y arriba la terraza vuela sobre mensulas hasta TerraceRadius.
         /// </summary>
-        public const float TerraceRadius = 7f, TerraceOuter = TerraceRadius + 0.5f;
-        public const float BaseRadius = 7.4f, BaseTop = 1.4f;
+        public const float TerraceRadius = 8.2f, TerraceOuter = TerraceRadius + 0.5f;
+        public const float BaseRadius = 8.6f, BaseTop = 1.4f;
         /// <summary>Postes del techo: sobre el muro (macizo en toda la vuelta), uno cada 36 grados.</summary>
-        public const float PostRadius = 5.2f, RoofPostHeight = 3.8f;
+        public const float PostRadius = 6.5f, RoofPostHeight = 3.8f;
         public const int RoofPosts = 10;
         public const int Sides = 20;
         public const float Row = 0.75f;
 
         // Rampas: radio interno/externo, giro total y angulo de inicio por piso.
-        public const float RampInner = 2.9f;
+        public const float RampInner = 4.8f;
         public const float RampOuter = InnerRadius - 0.05f;
-        public const float RampTurn = 270f;
+        public const float RampTurn = 180f;
         /// <summary>
-        /// Todas arrancan en el mismo angulo: cada rampa queda justo encima de la de abajo y en cada piso hay un descanso de
-        /// 90 grados (unos 6 m) entre la rampa que llega (270) y la que sigue (0). Antes eran { 0, 300, 240 } y el descanso media 30.
+        /// Todas arrancan en el mismo angulo (0 = este) y giran media vuelta por el norte hasta 180 (oeste): se sube de 0 a 180 y se
+        /// baja de 180 a 0. En cada piso queda libre el disco central (r < RampInner) y el arco sur (180..360): la plaza. Rework 2026-11-17.
         /// </summary>
         public static readonly float[] RampStart = { 0f, 0f, 0f };
         /// <summary>Altura libre sobre la rampa (el jugador mide ~2.1 m; prueba manual 2026-10-07: chocaba con 2.0).</summary>
@@ -48,7 +48,7 @@ namespace SpellSimulator.EditorTools.Map
         public const float FloorThickness = 0.3f;
 
         /// <summary>Puerta: ancho, alto, giro cerrada y abierta (grados, contra el muro oeste de la entrada) y duracion del giro.</summary>
-        public const float DoorWidth = 1.6f, DoorHeight = 2.9f, DoorClosedYaw = 0f, DoorOpenYaw = -150f, DoorSwing = 0.5f;
+        public const float DoorWidth = 1.92f, DoorHeight = 2.9f, DoorClosedYaw = 0f, DoorOpenYaw = -150f, DoorSwing = 0.5f;
 
         // Piedra calida (afuera arenisca, adentro revoque ocre), madera con veta y teja roja.
         private static readonly Color StoneA = new Color(0.76f, 0.7f, 0.58f);
@@ -136,11 +136,15 @@ namespace SpellSimulator.EditorTools.Map
         // ---------------------------------------------------------------- muro
 
         /// <summary>Ventanas por piso (segmentos del muro de 20 lados).</summary>
+        /// <summary>
+        /// Rework 2026-11-17: las rampas cubren el arco norte (0..180 grados) en todos los pisos, asi que las ventanas van en el arco sur
+        /// (segmento s = angulo s*18), sin tocar los segmentos 19 y 0 (llegada de rampas y faroles de nivel) ni el 15 (puerta).
+        /// </summary>
         private static readonly int[][] WindowSegments =
         {
-            new[] { 5, 0, 10 },
-            new[] { 3, 8, 13, 18 },
-            new[] { 1, 6, 11, 17 },
+            new[] { 11, 13, 17 },
+            new[] { 12, 14, 16, 18 },
+            new[] { 13, 16, 18 },
         };
 
         private const int DoorSegment = 15;
@@ -316,13 +320,15 @@ namespace SpellSimulator.EditorTools.Map
         {
             var b = new LowPolyMesh();
             float y = TerraceY + RoofPostHeight;
-            b.Frustum(Matrix4x4.identity, 5.0f, 5.5f, y - 0.4f, y, 12, Gold, true, true);     // aro dorado sobre los postes
-            b.Frustum(Matrix4x4.identity, 8.1f, 4.6f, y, y + 2.2f, 12, RoofDark, false, true);  // alero: cubre el balcon
+            // Radios escalados con PostRadius (rework 2026-11-17: la torre paso de 5,5 a 6,8 m de radio exterior).
+            const float k = PostRadius / 5.2f;
+            b.Frustum(Matrix4x4.identity, 5.0f * k, 5.5f * k, y - 0.4f, y, 12, Gold, true, true);     // aro dorado sobre los postes
+            b.Frustum(Matrix4x4.identity, TerraceOuter + 0.6f, 4.6f * k, y, y + 2.2f, 12, RoofDark, false, true);  // alero: cubre el balcon
             // Cono alto de teja roja en cuatro franjas (alternadas) y una aguja dorada.
-            b.Frustum(Matrix4x4.identity, 4.6f, 3.3f, y + 2.2f, y + 5f, 12, Roof, false);
-            b.Frustum(Matrix4x4.identity, 3.3f, 2.1f, y + 5f, y + 8f, 12, RoofDark, false);
-            b.Frustum(Matrix4x4.identity, 2.1f, 1.0f, y + 8f, y + 11f, 12, Roof, false);
-            b.Frustum(Matrix4x4.identity, 1.0f, 0f, y + 11f, y + 14f, 12, RoofDark, false);
+            b.Frustum(Matrix4x4.identity, 4.6f * k, 3.3f * k, y + 2.2f, y + 5f, 12, Roof, false);
+            b.Frustum(Matrix4x4.identity, 3.3f * k, 2.1f * k, y + 5f, y + 8f, 12, RoofDark, false);
+            b.Frustum(Matrix4x4.identity, 2.1f * k, 1.0f * k, y + 8f, y + 11f, 12, Roof, false);
+            b.Frustum(Matrix4x4.identity, 1.0f * k, 0f, y + 11f, y + 14f, 12, RoofDark, false);
             b.Frustum(Matrix4x4.identity, 0.12f, 0f, y + 13.6f, y + 16.2f, 6, Gold, false);      // aguja
             var orb = Matrix4x4.Translate(new Vector3(0f, y + 14.7f, 0f));
             b.Frustum(orb, 0.3f, 0f, 0f, 0.35f, 8, Gold, false, true);
@@ -442,9 +448,10 @@ namespace SpellSimulator.EditorTools.Map
             for (int i = 0; i < 6; i++)
             {
                 float a = 30f + i * 60f;
-                // Hasta el muro solo en el arco sin rampa de la planta baja ni hueco arriba (de 300 a 50 grados).
-                float d = Mathf.Repeat(a + 60f, 360f);
-                float outer = d < 110f ? InnerRadius - 0.05f : RampInner - 0.08f;
+                // Hasta el muro solo fuera del arco de la rampa de abajo (0..180) y del hueco del piso (de HoleFrom a RampTurn).
+                float holeFrom = RampTurn * (1f - (Headroom + FloorThickness) / FloorHeight);
+                bool overHole = a >= holeFrom - 10f && a <= RampTurn + 10f;
+                float outer = overHole ? RampInner - 0.08f : InnerRadius - 0.05f;
                 Vector3 dir = Polar(1f, a, 0f);
                 b.Box(Matrix4x4.TRS(dir * (outer + 0.3f) * 0.5f + Vector3.up * y, Quaternion.LookRotation(dir), Vector3.one), new Vector3(0.18f, 0.18f, outer - 0.3f), WoodDark);
             }
@@ -465,9 +472,11 @@ namespace SpellSimulator.EditorTools.Map
         {
             var b = new LowPolyMesh();
             const float y = 0.05f;
-            b.Box(Matrix4x4.Translate(new Vector3(0f, y + 0.006f, -3.25f)), new Vector3(1.15f, 0.012f, 2.5f), Ochre);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, y + 0.008f, -3.25f)), new Vector3(0.95f, 0.012f, 2.3f), Cloth);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, y + 0.01f, -3.25f)), new Vector3(0.3f, 0.012f, 1.9f), ClothDark);
+            // Pasillo de la puerta (r = InnerRadius) al centro: de z = -(InnerRadius - 0.3) a z = -2,3.
+            float aisleLen = InnerRadius - 0.3f - 2.3f, aisleZ = -(InnerRadius - 0.3f + 2.3f) * 0.5f;
+            b.Box(Matrix4x4.Translate(new Vector3(0f, y + 0.006f, aisleZ)), new Vector3(1.15f, 0.012f, aisleLen), Ochre);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, y + 0.008f, aisleZ)), new Vector3(0.95f, 0.012f, aisleLen - 0.2f), Cloth);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, y + 0.01f, aisleZ)), new Vector3(0.3f, 0.012f, aisleLen - 0.6f), ClothDark);
             var round = Matrix4x4.Translate(new Vector3(0f, y, 0.3f));
             b.Frustum(round, 1.75f, 1.75f, 0f, 0.012f, 20, ClothDark, true, false);
             b.Frustum(round, 1.55f, 1.55f, 0f, 0.015f, 20, Ochre, true, false);

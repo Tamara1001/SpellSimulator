@@ -19,11 +19,11 @@ namespace SpellSimulator.World.Map
         /// <summary>Por debajo de esta altura el jugador se cayo del mundo y vuelve al nexo (igual que Respawnable).</summary>
         public const float FallHeight = -8f;
 
-        /// <summary>Punto de la terraza donde arranca el tutorial, relativo al centro de la torre (XZ): en el balcon, al norte (el hueco de la rampa va de 72 a 270 grados y la rampa llega al sur): se mira al sur, por encima del hueco, con el valle detras.</summary>
-        public static readonly Vector2 TerraceOffset = new Vector2(-1.04f, 5.9f);
+        /// <summary>Punto de la terraza donde arranca el tutorial, relativo al centro de la torre (XZ): en el balcon, al norte (r = 6,8 m, 90 grados; el hueco de la rampa va de 48 a 180 grados y queda por dentro del balcon): se mira al este-sureste (rumbo 115), por donde sigue el recorrido en sentido horario.</summary>
+        public static readonly Vector2 TerraceOffset = new Vector2(0f, 6.8f);
 
         /// <summary>Rumbo (grados, 0 = norte, 90 = este) con el que se aparece en la terraza y en el nexo.</summary>
-        public const float TerraceYaw = 180f, NexusYaw = 45f;
+        public const float TerraceYaw = 115f, NexusYaw = 45f;
 
         /// <summary>Tablero del mapa: al noreste del nexo, entre el camino a la torre y el camino al laboratorio.</summary>
         public static readonly Vector2 MapBoard = new Vector2(3.6f, -2.4f);

@@ -719,10 +719,10 @@ namespace SpellSimulator.EditorTools
                 var pileBodies = pileRoot != null ? pileRoot.GetComponentsInChildren<Rigidbody>() : new Rigidbody[0];
                 float floor2 = SpellSimulator.EditorTools.Map.TowerBuilder.FloorHeight * 2f;
                 Vector3 towerAt = tutorial != null ? tutorial.transform.position : Vector3.zero;
-                Vector3 landing = towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(3.9f, SpellSimulator.EditorTools.Map.MapTutorial.PileAngle, floor2 + 0.5f);
+                Vector3 landing = towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(5.45f, SpellSimulator.EditorTools.Map.MapTutorial.PileAngle, floor2 + 0.5f);
                 bool Piled() { foreach (var c in Physics.OverlapSphere(landing, 0.9f)) if (c.attachedRigidbody != null && c.transform.IsChildOf(pileRoot)) return true; return false; }
                 bool piled = pileBodies.Length >= 5 && Piled();
-                bool railed = Physics.Raycast(towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(2.3f, 100f, floor2 + 0.5f),
+                bool railed = Physics.Raycast(towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(SpellSimulator.EditorTools.Map.TowerBuilder.RampInner - 0.6f, 100f, floor2 + 0.5f),
                     SpellSimulator.EditorTools.Map.TowerBuilder.Polar(1f, 100f, 0f), out RaycastHit railHit, 1.2f, ~0, QueryTriggerInteraction.Ignore) && railHit.collider.name.StartsWith("Tutorial_Rail");
                 foreach (var body in pileBodies) { body.position += Vector3.up * 40f; body.transform.position = body.position; }
                 Physics.SyncTransforms();
@@ -731,6 +731,15 @@ namespace SpellSimulator.EditorTools
                 Physics.SyncTransforms();
                 bool rearmed = pileBodies.Length > 0 && Piled();
                 Check(piled && railed && cleared && rearmed, $"tutorial piso 2: la pila tapa el descanso, hay baranda y se rearma (pila {piled}, baranda {railed}, despejada {cleared}, rearmada {rearmed})");
+                // Geometria de la torre (rework 2026-11-17): rampa de media vuelta por el norte, hueco en el piso solo sobre ella y plaza sur con piso.
+                bool GroundIs(float r, float a, float yFrom, string expected) =>
+                    Physics.Raycast(towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(r, a, yFrom), Vector3.down, out RaycastHit gh, 3f, ~0, QueryTriggerInteraction.Ignore) && gh.collider.name == expected;
+                float midRing = (SpellSimulator.EditorTools.Map.TowerBuilder.RampInner + SpellSimulator.EditorTools.Map.TowerBuilder.RampOuter) * 0.5f;
+                bool rampNorth = GroundIs(midRing, 90f, 2.25f + 1.2f, "TowerRamp_0");
+                bool holeOverRamp = GroundIs(midRing, 120f, floor2 + 0.5f, "TowerRamp_1");
+                bool plazaSouth = GroundIs(midRing, 270f, floor2 + 0.5f, "TowerFloor_2") && GroundIs(midRing, 225f, SpellSimulator.EditorTools.Map.TowerBuilder.FloorHeight + 0.5f, "TowerFloor_1");
+                bool centerDisc = GroundIs(0f, 0f, floor2 + 0.5f, "TowerFloor_2");
+                Check(rampNorth && holeOverRamp && plazaSouth && centerDisc, $"torre v2: rampa por el norte, hueco solo sobre la rampa, plaza sur y disco central con piso (rampa {rampNorth}, hueco {holeOverRamp}, plaza {plazaSouth}, disco {centerDisc})");
                 // Terraza (v2): la reja de la bajada solo se apaga cuando se hicieron las dos acciones (agacharse y saltar) y el rearme la vuelve a poner.
                 bool gateUp = tutorial != null && tutorial.TerraceGateUp && !tutorial.Crouched && !tutorial.JumpedWall;
                 if (tutorial != null) tutorial.MarkTerraceDone(true, false);
@@ -753,7 +762,7 @@ namespace SpellSimulator.EditorTools
                 // Piso 1 (T3): la tela pesada tapa la bajada (un rayo tangente la toca), el libro del viento esta, y al soltarla el paso queda libre y se rearma.
                 var cloth = pileRoot != null ? pileRoot.GetComponentInChildren<SpellSimulator.World.TutorialCloth>(true) : null;
                 float floor1 = SpellSimulator.EditorTools.Map.TowerBuilder.FloorHeight;
-                Vector3 clothFrom = towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(3.9f, SpellSimulator.EditorTools.Map.MapTutorial.ClothAngle + 12f, floor1 + 1.2f);
+                Vector3 clothFrom = towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(5.5f, SpellSimulator.EditorTools.Map.MapTutorial.ClothAngle + 12f, floor1 + 1.2f);
                 Vector3 clothDir = SpellSimulator.EditorTools.Map.TowerBuilder.Polar(1f, SpellSimulator.EditorTools.Map.MapTutorial.ClothAngle - 90f, 0f);
                 bool ClothBlocks() => Physics.Raycast(clothFrom, clothDir, out RaycastHit ch, 1.5f, ~0, QueryTriggerInteraction.Ignore) && ch.collider.GetComponentInParent<SpellSimulator.World.TutorialCloth>() != null;
                 bool hung = cloth != null && !cloth.IsOpen && ClothBlocks();

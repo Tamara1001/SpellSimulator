@@ -5,6 +5,15 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-17 — Torre v2, paso 1: geometría más grande y rampas de media vuelta
+
+- `TowerBuilder`: `OuterRadius` 5,5 → 6,8 m, `InnerRadius` 6,2, `RampInner` 4,8 (rampa de 1,35 m pegada al muro), **`RampTurn` 270° → 180°** (sube de 0° a 180° por el norte, se baja de 180° a 0°), hueco del piso de 48° a 180°. Queda libre el disco central (Ø 9,6 m) y el arco sur de cada piso (la plaza).
+- Terraza/talud/postes/barrera al nuevo radio (`TerraceRadius` 8,2, `BaseRadius` 8,6, `PostRadius` 6,5, `BarrierRadius` 9,2); techo escalado; puerta de 1,92 m (el ancho del vano); alfombra del pasillo; vigas del cielorraso según el hueco nuevo.
+- **Ventanas al arco sur** (las rampas tapan el norte): segmentos 11/13/17, 12/14/16/18 y 13/16/18 por piso.
+- Spawn en el balcón norte (`TerraceOffset` (0; 6,8), rumbo 115°), `TerraceRules` (viga 25°, muro 325°, reja 195°, radio 8,2). `MapTutorial`: hueco 48°–180°, valla 115°, pila 198°, tela 195°, trabas 258°/282°/294°; props de la pila, diana (al muro SE, 315°) y trabas movidos a los radios nuevos; `Respawnable.TowerRadius` 9.
+- Tests: `TutorialRulesTests` y `SpawnRulesTests` actualizados (media vuelta, hueco, disco de 9,6 m). Smoke +1 chequeo («torre v2»: rampa norte, hueco solo sobre la rampa, plaza sur, disco central). 626 EditMode.
+- **Pendiente (pasos 2–5):** los obstáculos de la terraza, los carteles y los ejercicios del piso 2 todavía están en sus posiciones viejas (la viga y el muro cruzan el centro); se rehacen piso por piso.
+
 ## 2026-11-17 — Tutoriales v2, R3: piso 1 con plantilla fantasma y rayo de apunte
 
 - Lienzo de práctica agarrable sobre una mesita del piso 1 (`TutorialPaper_Wind`) con `TutorialPaperGuide`: **plantilla fantasma** azul del sello de la receta `gust` (sigilo de viento, dos columnas y anillo; 14 trazos hechos con `LineRenderer`, no son trazos del lienzo ni entran al reconocimiento) y **rayo azul** que sale del papel por `EmissionNormal` mientras se lo sostiene.

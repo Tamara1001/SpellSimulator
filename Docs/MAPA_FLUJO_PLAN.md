@@ -52,6 +52,12 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
 - [x] **T2** Piso 2: mover objetos (baranda en el hueco de la rampa, pila de cajas y barril, rearmado)
 - [x] **T3** Piso 1: objetos mágicos (tinta, papel, primer hechizo, tomo I de viento)
 - [x] **T4** Planta baja: agua, tierra, columna y abrir la puerta con un hechizo. **T1-T4 reemplazan a 9b y 13.**
+- **Rediseño de la torre v2 (aprobado por Tamara el 2026-11-17; planos y carteles en `Docs/Torre/`), un commit por paso y OK de Tamara antes del siguiente:**
+  - [x] **TV1** Geometría: `OuterRadius` 6,8 / `InnerRadius` 6,2, rampa de media vuelta por el norte (0°–180°, r 4,8–6,15), hueco del piso 48°–180°, ventanas al arco sur, puerta de 1,92 m, techo y postes escalados, spawn en el balcón norte (0, 6,8) rumbo 115°
+  - [ ] **TV2** Terraza: baranda interior en r 4,8, viga/muro/reja a los radios nuevos, carteles 1–5 (resolver «agachado al saltar»)
+  - [ ] **TV3** Piso 2: pila a 198° en el pasillo, práctica opcional en el disco central, carteles 6–10
+  - [ ] **TV4** Piso 1: mesa de pluma, Tomo I, atril inclinado con lienzo y flecha de apunte, cortina con aspecto de tela, carteles 11–13, zona de viento al norte
+  - [ ] **TV5** Planta baja: libro `elements`, atril con lienzo y flecha al pestillo, trabas, cartel 14, quitar objetos huérfanos
 - [ ] **R-tutoriales v2** *(sigue este, antes del Archivo; plan aprobado por Tamara el 2026-11-17 tras probar T1-T4 a mano y ver que no funcionaban)*:
   - [x] **R1** Terraza: viga y muro cruzan de borde a borde (no se rodean por el centro), reja magica en la rampa que se apaga al agacharse y saltar, 2 faroles testigo, 4 carteles en orden
   - [x] **R2** Piso 2: ejercicios opcionales (flotar en un aro, girar un lienzo hasta encajar, tirar a una diana) + cartel de «dejar flotando»; la pila sigue destrabando — hecho 2026-11-17: 3 estaciones opcionales (marco para dejar el lienzo flotando, marco de canto, diana) con farolito, mesita con lienzo de práctica y cartel «Opcional»; no traban la bajada.

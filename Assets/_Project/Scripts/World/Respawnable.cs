@@ -15,7 +15,7 @@ namespace SpellSimulator.World
         // Revision barata (cada 0.5 s, sin allocations) de objetos que atravesaron el terreno o se alejaron demasiado.
         private const float CheckPeriod = 0.5f;
         private const float MaxDistance = 150f;
-        private const float TowerRadius = 7f;
+        private const float TowerRadius = 9f;
         private const float GroundMargin = 1.5f;
 
         private static readonly System.Collections.Generic.List<Interfaces.IResettable> resettables = new System.Collections.Generic.List<Interfaces.IResettable>();
