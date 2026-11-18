@@ -50,6 +50,8 @@ namespace SpellSimulator.Player
         {
             Vector3 position = SpawnRules.Start(skipTutorial, out float yaw);
             Place(position, yaw);
+            // Nadie empieza con algo en la mano (en VR un agarre accidental antes del tutorial dejaba un lapiz equipado).
+            if (TryGetComponent(out PlayerInteractor interactor)) interactor.ClearHands();
             if (skipTutorial) TutorialSeen = true;
             World.TowerTutorial tutorial = World.TowerTutorial.Instance;
             if (tutorial != null)

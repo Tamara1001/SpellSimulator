@@ -30,6 +30,7 @@ namespace SpellSimulator.Player
         private ObjectMover objectMover;
         private PlayerInteractor interactor;
         private Camera mainCamera;
+        private Rigidbody body;
         private float baseFov;
         private float currentFov;
         private float pitch;
@@ -89,6 +90,14 @@ namespace SpellSimulator.Player
             Camera cam = Camera.main;
             Vector3 pivot = cam != null ? cam.transform.position : transform.position;
             transform.RotateAround(pivot, Vector3.up, flick * VrSnapTurnDegrees);
+            // Con interpolacion el Rigidbody pisa el transform en el cuadro siguiente: se le pasa la nueva pose.
+            if (body == null) body = GetComponent<Rigidbody>();
+            if (body != null)
+            {
+                body.position = transform.position;
+                body.rotation = transform.rotation;
+                body.angularVelocity = Vector3.zero;
+            }
         }
 
         /// <summary>Baja el campo de vision mientras se mantiene X y lo devuelve al soltar. Solo PC.</summary>

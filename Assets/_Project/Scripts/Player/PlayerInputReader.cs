@@ -470,7 +470,11 @@ namespace SpellSimulator.Player
 
             // Salto: A o X de la mano que NO lleva la herramienta (la otra deshace). Agacharse: click del stick izquierdo (alterna).
             if (VrMainRight ? primaryLeftAction.WasPressedThisFrame() : primaryRightAction.WasPressedThisFrame()) IsJumping = true;
-            if (crouchToggleAction.WasPressedThisFrame()) vrCrouchLatched = !vrCrouchLatched;
+            if (crouchToggleAction.WasPressedThisFrame())
+            {
+                vrCrouchLatched = !vrCrouchLatched;
+                Hud.Notify("vrcrouch", vrCrouchLatched ? "Agachado (clic del stick izq. para levantarte)" : "De pie", 2f);
+            }
             if (vrCrouchLatched) IsCrouching = true;
 
             // B: toque = slot siguiente, mantener = arrojar la herramienta.

@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-18 — VR, 3.ª prueba: giro con el stick, agacharse real, manos vacías al empezar, carteles con controles VR
+
+- **Giro con stick der.:** el giro a saltos rotaba el transform pero el Rigidbody (con interpolación) lo pisaba; ahora se le pasa la nueva pose (`PlayerLook.HandleSnapTurn`).
+- **Agacharse:** además del clic del stick izq. (ahora avisa «Agachado / De pie»), agacharse de verdad (cabeza ≥ 35 cm más baja que la más alta vista) agacha el cuerpo (`PlayerMovement.PhysicalCrouch`).
+- **Lápiz al aparecer:** no se halló quién lo equipaba (ningún código lo da); `PlayerSpawn.Begin` ahora vacía las manos (`PlayerInteractor.ClearHands`). Pendiente de confirmar en el visor.
+- **Tutorial:** `VrTutorialTexts` cambia al empezar (solo VR) los textos de los carteles `Note_Tutorial_*` por los controles Touch.
+- Sin probar en el visor; pendiente: dibujar apoyando el lápiz sobre el papel.
+
 ## 2026-11-18 — VR, 2.ª prueba: tinta en los dos ojos, salto/agacharse, HUD en la muñeca, menos mareo
 
 Segunda prueba de Tamara en Quest 3 (tinta solo en el ojo izquierdo, no salta ni se agacha, sin hotbar ni menú, agarrar con la izquierda raro, no deja flotar, no cambia el grosor, mareo, puerta abierta al empezar).

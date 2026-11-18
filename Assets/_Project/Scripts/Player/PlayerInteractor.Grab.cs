@@ -137,6 +137,20 @@ namespace SpellSimulator.Player
             wasUsingTool = false;
         }
 
+        /// <summary>Deja las manos vacias (arrastre, agarre y herramienta equipada). Lo usa el inicio de partida: nadie empieza con algo en la mano.</summary>
+        public void ClearHands()
+        {
+            if (IsDragging) mover.End(false);
+            if (inventory.HandSecondary != null) DropHandSecondary();
+            for (int i = 0; i < SlotCount; i++)
+            {
+                if (inventory.HotbarItem(i) == null) continue;
+                SelectSlotInternal(i);
+                DropMain(false, Vector3.zero);
+            }
+            StowMain();
+        }
+
         /// <summary>Suelta lo de la mano principal y libera su slot. Con arrojar = true sale con esa velocidad.</summary>
         private void DropMain(bool throwIt, Vector3 velocity)
         {

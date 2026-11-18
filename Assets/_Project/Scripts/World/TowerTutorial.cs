@@ -117,6 +117,7 @@ namespace SpellSimulator.World
         public void Begin()
         {
             progress.Begin();
+            VrTutorialTexts.Apply();
             TutorialExercise.ResetAll();
             crouched = false;
             jumped = false;

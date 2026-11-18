@@ -128,7 +128,7 @@ namespace SpellSimulator.Player
             if (prone) target = 2f; // tumbado: ignora Ctrl y no se levanta por agacharse
             else
             {
-                if (inputReader.IsCrouching) crouching = true;
+                if (inputReader.IsCrouching || PhysicalCrouch()) crouching = true;
                 else if (crouching && HasHeadroom(standHeight)) crouching = false;
                 target = crouching ? 1f : 0f;
             }
@@ -146,6 +146,24 @@ namespace SpellSimulator.Player
                 p.y = standCameraY - StanceCameraDrop(stanceT);
                 cameraRoot.localPosition = p;
             }
+        }
+
+        private const float VrPhysicalCrouchDrop = 0.35f;
+        private float vrHeadBaseline = -1f;
+        private Transform vrHead;
+
+        /// <summary>
+        /// VR: agacharse de verdad. La altura de la cabeza seguida por el visor (local a la raiz de la camara) se compara con la mas alta
+        /// que se vio (se recalibra despacio): si baja mas de 35 cm, el cuerpo se agacha tambien.
+        /// </summary>
+        private bool PhysicalCrouch()
+        {
+            if (!PlatformDetector.IsVR) return false;
+            if (vrHead == null) { var cam = Camera.main; if (cam == null) return false; vrHead = cam.transform; }
+            float y = vrHead.localPosition.y;
+            if (vrHeadBaseline < 0f || y > vrHeadBaseline) vrHeadBaseline = y;
+            else vrHeadBaseline = Mathf.MoveTowards(vrHeadBaseline, y, 0.02f * Time.deltaTime);
+            return y < vrHeadBaseline - VrPhysicalCrouchDrop;
         }
 
         // La capsula no puede ser mas baja que su diametro.
