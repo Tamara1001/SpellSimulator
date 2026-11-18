@@ -5,6 +5,24 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-18 — Modificadores VFX: Alto contraste, diferenciación clara de signos y corrección de ancla
+
+- **Diferenciación inconfundible de signos (`SpellManifestation.cs`, `SpellVisualModifierMath.cs`, `ElementVfx.cs`):**
+  - **Atenuación base:** con signos dominantes la emisión base (Jet/Burst) baja al 20–25%, evitando opacar las pistas de signo.
+  - **Crush:** fragmentos sólidos grandes en 3D (mesh cubes/rock shards vía `ParticleSystemRenderer`) cayendo y estallando con destello de choque.
+  - **Orb:** membrana/esfera traslúcida con borde Fresnel del color elemental envolviendo el efecto y columna base al 20%.
+  - **Billowing:** nube enorme lenta y esponjosa (partículas ~3.8x, baja velocidad, sin hundimiento).
+  - **Cool:** tinte blanco/azul forzado en todas las partículas del hechizo (`colorOverLifetime`/`startColor`) más vaho gélido descendente.
+  - **Empower:** efecto 1.6x más grande, destellos brillantes continuos e intensidad de luz x2.6.
+  - **Entwine:** espiral estrecha densa de alto contraste alrededor del eje con avance longitudinal.
+  - **Focus:** haz fino láser directo hacia delante con base reducida y destello en la boca.
+  - **Gather vs Collection:** `gather` con succión centrípeta radial continua; `collection` con pulsos periódicos hacia un punto focal sobre el sello.
+  - **Repetition:** reflujo cinemático donde las partículas retornan al sello acompañadas de pulsos de eco.
+  - **Weave:** dos hélices gruesas entrelazadas en rotación opuesta.
+  - **Spread / Gravity:** `spread_high` amplía notablemente el cono y radio; `gravity_low` genera flotación ascendente visible.
+  - **Ancla y gravedad (Tierra y Cristal):** elevación del ancla en superficies y atenuación de gravedad extrema en Shuriken para evitar que el efecto se hunda bajo el terreno.
+- **Tests EditMode:** `SpellVisualModifierMathTests.cs` actualizado con validaciones para `GetCollectionParams` y suite completa en verde.
+
 ## 2026-11-18 — Saltear tutorial: sin pared invisible en la puerta
 
 - `TowerTutorial.Skip()` apaga los colliders de las trabas de la puerta (el sensor de viento invisible `DoorLatch_Bar` bloqueaba el vano); `ResetTutorial` los reactiva. Sin probar a mano.

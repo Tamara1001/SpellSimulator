@@ -112,11 +112,11 @@ namespace SpellSimulator.EditorTools
                         report.AppendLine($"{element.Id}_{variant.Id} ERROR sin manifestacion");
                         continue;
                     }
-                    manifestation.FastForward(SpellManifestation.ChargeSeconds + SpellManifestation.StrikeSeconds + 1.5f);
+                    manifestation.FastForward(SpellManifestation.ChargeSeconds + SpellManifestation.StrikeSeconds + 0.7f);
                     yield return null;
 
                     string file = Path.GetFullPath(Path.Combine(CaptureDirectory, $"mod_{element.Id}_{variant.Id}.png"));
-                    string hash = Capture(file, manifestation.Frame.Origin, manifestation.Frame.Normal);
+                    string hash = Capture(file, manifestation.Frame.Origin, manifestation.Frame.Normal, manifestation);
                     string duplicate = hashesForElement.TryGetValue(hash, out string original) ? " DUPLICADO_DE=" + original : string.Empty;
                     if (duplicate.Length == 0) hashesForElement.Add(hash, variant.Id);
                     report.AppendLine($"{element.Id}_{variant.Id} {hash}{duplicate}");
@@ -147,7 +147,7 @@ namespace SpellSimulator.EditorTools
                 primarySizeNorm = 1f, sizeRatio = 1f, strength = 1f, effectScale = 1f,
                 primaryManifestation = Manifestations.Column, manifestations = new ManifestationStrength[0],
                 force = 0.7f, spread = 0.25f, focus = 0.5f, range = 0.6f, gravity = 1f,
-                duration = 2f, stability = 1f, quality = 1f, neatness = 1f,
+                duration = 4f, stability = 1f, quality = 1f, neatness = 1f,
                 direction = Vector3.forward, directionCoherence = 1f, activatedAt = Time.time,
                 plan = plan, sealRadius = 0.35f, inkPower = 1f, waterproof = false,
                 analysisBoost = 1f, analysisPivot = new Vector2(0.5f, 0.5f)
@@ -179,7 +179,7 @@ namespace SpellSimulator.EditorTools
             foreach (var t in root.GetComponentsInChildren<Transform>(true)) t.gameObject.layer = layer;
         }
 
-        private static string Capture(string path, Vector3 target, Vector3 normal)
+        private static string Capture(string path, Vector3 target, Vector3 normal, SpellManifestation manifestation)
         {
             const int width = 640, height = 360;
             var go = new GameObject("HarnessModifierMatrixCam");
@@ -189,9 +189,46 @@ namespace SpellSimulator.EditorTools
             try
             {
                 var camera = go.AddComponent<Camera>();
-                // Vista desde el frente del sello (como la matriz original, que mostro el efecto), mas cerca.
-                go.transform.position = target + normal.normalized * 2.4f + Vector3.up * 0.2f;
-                go.transform.LookAt(target + normal.normalized * 0.4f);
+                // Vista LATERAL al eje del chorro (mirando de frente se ve solo la boca del efecto). Se prueba cada lado y distancia
+                // hasta encontrar una linea de vision sin paredes ni muebles (la torre es angosta).
+                Vector3 n = normal.normalized;
+                Vector3 side = Vector3.Cross(n, Mathf.Abs(n.y) > 0.9f ? Vector3.forward : Vector3.up).normalized;
+                Vector3 focus = target + n * 0.4f;
+                float reach = 1.5f;
+                // Encuadre por los limites reales de las particulas vivas (si las hay).
+                bool hasBounds = false;
+                Bounds live = new Bounds(focus, Vector3.zero);
+                foreach (var ps in manifestation.GetComponentsInChildren<ParticleSystem>())
+                {
+                    if (ps.particleCount == 0) continue;
+                    var r = ps.GetComponent<ParticleSystemRenderer>();
+                    if (r == null) continue;
+                    if (!hasBounds) { live = r.bounds; hasBounds = true; } else live.Encapsulate(r.bounds);
+                }
+                if (hasBounds)
+                {
+                    focus = live.center;
+                    if (Vector3.Dot(focus - target, n) < 0.15f) focus = target + n * 0.4f;
+                    reach = Mathf.Clamp(live.extents.magnitude * 2.2f, 1.0f, 6f);
+                }
+                string boundsText = hasBounds ? live.ToString() : "sin particulas";
+                report.AppendLine("  bounds=" + boundsText + " origen=" + target + " normal=" + normal);
+                Vector3 position = focus + side * 1.2f;
+                bool found = false;
+                foreach (float distance in new[] { reach, reach * 0.8f, reach * 0.6f, reach * 0.4f })
+                {
+                    foreach (Vector3 dir in new[] { side, -side, Vector3.Cross(n, side).normalized, -Vector3.Cross(n, side).normalized })
+                    {
+                        Vector3 candidate = focus + dir * distance;
+                        if (Physics.Linecast(focus, candidate, ~0, QueryTriggerInteraction.Ignore)) continue;
+                        position = candidate;
+                        found = true;
+                        break;
+                    }
+                    if (found) break;
+                }
+                go.transform.position = position;
+                go.transform.LookAt(focus);
                 camera.fieldOfView = 42f;
                 camera.targetTexture = texture;
                 camera.Render();

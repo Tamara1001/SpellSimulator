@@ -13,11 +13,23 @@ namespace SpellSimulator.Output
         /// <summary>Capas que no chocan: el jugador, los triggers y la UI.</summary>
         private static int CollisionMask => ~LayerMask.GetMask("Ignore Raycast", "Player", "UI", "TransparentFX");
 
-        private static readonly List<ParticleSystemVertexStream> MeshStreams = new List<ParticleSystemVertexStream>
+        public static readonly List<ParticleSystemVertexStream> MeshStreams = new List<ParticleSystemVertexStream>
         {
             ParticleSystemVertexStream.Position, ParticleSystemVertexStream.Normal,
             ParticleSystemVertexStream.Color, ParticleSystemVertexStream.UV,
         };
+
+        private static Mesh cubeMesh;
+        public static Mesh GetCubeMesh()
+        {
+            if (cubeMesh == null)
+            {
+                var temp = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                cubeMesh = temp.GetComponent<MeshFilter>().sharedMesh;
+                Object.DestroyImmediate(temp);
+            }
+            return cubeMesh;
+        }
 
         public static ParticleSystem Create(string name, Transform parent, ElementLook look, Vector3 position, Quaternion rotation,
             float scale, bool local = false, float? gravityOverride = null)

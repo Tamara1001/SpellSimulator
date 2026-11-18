@@ -251,6 +251,23 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
+        public void CollectionParams_GeneranPulsosPeriodicosPorElemento()
+        {
+            var colors = new HashSet<Color>();
+
+            foreach (var variant in AllVariants)
+            {
+                var p = SpellVisualModifierMath.GetCollectionParams(variant, 1f, 1f);
+                Assert.Less(p.speedFactor, 0f, $"Collection en {variant} debe converger (speedFactor < 0)");
+                Assert.Greater(p.burstCount, 0, $"Collection en {variant} debe tener pulsos periódicos de ráfaga");
+                Assert.Greater(p.shapeRadiusFactor, 2f, $"Collection en {variant} debe tener alcance exterior para converger");
+                colors.Add(p.startColor);
+            }
+
+            Assert.AreEqual(6, colors.Count, "Cada elemento debe tener color de acumulación distintivo");
+        }
+
+        [Test]
         public void WeaveParams_DobleHeliceConFasesYColoresComplementarios()
         {
             foreach (var variant in AllVariants)

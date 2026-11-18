@@ -115,96 +115,96 @@ namespace SpellSimulator.Output
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Cone,
-                        shapeRadiusFactor = 0.4f,
-                        shapeAngle = 70f,
-                        sizeFactor = 1.4f,
-                        speedFactor = 1.3f,
-                        lifetimeFactor = 0.6f,
+                        shapeRadiusFactor = 0.5f,
+                        shapeAngle = 65f,
+                        sizeFactor = 2.4f,
+                        speedFactor = 1.4f,
+                        lifetimeFactor = 0.7f,
                         rateFactor = 0f,
                         burstCount = Mathf.RoundToInt(180f * strNorm),
                         orbitalSpeed = 0f,
                         radialSpeed = 0f,
                         startColor = new Color(1f, 0.22f, 0.05f, 1f),
                         endColor = new Color(0.25f, 0.05f, 0.02f, 0f),
-                        lightIntensityBoost = 1.5f
+                        lightIntensityBoost = 1.8f
                     };
                 case ElementVariant.Water:
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Circle,
-                        shapeRadiusFactor = 0.5f,
+                        shapeRadiusFactor = 0.6f,
                         shapeAngle = 0f,
-                        sizeFactor = 0.8f,
-                        speedFactor = 1.4f,
-                        lifetimeFactor = 0.5f,
+                        sizeFactor = 2.2f,
+                        speedFactor = 1.3f,
+                        lifetimeFactor = 0.65f,
                         rateFactor = 0f,
                         burstCount = Mathf.RoundToInt(220f * strNorm),
                         orbitalSpeed = 0f,
                         radialSpeed = 0f,
                         startColor = new Color(0.9f, 0.96f, 1f, 1f),
                         endColor = new Color(0.08f, 0.35f, 0.8f, 0f),
-                        lightIntensityBoost = 1.2f
+                        lightIntensityBoost = 1.4f
                     };
                 case ElementVariant.Wind:
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Circle,
-                        shapeRadiusFactor = 0.7f,
+                        shapeRadiusFactor = 0.8f,
                         shapeAngle = 0f,
-                        sizeFactor = 1.6f,
-                        speedFactor = 1.8f,
-                        lifetimeFactor = 0.4f,
+                        sizeFactor = 2.5f,
+                        speedFactor = 1.6f,
+                        lifetimeFactor = 0.55f,
                         rateFactor = 0f,
-                        burstCount = Mathf.RoundToInt(150f * strNorm),
+                        burstCount = Mathf.RoundToInt(160f * strNorm),
                         orbitalSpeed = 0f,
                         radialSpeed = 0f,
                         startColor = new Color(0.9f, 0.94f, 1f, 0.85f),
                         endColor = new Color(0.6f, 0.75f, 0.9f, 0f),
-                        lightIntensityBoost = 1.1f
+                        lightIntensityBoost = 1.3f
                     };
                 case ElementVariant.Earth:
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Hemisphere,
-                        shapeRadiusFactor = 0.45f,
+                        shapeRadiusFactor = 0.55f,
                         shapeAngle = 0f,
-                        sizeFactor = 2.0f,
-                        speedFactor = 1.1f,
-                        lifetimeFactor = 0.8f,
+                        sizeFactor = 3.0f,
+                        speedFactor = 1.2f,
+                        lifetimeFactor = 0.85f,
                         rateFactor = 0f,
-                        burstCount = Mathf.RoundToInt(130f * strNorm),
+                        burstCount = Mathf.RoundToInt(140f * strNorm),
                         orbitalSpeed = 0f,
                         radialSpeed = 0f,
                         startColor = new Color(0.62f, 0.48f, 0.32f, 1f),
                         endColor = new Color(0.28f, 0.2f, 0.14f, 0f),
-                        lightIntensityBoost = 1.0f
+                        lightIntensityBoost = 1.2f
                     };
                 case ElementVariant.Crystal:
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Sphere,
-                        shapeRadiusFactor = 0.4f,
+                        shapeRadiusFactor = 0.5f,
                         shapeAngle = 0f,
-                        sizeFactor = 1.1f,
-                        speedFactor = 1.5f,
-                        lifetimeFactor = 0.65f,
+                        sizeFactor = 2.6f,
+                        speedFactor = 1.4f,
+                        lifetimeFactor = 0.75f,
                         rateFactor = 0f,
                         burstCount = Mathf.RoundToInt(200f * strNorm),
                         orbitalSpeed = 0f,
                         radialSpeed = 0f,
                         startColor = new Color(0.6f, 1f, 1f, 1f),
                         endColor = new Color(0.85f, 0.6f, 0.95f, 0f),
-                        lightIntensityBoost = 1.8f
+                        lightIntensityBoost = 1.9f
                     };
                 default: // Light
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Sphere,
-                        shapeRadiusFactor = 0.35f,
+                        shapeRadiusFactor = 0.45f,
                         shapeAngle = 0f,
-                        sizeFactor = 1.5f,
-                        speedFactor = 2.0f,
-                        lifetimeFactor = 0.45f,
+                        sizeFactor = 2.4f,
+                        speedFactor = 1.8f,
+                        lifetimeFactor = 0.6f,
                         rateFactor = 0f,
                         burstCount = Mathf.RoundToInt(260f * strNorm),
                         orbitalSpeed = 0f,
@@ -227,97 +227,97 @@ namespace SpellSimulator.Output
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Sphere,
-                        shapeRadiusFactor = 0.38f,
+                        shapeRadiusFactor = 0.95f,
                         shapeAngle = 0f,
-                        sizeFactor = 1.1f,
+                        sizeFactor = 1.3f,
                         speedFactor = 0.2f,
                         lifetimeFactor = 1.0f,
-                        rateFactor = 180f,
+                        rateFactor = 200f,
                         burstCount = 0,
                         orbitalSpeed = 3.0f,
                         radialSpeed = -0.1f,
                         startColor = new Color(1f, 0.65f, 0.1f, 0.9f),
                         endColor = new Color(0.8f, 0.12f, 0.05f, 0f),
-                        lightIntensityBoost = 1.3f
+                        lightIntensityBoost = 1.4f
                     };
                 case ElementVariant.Water:
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Sphere,
-                        shapeRadiusFactor = 0.42f,
+                        shapeRadiusFactor = 1.0f,
                         shapeAngle = 0f,
-                        sizeFactor = 0.9f,
+                        sizeFactor = 1.1f,
                         speedFactor = 0.15f,
                         lifetimeFactor = 1.1f,
-                        rateFactor = 200f,
+                        rateFactor = 220f,
                         burstCount = 0,
                         orbitalSpeed = 1.2f,
                         radialSpeed = -0.05f,
                         startColor = new Color(0.3f, 0.72f, 1f, 0.75f),
                         endColor = new Color(0.08f, 0.32f, 0.85f, 0.2f),
-                        lightIntensityBoost = 1.1f
+                        lightIntensityBoost = 1.2f
                     };
                 case ElementVariant.Wind:
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Sphere,
-                        shapeRadiusFactor = 0.45f,
+                        shapeRadiusFactor = 1.1f,
                         shapeAngle = 0f,
-                        sizeFactor = 1.0f,
+                        sizeFactor = 1.2f,
                         speedFactor = 0.25f,
                         lifetimeFactor = 1.0f,
-                        rateFactor = 160f,
+                        rateFactor = 190f,
                         burstCount = 0,
                         orbitalSpeed = 5.0f,
                         radialSpeed = -0.15f,
                         startColor = new Color(0.9f, 0.94f, 1f, 0.6f),
                         endColor = new Color(0.7f, 0.85f, 0.95f, 0f),
-                        lightIntensityBoost = 1.0f
+                        lightIntensityBoost = 1.1f
                     };
                 case ElementVariant.Earth:
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Sphere,
-                        shapeRadiusFactor = 0.4f,
+                        shapeRadiusFactor = 0.9f,
                         shapeAngle = 0f,
-                        sizeFactor = 1.5f,
+                        sizeFactor = 1.6f,
                         speedFactor = 0.18f,
                         lifetimeFactor = 1.2f,
-                        rateFactor = 130f,
+                        rateFactor = 160f,
                         burstCount = 0,
                         orbitalSpeed = 1.4f,
                         radialSpeed = -0.08f,
                         startColor = new Color(0.82f, 0.7f, 0.52f, 0.9f),
                         endColor = new Color(0.55f, 0.38f, 0.24f, 0f),
-                        lightIntensityBoost = 1.0f
+                        lightIntensityBoost = 1.1f
                     };
                 case ElementVariant.Crystal:
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Sphere,
-                        shapeRadiusFactor = 0.36f,
+                        shapeRadiusFactor = 0.88f,
                         shapeAngle = 0f,
-                        sizeFactor = 0.85f,
+                        sizeFactor = 1.1f,
                         speedFactor = 0.2f,
                         lifetimeFactor = 1.1f,
-                        rateFactor = 150f,
+                        rateFactor = 180f,
                         burstCount = 0,
                         orbitalSpeed = 2.0f,
                         radialSpeed = -0.1f,
                         startColor = new Color(0.72f, 0.96f, 1f, 0.9f),
                         endColor = new Color(0.9f, 0.65f, 1f, 0f),
-                        lightIntensityBoost = 1.4f
+                        lightIntensityBoost = 1.5f
                     };
                 default: // Light
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Sphere,
-                        shapeRadiusFactor = 0.35f,
+                        shapeRadiusFactor = 0.92f,
                         shapeAngle = 0f,
-                        sizeFactor = 1.2f,
+                        sizeFactor = 1.3f,
                         speedFactor = 0.15f,
                         lifetimeFactor = 1.0f,
-                        rateFactor = 240f,
+                        rateFactor = 260f,
                         burstCount = 0,
                         orbitalSpeed = 0.8f,
                         radialSpeed = -0.05f,
@@ -339,12 +339,12 @@ namespace SpellSimulator.Output
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Cone,
-                        shapeRadiusFactor = 0.45f,
-                        shapeAngle = 40f,
-                        sizeFactor = 3.5f,
-                        speedFactor = 0.35f,
-                        lifetimeFactor = 1.8f,
-                        rateFactor = 140f,
+                        shapeRadiusFactor = 0.6f,
+                        shapeAngle = 45f,
+                        sizeFactor = 3.8f,
+                        speedFactor = 0.22f,
+                        lifetimeFactor = 2.0f,
+                        rateFactor = 180f,
                         burstCount = 0,
                         orbitalSpeed = 0.5f,
                         radialSpeed = 0.15f,
@@ -356,12 +356,12 @@ namespace SpellSimulator.Output
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Hemisphere,
-                        shapeRadiusFactor = 0.5f,
+                        shapeRadiusFactor = 0.65f,
                         shapeAngle = 0f,
-                        sizeFactor = 3.2f,
-                        speedFactor = 0.3f,
-                        lifetimeFactor = 1.9f,
-                        rateFactor = 160f,
+                        sizeFactor = 3.6f,
+                        speedFactor = 0.2f,
+                        lifetimeFactor = 2.0f,
+                        rateFactor = 190f,
                         burstCount = 0,
                         orbitalSpeed = 0.3f,
                         radialSpeed = 0.1f,
@@ -373,12 +373,12 @@ namespace SpellSimulator.Output
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Sphere,
-                        shapeRadiusFactor = 0.55f,
+                        shapeRadiusFactor = 0.75f,
                         shapeAngle = 0f,
-                        sizeFactor = 3.0f,
-                        speedFactor = 0.4f,
-                        lifetimeFactor = 1.7f,
-                        rateFactor = 150f,
+                        sizeFactor = 3.8f,
+                        speedFactor = 0.25f,
+                        lifetimeFactor = 1.9f,
+                        rateFactor = 180f,
                         burstCount = 0,
                         orbitalSpeed = 0.8f,
                         radialSpeed = 0.2f,
@@ -390,12 +390,12 @@ namespace SpellSimulator.Output
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Hemisphere,
-                        shapeRadiusFactor = 0.6f,
+                        shapeRadiusFactor = 0.75f,
                         shapeAngle = 0f,
-                        sizeFactor = 3.4f,
-                        speedFactor = 0.35f,
-                        lifetimeFactor = 2.0f,
-                        rateFactor = 140f,
+                        sizeFactor = 4.0f,
+                        speedFactor = 0.22f,
+                        lifetimeFactor = 2.1f,
+                        rateFactor = 170f,
                         burstCount = 0,
                         orbitalSpeed = 0.4f,
                         radialSpeed = 0.25f,
@@ -407,12 +407,12 @@ namespace SpellSimulator.Output
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Sphere,
-                        shapeRadiusFactor = 0.45f,
+                        shapeRadiusFactor = 0.65f,
                         shapeAngle = 0f,
-                        sizeFactor = 2.2f,
-                        speedFactor = 0.4f,
-                        lifetimeFactor = 1.6f,
-                        rateFactor = 140f,
+                        sizeFactor = 3.6f,
+                        speedFactor = 0.25f,
+                        lifetimeFactor = 1.8f,
+                        rateFactor = 170f,
                         burstCount = 0,
                         orbitalSpeed = 1.0f,
                         radialSpeed = 0.15f,
@@ -424,12 +424,12 @@ namespace SpellSimulator.Output
                     return new SignVisualParams
                     {
                         shapeType = ParticleSystemShapeType.Sphere,
-                        shapeRadiusFactor = 0.5f,
+                        shapeRadiusFactor = 0.7f,
                         shapeAngle = 0f,
-                        sizeFactor = 3.6f,
-                        speedFactor = 0.35f,
-                        lifetimeFactor = 1.8f,
-                        rateFactor = 160f,
+                        sizeFactor = 3.9f,
+                        speedFactor = 0.22f,
+                        lifetimeFactor = 2.0f,
+                        rateFactor = 190f,
                         burstCount = 0,
                         orbitalSpeed = 0.6f,
                         radialSpeed = 0.2f,
@@ -986,7 +986,6 @@ namespace SpellSimulator.Output
                     {
                         shapeType = ParticleSystemShapeType.Sphere,
                         shapeRadiusFactor = 4.0f,
-                        shapeAngle = 0f,
                         sizeFactor = 1.0f,
                         speedFactor = -3.5f,
                         lifetimeFactor = 0.8f,
@@ -997,6 +996,119 @@ namespace SpellSimulator.Output
                         startColor = new Color(0.72f, 0.62f, 0.95f, 0.85f),
                         endColor = new Color(1f, 1f, 0.95f, 0f),
                         lightIntensityBoost = 1.5f
+                    };
+            }
+        }
+
+        /// <summary>
+        /// Parámetros para Acumulación (collection): pulsos periódicos hacia un punto sobre el sello.
+        /// </summary>
+        public static SignVisualParams GetCollectionParams(ElementVariant variant, float strength, float baseScale)
+        {
+            float strNorm = Mathf.Clamp(strength, 0.5f, 3f);
+            switch (variant)
+            {
+                case ElementVariant.Fire:
+                    return new SignVisualParams
+                    {
+                        shapeType = ParticleSystemShapeType.Sphere,
+                        shapeRadiusFactor = 2.4f,
+                        shapeAngle = 0f,
+                        sizeFactor = 1.3f,
+                        speedFactor = -3.2f,
+                        lifetimeFactor = 0.45f,
+                        rateFactor = 0f,
+                        burstCount = Mathf.RoundToInt(60f * strNorm),
+                        orbitalSpeed = 1.0f,
+                        radialSpeed = -1.5f,
+                        startColor = new Color(1f, 0.7f, 0.1f, 1f),
+                        endColor = new Color(0.9f, 0.15f, 0.05f, 0f),
+                        lightIntensityBoost = 1.4f
+                    };
+                case ElementVariant.Water:
+                    return new SignVisualParams
+                    {
+                        shapeType = ParticleSystemShapeType.Sphere,
+                        shapeRadiusFactor = 2.5f,
+                        shapeAngle = 0f,
+                        sizeFactor = 1.1f,
+                        speedFactor = -2.8f,
+                        lifetimeFactor = 0.5f,
+                        rateFactor = 0f,
+                        burstCount = Mathf.RoundToInt(70f * strNorm),
+                        orbitalSpeed = 1.5f,
+                        radialSpeed = -1.2f,
+                        startColor = new Color(0.4f, 0.85f, 1f, 1f),
+                        endColor = new Color(0.08f, 0.35f, 0.85f, 0f),
+                        lightIntensityBoost = 1.2f
+                    };
+                case ElementVariant.Wind:
+                    return new SignVisualParams
+                    {
+                        shapeType = ParticleSystemShapeType.Sphere,
+                        shapeRadiusFactor = 2.8f,
+                        shapeAngle = 0f,
+                        sizeFactor = 1.2f,
+                        speedFactor = -3.5f,
+                        lifetimeFactor = 0.4f,
+                        rateFactor = 0f,
+                        burstCount = Mathf.RoundToInt(65f * strNorm),
+                        orbitalSpeed = 2.0f,
+                        radialSpeed = -1.8f,
+                        startColor = new Color(0.85f, 0.95f, 1f, 0.95f),
+                        endColor = new Color(0.5f, 0.75f, 0.95f, 0f),
+                        lightIntensityBoost = 1.1f
+                    };
+                case ElementVariant.Earth:
+                    return new SignVisualParams
+                    {
+                        shapeType = ParticleSystemShapeType.Hemisphere,
+                        shapeRadiusFactor = 2.2f,
+                        shapeAngle = 0f,
+                        sizeFactor = 1.6f,
+                        speedFactor = -2.5f,
+                        lifetimeFactor = 0.55f,
+                        rateFactor = 0f,
+                        burstCount = Mathf.RoundToInt(55f * strNorm),
+                        orbitalSpeed = 0.8f,
+                        radialSpeed = -1.0f,
+                        startColor = new Color(0.8f, 0.6f, 0.4f, 1f),
+                        endColor = new Color(0.35f, 0.25f, 0.18f, 0f),
+                        lightIntensityBoost = 1.0f
+                    };
+                case ElementVariant.Crystal:
+                    return new SignVisualParams
+                    {
+                        shapeType = ParticleSystemShapeType.Sphere,
+                        shapeRadiusFactor = 2.3f,
+                        shapeAngle = 0f,
+                        sizeFactor = 1.2f,
+                        speedFactor = -3.0f,
+                        lifetimeFactor = 0.48f,
+                        rateFactor = 0f,
+                        burstCount = Mathf.RoundToInt(65f * strNorm),
+                        orbitalSpeed = 1.2f,
+                        radialSpeed = -1.4f,
+                        startColor = new Color(0.55f, 0.95f, 1f, 1f),
+                        endColor = new Color(0.85f, 0.6f, 1f, 0f),
+                        lightIntensityBoost = 1.5f
+                    };
+                default: // Light
+                    return new SignVisualParams
+                    {
+                        shapeType = ParticleSystemShapeType.Sphere,
+                        shapeRadiusFactor = 2.6f,
+                        shapeAngle = 0f,
+                        sizeFactor = 1.3f,
+                        speedFactor = -4.0f,
+                        lifetimeFactor = 0.4f,
+                        rateFactor = 0f,
+                        burstCount = Mathf.RoundToInt(80f * strNorm),
+                        orbitalSpeed = 1.5f,
+                        radialSpeed = -2.0f,
+                        startColor = new Color(1f, 0.95f, 0.6f, 1f),
+                        endColor = new Color(1f, 0.65f, 0.2f, 0f),
+                        lightIntensityBoost = 1.8f
                     };
             }
         }
