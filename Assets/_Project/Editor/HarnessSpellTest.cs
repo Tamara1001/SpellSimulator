@@ -97,7 +97,7 @@ namespace SpellSimulator.EditorTools
             Vector3 clothC = Polar(clothR, MapTutorial.ClothAngle, y1 + 1.6f);
             Vector3 clothDir = (Polar(clothR, MapTutorial.ClothAngle - 30f, 0f) - Polar(clothR, MapTutorial.ClothAngle + 30f, 0f)); // tangente hacia el oeste
             clothDir.y = 0f; clothDir.Normalize();
-            Vector3 barC = Polar(TowerBuilder.WallRadius(MapTutorial.LatchAngle, 0.2f) - 0.37f, MapTutorial.LatchAngle, 1.45f);
+            Vector3 barC = Polar(TowerBuilder.WallRadius(MapTutorial.LatchAngle, 0.12f) - MapTutorial.LatchGap, MapTutorial.LatchAngle, 1.5f);
             Vector3 barIn = (barC - o); barIn.y = 0f; barIn.Normalize();
             Vector3 weightC = Polar(TowerBuilder.WallRadius(MapTutorial.WeightAngle, 0.36f), MapTutorial.WeightAngle, 1.0f);
             Vector3 stoneC = Polar(TowerBuilder.WallRadius(MapTutorial.StoneAngle, 0.5f), MapTutorial.StoneAngle, 0.5f);

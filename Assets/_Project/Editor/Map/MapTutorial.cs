@@ -1,5 +1,6 @@
 using UnityEditor;
 using UnityEngine;
+using SpellSimulator.Canvas;
 using SpellSimulator.World;
 using SpellSimulator.World.Map;
 
@@ -49,7 +50,9 @@ namespace SpellSimulator.EditorTools.Map
         /// Planta baja: la puerta empieza trabada y se destraba de tres formas, en el muro al este de la puerta (270): un pestillo que el viento
         /// corre, un contrapeso que una columna (agua o aire) levanta, o una piedra que la tierra con Crush rompe.
         /// </summary>
-        public const float LatchAngle = 252f, WeightAngle = 288f, StoneAngle = 234f;
+        public const float LatchAngle = 270f, WeightAngle = 288f, StoneAngle = 234f;
+        /// <summary>Separacion (m) entre la barra del pestillo y el muro: la barra cruza la puerta por dentro (la hoja abre hacia adentro y choca con ella).</summary>
+        public const float LatchGap = 0.4f;
         public const string DoorLatchesName = "DoorLatches", DoorStoneName = "TutorialDoorStone";
 
         private static readonly Color Wood = new Color(0.5f, 0.33f, 0.2f);
@@ -464,7 +467,7 @@ namespace SpellSimulator.EditorTools.Map
         // ---------------------------------------------------------------- nivel 3: objetos magicos
 
         /// <summary>Caballete del tutorial del viento (piso 1) y de la planta baja: posicion (angulo/radio) y a donde apunta.</summary>
-        public const float EaselWindAngle = 215f, EaselWindR = 3.5f, EaselDoorAngle = 240f, EaselDoorR = 3.2f;
+        public const float EaselWindAngle = 215f, EaselWindR = 3.5f, EaselDoorAngle = 250f, EaselDoorR = 3.8f;
         public const string EaselWindName = "Easel_Wind", EaselDoorName = "Easel_Door";
 
         private static void MagicFloor(Transform parent, Transform props, Material material)
@@ -553,6 +556,14 @@ namespace SpellSimulator.EditorTools.Map
             float yaw = Mathf.Atan2(-toTarget.x, -toTarget.z) * Mathf.Rad2Deg;   // el +Z del caballete (cara visible) mira al lado contrario
             CanvasDesigns.Easel(template, material, name, ground, yaw);
             var canvas = GameObject.Find(name + "_Canvas");
+            // El hechizo sale por el lado contrario a quien dibuja (hacia el objetivo), no por la cara con tinta.
+            var dc = canvas != null ? canvas.GetComponent<DrawingCanvas>() : null;
+            if (dc != null)
+            {
+                var so = new SerializedObject(dc);
+                so.FindProperty("emissionSide").enumValueIndex = (int)EmissionSide.AwayFromViewer;
+                so.ApplyModifiedProperties();
+            }
             if (canvas != null && guide && canvas.GetComponent<SpellSimulator.Lab.TutorialPaperGuide>() == null)
                 canvas.AddComponent<SpellSimulator.Lab.TutorialPaperGuide>();
         }
@@ -565,15 +576,14 @@ namespace SpellSimulator.EditorTools.Map
             latches = new GameObject(DoorLatchesName).transform;
             latches.SetParent(props, false);
 
-            // Pestillo: una barra de madera contra el muro sobre dos soportes, a la altura de la mano. Cuerpo con resorte: el viento la corre.
-            var bar = new LowPolyMesh();
-            bar.Box(Matrix4x4.identity, new Vector3(0.12f, 0.12f, 0.95f), Wood, WoodDark);
-            bar.Box(Matrix4x4.Translate(new Vector3(0f, 0f, 0.55f)), new Vector3(0.2f, 0.2f, 0.06f), Iron);
-            bar.Box(Matrix4x4.Translate(new Vector3(0f, 0f, -0.55f)), new Vector3(0.2f, 0.2f, 0.06f), Iron);
-            // Dos ménsulas de hierro hasta el muro (+X local = hacia el muro): la barra queda a 0,4 m, con juego para que el viento la corra.
-            foreach (float bz in new[] { -0.38f, 0.38f })
-                bar.Box(Matrix4x4.Translate(new Vector3(0.285f, 0f, bz)), new Vector3(0.43f, 0.06f, 0.08f), Iron);
-            LatchBody(latches, material, "DoorLatch_Bar", bar, o + TowerBuilder.Polar(TowerBuilder.WallRadius(LatchAngle, 0.2f) - 0.37f, LatchAngle, 1.45f), LatchAngle, new Vector3(0.14f, 0.14f, 0.95f), 2.5f, false);
+            // Sensor de viento de la puerta: una placa INVISIBLE del tamano de la hoja, justo delante de ella, con resorte. El viento la empuja y,
+            // al apartarse, la puerta se destraba y se abre sola (la hoja es lo que se ve moverse; no hay pestillo ni barra que desaparezca).
+            var sensor = new LowPolyMesh();
+            sensor.Box(Matrix4x4.identity, new Vector3(0.1f, 0.1f, 0.1f), Wood);
+            LatchBody(latches, material, "DoorLatch_Bar", sensor, o + TowerBuilder.Polar(TowerBuilder.WallRadius(LatchAngle, 0.12f) - LatchGap, LatchAngle, 1.5f), LatchAngle, new Vector3(0.12f, 2.6f, 1.6f), 2.5f, false);
+            var sensorGo = latches.Find("DoorLatch_Bar");
+            Object.DestroyImmediate(sensorGo.GetComponent<MeshRenderer>());
+            Object.DestroyImmediate(sensorGo.GetComponent<MeshFilter>());
 
             // Contrapeso: un bloque de hierro colgado de una soga hasta el techo; hay que subirlo (columna de agua o de aire).
             var weight = new LowPolyMesh();
@@ -595,7 +605,7 @@ namespace SpellSimulator.EditorTools.Map
 
             // Caballete de la planta baja (lienzo fijo apuntando al pestillo) y el cartel 14. Plantilla fantasma del viento tambien.
             MakeEasel(material, EaselDoorName, o + TowerBuilder.Polar(EaselDoorR, EaselDoorAngle, 0f), latches.Find("DoorLatch_Bar").position, true);
-            WallCard(parent, material, "Note_Tutorial_Door", 342f, 0f, "Dibujá viento en el lienzo", "y apuntá al pestillo");
+            WallCard(parent, material, "Note_Tutorial_Door", 342f, 0f, "Dibujá viento en el lienzo", "y apuntá a la puerta");
         }
 
         private static void LatchBody(Transform parent, Material material, string name, LowPolyMesh mesh, Vector3 at, float angle, Vector3 colliderSize, float mass, bool liftOnly)
@@ -609,6 +619,7 @@ namespace SpellSimulator.EditorTools.Map
             rb.interpolation = RigidbodyInterpolation.Interpolate;
             var cloth = go.AddComponent<TutorialCloth>();
             cloth.SetLiftOnly(liftOnly);
+            cloth.SetDrops(!liftOnly);   // el pestillo cae al piso; el contrapeso se queda levantado
         }
 
         /// <summary>Baranda en arco, a ese radio, entre dos angulos (un tramo cada 12 grados).</summary>

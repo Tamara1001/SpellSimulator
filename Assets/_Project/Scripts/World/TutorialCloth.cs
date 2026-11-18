@@ -7,18 +7,21 @@ namespace SpellSimulator.World
     /// <summary>
     /// Tela pesada que tapa la bajada del piso 1 (torre-tutorial, Docs/MAPA_FLUJO_PLAN.md, §17). Es un cuerpo fisico atado a su lugar
     /// con un resorte: el viento (dibujado en un papel, en la pared o en el piso) o un objeto lanzado la apartan y entonces se suelta,
-    /// vuela y desaparece, dejando el paso libre. El jugador no la mueve: para el es un muro. <see cref="TowerTutorial.Begin"/> la rearma.
+    /// queda en otra posicion (la tela flota hacia el techo, el pestillo cae al piso, el contrapeso se queda levantado) y deja de bloquear al jugador. El jugador no la mueve: para el es un muro. <see cref="TowerTutorial.Begin"/> la rearma.
     /// Reglas en <see cref="ClothRules"/>. Sin allocations por frame.
     /// </summary>
     [RequireComponent(typeof(Rigidbody), typeof(BoxCollider))]
     public class TutorialCloth : MonoBehaviour
     {
         [SerializeField, Tooltip("Resorte que la devuelve a su lugar (1/s2) y freno del movimiento (1/s).")] private Vector2 spring = new Vector2(8f, 2.5f);
-        [SerializeField, Tooltip("Segundos que vuela suelta antes de achicarse y desaparecer.")] private float flyTime = 1.4f;
+        [SerializeField, Tooltip("Aceleracion (m/s2) hacia arriba de la tela ya suelta: flota y sube hasta topar con el techo.")] private float buoyancy = 1.6f;
 
         [SerializeField, Tooltip("Contrapeso: solo se suelta al subir (ClothRules.LiftDistance), no por empuje lateral.")] private bool liftOnly;
 
-        private const float PlayerHold = 0.2f, Shrink = 0.35f;
+        private const float PlayerHold = 0.2f;
+
+        private bool drops;
+        private Collider[] ignoredPlayer;
 
         private Rigidbody body;
         private BoxCollider box;
@@ -31,6 +34,9 @@ namespace SpellSimulator.World
 
         /// <summary>Lo llama el generador del mapa: contrapeso que solo se suelta al subir.</summary>
         public void SetLiftOnly(bool value) => liftOnly = value;
+
+        /// <summary>Lo llama el generador del mapa: al soltarse cae al piso (el pestillo) en vez de flotar.</summary>
+        public void SetDrops(bool value) => drops = value;
         /// <summary>Cuantas veces se soltó (para el smoke).</summary>
         public int Releases { get; private set; }
 
@@ -56,10 +62,13 @@ namespace SpellSimulator.World
             body.position = home;
             body.rotation = homeRotation;
             transform.localScale = scale;
+            body.constraints = RigidbodyConstraints.FreezeRotation;
+            body.linearDamping = 0f;
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.zero;
             body.useGravity = false;
             box.enabled = true;
+            SetIgnorePlayer(false);
             Physics.SyncTransforms();
         }
 
@@ -79,13 +88,8 @@ namespace SpellSimulator.World
         {
             if (opened)
             {
-                float t = Time.time - openedAt;
-                if (t > flyTime)
-                {
-                    float k = 1f - (t - flyTime) / Shrink;
-                    transform.localScale = scale * Mathf.Max(k, 0f);
-                    if (k <= 0f) gameObject.SetActive(false);
-                }
+                // Suelta: sigue siendo un cuerpo fisico. La tela flota (sube hasta el techo); el pestillo cae; el contrapeso queda donde lo dejo la columna.
+                if (!drops && !liftOnly) body.AddForce(Vector3.up * buoyancy - body.linearVelocity * 0.8f, ForceMode.Acceleration);
                 return;
             }
 
@@ -107,6 +111,20 @@ namespace SpellSimulator.World
             impulse = 0f;
         }
 
+        /// <summary>El cuerpo suelto ya no choca con el jugador (puede cruzarlo), pero sigue chocando con el resto del mundo.</summary>
+        private void SetIgnorePlayer(bool ignore)
+        {
+            if (ignore)
+            {
+                var player = FindFirstObjectByType<PlayerMovement>();
+                ignoredPlayer = player != null ? player.GetComponentsInChildren<Collider>() : null;
+            }
+            if (ignoredPlayer == null) return;
+            for (int i = 0; i < ignoredPlayer.Length; i++)
+                if (ignoredPlayer[i] != null) Physics.IgnoreCollision(box, ignoredPlayer[i], ignore);
+            if (!ignore) ignoredPlayer = null;
+        }
+
         /// <summary>Suelta la tela (lo usa el smoke para no depender del viento).</summary>
         public void ForceOpen()
         {
@@ -118,7 +136,15 @@ namespace SpellSimulator.World
             opened = true;
             openedAt = Time.time;
             Releases++;
-            box.enabled = false;
+            SetIgnorePlayer(true);
+            if (drops)
+            {
+                body.constraints = RigidbodyConstraints.None;
+                body.useGravity = true;
+                body.linearDamping = 0.3f;
+            }
+            else if (liftOnly) body.linearDamping = 3f;
+            else body.linearDamping = 0.5f;
             Debug.Log("[Tutorial] la tela pesada se soltó", this);
         }
     }

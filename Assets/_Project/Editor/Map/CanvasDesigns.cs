@@ -35,7 +35,11 @@ namespace SpellSimulator.EditorTools.Map
 
             // Todos los lienzos de papel emiten por la cara con tinta.
             foreach (var c in Object.FindObjectsByType<DrawingCanvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+            {
+                // Los caballetes del tutorial disparan hacia el objetivo (AwayFromViewer, ver MapTutorial.MakeEasel).
+                if (c.name.StartsWith("Easel_Wind") || c.name.StartsWith("Easel_Door")) continue;
                 SetInkSide(c.gameObject);
+            }
 
             // Biblioteca: cuadernos (con paginas) a la izquierda de la mesa de trabajo (las herramientas van a la derecha).
             Vector3 bench = towerOrigin + TowerProps.LibraryBench + Vector3.up * 0.82f;

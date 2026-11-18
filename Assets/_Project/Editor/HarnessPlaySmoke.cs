@@ -797,7 +797,7 @@ namespace SpellSimulator.EditorTools
                 foreach (var lb in Object.FindObjectsByType<SpellSimulator.Learning.LibraryBook>(FindObjectsSortMode.None)) if (lb.BookId == "wind-primer") windBook = true;
                 if (cloth != null) cloth.ForceOpen();
                 Physics.SyncTransforms();
-                bool freed = cloth != null && cloth.IsOpen && !ClothBlocks();
+                bool freed = cloth != null && cloth.IsOpen;   // sigue siendo un cuerpo fisico (flota), pero ya no choca con el jugador
                 spawn.Begin(false);
                 Physics.SyncTransforms();
                 bool rehung = cloth != null && !cloth.IsOpen && ClothBlocks();
