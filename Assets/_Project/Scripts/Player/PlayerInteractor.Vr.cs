@@ -12,18 +12,22 @@ namespace SpellSimulator.Player
     /// </summary>
     public partial class PlayerInteractor
     {
-        [Header("VR manos")]
-        [SerializeField, Tooltip("[VR] Velocidad (m/s) de la mano desde la que soltar el grip arroja lo agarrado.")]
-        private float vrThrowMinSpeed = 1f;
-        [SerializeField, Tooltip("[VR] Por debajo de esta velocidad (m/s) soltar el grip deja flotando lo que se pueda fijar.")]
-        private float vrPinMaxSpeed = 0.35f;
-        [SerializeField, Tooltip("[VR] Multiplicador de la velocidad de la mano al arrojar.")]
-        private float vrThrowScale = 1.3f;
+        // Valores fijos (no serializados): el prefab ya guarda los viejos y los pisaria.
+        private const float VrThrowMinSpeed = 2f;
+        private const float VrPinMaxSpeed = 0.8f;
+        private const float VrThrowScale = 1.3f;
+        /// <summary>Un agarre mas corto que esto queda «pegado» a la mano: se suelta con otro apretón de grip.</summary>
+        private const float VrTapSeconds = 0.35f;
+        private float vrThrowMinSpeed => VrThrowMinSpeed;
+        private float vrPinMaxSpeed => VrPinMaxSpeed;
+        private float vrThrowScale => VrThrowScale;
 
         private bool vrMainRight = true;
         private bool rayRight = true;
         private bool secondaryRight;
         private int secondaryGrabFrame = -1;
+        private float secondaryGrabTime;
+        private bool secondarySticky;
         private Vector3 vrLastPosL, vrLastPosR, vrVelL, vrVelR;
         private bool vrTracking;
         private LineRenderer vrPointerLineL;
@@ -58,6 +62,8 @@ namespace SpellSimulator.Player
             rayRight = vrMainRight;
             if (vrLeftController != null) vrPointerLineL = CreatePointer(vrLeftController.gameObject);
             if (vrPointerLineL != null) vrPointerLineL.enabled = false;
+            // La HUD de pantalla no se ve en el visor: un panel junto a la mano izquierda con la barra, la tinta y los avisos.
+            if (vrLeftController != null) gameObject.AddComponent<VrWristHud>().Init(this, vrLeftController);
         }
 
         private void SetVrMainHand(bool right)
@@ -97,8 +103,24 @@ namespace SpellSimulator.Player
         {
             if (!PlatformDetector.IsVR || inventory.HandSecondary == null) return;
             bool up = secondaryRight ? inputReader.VrGripUpRight : inputReader.VrGripUpLeft;
-            bool lost = inputReader.Gate == InputGate.Full && !inputReader.VrGripHeld(secondaryRight) && secondaryGrabFrame != Time.frameCount;
-            if (!up && !lost) return;
+            bool down = secondaryRight ? inputReader.VrGripDownRight : inputReader.VrGripDownLeft;
+            if (secondarySticky)
+            {
+                // Agarre «pegado»: se suelta con otro apretón de grip (no el mismo que lo agarro).
+                if (!down || secondaryGrabFrame == Time.frameCount) return;
+            }
+            else if (up && Time.unscaledTime - secondaryGrabTime < VrTapSeconds)
+            {
+                // Toque corto: queda en la mano sin tener que mantener el grip.
+                secondarySticky = true;
+                return;
+            }
+            else
+            {
+                bool lost = inputReader.Gate == InputGate.Full && !inputReader.VrGripHeld(secondaryRight) && secondaryGrabFrame != Time.frameCount;
+                if (!up && !lost) return;
+            }
+            secondarySticky = false;
 
             Vector3 v = VrHandVelocity(secondaryRight);
             float speed = v.magnitude;
@@ -123,6 +145,8 @@ namespace SpellSimulator.Player
             if (inventory.HeldMain != null && vrMainRight == right) right = !right;
             secondaryRight = right;
             secondaryGrabFrame = Time.frameCount;
+            secondaryGrabTime = Time.unscaledTime;
+            secondarySticky = false;
             return VrController(right) != null ? VrController(right) : (right ? rightHoldPoint : leftHoldPoint);
         }
 
@@ -132,6 +156,21 @@ namespace SpellSimulator.Player
             bool right = rayRight;
             if (inventory.HandSecondary != null && secondaryRight == right) right = !right;
             SetVrMainHand(right);
+        }
+
+        /// <summary>
+        /// Lo agarrado que va PEGADO a la mano (lienzo, cuaderno, grimorio) se endereza: la cara visible mira a la cabeza y queda
+        /// derecho respecto del piso. Desde ahi sigue la muñeca. Sin esto salia boca abajo o de espaldas segun la mano. Lo que sigue
+        /// a la mano por fisica (cajas) no se toca.
+        /// </summary>
+        private void OrientHeldTowardHead(GameObject item, Transform hand)
+        {
+            if (item == null || hand == null || item.transform.parent != hand) return;
+            Camera cam = Camera.main;
+            if (cam == null) return;
+            Vector3 away = item.transform.position - cam.transform.position;
+            if (away.sqrMagnitude < 0.0004f) return;
+            item.transform.rotation = Quaternion.LookRotation(away, Vector3.up);
         }
 
         /// <summary>Lo guardado en un slot vuelve a la mano principal actual (en VR esa mano puede haber cambiado).</summary>

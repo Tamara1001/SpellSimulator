@@ -5,6 +5,21 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-18 — VR, 2.ª prueba: tinta en los dos ojos, salto/agacharse, HUD en la muñeca, menos mareo
+
+Segunda prueba de Tamara en Quest 3 (tinta solo en el ojo izquierdo, no salta ni se agacha, sin hotbar ni menú, agarrar con la izquierda raro, no deja flotar, no cambia el grosor, mareo, puerta abierta al empezar).
+
+- **Tinta en un solo ojo:** `InkDecal`, `GrimoireInk` y `GrimoirePage` no tenían las macros de estéreo (`UNITY_VERTEX_INPUT_INSTANCE_ID`, `UNITY_SETUP_INSTANCE_ID`, `UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO`, `multi_compile_instancing`): con single pass instanced solo se dibujaban en el ojo izquierdo. Corregido. (Los demás shaders propios ya las tenían.)
+- **Menú:** el botón se llamaba `menuButton` en el binding, pero en el layout de los Touch es `menu` (uso `MenuButton`): nunca disparaba. Ahora lee `menu` y `{MenuButton}`.
+- **HUD en VR:** la HUD de pantalla no se ve en el visor. Nuevo `VrWristHud`: panel de mundo junto a la mano izquierda con la barra (3 slots, el equipado marcado), tinta, lo agarrado y los avisos; aparece al mirar la mano y 3 s tras cada cambio.
+- **Salto / agacharse:** A o X de la mano que no lleva la herramienta salta; el click del stick izquierdo alterna agacharse (baja la cápsula y la cámara; `PlayerMovement.HandleStance` ya no se corta en VR). Ya no se corre en VR. El tutorial de la terraza pedía ambos.
+- **Grosor y slots:** stick derecho arriba/abajo cambia el grosor; B (toque) pasa al slot siguiente; B (0,6 s) arroja la herramienta.
+- **Agarre:** un toque corto de grip (< 0,35 s) deja el objeto «pegado» (otro apretón lo suelta); mantenerlo funciona como antes. Cuadernos, lienzos y el grimorio se enderezan al agarrarlos (cara hacia la cabeza, derechos), así no salen boca abajo con la mano izquierda. Umbrales: ≥ 2 m/s arroja, ≤ 0,8 m/s deja flotando (antes 1 y 0,35: el pulso de la mano nunca bajaba tanto).
+- **Mareo:** el cuerpo ahora se interpola en VR (se movía a 50 Hz con un visor de 72–90 Hz); caminar a 2,6 m/s con fuerza 14 (antes 4,2 m/s y 50), respuesta cuadrática del stick, frenada más rápida y velocidad proporcional al empuje.
+- **Puerta final abierta al empezar:** en VR no hay menú de inicio, así que nunca se llamaba a `PlayerSpawn.Begin` y el tutorial no arrancaba (puerta con `startOpen`). `MainMenu.Start` ahora entra directo al tutorial en VR.
+- **Verificación:** compila; 626 tests EditMode en PASS. `HarnessPlaySmoke` no es válido con el visor conectado por Link (el Editor arranca en modo VR y el smoke espera el menú de PC): hay que correrlo con Link cerrado. El pánel de muñeca y el resto de VR se construyeron sin errores en un Play con el visor conectado.
+- **Pendiente:** dibujar «apoyando el lápiz». `PhysicalTool` ya tiene un modo de contacto (`vrContactDrawing`, alcance 4 cm, apagado) y el rayo sale de `raycastOrigin`; no se tocó porque falta saber qué se siente raro (¿trazo corrido de la punta?, ¿hay que mantener el gatillo?, ¿tiembla con el papel en la mano?).
+
 ## 2026-11-18 — VR: manos simétricas, soltar con gestos y modelos de control
 
 Primera prueba de Tamara en Quest 3 (Air Link a Unity): el movimiento andaba, pero todo se agarraba con la derecha y las manos eran dos cubos grises que tapaban el lienzo.

@@ -142,11 +142,12 @@ namespace SpellSimulator.Learning
                 Row("Q", "arroja", 44),
                 "Realidad virtual",
                 Row("Gatillo", "dibuja (mano de la herramienta)", 44) +
-                Row("Agarre", "agarra con esa mano; al soltar cae", 44) +
+                Row("Agarre", "mantener, o un toque lo deja pegado", 44) +
                 Row("Soltar", "rápido: arroja; quieto: flota", 44) +
-                Row("A / X · B", "deshace · arroja la herramienta", 44) +
-                Row("Stick der.", "lados: gira o pasa página; arriba/abajo: slot", 44) +
-                Row("Clic stick", "izq.: corre; der.: da vuelta la hoja", 44) +
+                Row("A / X", "deshace (la otra: salta)", 44) +
+                Row("B", "toque: slot; mantener: arroja la herramienta", 44) +
+                Row("Stick der.", "lados: gira/página; arriba-abajo: grosor", 44) +
+                Row("Clic stick", "izq.: agacharse; der.: da vuelta la hoja", 44) +
                 Row("Y", "cambia la tinta; mantener: reinicia", 44)),
         };
 

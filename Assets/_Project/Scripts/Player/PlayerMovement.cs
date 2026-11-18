@@ -45,6 +45,13 @@ namespace SpellSimulator.Player
         private bool crouching;
         private bool prone;
 
+        // VR: movimiento mas suave para no marear (aceleracion y frenada graduales, velocidad moderada, sin correr).
+        private const float VrWalkSpeed = 2.6f;
+        private const float VrCrouchSpeed = 1.2f;
+        private const float VrMoveForce = 14f;
+        private const float VrFriction = 0.45f;
+        private bool vrTuned;
+
         private bool isGrounded;
         /// <summary>Agachado o tumbado (lo lee el tutorial de la terraza).</summary>
         public bool IsLow => stanceT > 0.5f;
@@ -81,6 +88,12 @@ namespace SpellSimulator.Player
 
         private void Update()
         {
+            // VR: el cuerpo se mueve en FixedUpdate; sin interpolacion la cabeza se ve a saltos (50 Hz contra 72-90 Hz del visor) y marea.
+            if (!vrTuned && PlatformDetector.IsVR)
+            {
+                vrTuned = true;
+                rb.interpolation = RigidbodyInterpolation.Interpolate;
+            }
             CheckGrounded();
             HandleStance();
             HandleJump();
@@ -92,7 +105,17 @@ namespace SpellSimulator.Player
         /// </summary>
         private void HandleStance()
         {
-            if (body == null || PlatformDetector.IsVR) return;
+            if (body == null) return;
+            // VR: agacharse baja la altura de la capsula y el pivote de la camara (la altura real de la cabeza la pone el visor encima).
+            if (PlatformDetector.IsVR && cameraRoot == null)
+            {
+                var vrCam = Camera.main;
+                if (vrCam != null && vrCam.transform.parent != null)
+                {
+                    cameraRoot = vrCam.transform.parent;
+                    standCameraY = cameraRoot.localPosition.y;
+                }
+            }
 
             // C mantenida: si esta tumbado se levanta solo si hay altura libre hasta la altura de pie; si no, queda tumbado.
             if (inputReader.IsTogglingProne)
@@ -152,7 +175,14 @@ namespace SpellSimulator.Player
             return !Physics.SphereCast(from, radius, Vector3.up, out _, room, groundLayer, QueryTriggerInteraction.Ignore);
         }
 
-        private float CurrentMaxSpeed => prone ? proneSpeed : crouching ? crouchSpeed : inputReader.IsRunning ? runSpeed : walkSpeed;
+        private float CurrentMaxSpeed
+        {
+            get
+            {
+                if (PlatformDetector.IsVR) return crouching ? VrCrouchSpeed : VrWalkSpeed;
+                return prone ? proneSpeed : crouching ? crouchSpeed : inputReader.IsRunning ? runSpeed : walkSpeed;
+            }
+        }
 
         private void FixedUpdate()
         {
@@ -171,7 +201,13 @@ namespace SpellSimulator.Player
         {
             // Direccion
             Vector2 input = inputReader.MoveValue;
-            
+            bool vr = PlatformDetector.IsVR;
+            float rawMagnitude = input.magnitude;
+            // VR: respuesta cuadratica del stick (fino al empezar a empujar) y fuerza / frenada propias, mas suaves.
+            if (vr) input *= rawMagnitude;
+            float force = vr ? VrMoveForce : moveForce;
+            float brake = vr ? VrFriction : friction;
+
             // Usar la camara principal como referencia para saber hacia donde estamos mirando
             Transform refTransform = Camera.main != null ? Camera.main.transform : transform;
             
@@ -185,28 +221,30 @@ namespace SpellSimulator.Player
             right.Normalize();
 
             Vector3 moveDir = right * input.x + forward * input.y;
-            moveDir.Normalize();
-            hasInput = input.magnitude >= 0.1f;
+            // PC: siempre a fuerza plena. VR: la fuerza sigue al stick (empujar poco = andar despacio).
+            if (vr) moveDir = Vector3.ClampMagnitude(moveDir, 1f);
+            else moveDir.Normalize();
+            hasInput = rawMagnitude >= 0.1f;
             if (hasInput) TryStepUp(moveDir);
 
             // Velocidad actual plana (ignorando la Y de gravedad)
             Vector3 flatVel = new Vector3(rb.linearVelocity.x, 0f, rb.linearVelocity.z);
 
             // Counter movement (Friccion custom) para frenar rapido cuando soltamos las teclas
-            if (input.magnitude < 0.1f)
+            if (rawMagnitude < 0.1f)
             {
-                rb.AddForce(-flatVel * moveForce * friction, ForceMode.Acceleration);
+                rb.AddForce(-flatVel * force * brake, ForceMode.Acceleration);
             }
 
             // Aplicar fuerza de movimiento
             if (isGrounded)
             {
-                rb.AddForce(moveDir * moveForce, ForceMode.Acceleration);
+                rb.AddForce(moveDir * force, ForceMode.Acceleration);
             }
             else
             {
                 // En el aire tenemos mucho menos control (20%)
-                rb.AddForce(moveDir * moveForce * 0.2f, ForceMode.Acceleration);
+                rb.AddForce(moveDir * force * 0.2f, ForceMode.Acceleration);
             }
 
             // Limitar velocidad maxima para no acelerar infinitamente

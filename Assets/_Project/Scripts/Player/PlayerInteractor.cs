@@ -315,6 +315,14 @@ namespace SpellSimulator.Player
         /// </summary>
         private void HandleWheel()
         {
+            // VR: golpe del stick derecho arriba / abajo cambia el grosor (o el tamaño de la goma) de lo que lleva la mano principal.
+            if (PlatformDetector.IsVR)
+            {
+                int widthStep = inputReader.VrWidthDelta;
+                if (widthStep != 0 && inventory.HeldMain != null && inventory.HeldMain.TryGetComponent(out IWidthSelectable vrWidths))
+                    vrWidths.CycleWidth(widthStep);
+                return;
+            }
             float scroll = inputReader.Scroll;
             if (scroll == 0f) return;
             var book = Learning.Grimoire.Instance;

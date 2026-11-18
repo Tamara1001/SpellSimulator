@@ -111,6 +111,15 @@ namespace SpellSimulator.UI
         {
             bound = Bind();
             if (bound) menu.AddToClassList("mm--hidden");
+            // VR: no hay menu en pantalla ni pregunta del tutorial; se entra directo al tutorial. Sin esto el jugador quedaba en la
+            // planta baja con el tutorial sin empezar (puerta final abierta, barreras apagadas).
+            if (showOnStart && PlatformDetector.IsVR)
+            {
+                PlayerSpawn vrSpawn = FindFirstObjectByType<PlayerSpawn>();
+                try { if (vrSpawn != null) vrSpawn.Begin(false); }
+                catch (System.Exception e) { Debug.LogException(e, this); }
+                return;
+            }
             if (!showOnStart || PlatformDetector.IsVR || !bound) return;
             ShowMenu();
         }

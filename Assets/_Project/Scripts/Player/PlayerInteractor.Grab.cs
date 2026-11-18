@@ -189,6 +189,7 @@ namespace SpellSimulator.Player
                 inventory.SetHandSecondary(item);
                 Holdable.Mark(item, LocalOwnerId);
                 interactable.OnInteract(holdHand);
+                if (PlatformDetector.IsVR) OrientHeldTowardHead(item, holdHand);
                 currentHovered = null;
                 return true;
             }

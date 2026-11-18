@@ -97,6 +97,15 @@ namespace SpellSimulator.Player
         public int VrFlickX { get; private set; }
         /// <summary>[VR] Golpe del stick derecho hacia arriba (+1) o abajo (-1): cambia de slot de la barra. Solo el frame del golpe.</summary>
         public int VrSlotDelta { get; private set; }
+        /// <summary>[VR] Golpe del stick derecho hacia arriba (+1) o abajo (-1): cambia el grosor de la herramienta. Solo el frame del golpe.</summary>
+        public int VrWidthDelta { get; private set; }
+
+        private InputAction bButtonAction, crouchToggleAction;
+        private float bDownAt = -1f;
+        private bool bHoldDone;
+        private bool vrCrouchLatched;
+        private const float VrThrowToolHoldSeconds = 0.6f;
+        private const float VrTapSeconds = 0.4f;
 
         private InputAction gripLeftAction, gripRightAction, triggerLeftAction, triggerRightAction;
         private InputAction primaryLeftAction, primaryRightAction, yButtonAction, stickRightAction;
@@ -211,6 +220,10 @@ namespace SpellSimulator.Player
             primaryRightAction.AddBinding("<XRController>{RightHand}/primaryButton");
             yButtonAction = new InputAction("YButton", InputActionType.Button);
             yButtonAction.AddBinding("<XRController>{LeftHand}/secondaryButton");
+            bButtonAction = new InputAction("BButton", InputActionType.Button);
+            bButtonAction.AddBinding("<XRController>{RightHand}/secondaryButton");
+            crouchToggleAction = new InputAction("CrouchToggle", InputActionType.Button);
+            crouchToggleAction.AddBinding("<XRController>{LeftHand}/thumbstickClicked");
             stickRightAction = new InputAction("StickR", InputActionType.Value, expectedControlType: "Vector2");
             stickRightAction.AddBinding("<XRController>{RightHand}/thumbstick");
 
@@ -246,7 +259,7 @@ namespace SpellSimulator.Player
             runAction = new InputAction("Run", InputActionType.Button);
             runAction.AddBinding("<Keyboard>/leftShift");
             runAction.AddBinding("<Gamepad>/leftStickPress");
-            runAction.AddBinding("<XRController>{LeftHand}/thumbstickClicked");
+            // VR: sin correr (mas comodo); el click del stick izquierdo alterna agacharse (crouchToggleAction).
 
             crouchAction = new InputAction("Crouch", InputActionType.Button);
             crouchAction.AddBinding("<Keyboard>/leftCtrl");
@@ -259,7 +272,7 @@ namespace SpellSimulator.Player
             throwAction = new InputAction("Throw", InputActionType.Button);
             throwAction.AddBinding("<Keyboard>/q");
             throwAction.AddBinding("<Gamepad>/leftShoulder");
-            throwAction.AddBinding("<XRController>{RightHand}/secondaryButton"); // VR: boton B
+            // VR: B se lee en Update (toque = slot siguiente, mantener = arrojar la herramienta).
 
             flipAction = new InputAction("Flip", InputActionType.Button);
             flipAction.AddBinding("<Keyboard>/f");
@@ -284,7 +297,9 @@ namespace SpellSimulator.Player
             bookAction = new InputAction("Book", InputActionType.Button);
             bookAction.AddBinding("<Keyboard>/t");
             bookAction.AddBinding("<Gamepad>/buttonNorth");
-            bookAction.AddBinding("<XRController>{LeftHand}/menuButton");
+            // VR: en el layout de los Touch (OpenXR) el boton de menu se llama "menu" (uso MenuButton); "menuButton" no existe como nombre.
+            bookAction.AddBinding("<XRController>{LeftHand}/menu");
+            bookAction.AddBinding("<XRController>{LeftHand}/{MenuButton}");
         }
 
         private void OnEnable()
@@ -293,6 +308,7 @@ namespace SpellSimulator.Player
             triggerLeftAction.Enable(); triggerRightAction.Enable();
             primaryLeftAction.Enable(); primaryRightAction.Enable();
             yButtonAction.Enable(); stickRightAction.Enable();
+            bButtonAction.Enable(); crouchToggleAction.Enable();
             reloadAction.Enable();
             inkCycleAction.Enable();
             runAction.Enable();
@@ -330,6 +346,7 @@ namespace SpellSimulator.Player
             triggerLeftAction.Disable(); triggerRightAction.Disable();
             primaryLeftAction.Disable(); primaryRightAction.Disable();
             yButtonAction.Disable(); stickRightAction.Disable();
+            bButtonAction.Disable(); crouchToggleAction.Disable();
             reloadAction.Disable();
             inkCycleAction.Disable();
             runAction.Disable();
@@ -451,8 +468,27 @@ namespace SpellSimulator.Player
                 yDownAt = -1f;
             }
 
-            VrFlickX = 0;
+            // Salto: A o X de la mano que NO lleva la herramienta (la otra deshace). Agacharse: click del stick izquierdo (alterna).
+            if (VrMainRight ? primaryLeftAction.WasPressedThisFrame() : primaryRightAction.WasPressedThisFrame()) IsJumping = true;
+            if (crouchToggleAction.WasPressedThisFrame()) vrCrouchLatched = !vrCrouchLatched;
+            if (vrCrouchLatched) IsCrouching = true;
+
+            // B: toque = slot siguiente, mantener = arrojar la herramienta.
             VrSlotDelta = 0;
+            if (bButtonAction.WasPressedThisFrame()) { bDownAt = Time.unscaledTime; bHoldDone = false; }
+            else if (bDownAt >= 0f && !bHoldDone && bButtonAction.IsPressed() && Time.unscaledTime - bDownAt >= VrThrowToolHoldSeconds)
+            {
+                IsThrowing = true;
+                bHoldDone = true;
+            }
+            if (bButtonAction.WasReleasedThisFrame())
+            {
+                if (!bHoldDone && bDownAt >= 0f && Time.unscaledTime - bDownAt < VrTapSeconds) VrSlotDelta = 1;
+                bDownAt = -1f;
+            }
+
+            VrFlickX = 0;
+            VrWidthDelta = 0;
             Vector2 stick = stickRightAction.ReadValue<Vector2>();
             float mag = stick.magnitude;
             if (!stickArmed) { if (mag < VrFlickOff) stickArmed = true; }
@@ -460,7 +496,7 @@ namespace SpellSimulator.Player
             {
                 stickArmed = false;
                 if (Mathf.Abs(stick.x) > Mathf.Abs(stick.y)) VrFlickX = stick.x > 0f ? 1 : -1;
-                else VrSlotDelta = stick.y > 0f ? 1 : -1;
+                else VrWidthDelta = stick.y > 0f ? 1 : -1;
             }
         }
 
@@ -471,6 +507,7 @@ namespace SpellSimulator.Player
             VrTriggerDownLeft = VrTriggerDownRight = false;
             VrFlickX = 0;
             VrSlotDelta = 0;
+            VrWidthDelta = 0;
         }
 
         /// <summary>
