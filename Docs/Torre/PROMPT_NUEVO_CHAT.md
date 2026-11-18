@@ -1,0 +1,26 @@
+Retomá el rework del mapa en SpellSimulator (rama `rework-mapa`): **pasar a Unity el rediseño aprobado de la torre-tutorial, piso por piso**.
+
+**Leé primero (en este orden):** `CLAUDE.md`, `Docs/Torre/00_resumen.md` (geometría v1; la nota del inicio dice qué sigue vigente), `Docs/Torre/carteles.md` (textos y posiciones: fuente de verdad), `Docs/Torre/puzzles.md`, los planos `Docs/Torre/01_terraza.svg … 04_planta_baja.svg` (+ `vista_*.png`), `Docs/Torre/auditoria_codex.md` y `auditoria_argon.md` (riesgos de código que hay que resolver), `Docs/Torre/zonas_entrenamiento_guardadas.md`, y `Docs/MAPA_FLUJO_PLAN.md` §17–18. El código actual: `Assets/_Project/Editor/Map/TowerBuilder.cs` y `MapTutorial.cs`, `Scripts/World/TowerTutorial.cs`, `TerraceRules.cs`, `TutorialExercise.cs`, `Scripts/Lab/TutorialPaperGuide.cs`.
+
+**Qué se aprobó (Tamara, 2026-11-17):**
+- Torre más grande (OuterRadius 6,8 m, InnerRadius 6,2 m), rampa en media vuelta (norte, 0°–180°, r 4,8–6,15), plaza libre por piso. Cada piso se recorre: llegada a 0° (este) → sentido horario por el arco sur → rampa de bajada a 180° (oeste).
+- Un obstáculo obligatorio por piso: terraza (viga + muro + reja), piso 2 (pila de cajas), piso 1 (cortina pesada con viento), planta baja (puerta con 3 trabas; **una sola solución con cartel: viento dibujado en el lienzo y apuntado al pestillo**; agua y tierra funcionan sin cartel).
+- Carteles: los 14 de `carteles.md` (≤2 líneas, ≤28 caracteres/línea, tarjeta 1,30×0,50 m, sin «sello» ni «rayo»; se llama «flecha de apunte»). El de la reja solo indica estado.
+- Piso 2: práctica opcional en el disco central (mesa+lienzo, marco flotar, marco de canto, diana); nada de eso en el camino.
+- Libros en la torre: solo `wind-primer` (piso 1) y `elements` (planta baja). Quitar de la torre el libro raro, `variants`, `motion`, `shape` (van al Archivo).
+- **Zonas de entrenamiento de viento y agua de la planta baja: NO borrarlas.** Están guardadas en el tag git `zonas-entrenamiento-torre` y en `TowerProps.WindStation/WaterStation`. Dejar la de viento como zona de práctica en el **norte del piso 1** (cerca del Tomo I, usando el disco central, no la rampa) o en planta baja; la de agua guardada sin llamar (o en el Archivo). Actualizar los chequeos del smoke que las miran.
+
+**Cómo trabajar (una tarea por commit, en este orden):**
+1. Geometría de la torre (`TowerBuilder`: radios, rampa de 180°, techo/vigas/postes al nuevo radio, ventanas y puerta) + ajustar `TowerRules`/spawn/portales/mapa que dependan de ella. Verificar con harness.
+2. Terraza (`MapTutorial`/`TerraceRules`: baranda interior, viga y muro a los nuevos radios, reja, carteles 1–5; resolver el riesgo de «agachado al saltar»).
+3. Piso 2 (pila a 198°, práctica opcional en el centro, carteles 6–10).
+4. Piso 1 (mesa de pluma, Tomo I, atril inclinado fijo con el lienzo y `TutorialPaperGuide` apuntando a la cortina, cortina con aspecto de tela; carteles 11–13; resolver el orden «el hechizo se dispara al cerrar el anillo»). Zona de viento al norte.
+5. Planta baja (libro, atril con lienzo y flecha de apunte al pestillo, trabas, cartel 14; sacar objetos huérfanos listados en `auditoria_argon.md` §8-P1).
+6. Docs (`ARCHITECTURE`, `STRUCTURE` si aplica, `CHANGELOG`, tracker en `MAPA_FLUJO_PLAN.md`).
+Cada paso termina con: compilar, `SpellSimulator/Map/Build Pradera`, tests EditMode en verde, `HarnessPlaySmoke` en verde (+1 chequeo por sistema), capturas por cámara temporal (techo oculto) enviadas con SendUserFile, commit en español con trailer `Co-Authored-By`, y **esperar el OK de Tamara antes del siguiente piso**. Push solo si lo pide.
+
+**Reglas del proyecto y trampas conocidas:** no commitear ruido del Editor (`Assets/Settings/*_RPAsset.asset`, `UniversalRenderPipelineGlobalSettings`, `OpenXRPackageSettings`, `SpellSimulator.slnx`, `LiberationSans SDF - Fallback.asset`, defines de `ProjectSettings`, `Docs/Capturas/lab_*.png`); `git checkout -- Assets/_Project/Data/MapOverrides.json` después del Build. El Build se corre con el menú `SpellSimulator/Map/Build Pradera` (no `delayCall`); tras editar, `AssetDatabase.Refresh()` por `Unity_RunCommand` antes de correr tests o smoke (si no, corre un ensamblado viejo). El smoke borra los lienzos de la escena al probar el reinicio: chequear lienzos antes. Esperar resultados con un bucle `for … sleep 5` (un `sleep` largo suelto está bloqueado). Borrar archivos: usar `node C:/Users/Tamara/.claude/hooks/papelera.mjs <ruta>`.
+
+**Delegá (Tamara lo pidió):** Codex (`codex exec --sandbox read-only "…"`) para revisar cada piso antes de mostrarlo (bugs, legibilidad de carteles, flujo); Antigravity (`node D:/Archivos/Claude/agy-jaula/agy-jaula.mjs …`, modelo `gemini-4-argon-high` para diseño; máx. 900 s, ejecutar en segundo plano y esperar con un `until grep`) para auditorías y búsquedas. Verificá lo que devuelvan. Si algún agente tiene preguntas, hacérselas a Tamara **antes** de seguir. Respondé en español.
+
+**Todavía sin probar a mano por Tamara:** terraza R1, piso 2 R2 (ejercicios opcionales), piso 1 R3 (plantilla fantasma y flecha de apunte). Su feedback del 2026-11-17: tela que no parece tela, lienzo en el piso, carteles que se salen de la tarjeta, poco espacio entre rampas: el rediseño apunta a eso.
