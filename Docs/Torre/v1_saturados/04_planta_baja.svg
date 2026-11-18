@@ -1,0 +1,251 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" font-family="Segoe UI, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="arr-path" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#58d68d"/>
+    </marker>
+    <marker id="arr-aim" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5dade2"/>
+    </marker>
+    <marker id="arr-ramp-in" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#abebc6"/>
+    </marker>
+    <marker id="arr-dim" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0 1 L9 5 L0 9 z" fill="#85c1e9"/>
+    </marker>
+    <marker id="arr-dim-start" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M10 1 L1 5 L10 9 z" fill="#85c1e9"/>
+    </marker>
+  </defs>
+
+  <!-- Fondo oscuro. Centro (0,0) = (400, 410). Escala: 40 px = 1 m. Norte (90°) arriba -->
+  <rect width="1200" height="820" fill="#1e2530"/>
+
+  <!-- Barrera mágica exterior (r = 9,2 m -> 368 px) -->
+  <circle cx="400" cy="410" r="368" fill="none" stroke="#c678ff" stroke-width="2" stroke-dasharray="8 6" opacity="0.6"/>
+
+  <!-- Talud exterior de piedra en la base (BaseRadius = 8,6 m -> 344 px), abierto en el zaguán sur (261°..279°) -->
+  <path d="M 346 750 A 344 344 0 1 1 454 750 L 442 679 A 272 272 0 1 0 358 679 Z"
+        fill="#6e6254" stroke="#3b332b" stroke-width="2"/>
+  <text x="400" y="92" text-anchor="middle" fill="#b8a992" font-size="10.5" font-style="italic">Talud exterior de piedra (BaseRadius = 8,60 m · h = 1,40 m)</text>
+
+  <!-- Muro cilíndrico de piedra (OuterRadius = 6,8 m -> 272 px, InnerRadius = 6,2 m -> 248 px), abierto en la puerta sur (262°..278°) -->
+  <circle cx="400" cy="410" r="272" fill="#8d7a6b" stroke="#3b332b" stroke-width="2.5"/>
+  <!-- Piso de madera de la Biblioteca (InnerRadius = 6,2 m -> 248 px) -->
+  <circle cx="400" cy="410" r="248" fill="#543d2b" stroke="#c9a66b" stroke-width="2"/>
+
+  <!-- Alfombra circular central (r = 1,75 m -> 70 px, libre de mesas para despejar el paso y permitir dibujar en el piso) -->
+  <circle cx="400" cy="410" r="70" fill="#78281f" fill-opacity="0.55" stroke="#d4ac0d" stroke-width="2"/>
+  <!-- Alfombra de pasillo hacia la puerta sur -->
+  <rect x="378" y="480" width="44" height="175" fill="#78281f" fill-opacity="0.55" stroke="#d4ac0d" stroke-width="1.5"/>
+
+  <!-- Disco central libre de rampas (RampInner = 4,8 m -> 192 px, Ø 9,6 m = 72,4 m²) -->
+  <circle cx="400" cy="410" r="192" fill="none" stroke="#8e6b4a" stroke-width="1.5" stroke-dasharray="6 4"/>
+
+  <!-- Ventanas de Planta Baja (segmentos 0=0°, 5=90°, 10=180°) -->
+  <g stroke="#85c1e9" stroke-width="6" stroke-linecap="round">
+    <line x1="660" y1="395" x2="660" y2="425"/> <!-- 0° Este -->
+    <line x1="385" y1="150" x2="415" y2="150"/> <!-- 90° Norte -->
+    <line x1="140" y1="395" x2="140" y2="425"/> <!-- 180° Oeste -->
+  </g>
+
+  <!-- RAMPA QUE BAJA DESDE EL PISO 1 (TowerRamp_0: 180° -> 90° -> 0°, r = 4,8..6,15 m -> 192..246 px) -->
+  <path d="M 592 410 A 192 192 0 0 0 208 410 L 154 410 A 246 246 0 0 1 646 410 Z"
+        fill="#6e6559" stroke="#abebc6" stroke-width="2"/>
+  <!-- Baranda interior de la rampa (r = 4,8 m, de 6° a 180°) -->
+  <path d="M 591 390 A 192 192 0 0 0 208 410" fill="none" stroke="#d35400" stroke-width="5" stroke-linecap="round"/>
+  <path d="M 181 395 A 219 219 0 0 1 619 396" fill="none" stroke="#abebc6" stroke-width="3.5" stroke-dasharray="7 4" marker-end="url(#arr-ramp-in)"/>
+  <text x="400" y="196" text-anchor="middle" fill="#abebc6" font-size="11" font-weight="700">VIENE DE PISO 1 (180° → 90° → 0° · desembarca en Este)</text>
+
+  <!-- ZONAS LIBRES DE TRABAJO ACOTADAS -->
+  <g fill="#58d68d" fill-opacity="0.10" stroke="#58d68d" stroke-width="1.5" stroke-dasharray="5 4">
+    <!-- Zona 1: Atril Libro «Los cuatro elementos» + Mesa herramientas (4,0 x 4,0 m) -->
+    <rect x="440" y="325" width="160" height="165" rx="8"/>
+    <!-- Zona 2: Plaza Sur frente a la puerta y las 3 trabas (5,5 x 4,8 m) -->
+    <rect x="290" y="465" width="220" height="182" rx="8"/>
+  </g>
+  <g fill="#a3e4d7" font-size="10.5" font-weight="700" text-anchor="middle">
+    <text x="525" y="344">Zona Libro y Tinta: 4,0 × 4,0 m</text>
+    <text x="400" y="484">Plaza Sur de Resolución (Viento / Agua / Tierra): 5,5 × 4,8 m</text>
+  </g>
+
+  <!-- FAROL DE NIVEL 3 (se enciende al llegar a Planta Baja: ang = 350°, r = 5,9 m, y = 2,3 m) -->
+  <circle cx="632" cy="451" r="8" fill="#ffe48a" stroke="#7a5a12" stroke-width="2"/>
+  <text x="652" y="455" fill="#ffe48a" font-size="10.5" font-weight="700">Farol Nivel 3 (350°)</text>
+
+  <!-- Decoración y mobiliario lateral (no estorba el recorrido ni la plaza sur) -->
+  <!-- Estantes (135° bajo rampa y 215° suroeste) -->
+  <g transform="translate(232, 242) rotate(-45)">
+    <rect x="-28" y="-8" width="56" height="16" fill="#3b2313" stroke="#c9a66b" stroke-width="1.5"/>
+  </g>
+  <g transform="translate(205, 546) rotate(55)">
+    <rect x="-30" y="-9" width="60" height="18" fill="#3b2313" stroke="#c9a66b" stroke-width="1.5"/>
+  </g>
+  <text x="180" y="575" text-anchor="end" fill="#b8a992" font-size="10">Estante (215° · r=5,95m)</text>
+
+  <!-- Pila de agua decorativa/reactiva al oeste (ang = 165°, r = 4,2 m, sin cartel viejo) -->
+  <circle cx="238" cy="367" r="26" fill="#2e86c1" stroke="#95a5a6" stroke-width="4"/>
+  <polygon points="234,365 244,362 239,372" fill="#f9f3e3"/>
+  <text x="238" y="332" text-anchor="middle" fill="#85c1e9" font-size="10">Pila de agua (165° · r=4,2m)</text>
+
+  <!-- Mesa de Trabajo y Reposición (Workbench_Library: ang = 40°, r = 2,4 m, 2,0 x 0,7 m) -->
+  <g transform="translate(474, 348) rotate(-40)">
+    <rect x="-40" y="-14" width="80" height="28" rx="3" fill="#8e5a34" stroke="#2c1b0e" stroke-width="2"/>
+    <!-- 2 Cuadernos a la izquierda y herramientas/tinteros a la derecha -->
+    <rect x="-30" y="-6" width="10" height="13" fill="#5b2c6f" stroke="#f9f3e3" stroke-width="1"/>
+    <rect x="-16" y="-5" width="9" height="11" fill="#5b2c6f" stroke="#f9f3e3" stroke-width="1"/>
+    <circle cx="12" cy="-3" r="4.5" fill="#2e86c1" stroke="#fff" stroke-width="1"/>
+    <circle cx="25" cy="3" r="4.5" fill="#8e44ad" stroke="#fff" stroke-width="1"/>
+  </g>
+  <text x="515" y="382" text-anchor="middle" fill="#d0d8e2" font-size="10" font-weight="600">Mesa cuadernos + tinta (40° · r=2,4m)</text>
+
+  <!-- ATRIL CON EL LIBRO «Los cuatro elementos» (ang = 320°, r = 2,6 m, en el paso de la rampa hacia la puerta) -->
+  <g transform="translate(480, 477) rotate(35)">
+    <rect x="-14" y="-11" width="28" height="22" rx="2" fill="#6e472b" stroke="#2c1b0e" stroke-width="2"/>
+    <rect x="-9" y="-7" width="18" height="14" rx="1.5" fill="#e67e22" stroke="#ffffff" stroke-width="1.5"/>
+  </g>
+  <text x="542" y="482" text-anchor="start" fill="#f8c471" font-size="10.5" font-weight="700">Atril «Los cuatro elementos»</text>
+  <text x="542" y="495" text-anchor="start" fill="#f5cba7" font-size="10">(320° · r=2,6m · y=1,17m)</text>
+
+  <!-- ESTACIÓN GUIADA PRINCIPAL (R4): Atril + Lienzo con plantilla «gust» apuntando al pestillo (ang = 262°, r = 3,0 m) -->
+  <g transform="translate(383, 529) rotate(-8)">
+    <rect x="-22" y="-15" width="44" height="30" rx="3" fill="#6e472b" stroke="#2c1b0e" stroke-width="2"/>
+    <rect x="-13" y="-13" width="26" height="26" fill="#f9f3e3" stroke="#2980b9" stroke-width="2"/>
+    <circle cx="0" cy="0" r="8" fill="none" stroke="#3498db" stroke-width="1.5" stroke-dasharray="2 1"/>
+  </g>
+  <text x="305" y="520" text-anchor="end" fill="#ffffff" font-size="10.5" font-weight="700">Atril + Lienzo guiado (262° · r=3,0m)</text>
+  <text x="305" y="533" text-anchor="end" fill="#85c1e9" font-size="10">Solución guiada: plantilla «gust» (y=0,95m)</text>
+
+  <!-- FLECHA DE APUNTE CELESTE DESDE EL LIENZO HASTA EL PESTILLO DE LA PUERTA -->
+  <line x1="378" y1="546" x2="348" y2="624" stroke="#5dade2" stroke-width="3.5" stroke-dasharray="6 3" marker-end="url(#arr-aim)"/>
+  <text x="322" y="592" text-anchor="end" fill="#85c1e9" font-size="10" font-weight="700">Viento → Pestillo</text>
+
+  <!-- LAS 3 TRABAS DE LA PUERTA (cualquiera de las 3 destraba y abre TowerDoor) -->
+  <!-- 1) Pestillo de madera (DoorLatch_Bar: ang = 256°, r = 5,85 m, y = 1,45 m — Solución guiada con Viento) -->
+  <g transform="translate(343, 637) rotate(-14)">
+    <rect x="-18" y="-5" width="36" height="10" rx="2" fill="#d35400" stroke="#ffffff" stroke-width="2"/>
+  </g>
+  <text x="315" y="642" text-anchor="end" fill="#5dade2" font-weight="800" font-size="11">1 · Pestillo (256° · r=5,85m)</text>
+  <text x="315" y="655" text-anchor="end" fill="#aed6f1" font-size="10">Guiado: se corre con Viento (2,5 kg)</text>
+
+  <!-- 2) Contrapeso de hierro (DoorLatch_Weight: ang = 284°, r = 5,80 m, y = 1,00 m — Atajo opcional Agua/Aire ascendente) -->
+  <rect x="447" y="626" width="18" height="18" rx="2" fill="#34495e" stroke="#85c1e9" stroke-width="2"/>
+  <text x="480" y="654" text-anchor="start" fill="#85c1e9" font-weight="700" font-size="10.5">2 · Contrapeso (284° · r=5,8m)</text>
+  <text x="480" y="667" text-anchor="start" fill="#aab4c0" font-size="9.5">Atajo: sube 0,7m con Agua/Aire (3 kg)</text>
+
+  <!-- 3) Traba de piedra (TutorialDoorStone: ang = 296°, r = 5,80 m, y = 0,05 m — Atajo opcional Tierra + Crush) -->
+  <polygon points="492,612 512,608 516,626 496,630" fill="#7f8c8d" stroke="#f5cba7" stroke-width="2"/>
+  <text x="524" y="618" text-anchor="start" fill="#f5cba7" font-weight="700" font-size="10.5">3 · Piedra (296° · r=5,8m)</text>
+  <text x="524" y="631" text-anchor="start" fill="#aab4c0" font-size="9.5">Atajo: se rompe con Tierra + Crush</text>
+
+  <!-- PUERTA DE LA TORRE (TowerDoor: ang = 270°, ancho 1,60 m, alto 2,90 m) + Zaguán y Reja mágica -->
+  <rect x="368" y="654" width="64" height="32" fill="#2c3540"/>
+  <!-- Hoja de la puerta cerrada (línea gruesa marrón) y proyección abierta (-150° punteada) -->
+  <line x1="368" y1="658" x2="432" y2="658" stroke="#a0522d" stroke-width="8" stroke-linecap="round"/>
+  <line x1="368" y1="658" x2="314" y2="626" stroke="#a0522d" stroke-width="4" stroke-dasharray="5 3" opacity="0.7"/>
+  <!-- Reja mágica de la entrada (en el borde del talud) -->
+  <line x1="362" y1="752" x2="438" y2="752" stroke="#c678ff" stroke-width="5" stroke-dasharray="4 3"/>
+  <!-- Farol de Nivel 4 sobre el dintel de la puerta (270°, r = 5,9 m, y = 3,35 m) -->
+  <circle cx="400" cy="644" r="8" fill="#ffe48a" stroke="#7a5a12" stroke-width="2"/>
+  <text x="400" y="704" text-anchor="middle" fill="#ffffff" font-weight="800" font-size="11.5">PUERTA SUR (270° · 1,6 × 2,9 m)</text>
+  <text x="400" y="772" text-anchor="middle" fill="#58d68d" font-weight="800" font-size="12">↓ SALIDA AL NEXO (0, -6) · FIN DEL TUTORIAL ↓</text>
+
+  <!-- CAMINO DEL JUGADOR (0° -> Atril elementos -> Lienzo guiado -> Cruza la puerta en 270°) -->
+  <path d="M 616 420 Q 560 455 495 475 Q 445 505 400 528 L 400 740"
+        fill="none" stroke="#58d68d" stroke-width="4" stroke-dasharray="10 6" marker-end="url(#arr-path)"/>
+
+  <!-- CARTEL NUMERADO (#14 — único cartel de Planta Baja según R4, ANTES del atril guiado) -->
+  <g font-weight="800" font-size="12.5" text-anchor="middle">
+    <circle cx="430" cy="522" r="12" fill="#f4d03f" stroke="#1b1b1b" stroke-width="2"/>
+    <text x="430" y="527" fill="#1b1b1b">14</text>
+  </g>
+
+  <!-- COTAS DIMENSIONALES -->
+  <g stroke="#85c1e9" stroke-width="1.5" fill="#85c1e9" font-size="11" font-weight="600">
+    <line x1="208" y1="410" x2="592" y2="410" marker-start="url(#arr-dim-start)" marker-end="url(#arr-dim)"/>
+    <text x="400" y="402" text-anchor="middle" stroke="none">Disco central libre: Ø 9,60 m (72,4 m²)</text>
+  </g>
+
+  <!-- Brújula y Barra de escala -->
+  <g transform="translate(65, 85)" fill="#f0f0f0" stroke="#f0f0f0">
+    <path d="M0 24 L0 -24 M-7 -12 L0 -26 L7 -12" fill="none" stroke-width="2.5"/>
+    <text x="0" y="-32" text-anchor="middle" stroke="none" font-weight="800" font-size="13">N (90°)</text>
+    <text x="0" y="40" text-anchor="middle" stroke="none" font-size="10" fill="#aab4c0">S (270°)</text>
+    <text x="34" y="4" text-anchor="start" stroke="none" font-size="10" fill="#aab4c0">E (0°)</text>
+    <text x="-34" y="4" text-anchor="end" stroke="none" font-size="10" fill="#aab4c0">O (180°)</text>
+  </g>
+  <g transform="translate(40, 775)" fill="#f0f0f0">
+    <rect x="0" y="0" width="200" height="6" fill="#85c1e9"/>
+    <line x1="0" y1="-4" x2="0" y2="10" stroke="#85c1e9" stroke-width="2"/>
+    <line x1="40" y1="0" x2="40" y2="8" stroke="#1e2530" stroke-width="1.5"/>
+    <line x1="80" y1="0" x2="80" y2="8" stroke="#1e2530" stroke-width="1.5"/>
+    <line x1="120" y1="0" x2="120" y2="8" stroke="#1e2530" stroke-width="1.5"/>
+    <line x1="160" y1="0" x2="160" y2="8" stroke="#1e2530" stroke-width="1.5"/>
+    <line x1="200" y1="-4" x2="200" y2="10" stroke="#85c1e9" stroke-width="2"/>
+    <text x="100" y="-8" text-anchor="middle" font-weight="700" font-size="12">5 m (Escala: 40 px = 1 m)</text>
+  </g>
+
+  <!-- PANEL DE LEYENDA DERECHO -->
+  <rect x="800" y="20" width="380" height="780" rx="10" fill="#252e3b" stroke="#394659" stroke-width="1.5"/>
+  <g transform="translate(822, 50)" fill="#e9edf2">
+    <text font-size="18" font-weight="800" fill="#ffffff">Nivel 4 · Planta Baja (y = 0,05 m)</text>
+    <text y="22" fill="#85c1e9" font-size="12.5" font-weight="600">Tema: Abrir la puerta con un hechizo y salir al Nexo</text>
+
+    <text y="54" font-weight="700" font-size="13.5" fill="#f8c471">Diseño según R4 (MAPA_FLUJO_PLAN.md)</text>
+    <g font-size="11.5" fill="#d0d8e2">
+      <text y="74">• UNA solución guiada clara: un atril con lienzo y plantilla</text>
+      <text y="90">  de ráfaga («gust») en (262°, r=3,0m) apuntando al pestillo</text>
+      <text y="106">  de la puerta (256°), aplicando lo aprendido en el Piso 1.</text>
+      <text y="124">• Agua (contrapeso en 284°) y Tierra+Crush (piedra en 296°)</text>
+      <text y="140">  quedan como atajos opcionales sin cartel para experimentadores.</text>
+      <text y="158">• Se eliminó el escritorio central («LibraryDesk») y el libro</text>
+      <text y="174">  «variants» (va al Archivo): queda solo «Los cuatro elementos».</text>
+    </g>
+
+    <text y="206" font-weight="700" font-size="13.5" fill="#58d68d">Recorrido y formas de abrir la puerta</text>
+    <g font-size="11.5" fill="#d0d8e2">
+      <text y="226">1. Desembarca en 0° (Este) → se enciende Farol Nivel 3.</text>
+      <text y="244">2. Pasa junto al atril de «Los cuatro elementos» (320°, r=2,6m)</text>
+      <text y="260">   y la mesa de cuadernos/tinta (40°, r=2,4m).</text>
+      <text y="278">3. Lee el Cartel #14 (285°, r=2,9m) antes del atril guiado.</text>
+      <text y="296">4. Destraba la puerta por cualquiera de las 3 vías:</text>
+      <text y="314" fill="#85c1e9">   A) [Guiada] Ráfaga de viento al Pestillo (256°, r=5,85m).</text>
+      <text y="332" fill="#aab4c0">   B) [Atajo] Columna de agua/aire al Contrapeso (284°).</text>
+      <text y="350" fill="#aab4c0">   C) [Atajo] Tierra + Crush a la Piedra (296°).</text>
+      <text y="368">5. La puerta se abre (-150°); al cruzar el vano (270°) se</text>
+      <text y="384">   enciende el Farol Nivel 4 y se apaga la barrera mágica.</text>
+    </g>
+
+    <text y="418" font-weight="700" font-size="13.5" fill="#f4d03f">Cartel del piso (ANTES del atril guiado)</text>
+    <g font-size="11.5" fill="#e9edf2">
+      <circle cx="10" cy="438" r="9" fill="#f4d03f"/><text x="10" y="442" text-anchor="middle" fill="#111" font-weight="800">14</text>
+      <text x="26" y="442">(285°, r=2,9m) «Puerta trabada: lanzá viento al pestillo»</text>
+    </g>
+
+    <text y="476" font-weight="700" font-size="13.5" fill="#ffffff">Simbología</text>
+    <g font-size="11.5" fill="#d0d8e2">
+      <rect x="3" y="488" width="14" height="12" fill="#e67e22" stroke="#fff"/>
+      <text x="28" y="498">Atril con libro «Los cuatro elementos» (`elements`)</text>
+
+      <rect x="3" y="512" width="14" height="14" fill="#f9f3e3" stroke="#2980b9" stroke-width="1.5"/>
+      <text x="28" y="523">Atril + Lienzo guiado con plantilla «gust»</text>
+
+      <rect x="2" y="538" width="16" height="7" fill="#d35400" stroke="#fff"/>
+      <text x="28" y="545">Traba 1: Pestillo de madera (256° · guiado)</text>
+
+      <rect x="4" y="558" width="12" height="12" fill="#34495e" stroke="#85c1e9"/>
+      <text x="28" y="568">Traba 2: Contrapeso de hierro (284° · atajo)</text>
+
+      <polygon points="3,586 15,583 17,595 5,598" fill="#7f8c8d" stroke="#f5cba7"/>
+      <text x="28" y="594">Traba 3: Bloque de piedra rompible (296° · atajo)</text>
+
+      <line x1="0" y1="614" x2="20" y2="614" stroke="#a0522d" stroke-width="6"/>
+      <text x="28" y="618">Puerta de la torre (`TowerDoor`, 270°)</text>
+
+      <circle cx="10" cy="638" r="6" fill="#ffe48a" stroke="#7a5a12" stroke-width="1.5"/>
+      <text x="28" y="642">Faroles de Nivel 3 (350°) y Nivel 4 (270°)</text>
+
+      <path d="M0 662 h20" stroke="#58d68d" stroke-width="3.5" stroke-dasharray="6 4"/>
+      <text x="28" y="666">Camino del jugador hacia la salida sur</text>
+    </g>
+  </g>
+</svg>

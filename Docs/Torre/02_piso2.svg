@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 820" font-family="Segoe UI, Arial, sans-serif">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
+<rect width="1000" height="820" fill="#1e2530"/>
+<text x="30" y="46" font-size="26" font-weight="800" fill="#eef1f5">Piso 2 · mover objetos</text>
+<text x="30" y="72" font-size="15" fill="#aab3c0">Despejá la pila de cajas para seguir. Lo celeste es práctica opcional.</text>
+<circle cx="400" cy="420" r="262" fill="none" stroke="#8d7a6b" stroke-width="12"/>
+<circle cx="400" cy="420" r="248" fill="#39424f"/>
+<path d="M646.0,420.0 A246.0,246.0 0 0 0 154.0,420.0 L208.0,420.0 A192.0,192.0 0 0 1 592.0,420.0 Z" fill="#555e6e" stroke="#7b8596" stroke-width="2"/>
+<text x="400" y="200" font-size="14" fill="#c4ccd8" text-anchor="middle">rampa</text>
+<circle cx="400" cy="420" r="156" fill="none" stroke="#8fd3e8" stroke-width="3" stroke-dasharray="8 6"/>
+<text x="400" y="426" font-size="14" font-weight="700" fill="#8fd3e8" text-anchor="middle">PRÁCTICA OPCIONAL</text>
+<circle cx="494.0" cy="385.8" r="9" fill="#6fb8ff" stroke="#111" stroke-width="2"/>
+<text x="508" y="374" font-size="13" font-weight="600" fill="#6fb8ff" text-anchor="start">mesa + lienzo</text>
+<circle cx="462.0" cy="312.6" r="9" fill="#8fd3e8" stroke="#111" stroke-width="2"/>
+<text x="474" y="305" font-size="13" font-weight="600" fill="#8fd3e8" text-anchor="start">1 flotar</text>
+<circle cx="357.6" cy="303.5" r="9" fill="#8fd3e8" stroke="#111" stroke-width="2"/>
+<text x="346" y="295" font-size="13" font-weight="600" fill="#8fd3e8" text-anchor="end">2 de canto</text>
+<circle cx="499.0" cy="519.0" r="9" fill="#8fd3e8" stroke="#111" stroke-width="2"/>
+<text x="513" y="535" font-size="13" font-weight="600" fill="#8fd3e8" text-anchor="start">3 diana (Q)</text>
+<line x1="561.2" y1="581.2" x2="573.9" y2="593.9" stroke="#8fd3e8" stroke-width="8" stroke-linecap="round"/>
+<path d="M619.5,404.7 A220.0,220.0 0 0 1 183.3,458.2" fill="none" stroke="#58d68d" stroke-width="6" stroke-linecap="round" marker-end="url(#ar)"/>
+<text x="656" y="414" font-size="16" font-weight="700" fill="#58d68d" text-anchor="start">LLEGÁS</text>
+<line x1="217.4" y1="479.3" x2="166.0" y2="496.0" stroke="#e5534b" stroke-width="18" stroke-linecap="round"/>
+<text x="139" y="526" font-size="16" font-weight="700" fill="#f0a8a3" text-anchor="end">PILA DE CAJAS</text>
+<text x="176" y="368" font-size="16" font-weight="700" fill="#f5a623" text-anchor="middle">BAJÁS</text>
+<circle cx="574.3" cy="395.5" r="13" fill="#f4d03f" stroke="#111" stroke-width="2"/>
+<text x="574.3" y="400.5" font-size="14" font-weight="800" fill="#111" text-anchor="middle">6</text>
+<circle cx="226.9" cy="545.8" r="13" fill="#f4d03f" stroke="#111" stroke-width="2"/>
+<text x="226.9" y="550.8" font-size="14" font-weight="800" fill="#111" text-anchor="middle">10</text>
+<rect x="746" y="94" width="236" height="146" rx="8" fill="#161c26" stroke="#3a4352"/>
+<line x1="760" y1="120" x2="790" y2="120" stroke="#58d68d" stroke-width="6" stroke-linecap="round"/>
+<text x="802" y="125" font-size="14" fill="#eef1f5">camino</text>
+<rect x="760" y="140" width="30" height="16" rx="3" fill="#e5534b"/>
+<text x="802" y="153" font-size="14" fill="#eef1f5">obstáculo</text>
+<rect x="760" y="168" width="30" height="16" rx="3" fill="none" stroke="#8fd3e8" stroke-width="3" stroke-dasharray="5 3"/>
+<text x="802" y="181" font-size="14" fill="#eef1f5">opcional</text>
+<circle cx="775" cy="204" r="11" fill="#f4d03f" stroke="#111" stroke-width="2"/>
+<text x="802" y="209" font-size="14" fill="#eef1f5">cartel</text>
+<text x="940" y="750" font-size="18" font-weight="800" fill="#eef1f5" text-anchor="middle">N</text>
+<line x1="940" y1="758" x2="940" y2="790" stroke="#eef1f5" stroke-width="3" marker-end="url(#ar)" transform="rotate(180 940 774)"/>
+<line x1="30" y1="790" x2="230" y2="790" stroke="#eef1f5" stroke-width="3"/>
+<text x="30" y="782" font-size="13" fill="#aab3c0">5 m</text>
+</svg>

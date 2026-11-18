@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 820" font-family="Segoe UI, Arial, sans-serif">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
+<rect width="1000" height="820" fill="#1e2530"/>
+<text x="30" y="46" font-size="26" font-weight="800" fill="#eef1f5">Piso 1 · objetos mágicos</text>
+<text x="30" y="72" font-size="15" fill="#aab3c0">Tomá la pluma, leé el Tomo I, dibujá viento y apuntalo a la cortina.</text>
+<circle cx="400" cy="420" r="262" fill="none" stroke="#8d7a6b" stroke-width="12"/>
+<circle cx="400" cy="420" r="248" fill="#39424f"/>
+<path d="M646.0,420.0 A246.0,246.0 0 0 0 154.0,420.0 L208.0,420.0 A192.0,192.0 0 0 1 592.0,420.0 Z" fill="#555e6e" stroke="#7b8596" stroke-width="2"/>
+<text x="400" y="200" font-size="14" fill="#c4ccd8" text-anchor="middle">rampa</text>
+<path d="M611.5,405.2 A212.0,212.0 0 0 1 209.5,512.9" fill="none" stroke="#58d68d" stroke-width="6" stroke-linecap="round" marker-end="url(#ar)"/>
+<text x="648" y="414" font-size="16" font-weight="700" fill="#58d68d" text-anchor="start">LLEGÁS</text>
+<circle cx="513.4" cy="515.1" r="12" fill="#6fb8ff" stroke="#111" stroke-width="2"/>
+<text x="483" y="495" font-size="14" font-weight="700" fill="#6fb8ff" text-anchor="middle">1 pluma + tinta</text>
+<circle cx="433.3" cy="564.2" r="12" fill="#6fb8ff" stroke="#111" stroke-width="2"/>
+<text x="424" y="531" font-size="14" font-weight="700" fill="#6fb8ff" text-anchor="middle">2 Tomo I: viento</text>
+<circle cx="319.4" cy="544.1" r="12" fill="#6fb8ff" stroke="#111" stroke-width="2"/>
+<text x="341" y="517" font-size="14" font-weight="700" fill="#6fb8ff" text-anchor="middle">3 lienzo con plantilla</text>
+<path d="M308.9,536.6 L196.5,486.1" fill="none" stroke="#7fd4ff" stroke-width="4" stroke-linecap="round" stroke-dasharray="7 5" marker-end="url(#ar)"/>
+<text x="232" y="520" font-size="13" font-weight="600" fill="#7fd4ff" text-anchor="end">apuntá</text>
+<line x1="214.5" y1="469.7" x2="162.4" y2="483.7" stroke="#e5534b" stroke-width="18" stroke-linecap="round"/>
+<text x="135" y="510" font-size="16" font-weight="700" fill="#f0a8a3" text-anchor="end">CORTINA PESADA</text>
+<text x="176" y="368" font-size="16" font-weight="700" fill="#f5a623" text-anchor="middle">BAJÁS</text>
+<circle cx="596.6" cy="499.4" r="13" fill="#f4d03f" stroke="#111" stroke-width="2"/>
+<text x="596.6" y="504.4" font-size="14" font-weight="800" fill="#111" text-anchor="middle">11</text>
+<circle cx="506.0" cy="603.6" r="13" fill="#f4d03f" stroke="#111" stroke-width="2"/>
+<text x="506.0" y="608.6" font-size="14" font-weight="800" fill="#111" text-anchor="middle">12</text>
+<circle cx="334.5" cy="621.6" r="13" fill="#f4d03f" stroke="#111" stroke-width="2"/>
+<text x="334.5" y="626.6" font-size="14" font-weight="800" fill="#111" text-anchor="middle">13</text>
+<rect x="746" y="94" width="236" height="146" rx="8" fill="#161c26" stroke="#3a4352"/>
+<line x1="760" y1="120" x2="790" y2="120" stroke="#58d68d" stroke-width="6" stroke-linecap="round"/>
+<text x="802" y="125" font-size="14" fill="#eef1f5">camino</text>
+<rect x="760" y="140" width="30" height="16" rx="3" fill="#e5534b"/>
+<text x="802" y="153" font-size="14" fill="#eef1f5">obstáculo</text>
+<rect x="760" y="168" width="30" height="16" rx="3" fill="#6fb8ff"/>
+<text x="802" y="181" font-size="14" fill="#eef1f5">estación</text>
+<line x1="760" y1="204" x2="790" y2="204" stroke="#7fd4ff" stroke-width="4" stroke-dasharray="6 4"/>
+<text x="802" y="209" font-size="14" fill="#eef1f5">flecha de apunte</text>
+<text x="940" y="750" font-size="18" font-weight="800" fill="#eef1f5" text-anchor="middle">N</text>
+<line x1="940" y1="758" x2="940" y2="790" stroke="#eef1f5" stroke-width="3" marker-end="url(#ar)" transform="rotate(180 940 774)"/>
+<line x1="30" y1="790" x2="230" y2="790" stroke="#eef1f5" stroke-width="3"/>
+<text x="30" y="782" font-size="13" fill="#aab3c0">5 m</text>
+</svg>

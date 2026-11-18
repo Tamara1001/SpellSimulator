@@ -1,0 +1,271 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" font-family="Segoe UI, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="arr-path" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#58d68d"/>
+    </marker>
+    <marker id="arr-aim" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5dade2"/>
+    </marker>
+    <marker id="arr-ramp-in" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#abebc6"/>
+    </marker>
+    <marker id="arr-ramp-out" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f5b041"/>
+    </marker>
+    <marker id="arr-dim" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0 1 L9 5 L0 9 z" fill="#85c1e9"/>
+    </marker>
+    <marker id="arr-dim-start" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M10 1 L1 5 L10 9 z" fill="#85c1e9"/>
+    </marker>
+    <pattern id="hatch-hole" width="10" height="10" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#f5b041" stroke-width="1.5" opacity="0.35"/>
+    </pattern>
+  </defs>
+
+  <!-- Fondo oscuro. Centro (0,0) = (400, 410). Escala: 40 px = 1 m. Norte (90°) arriba -->
+  <rect width="1200" height="820" fill="#1e2530"/>
+
+  <!-- Barrera mágica exterior (r = 9,2 m -> 368 px) -->
+  <circle cx="400" cy="410" r="368" fill="none" stroke="#c678ff" stroke-width="2" stroke-dasharray="8 6" opacity="0.6"/>
+
+  <!-- Muro cilíndrico de piedra (OuterRadius = 6,8 m -> 272 px, InnerRadius = 6,2 m -> 248 px) -->
+  <circle cx="400" cy="410" r="272" fill="#8d7a6b" stroke="#3b332b" stroke-width="2.5"/>
+  <!-- Piso de madera del Estudio (InnerRadius = 6,2 m -> 248 px) -->
+  <circle cx="400" cy="410" r="248" fill="#543d2b" stroke="#c9a66b" stroke-width="2"/>
+
+  <!-- Disco central libre de rampas (RampInner = 4,8 m -> 192 px, Ø 9,6 m = 72,4 m²) -->
+  <circle cx="400" cy="410" r="192" fill="#634833" stroke="#8e6b4a" stroke-width="1.5" stroke-dasharray="6 4"/>
+
+  <!-- Grilla polar tenue -->
+  <g stroke="#7a5c43" stroke-width="0.8" opacity="0.45" fill="none">
+    <line x1="152" y1="410" x2="648" y2="410"/>
+    <line x1="400" y1="162" x2="400" y2="658"/>
+  </g>
+
+  <!-- Ventanas del Piso 1 (segmentos 3=54°, 8=144°, 13=234°, 18=324°) -->
+  <g stroke="#85c1e9" stroke-width="6" stroke-linecap="round">
+    <line x1="542" y1="201" x2="562" y2="218"/> <!-- 54° -->
+    <line x1="191" y1="268" x2="208" y2="248"/> <!-- 144° -->
+    <line x1="238" y1="602" x2="258" y2="619"/> <!-- 234° -->
+    <line x1="592" y1="572" x2="609" y2="552"/> <!-- 324° -->
+  </g>
+
+  <!-- TRAMO FINAL DE LA RAMPA QUE LLEGA DESDE PISO 2 (48° -> 0°, r = 4,8..6,15 m -> 192..246 px) -->
+  <path d="M 592 410 A 192 192 0 0 0 528.5 267.3 L 564.6 227.2 A 246 246 0 0 1 646 410 Z"
+        fill="#6e6559" stroke="#abebc6" stroke-width="2"/>
+  <path d="M 518 228 A 219 219 0 0 1 619 396" fill="none" stroke="#abebc6" stroke-width="3.5" stroke-dasharray="6 4" marker-end="url(#arr-ramp-in)"/>
+  <text x="615" y="295" text-anchor="start" fill="#abebc6" font-size="11" font-weight="700">Llega de Piso 2</text>
+  <text x="615" y="310" text-anchor="start" fill="#abebc6" font-size="10.5">(48° → 0° · desembarco Este)</text>
+
+  <!-- HUECO DE LA RAMPA QUE BAJA A PLANTA BAJA (HoleFrom = 48° a HoleTo = 180°, r = 4,8..6,15 m -> 192..246 px) -->
+  <path d="M 528.5 267.3 A 192 192 0 0 0 208 410 L 154 410 A 246 246 0 0 1 564.6 227.2 Z"
+        fill="#191e26" stroke="#f5b041" stroke-width="2"/>
+  <path d="M 528.5 267.3 A 192 192 0 0 0 208 410 L 154 410 A 246 246 0 0 1 564.6 227.2 Z"
+        fill="url(#hatch-hole)"/>
+  <path d="M 181 395 A 219 219 0 0 1 495 213" fill="none" stroke="#f5b041" stroke-width="3.5" stroke-dasharray="7 4" marker-end="url(#arr-ramp-out)"/>
+  <text x="330" y="198" text-anchor="middle" fill="#f8c471" font-size="11" font-weight="700" transform="rotate(-15 330 198)">BAJA A PLANTA BAJA (180° → 90° → 0°)</text>
+
+  <!-- BARANDA DEL HUECO (HoleRail: r = 4,8 m de 48° a RailEnd = 205°, más cierre radial en 48°) -->
+  <path d="M 528.5 267.3 A 192 192 0 0 0 226.0 491.1" fill="none" stroke="#d35400" stroke-width="6" stroke-linecap="round"/>
+  <line x1="528.5" y1="267.3" x2="564.6" y2="227.2" stroke="#d35400" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- ZONAS LIBRES DE TRABAJO ACOTADAS -->
+  <g fill="#58d68d" fill-opacity="0.10" stroke="#58d68d" stroke-width="1.5" stroke-dasharray="5 4">
+    <!-- Estación 1: Mesa de tinta y herramientas (3,5 x 3,2 m) -->
+    <rect x="468" y="425" width="140" height="128" rx="8"/>
+    <!-- Estación 2: Mesa del Libro Tomo I (4,0 x 3,5 m) -->
+    <rect x="325" y="380" width="150" height="140" rx="8"/>
+    <!-- Estación 3: Atril Lienzo Guiado -> Cortina (4,5 x 4,0 m) -->
+    <polygon points="175,455 365,425 365,585 205,585"/>
+  </g>
+  <g fill="#a3e4d7" font-size="10.5" font-weight="700" text-anchor="middle">
+    <text x="538" y="544">Zona Tinta: 3,5 × 3,2 m</text>
+    <text x="400" y="398">Zona Libro: 4,0 × 3,5 m</text>
+    <text x="285" y="572">Zona Práctica y Disparo: 4,5 × 4,0 m</text>
+  </g>
+
+  <!-- Nota de limpieza en el cuadrante norte del disco central -->
+  <g fill="#9aa6b5" font-size="10.5" text-anchor="middle" font-style="italic">
+    <text x="400" y="295">Espacio central despejado (sin Portal del Estudio → mudado al Nexo,</text>
+    <text x="400" y="311">y sin los libros «motion» y «shape» → mudados al Archivo)</text>
+  </g>
+
+  <!-- FAROL DE NIVEL 2 (ang = 350°, r = 5,9 m, y = 6,7 m) -->
+  <circle cx="632" cy="451" r="8" fill="#ffe48a" stroke="#7a5a12" stroke-width="2"/>
+  <text x="652" y="455" fill="#ffe48a" font-size="10.5" font-weight="700">Farol Nivel 2 (350°)</text>
+
+  <!-- Estante decorativo contra el muro sur (ang = 285°, r = 5,95 m) -->
+  <g transform="translate(462, 640) rotate(15)">
+    <rect x="-30" y="-9" width="60" height="18" fill="#3b2313" stroke="#c9a66b" stroke-width="1.5"/>
+  </g>
+  <text x="475" y="675" text-anchor="middle" fill="#b8a992" font-size="10">Estante decorativo (285° · r=5,95m)</text>
+
+  <!-- ESTACIÓN 1: Mesa de Trabajo con Pluma, Tinta y Cinturón (ang = 325°, r = 3,6 m, 1,8 x 0,7 m) -->
+  <g transform="translate(518, 493) rotate(35)">
+    <rect x="-36" y="-14" width="72" height="28" rx="3" fill="#8e5a34" stroke="#2c1b0e" stroke-width="2"/>
+    <!-- Tinteros (azul/violeta), pluma y cinturón de cuero -->
+    <circle cx="-20" cy="-4" r="5" fill="#2e86c1" stroke="#fff" stroke-width="1.2"/>
+    <circle cx="-8" cy="4" r="4.5" fill="#8e44ad" stroke="#fff" stroke-width="1.2"/>
+    <line x1="2" y1="-8" x2="12" y2="8" stroke="#f9f3e3" stroke-width="2.5" stroke-linecap="round"/>
+    <!-- Cinturón enrollado (Belt) a la derecha -->
+    <circle cx="24" cy="0" r="6" fill="none" stroke="#d35400" stroke-width="3"/>
+    <rect x="27" y="-2" width="4" height="4" fill="#f4d03f"/>
+  </g>
+  <text x="538" y="526" text-anchor="middle" fill="#ffffff" font-size="10.5" font-weight="700">1 · Mesa Pluma + Tinta + Cinturón (325° · r=3,6m)</text>
+
+  <!-- ESTACIÓN 2: Mesa del Estudio con el único libro del piso: Tomo I: el viento (ang = 270°, r = 1,6 m) -->
+  <g transform="translate(400, 474)">
+    <!-- Silla al norte -->
+    <rect x="-9" y="-32" width="18" height="18" rx="2" fill="#a93226" stroke="#2c1b0e" stroke-width="1.5"/>
+    <!-- Mesa (1,6 x 0,9 m) -->
+    <rect x="-32" y="-18" width="64" height="36" rx="3" fill="#8e5a34" stroke="#2c1b0e" stroke-width="2"/>
+    <!-- Libro wind-primer («Tomo I: el viento») -->
+    <rect x="-10" y="-8" width="20" height="16" rx="2" fill="#5dade2" stroke="#ffffff" stroke-width="1.8"/>
+    <line x1="0" y1="-8" x2="0" y2="8" stroke="#1b4f72" stroke-width="1.5"/>
+  </g>
+  <text x="400" y="508" text-anchor="middle" fill="#85c1e9" font-size="11" font-weight="700">2 · Mesa + Libro «Tomo I: el viento» (270° · r=1,6m)</text>
+
+  <!-- ESTACIÓN 3: Atril inclinado con Lienzo Guiado (ang = 220°, r = 2,6 m, alto 0,95 m) -->
+  <g transform="translate(320, 477) rotate(-15)">
+    <!-- Atril bajo inclinado 25° con tope para que el papel nunca caiga al piso -->
+    <rect x="-22" y="-15" width="44" height="30" rx="3" fill="#6e472b" stroke="#2c1b0e" stroke-width="2"/>
+    <!-- Lienzo agarrable TutorialPaper_Wind (0,50 x 0,50 m) con plantilla fantasma azul de ráfaga (gust) -->
+    <rect x="-13" y="-13" width="26" height="26" fill="#f9f3e3" stroke="#2980b9" stroke-width="2"/>
+    <circle cx="0" cy="0" r="8" fill="none" stroke="#3498db" stroke-width="1.5" stroke-dasharray="2 1"/>
+    <path d="M-4 0 Q0 -5 4 0 Q0 5 -4 0" fill="none" stroke="#3498db" stroke-width="1.2"/>
+  </g>
+  <text x="295" y="445" text-anchor="middle" fill="#ffffff" font-size="10.5" font-weight="700">3 · Atril + Lienzo guiado (220° · r=2,6m)</text>
+  <text x="295" y="458" text-anchor="middle" fill="#85c1e9" font-size="10">Plantilla azul «gust» (y=5,45m, no cae al piso)</text>
+
+  <!-- FLECHA DE APUNTE CELESTE (AimGuide = EmissionNormal del lienzo sostenido apuntando a la cortina) -->
+  <line x1="302" y1="474" x2="202" y2="467" stroke="#5dade2" stroke-width="3.5" stroke-dasharray="6 3" marker-end="url(#arr-aim)"/>
+  <text x="255" y="490" text-anchor="middle" fill="#85c1e9" font-size="10" font-weight="700" transform="rotate(4 255 490)">Guía de apunte → Viento</text>
+
+  <!-- OBSTÁCULO OBLIGATORIO: Cortina / Tela Pesada (ClothAngle = 195°, r = 4,85..6,14 m) -->
+  <!-- Cuerdas tensoras laterales a la baranda y al muro -->
+  <line x1="226" y1="491" x2="212.6" y2="460.2" stroke="#dfc28b" stroke-width="2.5" stroke-dasharray="3 2"/>
+  <line x1="160" y1="485" x2="162.8" y2="473.6" stroke="#dfc28b" stroke-width="2.5" stroke-dasharray="3 2"/>
+  <!-- Viga y barral de hierro con 7 argollas -->
+  <line x1="215" y1="459" x2="160" y2="474" stroke="#33333a" stroke-width="6" stroke-linecap="round"/>
+  <!-- Paño de lona bordó con 7 pliegues profundos en zigzag y guarda dorada -->
+  <path d="M 212.6 460.2 L 207 468 L 199 459 L 192 472 L 184 463 L 177 476 L 169 467 L 162.8 473.6"
+        fill="none" stroke="#b03a2e" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M 212.6 460.2 L 207 468 L 199 459 L 192 472 L 184 463 L 177 476 L 169 467 L 162.8 473.6"
+        fill="none" stroke="#f4d03f" stroke-width="1.8" stroke-dasharray="4 6" stroke-linejoin="round"/>
+  <text x="142" y="456" text-anchor="end" fill="#f1948a" font-weight="800" font-size="11.5">CORTINA PESADA (195°)</text>
+  <text x="142" y="471" text-anchor="end" fill="#f5b7b1" font-size="10.5">Lona bordó con 7 pliegues, argollas,</text>
+  <text x="142" y="485" text-anchor="end" fill="#f5b7b1" font-size="10.5">sogas laterales y emblema de viento (18 kg)</text>
+
+  <!-- CAMINO DEL JUGADOR (0° -> Estación 1 -> Estación 2 -> Estación 3 -> Cortina 195° -> Rampa 180°) -->
+  <path d="M 616 420 Q 590 465 545 485 L 430 482 L 340 482 Q 250 515 194 466 L 182 422"
+        fill="none" stroke="#58d68d" stroke-width="3.5" stroke-dasharray="9 5" marker-end="url(#arr-path)"/>
+
+  <!-- CARTELES NUMERADOS (#11, #12, #13) — cada uno ANTES de su estación -->
+  <g font-weight="800" font-size="12.5" text-anchor="middle">
+    <!-- #11 Antes de la mesa de pluma y tinta (ang = 340°, r = 4,1 m) -->
+    <circle cx="554" cy="466" r="12" fill="#f4d03f" stroke="#1b1b1b" stroke-width="2"/>
+    <text x="554" y="471" fill="#1b1b1b">11</text>
+    <!-- #12 Antes del libro de viento (ang = 295°, r = 2,2 m) -->
+    <circle cx="437" cy="490" r="12" fill="#f4d03f" stroke="#1b1b1b" stroke-width="2"/>
+    <text x="437" y="495" fill="#1b1b1b">12</text>
+    <!-- #13 Antes del atril del lienzo guiado (ang = 238°, r = 2,9 m) -->
+    <circle cx="339" cy="508" r="12" fill="#f4d03f" stroke="#1b1b1b" stroke-width="2"/>
+    <text x="339" y="513" fill="#1b1b1b">13</text>
+  </g>
+
+  <!-- COTAS DIMENSIONALES -->
+  <g stroke="#85c1e9" stroke-width="1.5" fill="#85c1e9" font-size="11" font-weight="600">
+    <!-- Distancia de tiro desde el atril (220°, r=2,6m) hasta la cortina (195°, r=5,5m) = 3,20 m -->
+    <line x1="320" y1="528" x2="188" y2="528" marker-start="url(#arr-dim-start)" marker-end="url(#arr-dim)"/>
+    <text x="254" y="544" text-anchor="middle" stroke="none">Distancia limpia al blanco: 3,20 m</text>
+    <!-- Diámetro del disco central (9,60 m) -->
+    <line x1="208" y1="360" x2="592" y2="360" marker-start="url(#arr-dim-start)" marker-end="url(#arr-dim)"/>
+    <text x="400" y="352" text-anchor="middle" stroke="none">Disco central libre: Ø 9,60 m (72,4 m²)</text>
+  </g>
+
+  <!-- Brújula y Barra de escala -->
+  <g transform="translate(65, 85)" fill="#f0f0f0" stroke="#f0f0f0">
+    <path d="M0 24 L0 -24 M-7 -12 L0 -26 L7 -12" fill="none" stroke-width="2.5"/>
+    <text x="0" y="-32" text-anchor="middle" stroke="none" font-weight="800" font-size="13">N (90°)</text>
+    <text x="0" y="40" text-anchor="middle" stroke="none" font-size="10" fill="#aab4c0">S (270°)</text>
+    <text x="34" y="4" text-anchor="start" stroke="none" font-size="10" fill="#aab4c0">E (0°)</text>
+    <text x="-34" y="4" text-anchor="end" stroke="none" font-size="10" fill="#aab4c0">O (180°)</text>
+  </g>
+  <g transform="translate(40, 775)" fill="#f0f0f0">
+    <rect x="0" y="0" width="200" height="6" fill="#85c1e9"/>
+    <line x1="0" y1="-4" x2="0" y2="10" stroke="#85c1e9" stroke-width="2"/>
+    <line x1="40" y1="0" x2="40" y2="8" stroke="#1e2530" stroke-width="1.5"/>
+    <line x1="80" y1="0" x2="80" y2="8" stroke="#1e2530" stroke-width="1.5"/>
+    <line x1="120" y1="0" x2="120" y2="8" stroke="#1e2530" stroke-width="1.5"/>
+    <line x1="160" y1="0" x2="160" y2="8" stroke="#1e2530" stroke-width="1.5"/>
+    <line x1="200" y1="-4" x2="200" y2="10" stroke="#85c1e9" stroke-width="2"/>
+    <text x="100" y="-8" text-anchor="middle" font-weight="700" font-size="12">5 m (Escala: 40 px = 1 m)</text>
+  </g>
+
+  <!-- PANEL DE LEYENDA DERECHO -->
+  <rect x="800" y="20" width="380" height="780" rx="10" fill="#252e3b" stroke="#394659" stroke-width="1.5"/>
+  <g transform="translate(822, 50)" fill="#e9edf2">
+    <text font-size="18" font-weight="800" fill="#ffffff">Nivel 3 · Piso 1 (y = 4,50 m)</text>
+    <text y="22" fill="#85c1e9" font-size="12.5" font-weight="600">Tema: Objetos mágicos y primer hechizo de viento</text>
+
+    <text y="54" font-weight="700" font-size="13.5" fill="#f8c471">Por qué resuelve los problemas reportados</text>
+    <g font-size="11.5" fill="#d0d8e2">
+      <text y="74">• Se quitaron del piso el Portal del Estudio (va al Nexo) y</text>
+      <text y="90">  los libros «motion» y «shape» (van al Archivo): queda solo</text>
+      <text y="106">  «Tomo I: el viento» en el centro de la sala.</text>
+      <text y="124">• El lienzo de práctica va sobre un atril inclinado a y=0,95m</text>
+      <text y="140">  con tope en (220°, r=2,6m): nunca cae al piso ni toca la rampa.</text>
+      <text y="158">• La tela se rediseña como cortina bordó con 7 pliegues en</text>
+      <text y="174">  zigzag, barral con argollas, sogas laterales y emblema.</text>
+      <text y="192">• El cartel #13 pide lanzar VIENTO y aclara que la línea</text>
+      <text y="208">  celeste es la guía de apunte (no «un rayo azul»).</text>
+    </g>
+
+    <text y="240" font-weight="700" font-size="13.5" fill="#58d68d">Recorrido en serie (3 estaciones ordenadas)</text>
+    <g font-size="11.5" fill="#d0d8e2">
+      <text y="260">1. Desembarca en 0° (Este) → se enciende Farol Nivel 2.</text>
+      <text y="278">2. Estación 1 (325°, r=3,6m): equipa con E la pluma, el</text>
+      <text y="294">   tintero y el cinturón (recarga tinta con R).</text>
+      <text y="312">3. Estación 2 (270°, r=1,6m): lee con E el libro «Tomo I:</text>
+      <text y="328">   el viento» (aprende cómo actúan el viento y las columnas).</text>
+      <text y="346">4. Estación 3 (220°, r=2,6m): calca el sello azul (ráfaga)</text>
+      <text y="362">   con clic izq., agarra el papel con E y apunta la guía</text>
+      <text y="378">   celeste a la cortina (195°) antes de cerrar el anillo.</text>
+      <text y="396">5. La ráfaga vuela la cortina y habilita la rampa (180°).</text>
+    </g>
+
+    <text y="428" font-weight="700" font-size="13.5" fill="#f4d03f">Carteles del piso (todos ANTES de su estación)</text>
+    <g font-size="11.5" fill="#e9edf2">
+      <circle cx="10" cy="446" r="9" fill="#f4d03f"/><text x="10" y="450" text-anchor="middle" fill="#111" font-weight="800">11</text>
+      <text x="26" y="450">(340°, r=4,1m) «E agarrá pluma y tinta · R recargá»</text>
+
+      <circle cx="10" cy="470" r="9" fill="#f4d03f"/><text x="10" y="474" text-anchor="middle" fill="#111" font-weight="800">12</text>
+      <text x="26" y="474">(295°, r=2,2m) «E Leé el libro Tomo I: el viento»</text>
+
+      <circle cx="10" cy="494" r="9" fill="#f4d03f"/><text x="10" y="498" text-anchor="middle" fill="#111" font-weight="800">13</text>
+      <text x="26" y="498">(238°, r=2,9m) «Calcá el sello · apuntá a la tela»</text>
+    </g>
+
+    <text y="532" font-weight="700" font-size="13.5" fill="#ffffff">Simbología</text>
+    <g font-size="11.5" fill="#d0d8e2">
+      <rect x="2" y="544" width="16" height="10" fill="#8e5a34" stroke="#2c1b0e"/>
+      <text x="28" y="553">Mesa de herramientas, tinteros y cinturón</text>
+
+      <rect x="4" y="566" width="12" height="10" fill="#5dade2" stroke="#fff"/>
+      <text x="28" y="575">Libro «Tomo I: el viento» (`wind-primer`)</text>
+
+      <rect x="3" y="588" width="14" height="14" fill="#f9f3e3" stroke="#2980b9" stroke-width="1.5"/>
+      <text x="28" y="599">Atril + Lienzo agarrable con plantilla «gust»</text>
+
+      <line x1="0" y1="618" x2="20" y2="618" stroke="#5dade2" stroke-width="3" stroke-dasharray="4 2"/>
+      <text x="28" y="622">Flecha guía de apunte del lienzo (`AimGuide`)</text>
+
+      <path d="M0 642 l4 4 l5 -8 l5 8 l6 -4" fill="none" stroke="#b03a2e" stroke-width="4"/>
+      <text x="28" y="646">Cortina pesada con pliegues y sogas (`195°`)</text>
+
+      <path d="M0 668 h20" stroke="#58d68d" stroke-width="3.5" stroke-dasharray="6 4"/>
+      <text x="28" y="672">Camino del jugador (0° → 325° → 270° → 220° → 180°)</text>
+    </g>
+  </g>
+</svg>

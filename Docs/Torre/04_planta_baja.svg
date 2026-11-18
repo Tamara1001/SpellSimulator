@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 820" font-family="Segoe UI, Arial, sans-serif">
+<defs><marker id="ar" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
+<rect width="1000" height="820" fill="#1e2530"/>
+<text x="30" y="46" font-size="26" font-weight="800" fill="#eef1f5">Planta baja · la puerta</text>
+<text x="30" y="72" font-size="15" fill="#aab3c0">Dibujá viento en el lienzo y apuntalo al pestillo para abrir.</text>
+<circle cx="400" cy="420" r="262" fill="none" stroke="#8d7a6b" stroke-width="12"/>
+<circle cx="400" cy="420" r="248" fill="#39424f"/>
+<path d="M646.0,420.0 A246.0,246.0 0 0 0 154.0,420.0 L208.0,420.0 A192.0,192.0 0 0 1 592.0,420.0 Z" fill="#555e6e" stroke="#7b8596" stroke-width="2"/>
+<text x="400" y="200" font-size="14" fill="#c4ccd8" text-anchor="middle">rampa</text>
+<path d="M607.5,405.5 A208.0,208.0 0 0 1 443.2,623.5" fill="none" stroke="#58d68d" stroke-width="6" stroke-linecap="round" marker-end="url(#ar)"/>
+<text x="644" y="414" font-size="16" font-weight="700" fill="#58d68d" text-anchor="start">LLEGÁS</text>
+<circle cx="479.7" cy="486.8" r="12" fill="#6fb8ff" stroke="#111" stroke-width="2"/>
+<text x="464" y="491" font-size="14" font-weight="700" fill="#6fb8ff" text-anchor="end">1 libro: elementos</text>
+<circle cx="383.3" cy="538.8" r="12" fill="#6fb8ff" stroke="#111" stroke-width="2"/>
+<text x="367" y="533" font-size="14" font-weight="700" fill="#6fb8ff" text-anchor="end">2 lienzo con plantilla</text>
+<circle cx="343.4" cy="647.0" r="11" fill="#e5534b" stroke="#111" stroke-width="2"/>
+<text x="327" y="661" font-size="14" font-weight="700" fill="#f0a8a3" text-anchor="end">3 pestillo</text>
+<path d="M375.1,537.4 L344.8,641.2" fill="none" stroke="#7fd4ff" stroke-width="4" stroke-linecap="round" stroke-dasharray="7 5" marker-end="url(#ar)"/>
+<rect x="360" y="656" width="80" height="24" rx="4" fill="#e5534b" stroke="#111" stroke-width="2"/>
+<text x="400" y="674" font-size="14" font-weight="800" fill="#111" text-anchor="middle">PUERTA</text>
+<text x="400" y="720" font-size="16" font-weight="700" fill="#f5a623" text-anchor="middle">SALÍS AL NEXO ↓</text>
+<circle cx="430.0" cy="532.0" r="13" fill="#f4d03f" stroke="#111" stroke-width="2"/>
+<text x="430.0" y="537.0" font-size="14" font-weight="800" fill="#111" text-anchor="middle">14</text>
+<rect x="746" y="94" width="236" height="146" rx="8" fill="#161c26" stroke="#3a4352"/>
+<line x1="760" y1="120" x2="790" y2="120" stroke="#58d68d" stroke-width="6" stroke-linecap="round"/>
+<text x="802" y="125" font-size="14" fill="#eef1f5">camino</text>
+<rect x="760" y="140" width="30" height="16" rx="3" fill="#e5534b"/>
+<text x="802" y="153" font-size="14" fill="#eef1f5">puerta trabada</text>
+<rect x="760" y="168" width="30" height="16" rx="3" fill="#6fb8ff"/>
+<text x="802" y="181" font-size="14" fill="#eef1f5">estación</text>
+<circle cx="775" cy="204" r="11" fill="#f4d03f" stroke="#111" stroke-width="2"/>
+<text x="802" y="209" font-size="14" fill="#eef1f5">cartel</text>
+<text x="940" y="750" font-size="18" font-weight="800" fill="#eef1f5" text-anchor="middle">N</text>
+<line x1="940" y1="758" x2="940" y2="790" stroke="#eef1f5" stroke-width="3" marker-end="url(#ar)" transform="rotate(180 940 774)"/>
+<line x1="30" y1="790" x2="230" y2="790" stroke="#eef1f5" stroke-width="3"/>
+<text x="30" y="782" font-size="13" fill="#aab3c0">5 m</text>
+</svg>

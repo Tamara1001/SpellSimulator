@@ -1,0 +1,278 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" font-family="Segoe UI, Arial, sans-serif" font-size="12">
+  <defs>
+    <marker id="arr-path" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#58d68d"/>
+    </marker>
+    <marker id="arr-opt" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#5dade2"/>
+    </marker>
+    <marker id="arr-ramp-in" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#abebc6"/>
+    </marker>
+    <marker id="arr-ramp-out" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M0 0 L10 5 L0 10 z" fill="#f5b041"/>
+    </marker>
+    <marker id="arr-dim" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M0 1 L9 5 L0 9 z" fill="#85c1e9"/>
+    </marker>
+    <marker id="arr-dim-start" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+      <path d="M10 1 L1 5 L10 9 z" fill="#85c1e9"/>
+    </marker>
+    <pattern id="hatch-hole" width="10" height="10" patternTransform="rotate(45 0 0)" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="0" x2="0" y2="10" stroke="#f5b041" stroke-width="1.5" opacity="0.35"/>
+    </pattern>
+  </defs>
+
+  <!-- Fondo oscuro. Centro (0,0) = (400, 410). Escala: 40 px = 1 m. Norte (90°) arriba -->
+  <rect width="1200" height="820" fill="#1e2530"/>
+
+  <!-- Barrera mágica exterior (r = 9,2 m -> 368 px) -->
+  <circle cx="400" cy="410" r="368" fill="none" stroke="#c678ff" stroke-width="2" stroke-dasharray="8 6" opacity="0.6"/>
+
+  <!-- Muro cilíndrico de piedra (OuterRadius = 6,8 m -> 272 px, InnerRadius = 6,2 m -> 248 px) -->
+  <circle cx="400" cy="410" r="272" fill="#8d7a6b" stroke="#3b332b" stroke-width="2.5"/>
+  <!-- Piso de madera completo (InnerRadius = 6,2 m -> 248 px) -->
+  <circle cx="400" cy="410" r="248" fill="#543d2b" stroke="#c9a66b" stroke-width="2"/>
+
+  <!-- Disco central libre de rampas (RampInner = 4,8 m -> 192 px, Ø 9,6 m = 72,4 m²) -->
+  <circle cx="400" cy="410" r="192" fill="#634833" stroke="#8e6b4a" stroke-width="1.5" stroke-dasharray="6 4"/>
+
+  <!-- Grilla polar tenue -->
+  <g stroke="#7a5c43" stroke-width="0.8" opacity="0.45" fill="none">
+    <line x1="152" y1="410" x2="648" y2="410"/>
+    <line x1="400" y1="162" x2="400" y2="658"/>
+  </g>
+
+  <!-- Ventanas del Piso 2 (segmentos 1=18°, 6=108°, 11=198°, 17=306°) -->
+  <g stroke="#85c1e9" stroke-width="6" stroke-linecap="round">
+    <line x1="644" y1="316" x2="652" y2="342"/> <!-- 18° -->
+    <line x1="306" y1="166" x2="332" y2="158"/> <!-- 108° -->
+    <line x1="148" y1="478" x2="156" y2="504"/> <!-- 198° -->
+    <line x1="544" y1="628" x2="566" y2="610"/> <!-- 306° -->
+  </g>
+
+  <!-- TRAMO FINAL DE LA RAMPA QUE LLEGA DESDE LA TERRAZA (48° -> 0°, r = 4,8..6,15 m -> 192..246 px) -->
+  <path d="M 592 410 A 192 192 0 0 0 528.5 267.3 L 564.6 227.2 A 246 246 0 0 1 646 410 Z"
+        fill="#6e6559" stroke="#abebc6" stroke-width="2"/>
+  <path d="M 518 228 A 219 219 0 0 1 619 396" fill="none" stroke="#abebc6" stroke-width="3.5" stroke-dasharray="6 4" marker-end="url(#arr-ramp-in)"/>
+  <text x="615" y="295" text-anchor="start" fill="#abebc6" font-size="11" font-weight="700">Llega de Terraza</text>
+  <text x="615" y="310" text-anchor="start" fill="#abebc6" font-size="10.5">(48° → 0° · desembarco Este)</text>
+
+  <!-- HUECO DE LA RAMPA QUE BAJA A PISO 1 (HoleFrom = 48° a HoleTo = 180°, r = 4,8..6,15 m -> 192..246 px) -->
+  <path d="M 528.5 267.3 A 192 192 0 0 0 208 410 L 154 410 A 246 246 0 0 1 564.6 227.2 Z"
+        fill="#191e26" stroke="#f5b041" stroke-width="2"/>
+  <path d="M 528.5 267.3 A 192 192 0 0 0 208 410 L 154 410 A 246 246 0 0 1 564.6 227.2 Z"
+        fill="url(#hatch-hole)"/>
+  <path d="M 181 395 A 219 219 0 0 1 495 213" fill="none" stroke="#f5b041" stroke-width="3.5" stroke-dasharray="7 4" marker-end="url(#arr-ramp-out)"/>
+  <text x="330" y="198" text-anchor="middle" fill="#f8c471" font-size="11" font-weight="700" transform="rotate(-15 330 198)">BAJA A PISO 1 (180° → 90° → 0°)</text>
+
+  <!-- BARANDA DEL HUECO (HoleRail: r = 4,8 m de 48° a RailEnd = 205°, más cierre radial en 48°) -->
+  <path d="M 528.5 267.3 A 192 192 0 0 0 226.0 491.1" fill="none" stroke="#d35400" stroke-width="6" stroke-linecap="round"/>
+  <line x1="528.5" y1="267.3" x2="564.6" y2="227.2" stroke="#d35400" stroke-width="6" stroke-linecap="round"/>
+  <text x="242" y="345" fill="#f5cba7" font-size="10.5" font-weight="700" transform="rotate(-65 242 345)">Baranda hueco (r=4,8m · 48°..205°)</text>
+
+  <!-- ZONAS LIBRES DE TRABAJO ACOTADAS -->
+  <g fill="#58d68d" fill-opacity="0.10" stroke="#58d68d" stroke-width="1.5" stroke-dasharray="5 4">
+    <!-- Zona desembarco Este (3,0 x 2,8 m) -->
+    <rect x="530" y="412" width="110" height="100" rx="6"/>
+    <!-- Zona Opcional 1: Mesa lienzo + Marco Flotar (3,8 x 3,6 m) -->
+    <rect x="415" y="255" width="144" height="148" rx="8"/>
+    <!-- Zona Opcional 2: Marco de Canto (3,6 x 3,5 m) -->
+    <rect x="260" y="250" width="144" height="140" rx="8"/>
+    <!-- Zona Opcional 3: Línea de tiro Diana (3,2 x 3,5 m) -->
+    <polygon points="465,455 605,545 545,620 420,515"/>
+    <!-- Zona Puzzle Obligatorio: Explanada frente a la Pila (4,2 x 4,0 m) -->
+    <rect x="218" y="455" width="168" height="160" rx="8"/>
+  </g>
+  <g fill="#a3e4d7" font-size="10" font-weight="700" text-anchor="middle">
+    <text x="585" y="452">Desembarco libre</text>
+    <text x="585" y="465">3,0 × 2,8 m</text>
+    <text x="487" y="272">Zona Flotar: 3,8 × 3,6 m</text>
+    <text x="332" y="268">Zona Canto: 3,6 × 3,5 m</text>
+    <text x="505" y="575" transform="rotate(38 505 575)">Línea Tiro: 3,2 × 3,5 m</text>
+    <text x="302" y="598">Zona Maniobra Pila: 4,2 × 4,0 m</text>
+  </g>
+
+  <!-- FAROL DE NIVEL 1 (se enciende al llegar a Piso 2: ang = 350°, r = 5,9 m, y = 11,2 m) -->
+  <circle cx="632" cy="451" r="8" fill="#ffe48a" stroke="#7a5a12" stroke-width="2"/>
+  <text x="652" y="455" fill="#ffe48a" font-size="10.5" font-weight="700">Farol Nivel 1 (350°)</text>
+
+  <!-- ESTACIÓN OPCIONAL A: Mesa con Lienzo de Práctica (ang = 20°, r = 2,5 m) -->
+  <g transform="translate(494, 376) rotate(-20)">
+    <rect x="-24" y="-14" width="48" height="28" rx="3" fill="#8e5a34" stroke="#2c1b0e" stroke-width="2"/>
+    <rect x="-10" y="-10" width="20" height="20" fill="#f9f3e3" stroke="#2980b9" stroke-width="2"/>
+  </g>
+  <text x="494" y="348" text-anchor="middle" fill="#ffffff" font-size="10.5" font-weight="700">Mesa + Lienzo (20° · r=2,5m)</text>
+  <text x="494" y="360" text-anchor="middle" fill="#aed6f1" font-size="9.5">Lienzo visible a y=9,87m</text>
+
+  <!-- ESTACIÓN OPCIONAL 1: Marco para dejar el lienzo flotando (ang = 60°, r = 3,1 m) -->
+  <g transform="translate(462, 303) rotate(-60)">
+    <rect x="-16" y="-5" width="32" height="10" fill="none" stroke="#5dade2" stroke-width="3.5"/>
+  </g>
+  <circle cx="478" cy="285" r="6" fill="#ffe48a" stroke="#7a5a12" stroke-width="1.5"/>
+  <text x="485" y="302" text-anchor="start" fill="#85c1e9" font-size="10.5" font-weight="700">Marco 1 · Flotar (60° · r=3,1m)</text>
+
+  <!-- ESTACIÓN OPCIONAL 2: Marco para poner el lienzo de canto (ang = 110°, r = 3,1 m) -->
+  <g transform="translate(358, 293) rotate(-110)">
+    <rect x="-16" y="-5" width="32" height="10" fill="none" stroke="#5dade2" stroke-width="3.5"/>
+  </g>
+  <circle cx="342" cy="280" r="6" fill="#ffe48a" stroke="#7a5a12" stroke-width="1.5"/>
+  <text x="330" y="295" text-anchor="end" fill="#85c1e9" font-size="10.5" font-weight="700">Marco 2 · De canto (110° · r=3,1m)</text>
+
+  <!-- ESTACIÓN OPCIONAL 3: Diana en el muro sureste (ang = 315°, r = 6,12 m) + Caja de tiro (r = 3,5 m) -->
+  <g transform="translate(573, 583) rotate(45)">
+    <rect x="-18" y="-4" width="36" height="8" fill="#3b2313" stroke="#111" stroke-width="1.5"/>
+    <circle cx="0" cy="-6" r="10" fill="#e74c3c" stroke="#f9f3e3" stroke-width="2.5"/>
+    <circle cx="0" cy="-6" r="4" fill="#f9f3e3"/>
+  </g>
+  <circle cx="556" cy="566" r="6" fill="#ffe48a" stroke="#7a5a12" stroke-width="1.5"/>
+  <text x="595" y="592" text-anchor="start" fill="#f1948a" font-size="10.5" font-weight="700">Diana (315° · r=6,1m)</text>
+  <!-- Caja chica de tiro sobre pedestal en (315°, r = 3,5 m) -->
+  <rect x="490" y="500" width="18" height="18" rx="2" fill="#d35400" stroke="#fad7a0" stroke-width="2"/>
+  <text x="478" y="514" text-anchor="end" fill="#f8c471" font-size="10" font-weight="600">Caja tiro (315° · r=3,5m · 6kg)</text>
+
+  <!-- PUZZLE OBLIGATORIO: Pila de cajas y barril en el descanso suroeste (PileAngle = 198°, r = 4,8..6,15 m) -->
+  <g>
+    <!-- 2 Cajas grandes abajo (0,8 x 0,8 m, 40 kg c/u) -->
+    <rect x="188" y="458" width="32" height="32" rx="3" fill="#a0522d" stroke="#f5cba7" stroke-width="2" transform="rotate(-18 204 474)"/>
+    <rect x="161" y="466" width="32" height="32" rx="3" fill="#a0522d" stroke="#f5cba7" stroke-width="2" transform="rotate(-12 177 482)"/>
+    <!-- 2 Cajas chicas arriba (0,4 x 0,4 m, 6 kg c/u) -->
+    <rect x="196" y="466" width="16" height="16" rx="2" fill="#e67e22" stroke="#ffffff" stroke-width="1.5" transform="rotate(8 204 474)"/>
+    <rect x="169" y="474" width="16" height="16" rx="2" fill="#e67e22" stroke="#ffffff" stroke-width="1.5" transform="rotate(-25 177 482)"/>
+    <!-- 1 Barril detrás (Ø 0,56 m, 30 kg) en (190°, r = 5,5 m) -->
+    <circle cx="183" cy="448" r="12" fill="#6e3f19" stroke="#f5cba7" stroke-width="2"/>
+    <circle cx="183" cy="448" r="7" fill="none" stroke="#2c1b0e" stroke-width="1.5"/>
+  </g>
+  <text x="142" y="452" text-anchor="end" fill="#f8c471" font-weight="800" font-size="11.5">PILA OBLIGATORIA (198°)</text>
+  <text x="142" y="467" text-anchor="end" fill="#f5cba7" font-size="10.5">2 cajas grandes (40kg) + 2 chicas (6kg)</text>
+  <text x="142" y="481" text-anchor="end" fill="#f5cba7" font-size="10.5">+ 1 barril (30kg) · cierra r=4,8..6,15m</text>
+
+  <!-- CAMINO DEL JUGADOR (verde = ruta principal 0° -> centro/sur -> pila 198° -> rampa 180°; celeste = desvíos opcionales) -->
+  <path d="M 616 420 Q 560 490 430 535 Q 310 560 245 505 L 184 422"
+        fill="none" stroke="#58d68d" stroke-width="4" stroke-dasharray="10 6" marker-end="url(#arr-path)"/>
+  <!-- Rutas opcionales a ejercicios -->
+  <path d="M 575 435 Q 535 405 508 386" fill="none" stroke="#5dade2" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#arr-opt)"/>
+  <path d="M 488 360 Q 475 330 466 315" fill="none" stroke="#5dade2" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#arr-opt)"/>
+  <path d="M 450 303 Q 405 295 372 293" fill="none" stroke="#5dade2" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#arr-opt)"/>
+  <path d="M 505 510 L 560 568" fill="none" stroke="#5dade2" stroke-width="2.5" stroke-dasharray="5 4" marker-end="url(#arr-opt)"/>
+
+  <!-- CARTELES NUMERADOS (#6 a #10) — todos ANTES de su estación -->
+  <g font-weight="800" font-size="13" text-anchor="middle">
+    <!-- #6 Opcional Lienzo (ang = 8°, r = 3,1 m, antes de la mesa en 20°) -->
+    <circle cx="523" cy="393" r="12" fill="#f4d03f" stroke="#1b1b1b" stroke-width="2"/>
+    <text x="523" y="398" fill="#1b1b1b">6</text>
+    <!-- #7 Marco Flotar (ang = 48°, r = 2,7 m, antes del marco en 60°) -->
+    <circle cx="472" cy="330" r="12" fill="#f4d03f" stroke="#1b1b1b" stroke-width="2"/>
+    <text x="472" y="335" fill="#1b1b1b">7</text>
+    <!-- #8 Marco Canto (ang = 95°, r = 2,7 m, antes del marco en 110°) -->
+    <circle cx="391" cy="302" r="12" fill="#f4d03f" stroke="#1b1b1b" stroke-width="2"/>
+    <text x="391" y="307" fill="#1b1b1b">8</text>
+    <!-- #9 Diana (ang = 328°, r = 3,8 m, antes de la caja de tiro en 315°) -->
+    <circle cx="529" cy="491" r="12" fill="#f4d03f" stroke="#1b1b1b" stroke-width="2"/>
+    <text x="529" y="496" fill="#1b1b1b">9</text>
+    <!-- #10 Pila obligatoria (ang = 216°, r = 5,35 m, 1,8 m antes de la pila en 198°) -->
+    <circle cx="227" cy="536" r="12" fill="#f4d03f" stroke="#1b1b1b" stroke-width="2"/>
+    <text x="227" y="541" fill="#1b1b1b">10</text>
+  </g>
+
+  <!-- COTAS DIMENSIONALES -->
+  <g stroke="#85c1e9" stroke-width="1.5" fill="#85c1e9" font-size="11" font-weight="600">
+    <!-- Diámetro del disco central libre (9,60 m) -->
+    <line x1="208" y1="410" x2="592" y2="410" marker-start="url(#arr-dim-start)" marker-end="url(#arr-dim)"/>
+    <text x="400" y="426" text-anchor="middle" stroke="none">Disco central libre: Ø 9,60 m (72,4 m²)</text>
+    <!-- Radio interior total (6,20 m) -->
+    <line x1="400" y1="410" x2="400" y2="658" marker-start="url(#arr-dim-start)" marker-end="url(#arr-dim)"/>
+    <text x="408" y="642" text-anchor="start" stroke="none">r interior = 6,20 m (Ø 12,40 m)</text>
+  </g>
+
+  <!-- Brújula y Barra de escala -->
+  <g transform="translate(65, 85)" fill="#f0f0f0" stroke="#f0f0f0">
+    <path d="M0 24 L0 -24 M-7 -12 L0 -26 L7 -12" fill="none" stroke-width="2.5"/>
+    <text x="0" y="-32" text-anchor="middle" stroke="none" font-weight="800" font-size="13">N (90°)</text>
+    <text x="0" y="40" text-anchor="middle" stroke="none" font-size="10" fill="#aab4c0">S (270°)</text>
+    <text x="34" y="4" text-anchor="start" stroke="none" font-size="10" fill="#aab4c0">E (0°)</text>
+    <text x="-34" y="4" text-anchor="end" stroke="none" font-size="10" fill="#aab4c0">O (180°)</text>
+  </g>
+  <g transform="translate(40, 775)" fill="#f0f0f0">
+    <rect x="0" y="0" width="200" height="6" fill="#85c1e9"/>
+    <line x1="0" y1="-4" x2="0" y2="10" stroke="#85c1e9" stroke-width="2"/>
+    <line x1="40" y1="0" x2="40" y2="8" stroke="#1e2530" stroke-width="1.5"/>
+    <line x1="80" y1="0" x2="80" y2="8" stroke="#1e2530" stroke-width="1.5"/>
+    <line x1="120" y1="0" x2="120" y2="8" stroke="#1e2530" stroke-width="1.5"/>
+    <line x1="160" y1="0" x2="160" y2="8" stroke="#1e2530" stroke-width="1.5"/>
+    <line x1="200" y1="-4" x2="200" y2="10" stroke="#85c1e9" stroke-width="2"/>
+    <text x="100" y="-8" text-anchor="middle" font-weight="700" font-size="12">5 m (Escala: 40 px = 1 m)</text>
+  </g>
+
+  <!-- PANEL DE LEYENDA DERECHO -->
+  <rect x="800" y="20" width="380" height="780" rx="10" fill="#252e3b" stroke="#394659" stroke-width="1.5"/>
+  <g transform="translate(822, 50)" fill="#e9edf2">
+    <text font-size="18" font-weight="800" fill="#ffffff">Nivel 2 · Piso 2 (y = 9,00 m)</text>
+    <text y="22" fill="#85c1e9" font-size="12.5" font-weight="600">Tema: Mover objetos (E agarrar/flotar, Q arrojar, F girar)</text>
+
+    <text y="54" font-weight="700" font-size="13.5" fill="#f8c471">Por qué resuelve los problemas reportados</text>
+    <g font-size="11.5" fill="#d0d8e2">
+      <text y="74">• Ningún objeto pisa la rampa (0°..48° queda 100 % libre).</text>
+      <text y="92">• El taller de alquimia se mudó al Archivo: el disco central</text>
+      <text y="108">  de Ø 9,60 m (72,4 m²) aloja los ejercicios con ≥3,5×3,5 m.</text>
+      <text y="126">• El lienzo de práctica está sobre su mesa en (20°, r=2,5m),</text>
+      <text y="142">  justo frente al desembarco de la rampa (0°).</text>
+      <text y="160">• La pila está en 198° (2,5 m antes de la bajada en 180°)</text>
+      <text y="176">  con una explanada de 4,2 × 4,0 m delante para mover cajas.</text>
+    </g>
+
+    <text y="208" font-weight="700" font-size="13.5" fill="#58d68d">Recorrido y estaciones del piso</text>
+    <g font-size="11.5" fill="#d0d8e2">
+      <text y="228">1. Desembarca en 0° (Este) → se enciende Farol Nivel 1.</text>
+      <text y="246">2. [Opcional] En (20°, r=2,5m) agarra el lienzo con E y</text>
+      <text y="262">   vuelve a apretar E para dejarlo flotando en el aire.</text>
+      <text y="280">3. [Opcional] Marco 1 (60°, r=3,1m): flotar dentro del aro.</text>
+      <text y="298">4. [Opcional] Marco 2 (110°, r=3,1m): girar de canto.</text>
+      <text y="316">5. [Opcional] Diana (315°, r=6,1m): arrojar caja con Q.</text>
+      <text y="334">6. [Obligatorio] En 198° saca las cajas de la pila con E o Q</text>
+      <text y="350">   y baja por la rampa en 180° (Oeste) hacia el Piso 1.</text>
+    </g>
+
+    <text y="384" font-weight="700" font-size="13.5" fill="#f4d03f">Carteles del piso (todos ANTES de su objeto)</text>
+    <g font-size="11.5" fill="#e9edf2">
+      <circle cx="10" cy="402" r="9" fill="#f4d03f"/><text x="10" y="406" text-anchor="middle" fill="#111" font-weight="800">6</text>
+      <text x="26" y="406">(8°, r=3,1m) «Opcional: E agarrar · E flotar»</text>
+
+      <circle cx="10" cy="426" r="9" fill="#f4d03f"/><text x="10" y="430" text-anchor="middle" fill="#111" font-weight="800">7</text>
+      <text x="26" y="430">(48°, r=2,7m) «1 · Dejá el lienzo flotando acá»</text>
+
+      <circle cx="10" cy="450" r="9" fill="#f4d03f"/><text x="10" y="454" text-anchor="middle" fill="#111" font-weight="800">8</text>
+      <text x="26" y="454">(95°, r=2,7m) «2 · Giralo de canto en el marco»</text>
+
+      <circle cx="10" cy="474" r="9" fill="#f4d03f"/><text x="10" y="478" text-anchor="middle" fill="#111" font-weight="800">9</text>
+      <text x="26" y="478">(328°, r=3,8m) «3 · Arrojá la caja con Q a la diana»</text>
+
+      <circle cx="10" cy="498" r="9" fill="#f4d03f"/><text x="10" y="502" text-anchor="middle" fill="#111" font-weight="800">10</text>
+      <text x="26" y="502">(216°, r=5,35m) «E agarrar/soltar · Q arrojar»</text>
+    </g>
+
+    <text y="536" font-weight="700" font-size="13.5" fill="#ffffff">Simbología</text>
+    <g font-size="11.5" fill="#d0d8e2">
+      <rect x="2" y="548" width="16" height="12" fill="#8e5a34" stroke="#f9f3e3"/>
+      <text x="28" y="558">Mesa con lienzo de práctica (0,45 × 0,45 m)</text>
+
+      <rect x="2" y="572" width="16" height="8" fill="none" stroke="#5dade2" stroke-width="2.5"/>
+      <text x="28" y="580">Marco de ejercicio opcional + farolito testigo</text>
+
+      <circle cx="10" cy="598" r="6" fill="#e74c3c" stroke="#f9f3e3" stroke-width="1.5"/>
+      <text x="28" y="602">Diana en pared (315°, r=6,1m) + caja de tiro</text>
+
+      <rect x="3" y="614" width="14" height="14" fill="#a0522d" stroke="#f5cba7" stroke-width="1.5"/>
+      <text x="28" y="625">Pila de cajas (40 kg / 6 kg) y barril (30 kg)</text>
+
+      <line x1="0" y1="644" x2="20" y2="644" stroke="#d35400" stroke-width="5"/>
+      <text x="28" y="648">Baranda del hueco (r=4,8m, 48°..205°)</text>
+
+      <path d="M0 668 h20" stroke="#58d68d" stroke-width="3.5" stroke-dasharray="6 4"/>
+      <text x="28" y="672">Camino obligatorio (0° → 198° → 180°)</text>
+
+      <path d="M0 690 h20" stroke="#5dade2" stroke-width="2.5" stroke-dasharray="4 3"/>
+      <text x="28" y="694">Desvíos opcionales a ejercicios</text>
+    </g>
+  </g>
+</svg>
