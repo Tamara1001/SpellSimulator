@@ -93,6 +93,9 @@ namespace SpellSimulator.Player
             {
                 vrTuned = true;
                 rb.interpolation = RigidbodyInterpolation.Interpolate;
+                // Sin friccion contra paredes y esquinas: se desliza en vez de quedar pegado (el frenado ya es propio).
+                if (body != null)
+                    body.sharedMaterial = new PhysicsMaterial("VrBody") { dynamicFriction = 0f, staticFriction = 0f, frictionCombine = PhysicsMaterialCombine.Minimum };
             }
             CheckGrounded();
             HandleStance();
@@ -255,7 +258,7 @@ namespace SpellSimulator.Player
             }
 
             // Aplicar fuerza de movimiento
-            if (isGrounded)
+            if (isGrounded || float.IsFinite(stepTargetFeetY))
             {
                 rb.AddForce(moveDir * force, ForceMode.Acceleration);
             }
@@ -305,19 +308,52 @@ namespace SpellSimulator.Player
         /// Sube bordes bajos (umbral de la torre, inicio de una rampa, roca chica) sin saltar: si a la altura de los pies
         /// hay una pared casi vertical y a la altura maxima de escalon no, se sube el cuerpo a la cima del borde.
         /// </summary>
+        private const float VrStepHeight = 0.5f, VrClimbSpeed = 2.2f;
+        private float stepTargetFeetY = float.NegativeInfinity;
+        private float stepClimbUntil;
+
         private void TryStepUp(Vector3 moveDir)
         {
+            bool vr = PlatformDetector.IsVR;
+            // VR: sube el borde deslizandose hacia arriba (no de un salto, que marea) y mira tambien de costado para no
+            // quedar trabado en esquinas y umbrales.
+            if (vr && float.IsFinite(stepTargetFeetY))
+            {
+                float feetY = rb.position.y - playerHeight * 0.5f;
+                if (feetY >= stepTargetFeetY - 0.02f || Time.time > stepClimbUntil) stepTargetFeetY = float.NegativeInfinity;
+                else
+                {
+                    rb.linearVelocity = new Vector3(rb.linearVelocity.x, Mathf.Max(rb.linearVelocity.y, VrClimbSpeed), rb.linearVelocity.z);
+                    return;
+                }
+            }
             if (!isGrounded) return;
+            if (TryStep(moveDir, vr)) return;
+            if (!vr) return;
+            Quaternion left = Quaternion.AngleAxis(-40f, Vector3.up), right = Quaternion.AngleAxis(40f, Vector3.up);
+            if (!TryStep(left * moveDir, true)) TryStep(right * moveDir, true);
+        }
+
+        private bool TryStep(Vector3 dir, bool vr)
+        {
+            float stepMax = vr ? VrStepHeight : maxStepHeight;
             float reach = bodyRadius + 0.2f;
             Vector3 feet = transform.position + Vector3.down * (playerHeight * 0.5f - 0.04f);
-            if (!Physics.Raycast(feet, moveDir, out RaycastHit low, reach, groundLayer, QueryTriggerInteraction.Ignore)) return;
-            if (Vector3.Angle(low.normal, Vector3.up) < 50f) return; // es una pendiente, no un escalon
-            Vector3 top = feet + Vector3.up * maxStepHeight;
-            if (Physics.Raycast(top, moveDir, reach, groundLayer, QueryTriggerInteraction.Ignore)) return; // muy alto
-            if (!Physics.Raycast(top + moveDir * reach, Vector3.down, out RaycastHit landing, maxStepHeight, groundLayer, QueryTriggerInteraction.Ignore)) return;
+            if (!Physics.Raycast(feet, dir, out RaycastHit low, reach, groundLayer, QueryTriggerInteraction.Ignore)) return false;
+            if (Vector3.Angle(low.normal, Vector3.up) < 50f) return false; // es una pendiente, no un escalon
+            Vector3 top = feet + Vector3.up * stepMax;
+            if (Physics.Raycast(top, dir, reach, groundLayer, QueryTriggerInteraction.Ignore)) return false; // muy alto
+            if (!Physics.Raycast(top + dir * reach, Vector3.down, out RaycastHit landing, stepMax, groundLayer, QueryTriggerInteraction.Ignore)) return false;
             float rise = landing.point.y - (feet.y - 0.04f);
-            if (rise <= 0.01f || rise > maxStepHeight) return;
-            rb.position += Vector3.up * (rise + 0.02f);
+            if (rise <= 0.01f || rise > stepMax) return false;
+            if (vr)
+            {
+                stepTargetFeetY = landing.point.y;
+                stepClimbUntil = Time.time + 0.6f;
+                rb.linearVelocity = new Vector3(rb.linearVelocity.x, Mathf.Max(rb.linearVelocity.y, VrClimbSpeed), rb.linearVelocity.z);
+            }
+            else rb.position += Vector3.up * (rise + 0.02f);
+            return true;
         }
 
         private void ApplyCustomGravity()

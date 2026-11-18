@@ -342,6 +342,42 @@ namespace SpellSimulator.World
             bodyRenderer.SetPropertyBlock(block);
         }
 
+        private const float TipRadius = 0.004f, TipProbeBack = 0.05f, TipMaxPush = 0.25f;
+        private static readonly RaycastHit[] tipHits = new RaycastHit[8];
+
+        /// <summary>
+        /// [VR] La punta no atraviesa lienzos ni el mundo: se empuja la herramienta (solo ese tramo) hacia afuera de la superficie, a lo
+        /// largo de su normal. Se rehace cada cuadro desde la pose de la mano (sin estado ni fisica), asi la punta no tiembla y se
+        /// desliza sobre el papel mientras la mano sigue de largo.
+        /// </summary>
+        private void LateUpdate()
+        {
+            if (!held || !PlatformDetector.IsVR || raycastOrigin == null || transform.parent == null) return;
+            transform.localPosition = Vector3.zero;
+            Vector3 tip = raycastOrigin.position;
+            Vector3 forward = raycastOrigin.forward;
+            Vector3 start = tip - forward * TipProbeBack;
+            int n = Physics.SphereCastNonAlloc(start, TipRadius, forward, tipHits, TipProbeBack + TipRadius, ~0, QueryTriggerInteraction.Collide);
+            float bestDistance = float.MaxValue;
+            Vector3 pushOffset = Vector3.zero;
+            Transform owner = transform.root;
+            for (int i = 0; i < n; i++)
+            {
+                RaycastHit hit = tipHits[i];
+                Collider c = hit.collider;
+                if (hit.distance <= 0f || hit.distance >= bestDistance) continue;
+                bool isCanvas = c.GetComponentInParent<DrawingCanvas>() != null;
+                if (!isCanvas && c.transform.IsChildOf(owner)) continue; // el propio cuerpo y las manos (un lienzo en la otra mano si cuenta)
+                if (c.isTrigger && !isCanvas) continue;
+                if (!isCanvas && c.attachedRigidbody != null && !c.attachedRigidbody.isKinematic) continue;
+                float depth = TipRadius - Vector3.Dot(tip - hit.point, hit.normal);
+                if (depth <= 0f) continue;
+                bestDistance = hit.distance;
+                pushOffset = hit.normal * Mathf.Min(depth, TipMaxPush);
+            }
+            if (pushOffset != Vector3.zero) transform.position += pushOffset;
+        }
+
         private static readonly RaycastHit[] focusHits = new RaycastHit[16];
         private static readonly Collider[] contactHits = new Collider[8];
         private const float ContactRadius = 0.035f;

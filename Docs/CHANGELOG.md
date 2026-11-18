@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-18 — VR: lápiz con colisión y movimiento más suave
+
+- **Lápiz con colisión (`PhysicalTool.LateUpdate`):** la punta no atraviesa lienzos ni el mundo; se empuja la herramienta a lo largo de la normal de la superficie, recalculado cada cuadro desde la mano (sin estado), así la punta no tiembla y se desliza sobre el papel.
+- **Movimiento VR (`PlayerMovement`):** cuerpo sin fricción contra paredes, escalones de hasta 0,5 m que se suben deslizando (no de golpe) y también al avanzar en diagonal, para no quedar trabado en umbrales (laboratorio) ni tener que saltar.
+- Sin probar en el visor; los 0,5 m y la velocidad de subida (2,2 m/s) son estimaciones.
+
 ## 2026-11-18 — VR, 4.ª prueba: causa raíz (Camera.main nulo), menú VR, dibujo por contacto, perillas
 
 - **Causa raíz:** la cámara del visor no tenía el tag `MainCamera`, así que `Camera.main` era null en VR. Eso rompía: el avance según la mirada (caminaba según el cuerpo, que solo gira con el giro a saltos), la HUD de la muñeca (hotbar), agacharse, el giro y el enderezado de lo agarrado. `PlatformDetector` ahora etiqueta la cámara VR.
