@@ -13,13 +13,13 @@ namespace SpellSimulator.World.Map
         public const int Levels = 4;
 
         /// <summary>Medidas de la torre (iguales a las de TowerBuilder; lo fija un test).</summary>
-        public const float FloorHeight = 4.5f, InnerRadius = 6.2f, OuterRadius = 6.8f;
+        public const float FloorHeight = 5f, InnerRadius = 5.8f, OuterRadius = 6.4f;
 
         /// <summary>Angulo de la puerta (grados, 0 = este, 90 = norte) y medio ancho angular del vano.</summary>
         public const float DoorAngle = 270f, DoorHalfAngle = 12f;
 
-        /// <summary>Radio de la barrera magica: un prisma alrededor de la torre, por fuera del balcon de la terraza (8,7 m) y del talud de la base (8,6 m).</summary>
-        public const float BarrierRadius = 9.2f;
+        /// <summary>Radio de la barrera magica: un prisma alrededor de la torre, por fuera del balcon de la terraza (8,2 m) y del talud de la base (8,2 m).</summary>
+        public const float BarrierRadius = 8.7f;
 
         /// <summary>Margen sobre el piso de abajo: por debajo de esa altura del pivote el jugador ya bajo (el pivote va a 1-1,7 m del piso).</summary>
         private const float ArrivalMargin = 2.6f;

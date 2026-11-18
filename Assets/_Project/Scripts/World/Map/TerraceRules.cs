@@ -12,7 +12,7 @@ namespace SpellSimulator.World.Map
         /// <summary>Angulos (grados, 0 = este) de la viga y del muro bajo.</summary>
         public const float BeamAngle = 25f, JumpWallAngle = 325f;
         /// <summary>Radio de la terraza, medio ancho de la franja que cuenta como «bajo la viga» / «sobre el muro» y altura de la terraza.</summary>
-        public const float Radius = 8.2f, StripHalfWidth = 0.55f, TerraceY = 13.5f;
+        public const float Radius = 7.7f, StripHalfWidth = 0.55f, TerraceY = 15f;
         /// <summary>Angulo de la reja que tapa la rampa (entre las barandas del hueco).</summary>
         public const float GateAngle = 195f;
 

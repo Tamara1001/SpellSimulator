@@ -91,17 +91,20 @@ namespace SpellSimulator.EditorTools
 
             // Cada escenario: receta, centro del papel, direccion de emision, quien tiene que ceder.
             float y1 = TowerBuilder.FloorHeight;
-            Vector3 clothC = Polar(3.9f, MapTutorial.ClothAngle, y1 + 1.6f);
-            Vector3 clothDir = (Polar(3.9f, MapTutorial.ClothAngle + 30f, 0f) - Polar(3.9f, MapTutorial.ClothAngle - 30f, 0f)); // tangente hacia 270
+            // Geometria de la torre v2: todo pegado al muro. La tela esta entre la baranda y el muro; se le dispara desde el lado sur (angulos
+            // mayores), de frente a su cara (tangente), como lo hace quien dibuja en el caballete.
+            float clothR = (TowerBuilder.RampInner + TowerBuilder.InnerRadius) * 0.5f;
+            Vector3 clothC = Polar(clothR, MapTutorial.ClothAngle, y1 + 1.6f);
+            Vector3 clothDir = (Polar(clothR, MapTutorial.ClothAngle - 30f, 0f) - Polar(clothR, MapTutorial.ClothAngle + 30f, 0f)); // tangente hacia el oeste
             clothDir.y = 0f; clothDir.Normalize();
-            Vector3 barC = Polar(4.6f, MapTutorial.LatchAngle, 1.45f);
+            Vector3 barC = Polar(TowerBuilder.WallRadius(MapTutorial.LatchAngle, 0.2f) - 0.37f, MapTutorial.LatchAngle, 1.45f);
             Vector3 barIn = (barC - o); barIn.y = 0f; barIn.Normalize();
-            Vector3 weightC = Polar(4.5f, MapTutorial.WeightAngle, 1.0f);
-            Vector3 stoneC = Polar(4.5f, MapTutorial.StoneAngle, 0.5f);
+            Vector3 weightC = Polar(TowerBuilder.WallRadius(MapTutorial.WeightAngle, 0.36f), MapTutorial.WeightAngle, 1.0f);
+            Vector3 stoneC = Polar(TowerBuilder.WallRadius(MapTutorial.StoneAngle, 0.5f), MapTutorial.StoneAngle, 0.5f);
             Vector3 stoneIn = (stoneC - o); stoneIn.y = 0f; stoneIn.Normalize();
 
             foreach (string recipe in new[] { "gust", "wind_fan", "wind_breath" })
-                foreach (float dist in new[] { 0.8f, 1.2f, 1.8f })
+                foreach (float dist in new[] { 0.8f, 1.2f, 1.8f, 2.6f })
                 {
                     foreach (var step in Shoot("tela", recipe, clothC - clothDir * dist, clothDir, dist, () => cloth.IsOpen, () => tutorial.Begin(), bench, caster, rebuild)) yield return step;
                     foreach (var step in Shoot("pestillo", recipe, barC - barIn * dist, barIn, dist, () => bar.IsOpen, () => tutorial.Begin(), bench, caster, rebuild)) yield return step;

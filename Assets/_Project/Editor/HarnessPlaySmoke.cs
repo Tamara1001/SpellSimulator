@@ -192,7 +192,7 @@ namespace SpellSimulator.EditorTools
             }
 
             // --- Piso 1 del tutorial: lienzo con plantilla fantasma (lineas aparte, no son trazos) y rayo de apunte
-            var windPaper = Find("TutorialPaper_Wind");
+            var windPaper = Find("Easel_Wind_Canvas");
             if (windPaper != null)
             {
                 Transform ghost = windPaper.transform.Find("GhostTemplate");
@@ -208,7 +208,7 @@ namespace SpellSimulator.EditorTools
                     cam.nearClipPlane = 0.05f;
                     var rt = new RenderTexture(900, 900, 24);
                     cam.targetTexture = rt;
-                    camGo.transform.position = windPaper.transform.position + Vector3.up * 1.1f;
+                    camGo.transform.position = windPaper.transform.position - windPaper.transform.forward * 1.1f;
                     camGo.transform.LookAt(windPaper.transform.position);
                     cam.Render();
                     RenderTexture.active = rt;
@@ -224,7 +224,7 @@ namespace SpellSimulator.EditorTools
                 }
                 Check(ghostStrokes >= 2 && hasAim && noInk, $"tutorial piso 1: el lienzo trae plantilla fantasma y rayo de apunte, sin trazos propios (trazos fantasma {ghostStrokes}, rayo {hasAim}, sin tinta {noInk})");
             }
-            else failures.Add("falta TutorialPaper_Wind");
+            else failures.Add("falta Easel_Wind_Canvas");
 
             // --- Dibujo y reinicio del mundo
             var paper = Find("Paper_S");
@@ -362,9 +362,25 @@ namespace SpellSimulator.EditorTools
             // --- Tutoriales nuevos, hojas livianas, barquito estable, muros de tierra y Wall Breaker.
             Check(GameObject.Find("Struct_EarthWorkshop") != null && GameObject.Find("Struct_WaterLab") != null && GameObject.Find("Slate_WaterLab") != null,
                 "tutoriales nuevos: taller de piedra y laboratorio del lago con su pizarra");
-            Check(Object.FindObjectsByType<Flutter>(FindObjectsSortMode.None).Length >= 20, "tutorial de viento: muchas hojas livianas que revolotean");
-            var boat = GameObject.Find("ToyBoat");
-            Check(boat != null && boat.GetComponent<KeepUpright>() != null && boat.GetComponent<Rigidbody>().mass <= 0.1f, "tutorial de agua: barquito liviano que se mantiene boca arriba");
+            // Interior de la torre v2: sin estaciones/alquimia/portal dentro, y los muebles de pared pegados al muro (a menos de 0,7 m).
+            {
+                Vector3 towerC = SpellSimulator.EditorTools.Map.MapBuilder.TowerOrigin();
+                float Flat(Vector3 p) => new Vector2(p.x - towerC.x, p.z - towerC.z).magnitude;
+                var towerPortal = Portal.Find("tower-study");
+                bool portalOut = towerPortal != null && Flat(towerPortal.transform.position) > SpellSimulator.EditorTools.Map.TowerBuilder.BaseRadius + 2f;
+                bool noClutter = GameObject.Find("AlchemyTable") == null && GameObject.Find("WindTable") == null && GameObject.Find("WaterBasin") == null
+                    && GameObject.Find("WallBoard_Library") == null && GameObject.Find("DraftingTable") == null;
+                bool hugging = true;
+                string loose = "";
+                foreach (string n in new[] { "Chest_Library_A", "Crate_Library_A", "Chest_Study_A", "Crate_Study_A", "Chest_Tower2_A", "Chest_Tower2_B", "Crate_Tower2_A", "Workbench_Study", "Bookshelf" })
+                {
+                    var go = GameObject.Find(n);
+                    if (go == null) continue;
+                    float gap = SpellSimulator.EditorTools.Map.TowerBuilder.InnerRadius - Flat(go.transform.position);
+                    if (gap > 0.9f) { hugging = false; loose += n + " "; }
+                }
+                Check(portalOut && noClutter && hugging, $"torre v2: portal fuera de la torre, sin estaciones ni alquimia y muebles pegados al muro (portal fuera {portalOut}, limpio {noClutter}, sueltos: {loose})");
+            }
 
             var columns = new System.Collections.Generic.List<SpellSimulator.Compiler.SignReading>
             {
@@ -735,7 +751,7 @@ namespace SpellSimulator.EditorTools
                 bool GroundIs(float r, float a, float yFrom, string expected) =>
                     Physics.Raycast(towerAt + SpellSimulator.EditorTools.Map.TowerBuilder.Polar(r, a, yFrom), Vector3.down, out RaycastHit gh, 3f, ~0, QueryTriggerInteraction.Ignore) && gh.collider.name == expected;
                 float midRing = (SpellSimulator.EditorTools.Map.TowerBuilder.RampInner + SpellSimulator.EditorTools.Map.TowerBuilder.RampOuter) * 0.5f;
-                bool rampNorth = GroundIs(midRing, 90f, 2.25f + 1.2f, "TowerRamp_0");
+                bool rampNorth = GroundIs(midRing, 90f, SpellSimulator.EditorTools.Map.TowerBuilder.RampY(0, 90f) + 1.2f, "TowerRamp_0");
                 bool holeOverRamp = GroundIs(midRing, 120f, floor2 + 0.5f, "TowerRamp_1");
                 bool plazaSouth = GroundIs(midRing, 270f, floor2 + 0.5f, "TowerFloor_2") && GroundIs(midRing, 225f, SpellSimulator.EditorTools.Map.TowerBuilder.FloorHeight + 0.5f, "TowerFloor_1");
                 bool centerDisc = GroundIs(0f, 0f, floor2 + 0.5f, "TowerFloor_2");

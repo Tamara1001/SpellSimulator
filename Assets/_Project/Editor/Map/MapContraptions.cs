@@ -61,9 +61,8 @@ namespace SpellSimulator.EditorTools.Map
             Slab(template, material, caster, stoneProfile, RuneKind.Stone, "ImpactStone_J2", origin + TrainingLayout.Offset(new Vector3(-0.75f, 0.2f, -1.5f)), 0.2f, 0.06f, false, SealTrigger.Mode.Impact, 3f);
             Weight(map, material, stoneProfile, origin + TrainingLayout.Offset(new Vector3(1.0f, 0.3f, 0f)));
 
-            // Oro (rara): en el estudio (primer piso), sobre un pedestal frente al estante de 285 grados, en el area
-            // central libre (radio 2.2 < 2.6: fuera del anillo de rampas y del hueco de la rampa de abajo).
-            Vector3 pedestalAt = MapBuilder.TowerOrigin() + TowerBuilder.Polar(2.2f, 285f, TowerBuilder.FloorHeight);
+            // Oro (rara): en el estudio (primer piso), sobre un pedestal contra el muro sur (270 grados).
+            Vector3 pedestalAt = MapBuilder.TowerOrigin() + TowerBuilder.Polar(TowerBuilder.WallRadius(270f, 0.46f), 270f, TowerBuilder.FloorHeight);   // pegado al muro, entre los baules y el atril del viento
             float pedestalTop = Pedestal(map, material, pedestalAt);
             Slab(template, material, caster, stoneProfile, RuneKind.Gold, "ImpactGold_S", pedestalAt + Vector3.up * (pedestalTop + 0.09f), 0.18f, 0.06f, false, SealTrigger.Mode.Impact, 3f);
         }

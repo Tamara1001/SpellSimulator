@@ -15,10 +15,10 @@ namespace SpellSimulator.EditorTools.Map
     /// </summary>
     public static class TowerBuilder
     {
-        public const float OuterRadius = 6.8f;
+        public const float OuterRadius = 6.4f;
         public const float Wall = 0.6f;
         public const float InnerRadius = OuterRadius - Wall;
-        public const float FloorHeight = 4.5f;
+        public const float FloorHeight = 5f;
         public const int Floors = 3;
         public const float TerraceY = FloorHeight * Floors;
         public const float ParapetHeight = 1f;
@@ -26,16 +26,17 @@ namespace SpellSimulator.EditorTools.Map
         /// Silueta (rework 2026-11-17): la torre es mas ancha abajo y arriba que en el medio. El interior no cambia (cilindro de
         /// InnerRadius): abajo hay un talud de piedra hasta BaseRadius y arriba la terraza vuela sobre mensulas hasta TerraceRadius.
         /// </summary>
-        public const float TerraceRadius = 8.2f, TerraceOuter = TerraceRadius + 0.5f;
-        public const float BaseRadius = 8.6f, BaseTop = 1.4f;
+        public const float TerraceRadius = 7.7f, TerraceOuter = TerraceRadius + 0.5f;
+        public const float BaseRadius = 8.2f, BaseTop = 1.4f;
         /// <summary>Postes del techo: sobre el muro (macizo en toda la vuelta), uno cada 36 grados.</summary>
-        public const float PostRadius = 6.5f, RoofPostHeight = 3.8f;
+        public const float PostRadius = 6.1f, RoofPostHeight = 3.8f;
         public const int RoofPosts = 10;
         public const int Sides = 20;
-        public const float Row = 0.75f;
+        /// <summary>Una fila de sillares: 1/8 de piso (las ventanas y la puerta se cortan por filas).</summary>
+        public const float Row = FloorHeight / 8f;
 
         // Rampas: radio interno/externo, giro total y angulo de inicio por piso.
-        public const float RampInner = 4.8f;
+        public const float RampInner = 4.1f;
         public const float RampOuter = InnerRadius - 0.05f;
         public const float RampTurn = 180f;
         /// <summary>
@@ -48,7 +49,7 @@ namespace SpellSimulator.EditorTools.Map
         public const float FloorThickness = 0.3f;
 
         /// <summary>Puerta: ancho, alto, giro cerrada y abierta (grados, contra el muro oeste de la entrada) y duracion del giro.</summary>
-        public const float DoorWidth = 1.92f, DoorHeight = 2.9f, DoorClosedYaw = 0f, DoorOpenYaw = -150f, DoorSwing = 0.5f;
+        public const float DoorWidth = 1.8f, DoorHeight = 3.1f, DoorClosedYaw = 0f, DoorOpenYaw = -150f, DoorSwing = 0.5f;
 
         // Piedra calida (afuera arenisca, adentro revoque ocre), madera con veta y teja roja.
         private static readonly Color StoneA = new Color(0.76f, 0.7f, 0.58f);
@@ -113,6 +114,18 @@ namespace SpellSimulator.EditorTools.Map
         /// <summary>Yaw (grados de Unity) que deja el +X local tangente al muro en ese angulo (y el -Z local mirando al centro).</summary>
         public static float TangentYaw(float angleDeg) => 270f - angleDeg;
 
+        /// <summary>
+        /// Radio del centro de un mueble de <paramref name="depth"/> metros de fondo para que quede PEGADO a la cara interior del muro
+        /// (poligono de <see cref="Sides"/> lados) en ese angulo. Con yaw = <see cref="TangentYaw"/> el fondo es el eje local Z.
+        /// </summary>
+        public static float WallRadius(float angleDeg, float depth)
+        {
+            float step = 360f / Sides;
+            float delta = (Mathf.Repeat(angleDeg, step) - step * 0.5f) * Mathf.Deg2Rad;
+            float apothem = InnerRadius * Mathf.Cos(step * 0.5f * Mathf.Deg2Rad);
+            return apothem / Mathf.Cos(delta) - depth * 0.5f - 0.03f;
+        }
+
         /// <summary>Altura de la superficie de la rampa del piso indicado sobre ese angulo, o NaN si la rampa no pasa por ahi.</summary>
         public static float RampY(int ramp, float angleDeg)
         {
@@ -137,28 +150,33 @@ namespace SpellSimulator.EditorTools.Map
 
         /// <summary>Ventanas por piso (segmentos del muro de 20 lados).</summary>
         /// <summary>
-        /// Rework 2026-11-17: las rampas cubren el arco norte (0..180 grados) en todos los pisos, asi que las ventanas van en el arco sur
-        /// (segmento s = angulo s*18), sin tocar los segmentos 19 y 0 (llegada de rampas y faroles de nivel) ni el 15 (puerta).
+        /// Ventanas bajas (de 2 a 5 filas sobre el piso) en el arco oeste-sur-este, donde no pasa ninguna rampa (segmento s = angulo s*18);
+        /// se evitan el 15 (puerta), el 0 y el 19 (llegada de rampas y faroles de nivel) y el 11 del piso 2 (pila de cajas).
         /// </summary>
         private static readonly int[][] WindowSegments =
         {
-            new[] { 11, 13, 17 },
-            new[] { 12, 14, 16, 18 },
-            new[] { 13, 16, 18 },
+            new[] { 9, 11, 13, 17 },
+            new[] { 10, 12, 14, 16, 18 },
+            new[] { 9, 13, 16, 18 },
         };
 
+        /// <summary>
+        /// Ventanas altas y angostas (filas 5 y 6) en el arco norte, sobre la rampa de ese piso (la rampa pasa por debajo): asi la torre
+        /// tiene luz y ventanas por todos lados sin que ninguna rampa las tape. Todos los pisos.
+        /// </summary>
+        private static readonly int[] SlitSegments = { 2, 4, 6 };
+
         private const int DoorSegment = 15;
-        private const float WindowBottom = 1.5f, WindowTop = 3f;
+        private const float WindowBottom = Row * 2f, WindowTop = Row * 5f, SlitBottom = Row * 5f, SlitTop = Row * 7f;
 
         /// <summary>Huecos (puerta y ventanas): segmento y filas.</summary>
         private static bool IsOpening(int segment, int row)
         {
-            float y = row * Row;
-            if (segment == DoorSegment && y < 3f) return true;                // puerta (sur)
-            int floor = Mathf.FloorToInt(y / FloorHeight);
-            float local = y - floor * FloorHeight;
-            if (local < WindowBottom || local >= WindowTop || floor >= Floors) return false;
-            return System.Array.IndexOf(WindowSegments[floor], segment) >= 0;
+            if (segment == DoorSegment && row < 5) return true;               // puerta (sur)
+            int floor = row / 8, local = row % 8;
+            if (floor >= Floors) return false;
+            if (local >= 2 && local < 5 && System.Array.IndexOf(WindowSegments[floor], segment) >= 0) return true;
+            return local >= 5 && local < 7 && System.Array.IndexOf(SlitSegments, segment) >= 0;
         }
 
         private static LowPolyMesh WallMesh()
@@ -261,7 +279,7 @@ namespace SpellSimulator.EditorTools.Map
             float start = RampStart[floor];
             float baseY = floor * FloorHeight;
             const int steps = 54;
-            const float thickness = 0.25f, rail = 0.9f;
+            const float thickness = 0.5f, rail = 0.9f;
             for (int i = 0; i < steps; i++)
             {
                 float t0 = i / (float)steps, t1 = (i + 1) / (float)steps;
@@ -273,8 +291,8 @@ namespace SpellSimulator.EditorTools.Map
                 b.Quad(Polar(RampOuter, a0, y0 - thickness), Polar(RampOuter, a1, y1 - thickness), Polar(RampInner, a1, y1 - thickness), Polar(RampInner, a0, y0 - thickness), StoneB * 0.9f);
                 if (t0 < 0.97f)
                 {
-                    b.Quad(Polar(RampInner, a0, y0 - thickness), Polar(RampInner, a0, y0 + rail), Polar(RampInner, a1, y1 + rail), Polar(RampInner, a1, y1 - thickness), WoodDark);
-                    b.Quad(Polar(RampInner - 0.08f, a1, y1 - thickness), Polar(RampInner - 0.08f, a1, y1 + rail), Polar(RampInner - 0.08f, a0, y0 + rail), Polar(RampInner - 0.08f, a0, y0 - thickness), WoodDark);
+                    b.Quad(Polar(RampInner, a0, y0 - thickness), Polar(RampInner, a0, y0 + rail), Polar(RampInner, a1, y1 + rail), Polar(RampInner, a1, y1 - thickness), StoneB * 0.92f);
+                    b.Quad(Polar(RampInner - 0.08f, a1, y1 - thickness), Polar(RampInner - 0.08f, a1, y1 + rail), Polar(RampInner - 0.08f, a0, y0 + rail), Polar(RampInner - 0.08f, a0, y0 - thickness), StoneB * 0.85f);
                     // Pasamanos claro arriba de la baranda.
                     b.Quad(Polar(RampInner - 0.1f, a0, y0 + rail), Polar(RampInner - 0.1f, a1, y1 + rail), Polar(RampInner + 0.02f, a1, y1 + rail), Polar(RampInner + 0.02f, a0, y0 + rail), WoodFloor);
                 }
@@ -360,10 +378,11 @@ namespace SpellSimulator.EditorTools.Map
             float faceIn = InnerRadius * Mathf.Cos(step * 0.5f * Mathf.Deg2Rad);
 
             for (int f = 0; f < Floors; f++)
-                foreach (int s in WindowSegments[f])
+                for (int pass = 0; pass < 2; pass++)
+                foreach (int s in pass == 0 ? WindowSegments[f] : SlitSegments)
                 {
                     float c = s * step;
-                    float y0 = f * FloorHeight + WindowBottom, y1 = f * FloorHeight + WindowTop;
+                    float y0 = f * FloorHeight + (pass == 0 ? WindowBottom : SlitBottom), y1 = f * FloorHeight + (pass == 0 ? WindowTop : SlitTop);
                     Matrix4x4 outside = FaceFrame(c, faceOut);
                     // Marco exterior: jambas, dintel, alfeizar saliente y cruz.
                     Frame(b, outside, halfOut, y0, y1, 0.04f);
@@ -371,14 +390,14 @@ namespace SpellSimulator.EditorTools.Map
                     b.Box(outside * Matrix4x4.Translate(new Vector3(0f, (y0 + y1) * 0.5f, -0.05f)), new Vector3(0.06f, y1 - y0, 0.06f), WoodDark);
                     b.Box(outside * Matrix4x4.Translate(new Vector3(0f, y0 + (y1 - y0) * 0.55f, -0.05f)), new Vector3(halfOut * 2f, 0.06f, 0.06f), WoodDark);
                     // Cortinas recogidas a los lados (rojo con lazo dorado), del lado de adentro.
-                    if (RampClear(c - 12f, c + 12f, y0 - 0.3f, y1 + 0.25f)) Curtains(b, FaceFrame(c, faceIn - 0.06f), halfIn, y0, y1);
+                    if (pass == 0 && RampClear(c - 12f, c + 12f, y0 - 0.3f, y1 + 0.25f)) Curtains(b, FaceFrame(c, faceIn - 0.06f), halfIn, y0, y1);
                 }
 
             // Puerta: marco de madera adentro y afuera, y dintel grueso afuera.
             float door = DoorSegment * step;
-            Frame(b, FaceFrame(door, faceOut), halfOut, 0f, 3f, 0.05f);
-            b.Box(FaceFrame(door, faceOut) * Matrix4x4.Translate(new Vector3(0f, 3.12f, 0.06f)), new Vector3(halfOut * 2f + 0.5f, 0.24f, 0.16f), WoodDark);
-            Frame(b, FaceFrame(door, faceIn - 0.12f), halfIn, 0f, 3f, 0.04f);
+            Frame(b, FaceFrame(door, faceOut), halfOut, 0f, Row * 5f, 0.05f);
+            b.Box(FaceFrame(door, faceOut) * Matrix4x4.Translate(new Vector3(0f, Row * 5f + 0.12f, 0.06f)), new Vector3(halfOut * 2f + 0.5f, 0.24f, 0.16f), WoodDark);
+            Frame(b, FaceFrame(door, faceIn - 0.12f), halfIn, 0f, Row * 5f, 0.04f);
 
             // Estandartes a los lados de la puerta (segmentos 14 y 16), sobre los faroles.
             foreach (int s in new[] { DoorSegment - 1, DoorSegment + 1 })
@@ -540,7 +559,7 @@ namespace SpellSimulator.EditorTools.Map
             // (el estante de 292 grados se quito: ahi van las trabas de la puerta de la torre-tutorial, ver MapTutorial.DoorLocks)
             tris += Shelf(props, material, 143f, 0f, null, 3);
             // Estudio (primer piso): estantes donde la rampa de arriba deja altura y fuera del hueco de la de abajo.
-            tris += Shelf(props, material, 285f, FloorHeight);
+            tris += Shelf(props, material, 353f, FloorHeight);
 
             // Escritorio central (sobre la alfombra redonda) y mesa de lectura al este; el pasillo puerta-centro queda libre.
             tris += Table(props, material, "LibraryDesk", new Vector3(0f, 0f, 0.3f), 0f, 1.8f, 0.9f);

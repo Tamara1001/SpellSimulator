@@ -216,30 +216,27 @@ namespace SpellSimulator.EditorTools.Map
 
         // ---------------------------------------------------------------- torre: ambiente
 
+        /// <summary>Angulo (muro) del atril de la planta baja con el libro de los cuatro elementos.</summary>
+        public const float LecternAngle = 320f;
+
         public static void TowerAmbience(Transform tower, Material material, SpellOutputController output)
         {
             var root = new GameObject("Ambience").transform;
             root.SetParent(tower, false);
             Vector3 o = tower.position;
 
-            // Velas sobre el escritorio (centro) y la mesa de lectura (este). Ninguna cerca de las estaciones de viento y agua.
-            Vector3[] candles = { new Vector3(-0.7f, 0.82f, 0.6f), new Vector3(0.72f, 0.82f, 0.6f), new Vector3(2.1f, 0.82f, -0.02f) };
+            // Sin velas sueltas (flotaban sobre mesas que ya no existen). Dos atriles PEGADOS al muro, con el libro mirando al centro:
+            // el de los cuatro elementos en la planta baja (a la derecha de quien entra) y el del viento en el piso 1.
             var b = new LowPolyMesh();
-            foreach (var c in candles)
+            Color lecternWood = new Color(0.36f, 0.22f, 0.15f);
+            foreach (var (angle, y) in new[] { (LecternAngle, 0f), (MapTutorial.WindBookAngle, TowerBuilder.FloorHeight) })
             {
-                b.Frustum(Matrix4x4.Translate(c), 0.05f, 0.05f, 0f, 0.18f, 6, new Color(0.95f, 0.92f, 0.82f));
-                b.Frustum(Matrix4x4.Translate(c), 0.09f, 0.09f, -0.01f, 0.01f, 6, new Color(0.7f, 0.55f, 0.3f));
-                if (output != null)
-                    Loop("CandleFlame", root, o + c + Vector3.up * 0.2f, output.LookFor(ElementType.Fire), 14f,
-                        new Vector2(0.05f, 0.09f), new Vector2(0.05f, 0.15f), -0.1f, 0.35f, 5f, 0.01f);
+                var lectern = Matrix4x4.TRS(TowerBuilder.Polar(TowerBuilder.WallRadius(angle, 0.5f), angle, y), Quaternion.Euler(0f, 90f - angle, 0f), Vector3.one);
+                b.Frustum(lectern, 0.25f, 0.12f, 0f, 0.1f, 6, lecternWood);
+                b.Box(lectern * Matrix4x4.Translate(new Vector3(0f, 0.6f, 0f)), new Vector3(0.1f, 1.1f, 0.1f), lecternWood);
+                var desk = lectern * Matrix4x4.TRS(new Vector3(0f, 1.15f, 0f), Quaternion.Euler(-25f, 0f, 0f), Vector3.one);
+                b.Box(desk, new Vector3(0.6f, 0.04f, 0.45f), new Color(0.45f, 0.3f, 0.2f));
             }
-            // Atril con el libro de los cuatro elementos, a la izquierda de quien entra: se ve desde el spawn (la puerta
-            // abierta queda contra el muro, detras) y detras de el, la estacion de agua.
-            var lectern = Matrix4x4.TRS(new Vector3(-1.3f, 0f, -2.6f), Quaternion.Euler(0f, -52f, 0f), Vector3.one);
-            b.Frustum(lectern, 0.25f, 0.12f, 0f, 0.1f, 6, new Color(0.36f, 0.22f, 0.15f));
-            b.Box(lectern * Matrix4x4.Translate(new Vector3(0f, 0.6f, 0f)), new Vector3(0.1f, 1.1f, 0.1f), new Color(0.36f, 0.22f, 0.15f));
-            var desk = lectern * Matrix4x4.TRS(new Vector3(0f, 1.15f, 0f), Quaternion.Euler(-25f, 0f, 0f), Vector3.one);
-            b.Box(desk, new Vector3(0.6f, 0.04f, 0.45f), new Color(0.45f, 0.3f, 0.2f));
             var mesh = MapBuilder.SaveMesh(b.Build("TowerProps"));
             MapBuilder.Place("TowerProps", root, mesh, material, o, Quaternion.identity);
 
@@ -275,25 +272,14 @@ namespace SpellSimulator.EditorTools.Map
             root.SetParent(tower, false);
             Vector3 o = tower.position;
             float floor = TowerBuilder.FloorHeight;
+            Vector3 lecternAt = TowerBuilder.Polar(TowerBuilder.WallRadius(LecternAngle, 0.5f), LecternAngle, 1.168f);
+            Vector3 windAt = TowerBuilder.Polar(TowerBuilder.WallRadius(MapTutorial.WindBookAngle, 0.5f), MapTutorial.WindBookAngle, floor + 1.168f);
+            // Solo los dos libros del tutorial (elementos y viento): los demas (variantes, movimiento, forma, raro) y su pedestal se quitaron.
             var spots = new (string id, Vector3 at, float yaw, float tilt)[]
             {
-                ("elements", new Vector3(-1.293f, 1.168f, -2.605f), -52f, -25f),
-                ("wind-primer", new Vector3(MapTutorial.WindBook.x, floor + 0.86f, MapTutorial.WindBook.z), 20f, 0f),
-                ("variants", new Vector3(-0.6f, 0.86f, 0.22f), 15f, 0f),
-                ("motion", new Vector3(0.9f, floor + 0.86f, 0.2f), 60f, 0f),
-                ("shape", new Vector3(0.25f, floor + 0.86f, 0.75f), 95f, 0f),
-                ("rare", new Vector3(0f, TowerBuilder.TerraceY + 1.05f, 0f), 0f, -20f),
+                ("elements", lecternAt, 90f - LecternAngle, -25f),
+                ("wind-primer", windAt, 90f - MapTutorial.WindBookAngle, -25f),
             };
-
-            // Pedestal en la terraza.
-            var pedestal = new LowPolyMesh();
-            pedestal.Frustum(Matrix4x4.identity, 0.35f, 0.28f, 0f, 1f, 8, new Color(0.62f, 0.66f, 0.58f));
-            var pedMesh = MapBuilder.SaveMesh(pedestal.Build("BookPedestal"));
-            var ped = MapBuilder.Place("BookPedestal", root, pedMesh, material, o + new Vector3(0f, TowerBuilder.TerraceY, 0f), Quaternion.identity);
-            var pedCol = ped.AddComponent<CapsuleCollider>();
-            pedCol.radius = 0.32f;
-            pedCol.height = 1f;
-            pedCol.center = new Vector3(0f, 0.5f, 0f);
 
             foreach (var (id, at, yaw, tilt) in spots)
             {

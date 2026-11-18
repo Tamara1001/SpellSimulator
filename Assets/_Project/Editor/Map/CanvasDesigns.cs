@@ -44,24 +44,14 @@ namespace SpellSimulator.EditorTools.Map
             var notebookB = Grabbable(template, material, "Notebook_B", bench + new Vector3(-0.45f, 0.012f, -0.08f), Quaternion.Euler(90f, -20f, 0f), 0.2f, 0.28f, Dressing.Notebook);
             AddPages(notebookB);
 
-            // Estacion de agua (oeste, ver TowerProps): pizarra CHICA fija en el muro, justo sobre la pila. El chorro sale de la
-            // pizarra hacia el centro y cae sobre el agua; nada que sumergir (el agua borra la tinta, por eso el lienzo no se agarra).
-            float waterWall = TowerProps.WaterAngle * Mathf.Deg2Rad;
-            Vector3 waterOut = new Vector3(Mathf.Cos(waterWall), 0f, Mathf.Sin(waterWall));
-            float waterFace = TowerBuilder.InnerRadius * Mathf.Cos(9f * Mathf.Deg2Rad);
-            Vector3 waterBoardAt = towerOrigin + waterOut * (waterFace - 0.06f) + Vector3.up * 1.95f;
-            Fixed(template, material, "BigCanvas_Library", waterBoardAt, Quaternion.LookRotation(waterOut), 0.8f, 0.6f, Dressing.Framed);
-
-            // Estacion de viento (sureste): pizarra de pared centrada en una cara del muro, sobre la mesa de los papeles.
-            float wallAngle = TowerProps.WindAngle * Mathf.Deg2Rad;
-            Vector3 outward = new Vector3(Mathf.Cos(wallAngle), 0f, Mathf.Sin(wallAngle));
-            float face = TowerBuilder.InnerRadius * Mathf.Cos(9f * Mathf.Deg2Rad);
-            Vector3 boardAt = towerOrigin + outward * (face - 0.06f) + Vector3.up * 1.85f;
-            Fixed(template, material, "WallBoard_Library", boardAt, Quaternion.LookRotation(outward), 1.4f, 0.9f, Dressing.Framed);
-
-            // Estudio (primer piso): mesa de dibujo inclinada y caballete.
-            DraftingTable(template, material, "DraftingTable", towerOrigin + new Vector3(-1.6f, floor, -1.2f), 20f);
-            Easel(template, material, "Easel_Study", towerOrigin + new Vector3(1.5f, floor, -1.0f), 250f);
+            // Las pizarras de las estaciones de agua/viento, la mesa de dibujo y el caballete del estudio ya no estan en la torre:
+            // los lienzos fijos del tutorial son los caballetes de MapTutorial (piso 1 y planta baja). Se borran los de builds anteriores
+            // (cuelgan de la raiz de la escena, no de Map).
+            foreach (string retired in new[] { "WallBoard_Library", "BigCanvas_Library", "DraftingTable", "Easel_Study", "Easel_Study_Canvas" })
+            {
+                var stale = GameObject.Find(retired);
+                if (stale != null) Object.DestroyImmediate(stale);
+            }
 
             // Lienzo gigante de pie en el entrenamiento, con dos soportes de madera detras para que no se caiga ni flote.
             // La cara mira a la mesa de estampas (fieldOrigin). El papel enorme queda en el piso, como antes.
@@ -246,7 +236,7 @@ namespace SpellSimulator.EditorTools.Map
 
         // ---------------------------------------------------------------- soportes
 
-        private static void Easel(GameObject template, Material material, string name, Vector3 ground, float yaw)
+        internal static void Easel(GameObject template, Material material, string name, Vector3 ground, float yaw)
         {
             var old = GameObject.Find(name);
             if (old != null) Object.DestroyImmediate(old);

@@ -5,6 +5,18 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-17 — Torre v2, rehecha completa (proporciones, ventanas, terraza sellada, pisos y muebles)
+
+Tras la crítica de Tamara al paso 1 («terraza se puede pasar caminando, actividades mal acomodadas y mal formuladas, el piso del viento no se puede hacer, sigue el portal, escaleras finitas, muebles despegados, torre ancha y baja, todas las ventanas al sur»):
+
+- **Proporciones:** `OuterRadius` 6,4 (antes 6,8), `FloorHeight` **5** (antes 4,5), terraza 7,7, base 8,2, postes 6,1; rampa de **1,65 m** de ancho (`RampInner` 4,1) con baranda de piedra en vez de madera maciza. `TowerBuilder.WallRadius(ángulo, fondo)` calcula el radio para dejar un mueble **pegado** a la cara interior del muro de 20 lados.
+- **Ventanas en los cuatro lados:** bajas (filas 2–4) al sur/este/oeste y ranuras altas (filas 5–6) al norte, sobre la rampa.
+- **Terraza sellada:** baranda circular completa en r 4,1 (con collider de 2,2 m: no se salta), viga/muro/reja de la baranda al parapeto. `HarnessTerraceReach`: caminar/agacharse/saltar/ambos → no llega a la bajada; sin la reja sí.
+- **Piso 2:** pila (3 cajas grandes + 2 chicas + barril) en el pasillo a 198°; práctica opcional en el disco central (mesa, dos marcos de pie, diana en el muro) con rótulos de una línea. **Piso 1:** mesa de pluma y atril del Tomo I pegados al muro, **caballete inclinado con lienzo fijo**, plantilla fantasma y flecha de apunte siempre visible (`TutorialPaperGuide` sin `PhysicalCanvas`), a ~2,5 m de la cortina. **Planta baja:** atril con `elements`, caballete apuntando al pestillo, trabas pegadas al muro.
+- **Carteles:** los 14 de `Docs/Torre/carteles.md` (1,30 × 0,50 m, 2 líneas) y mini-rótulos 0,90 × 0,28.
+- **Quitado de la torre:** portal `tower-study` (ahora en la pradera, 14 m al sur de la puerta), mesa de alquimia + sillas (el cinturón va sobre `Workbench_Study`), estaciones de viento/agua, `WallBoard_Library`/`BigCanvas_Library`/`DraftingTable`/`Easel_Study`, velas sueltas, pedestal de la terraza y los libros variants/motion/shape/rare. El pedestal de la runa de oro quedó contra el muro.
+- Harness: `HarnessTerraceReach.RunFloors()` (piso 2 y piso 1: sin quitar la pila/tela no se llega a la boca de la rampa; quitándola sí), `HarnessSpellTest` con la geometría nueva, smoke con `Easel_Wind_Canvas`.
+
 ## 2026-11-17 — Torre v2, paso 1: geometría más grande y rampas de media vuelta
 
 - `TowerBuilder`: `OuterRadius` 5,5 → 6,8 m, `InnerRadius` 6,2, `RampInner` 4,8 (rampa de 1,35 m pegada al muro), **`RampTurn` 270° → 180°** (sube de 0° a 180° por el norte, se baja de 180° a 0°), hueco del piso de 48° a 180°. Queda libre el disco central (Ø 9,6 m) y el arco sur de cada piso (la plaza).

@@ -101,9 +101,9 @@ namespace SpellSimulator.Tests
             // El hueco del piso va de donde la rampa de abajo deja menos de Headroom + espesor hasta donde llega (RampTurn).
             Assert.AreEqual(TowerBuilder.RampTurn * (1f - (TowerBuilder.Headroom + TowerBuilder.FloorThickness) / TowerBuilder.FloorHeight), MapTutorial.HoleFrom, 0.5f);
             Assert.AreEqual(TowerBuilder.RampTurn, MapTutorial.HoleTo, 0.01f);
-            // El disco central (r < RampInner) es de 9,6 m y la rampa ocupa 1,35 m pegada al muro.
-            Assert.AreEqual(9.6f, TowerBuilder.RampInner * 2f, 0.01f);
-            Assert.AreEqual(1.35f, TowerBuilder.RampOuter - TowerBuilder.RampInner, 0.01f);
+            // El disco central (r < RampInner) es de 8,2 m y la rampa ocupa 1,65 m pegada al muro (ancha: se camina sin rozar la baranda).
+            Assert.AreEqual(8.2f, TowerBuilder.RampInner * 2f, 0.01f);
+            Assert.AreEqual(1.65f, TowerBuilder.RampOuter - TowerBuilder.RampInner, 0.01f);
             Assert.That(MapTutorial.PileAngle, Is.InRange(TowerBuilder.RampTurn + 10f, 350f), "la pila va en el descanso");
         }
     }

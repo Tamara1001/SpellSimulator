@@ -11,7 +11,7 @@ namespace SpellSimulator.World.Map
     public static class SpawnRules
     {
         /// <summary>Altura del piso de la terraza sobre el pie de la torre. Igual a TowerBuilder.TerraceY (lo fija un test).</summary>
-        public const float TerraceHeight = 13.5f;
+        public const float TerraceHeight = 15f;
 
         /// <summary>Altura del pivote del jugador sobre el piso al ubicarlo (la misma que usa MapBuilder).</summary>
         public const float BodyLift = 1.7f;
@@ -19,8 +19,8 @@ namespace SpellSimulator.World.Map
         /// <summary>Por debajo de esta altura el jugador se cayo del mundo y vuelve al nexo (igual que Respawnable).</summary>
         public const float FallHeight = -8f;
 
-        /// <summary>Punto de la terraza donde arranca el tutorial, relativo al centro de la torre (XZ): en el balcon, al norte (r = 6,8 m, 90 grados; el hueco de la rampa va de 48 a 180 grados y queda por dentro del balcon): se mira al este-sureste (rumbo 115), por donde sigue el recorrido en sentido horario.</summary>
-        public static readonly Vector2 TerraceOffset = new Vector2(0f, 6.8f);
+        /// <summary>Punto de la terraza donde arranca el tutorial, relativo al centro de la torre (XZ): en el balcon, al norte (r = 6,6 m, 90 grados; el hueco de la rampa va de 61 a 180 grados y queda por dentro del balcon): se mira al este-sureste (rumbo 115), por donde sigue el recorrido en sentido horario.</summary>
+        public static readonly Vector2 TerraceOffset = new Vector2(0f, 6.6f);
 
         /// <summary>Rumbo (grados, 0 = norte, 90 = este) con el que se aparece en la terraza y en el nexo.</summary>
         public const float TerraceYaw = 115f, NexusYaw = 45f;

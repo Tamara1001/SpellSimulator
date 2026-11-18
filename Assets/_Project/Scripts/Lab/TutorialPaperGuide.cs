@@ -103,7 +103,8 @@ namespace SpellSimulator.Lab
         private void Update()
         {
             if (aim == null) return;
-            bool show = grab != null && grab.IsHeld;
+            // Lienzo fijo (caballete): la flecha se ve siempre; el de mano, solo mientras se sostiene.
+            bool show = grab == null || grab.IsHeld;
             if (aim.enabled != show) aim.enabled = show;
             if (!show) return;
             if (cam == null) cam = Camera.main;
