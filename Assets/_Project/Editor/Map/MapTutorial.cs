@@ -463,7 +463,24 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 viewer = o + TowerBuilder.Polar(3.9f, 345f, y);
             Note(parent, material, "Note_Tutorial_Ink", o + new Vector3(-0.5f, y + 1.75f, 2.1f), o + new Vector3(0f, y, -1f), "<b>pluma</b>  +  tinta");
             Note(parent, material, "Note_Tutorial_Book", o + new Vector3(WindBook.x, y + 1.5f, WindBook.z), o + new Vector3(0f, y, -1f), "<b>E</b>  leer el libro");
-            Note(parent, material, "Note_Tutorial_Cloth", o + TowerBuilder.Polar(3.35f, ClothAngle + 14f, y + 2.0f), viewer, "círculo  +  viento");
+            Note(parent, material, "Note_Tutorial_Cloth", o + TowerBuilder.Polar(3.35f, ClothAngle + 14f, y + 2.0f), viewer, "<b>apuntá</b> el rayo azul a la tela");
+
+            // Lienzo de practica agarrable con plantilla fantasma (el sello del viento para calcar) y rayo de apunte al sostenerlo.
+            const float tableAngle = 14f;
+            MovablesSetup.Prop(props, material, "TutorialTable_1", MovablesSetup.Kind.Table, o + TowerBuilder.Polar(4.0f, tableAngle, y + 0.02f), TowerBuilder.TangentYaw(tableAngle));
+            var template = GameObject.Find("PaperCanvas");
+            if (template != null)
+            {
+                var paper = Object.Instantiate(template, props);
+                paper.name = "TutorialPaper_Wind";
+                paper.transform.SetPositionAndRotation(o + TowerBuilder.Polar(4.0f, tableAngle, y + 0.87f), Quaternion.Euler(90f, TowerBuilder.TangentYaw(tableAngle), 0f));
+                paper.transform.localScale = new Vector3(0.5f, 0.5f, template.transform.localScale.z);
+                var prb = paper.GetComponent<Rigidbody>();
+                if (prb != null) { prb.isKinematic = false; prb.useGravity = true; }
+                if (paper.GetComponent<SpellSimulator.Lab.TutorialPaperGuide>() == null) paper.AddComponent<SpellSimulator.Lab.TutorialPaperGuide>();
+            }
+            Note(parent, material, "Note_Tutorial_Steps", o + TowerBuilder.Polar(4.0f, tableAngle, y + 1.75f), viewer,
+                "<b>1</b> mojá la pluma en la tinta  ·  <b>2</b> calcá el dibujo azul  ·  <b>3</b> agarrá el papel con <b>E</b> y apuntá a la tela", 1.6f, 0.7f, 0.62f);
         }
 
         /// <summary>Lugar (local a la torre, en planta) del libro «Tomo I: el viento» del piso 1; lo usa MapDetails.LibraryBooks.</summary>

@@ -191,6 +191,41 @@ namespace SpellSimulator.EditorTools
                 Check(interactor.SecondaryItem == null, "soltar lo arrastrado");
             }
 
+            // --- Piso 1 del tutorial: lienzo con plantilla fantasma (lineas aparte, no son trazos) y rayo de apunte
+            var windPaper = Find("TutorialPaper_Wind");
+            if (windPaper != null)
+            {
+                Transform ghost = windPaper.transform.Find("GhostTemplate");
+                int ghostStrokes = ghost != null ? ghost.childCount : 0;
+                bool hasAim = windPaper.transform.Find("AimGuide") != null;
+                var windCanvas = windPaper.GetComponent<DrawingCanvas>();
+                bool noInk = windCanvas != null && windCanvas.Session.Strokes.Count == 0;
+                // Captura de la plantilla vista desde arriba (para revisarla a ojo).
+                {
+                    var camGo = new GameObject("smokeCam");
+                    var cam = camGo.AddComponent<Camera>();
+                    cam.fieldOfView = 40f;
+                    cam.nearClipPlane = 0.05f;
+                    var rt = new RenderTexture(900, 900, 24);
+                    cam.targetTexture = rt;
+                    camGo.transform.position = windPaper.transform.position + Vector3.up * 1.1f;
+                    camGo.transform.LookAt(windPaper.transform.position);
+                    cam.Render();
+                    RenderTexture.active = rt;
+                    var shot = new Texture2D(900, 900, TextureFormat.RGB24, false);
+                    shot.ReadPixels(new Rect(0, 0, 900, 900), 0, 0);
+                    shot.Apply();
+                    System.IO.File.WriteAllBytes("Docs/Capturas/piso1_plantilla.png", shot.EncodeToPNG());
+                    RenderTexture.active = null;
+                    cam.targetTexture = null;
+                    Object.DestroyImmediate(shot);
+                    Object.DestroyImmediate(rt);
+                    Object.DestroyImmediate(camGo);
+                }
+                Check(ghostStrokes >= 2 && hasAim && noInk, $"tutorial piso 1: el lienzo trae plantilla fantasma y rayo de apunte, sin trazos propios (trazos fantasma {ghostStrokes}, rayo {hasAim}, sin tinta {noInk})");
+            }
+            else failures.Add("falta TutorialPaper_Wind");
+
             // --- Dibujo y reinicio del mundo
             var paper = Find("Paper_S");
             var world = Object.FindFirstObjectByType<MagicWorld>();

@@ -233,6 +233,21 @@ namespace SpellSimulator.Lab
         }
 
         /// <summary>
+        /// Trazos (cuadrado unidad, sin temblor) de una receta de Data/Spells, sin tocar el estado del banco. Null si el id no existe.
+        /// Lo usa la plantilla fantasma del tutorial del piso 1.
+        /// </summary>
+        public List<List<Vector2>> RecipeStrokes(string recipeId)
+        {
+            EnsureRecipes();
+            EnsureGlyphs();
+            int index = recipeIds.IndexOf(recipeId);
+            if (index < 0 || templateOf == null) return null;
+            LabSealSpec s = LabSealBenchMath.FromRecipe(LabSealSpec.Default(), recipeDefs[index], out _);
+            s.tremor = 0f;
+            return LabSealSynth.Build(s, templateOf);
+        }
+
+        /// <summary>
         /// «Reiniciar sello» (v4): vuelve todos los controles del sello (grupos 1–4) a la receta elegida en su forma base (sigilo,
         /// signos y geometria del canon; tinta, pluma, sentido, temblor y semilla por defecto). La posicion y el tamaño del papel
         /// del campo (grupo 5) no cambian. Un evento por variable que cambie.

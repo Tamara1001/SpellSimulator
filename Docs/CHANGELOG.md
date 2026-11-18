@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-17 — Tutoriales v2, R3: piso 1 con plantilla fantasma y rayo de apunte
+
+- Lienzo de práctica agarrable sobre una mesita del piso 1 (`TutorialPaper_Wind`) con `TutorialPaperGuide`: **plantilla fantasma** azul del sello de la receta `gust` (sigilo de viento, dos columnas y anillo; 14 trazos hechos con `LineRenderer`, no son trazos del lienzo ni entran al reconocimiento) y **rayo azul** que sale del papel por `EmissionNormal` mientras se lo sostiene.
+- `LabSealBench.RecipeStrokes(id)` (trazos de una receta sin tocar el estado) y `PhysicalCanvas.IsHeld`.
+- Cartel de 3 pasos («1 mojá la pluma · 2 calcá el dibujo azul · 3 agarrá el papel y apuntá a la tela») y cartel «apuntá el rayo azul a la tela» junto a la tela.
+- Smoke +1 chequeo (14 trazos fantasma, rayo, sin tinta) y captura `piso1_plantilla.png`. 626 EditMode. Revisión de Codex: sin bugs graves; se hizo `Build()` idempotente.
+- Pendiente de probar a mano: que el rayo apunte bien con el papel en la mano y que calcar la plantilla suelte la tela.
+
 ## 2026-11-17 — Tutoriales v2, R2: ejercicios opcionales en el piso 2
 
 - Tres estaciones **opcionales** (no traban la bajada; la pila sigue siendo lo que se despeja): marco donde dejar un lienzo **flotando** (`E` dos veces), marco donde dejarlo **de canto** (girándolo) y una **diana** para arrojar una caja con `Q`. Cada una enciende un farolito; el rearme del tutorial los apaga.

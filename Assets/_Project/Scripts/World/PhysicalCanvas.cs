@@ -129,6 +129,9 @@ namespace SpellSimulator.World
         /// <summary>True si esta flotando en el aire (se replica en red).</summary>
         public bool IsFloating => floating;
 
+        /// <summary>True mientras alguien lo sostiene en la mano (local o remoto).</summary>
+        public bool IsHeld => holdParent != null || remoteHeld;
+
         /// <summary>Red (F2): en un cliente el servidor manda la pose; se apaga lo que movia el lienzo por su cuenta (flotar, animar, acostarse).</summary>
         public void NetNeutralize()
         {
