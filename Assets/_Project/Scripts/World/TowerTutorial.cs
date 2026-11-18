@@ -135,6 +135,11 @@ namespace SpellSimulator.World
                 cloths.Clear();
             }
             if (doorStone != null) doorStone.Restore();
+            if (doorLatches != null)
+            {
+                var latchColliders = doorLatches.GetComponentsInChildren<Collider>(true);
+                for (int i = 0; i < latchColliders.Length; i++) latchColliders[i].enabled = true;
+            }
             if (door != null) door.Lock();
             checkTimer = 0f;
             Apply();
@@ -145,6 +150,12 @@ namespace SpellSimulator.World
         {
             progress.Skip();
             if (door != null && door.Locked) door.Unlock(true, true);
+            // El sensor invisible de viento (DoorLatch_Bar) y demas trabas quedaban como colliders en el vano: pared invisible al entrar.
+            if (doorLatches != null)
+            {
+                var colliders = doorLatches.GetComponentsInChildren<Collider>(true);
+                for (int i = 0; i < colliders.Length; i++) colliders[i].enabled = false;
+            }
             Apply();
         }
 
