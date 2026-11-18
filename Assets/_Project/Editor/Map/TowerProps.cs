@@ -62,6 +62,11 @@ namespace SpellSimulator.EditorTools.Map
             if (tower == null) return;
             float floor = TowerBuilder.FloorHeight;
 
+            // Herramientas sueltas de versiones anteriores (clones "Pen_933_0", "InkwellPortableNormal_983_5"...): se borran, quedaban en el piso.
+            var staleTool = new System.Text.RegularExpressions.Regex(@"^(Pen|Brush|Eraser|Rag|Inkwell|InkwellPortable\w+)_\d+_\d+$");
+            foreach (var t in Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (t != null && staleTool.IsMatch(t.name)) Object.DestroyImmediate(t.gameObject);
+
             // Mesa de trabajo de la biblioteca: herramientas a la derecha (los cuadernos van a la izquierda, ver CanvasDesigns).
             var library = new Desk(LibraryBench, 0f, LibraryBenchWidth, LibraryBenchDepth);
             TowerBuilder.Table(tower.transform, material, "Workbench_Library", library.Center, library.Yaw, library.Width, library.Depth);
@@ -69,35 +74,31 @@ namespace SpellSimulator.EditorTools.Map
             Tools(origin, library, new[] { "Pen", "Pen", "Brush", "Brush", "Eraser", "Rag", "Inkwell", "Inkwell",
                 PortablePrefix + nameof(InkKind.Powerful), PortablePrefix + nameof(InkKind.Normal) }, 0.25f, 0.4f, material);
 
-            // Estudio (primer piso): mesa con herramientas y tinta PEGADA al muro (la pluma del tutorial del viento, StudyDeskAngle).
-            var study = new Desk(StudyDeskCenter(), TowerBuilder.TangentYaw(StudyDeskAngle), 1.8f, 0.7f);
-            TowerBuilder.Table(tower.transform, material, "Workbench_Study", study.Center, study.Yaw, study.Width, study.Depth);
+            // Estudio (primer piso): la mesa del CENTRO (StudyTable) lleva la pluma, los tinteros y el libro del viento; el cinturon y el
+            // libro van a los costados (MapBelt, MapDetails.LibraryBooks). Una segunda mesa chica tiene cuadernos y hojas (CanvasDesigns).
+            var study = new Desk(StudyTableCenter, StudyTableYaw, StudyTableWidth, StudyTableDepth);
             Tools(origin, study, new[] { "Pen", "Brush", "Eraser", "Rag", "Inkwell",
                 PortablePrefix + nameof(InkKind.Normal), PortablePrefix + nameof(InkKind.Resistant) }, 0.3f, 0f, material);
+            TowerBuilder.Table(tower.transform, material, NotebookTableName, NotebookTableCenter, NotebookTableYaw, 1.5f, 0.8f);
 
             // Las estaciones de viento y agua (WindStation/WaterStation) y el taller de alquimia (Alchemy) ya no se arman en la torre:
             // la planta baja enseña UNA sola solucion (Docs/Torre/carteles.md) y el cinturon vive en la mesa del estudio. Las funciones
             // quedan para reusarlas en el campo de entrenamiento.
 
-            // Cajas y baules movibles (se pueden cargar, apilar y quemar), todos PEGADOS al muro.
-            CrateAtWall(map, material, "Chest_Library_A", origin, 125f, 0f, new Vector3(0.7f, 0.4f, 0.45f));
-            CrateAtWall(map, material, "Crate_Library_A", origin, 139f, 0f, Vector3.one * 0.5f);
-            CrateAtWall(map, material, "Crate_Library_B", origin, 139f, 0.5f, Vector3.one * 0.4f);
-            CrateAtWall(map, material, "Chest_Study_A", origin, 244f, floor, new Vector3(0.7f, 0.4f, 0.45f));
-            CrateAtWall(map, material, "Crate_Study_A", origin, 255f, floor, Vector3.one * 0.5f);
-            float f2 = floor * 2f;
-            CrateAtWall(map, material, "Chest_Tower2_A", origin, 236f, f2, new Vector3(0.7f, 0.4f, 0.45f));
-            CrateAtWall(map, material, "Chest_Tower2_B", origin, 249f, f2, new Vector3(0.7f, 0.4f, 0.45f));
-            CrateAtWall(map, material, "Crate_Tower2_B", origin, 249f, f2 + 0.4f, Vector3.one * 0.4f);
-            CrateAtWall(map, material, "Crate_Tower2_A", origin, 262f, f2, Vector3.one * 0.5f);
+            // Cajas y baules de la planta baja: PEGADOS al muro, en caras libres (ni ventana, ni puerta, ni estante).
+            CrateAtWall(map, material, "Chest_Library_A", origin, 126f, 0f, new Vector3(0.7f, 0.4f, 0.45f));
+            CrateAtWall(map, material, "Crate_Library_A", origin, 108f, 0f, Vector3.one * 0.5f);
+            CrateAtWall(map, material, "Crate_Library_B", origin, 108f, 0.5f, Vector3.one * 0.4f);
         }
 
-        /// <summary>Angulo (muro) de la mesa del estudio (piso 1): ahi esta la pluma del tutorial del viento.</summary>
-        public const float StudyDeskAngle = 322f;
+        /// <summary>Mesa del centro del piso 1 (la crea TowerBuilder.Interior): centro local, yaw, ancho y fondo.</summary>
+        public static readonly Vector3 StudyTableCenter = new Vector3(0.6f, TowerBuilder.FloorHeight, 0.4f);
+        public const float StudyTableYaw = 75f, StudyTableWidth = 2f, StudyTableDepth = 1f;
 
-        /// <summary>Centro local de la mesa del estudio, pegada al muro (cubierta de 0.7 m de fondo).</summary>
-        public static Vector3 StudyDeskCenter() =>
-            TowerBuilder.Polar(TowerBuilder.WallRadius(StudyDeskAngle, 0.7f), StudyDeskAngle, TowerBuilder.FloorHeight);
+        /// <summary>Mesa chica de cuadernos y hojas del piso 1 (sureste del disco central, lejos de la linea caballete-cortina).</summary>
+        public const string NotebookTableName = "NotebookTable";
+        public static readonly Vector3 NotebookTableCenter = new Vector3(1.0f, TowerBuilder.FloorHeight, -2.1f);
+        public const float NotebookTableYaw = 20f;
 
         /// <summary>Caja o baul con su fondo contra el muro en ese angulo; lift = altura sobre el piso del nivel (se apila sobre otra).</summary>
         private static void CrateAtWall(Transform map, Material material, string name, Vector3 origin, float angle, float floorY, Vector3 size)

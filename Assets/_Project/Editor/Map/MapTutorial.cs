@@ -49,7 +49,7 @@ namespace SpellSimulator.EditorTools.Map
         /// Planta baja: la puerta empieza trabada y se destraba de tres formas, en el muro al este de la puerta (270): un pestillo que el viento
         /// corre, un contrapeso que una columna (agua o aire) levanta, o una piedra que la tierra con Crush rompe.
         /// </summary>
-        public const float LatchAngle = 258f, WeightAngle = 282f, StoneAngle = 294f;
+        public const float LatchAngle = 252f, WeightAngle = 288f, StoneAngle = 234f;
         public const string DoorLatchesName = "DoorLatches", DoorStoneName = "TutorialDoorStone";
 
         private static readonly Color Wood = new Color(0.5f, 0.33f, 0.2f);
@@ -268,6 +268,17 @@ namespace SpellSimulator.EditorTools.Map
                 line2 == null ? line1 : line1 + "\n" + line2, 1.3f, 0.5f, 0.62f);
         }
 
+        /// <summary>
+        /// Cartel PEGADO al muro, de frente al centro (nunca en diagonal ni en el pasillo): <paramref name="faceAngle"/> tiene que ser el centro de una
+        /// cara del muro (multiplo de 18 grados) sin ventana ni puerta; <paramref name="height"/> es la altura del centro sobre el piso del nivel.
+        /// </summary>
+        private static void WallCard(Transform parent, Material material, string name, float faceAngle, float floorY, string line1, string line2, float height = 1.6f)
+        {
+            Vector3 at = parent.position + TowerBuilder.Polar(TowerBuilder.WallRadius(faceAngle, 0.07f), faceAngle, floorY + height);
+            Vector3 viewer = parent.position + new Vector3(0f, floorY + height, 0f);
+            Note(parent, material, name, at, viewer, line1 + "\n" + line2, 1.3f, 0.5f, 0.62f);
+        }
+
         /// <summary>Mini-rotulo de estacion opcional (0,90 x 0,28 m, una linea).</summary>
         private static void Tag(Transform parent, Material material, string name, Vector3 localAt, Vector3 viewerLocal, string text) =>
             Note(parent, material, name, parent.position + localAt, parent.position + viewerLocal, text, 0.9f, 0.28f, 0.5f);
@@ -338,38 +349,65 @@ namespace SpellSimulator.EditorTools.Map
             MovablesSetup.Prop(props, material, "TutorialBox_B", MovablesSetup.Kind.SmallBox, o + TowerBuilder.Polar(5.34f, PileAngle, y + 0.84f), yaw - 15f);
             MovablesSetup.Prop(props, material, "TutorialBarrel", MovablesSetup.Kind.Barrel, o + TowerBuilder.Polar(5.0f, PileAngle + 6f, y + 0.02f), 0f);
 
-            // Carteles 6 y 10 (carteles.md).
-            Card(parent, material, "Note_Tutorial_Practice", 8f, 4.4f, y, TowerBuilder.Polar(4.9f, 340f, y), "Opcional · practicá", "<b>E</b> agarrar · <b>E</b> flotar");
-            Card(parent, material, "Note_Tutorial_Pile", 216f, 5.35f, y, TowerBuilder.Polar(5.35f, 241f, y), "<b>E</b> · Mover las cajas", "Despejá la bajada");
+            // Carteles 6 y 10 (carteles.md): pegados al muro, de frente al centro. El 6 en la llegada; el 10 antes de la pila (de cara a quien camina hacia ella).
+            WallCard(parent, material, "Note_Tutorial_Practice", 342f, y, "<b>E</b> · Agarrar y soltar", "Practicá en el centro");
+            WallCard(parent, material, "Note_Tutorial_Pile", 216f, y, "<b>E</b> · Mover las cajas", "Despejá la bajada");
 
             Exercises(parent, props, material, y, o);
         }
 
-        // Ejercicios opcionales en el disco central (no traban nada): dejar un lienzo flotando, ponerlo de canto y acertar un tiro.
-        private const float ExerciseR = 3.1f, TableAngle = 20f, TableR = 2.5f, TargetAngle = 315f;
+        // Practica OPCIONAL en el disco central (el pasillo del anillo queda libre): una mesa con cosas, dos marcos, una diana y objetos sueltos
+        // para agarrar, apilar y tirar.
+        private const float ExerciseR = 3.0f, TargetAngle = 306f, FloatFrameAngle = 292f, UprightFrameAngle = 252f;
 
         private static void Exercises(Transform parent, Transform props, Material material, float y, Vector3 o)
         {
-            // Mesita con el lienzo de practica (copia del papel de la biblioteca).
-            MovablesSetup.Prop(props, material, "TutorialTable", MovablesSetup.Kind.Table, o + TowerBuilder.Polar(TableR, TableAngle, y + 0.02f), TowerBuilder.TangentYaw(TableAngle));
+            Vector3 At(float r, float angle, float dy = 0.02f) => o + TowerBuilder.Polar(r, angle, y + dy);
+
+            // Mesa de practica con el lienzo, dos libros, una maceta y una vela (todo se agarra).
+            const float tableAngle = 330f;
+            float tableYaw = TowerBuilder.TangentYaw(tableAngle);
+            Vector3 tableAt = At(2.4f, tableAngle);
+            MovablesSetup.Prop(props, material, "TutorialTable", MovablesSetup.Kind.Table, tableAt, tableYaw);
+            Quaternion tableRot = Quaternion.Euler(0f, tableYaw, 0f);
+            Vector3 top = tableAt + Vector3.up * 0.8f;
+            MovablesSetup.Prop(props, material, "Practice_Book_A", MovablesSetup.Kind.Book, top + tableRot * new Vector3(-0.42f, 0f, 0.1f), tableYaw + 25f);
+            MovablesSetup.Prop(props, material, "Practice_Book_B", MovablesSetup.Kind.Book, top + tableRot * new Vector3(0.38f, 0f, -0.12f), tableYaw - 15f);
+            MovablesSetup.Prop(props, material, "Practice_Pot", MovablesSetup.Kind.Pot, top + tableRot * new Vector3(0.45f, 0f, 0.14f), tableYaw);
+            MovablesSetup.Prop(props, material, "Practice_Candle", MovablesSetup.Kind.Candle, top + tableRot * new Vector3(-0.05f, 0f, -0.26f), tableYaw);
             var template = GameObject.Find("PaperCanvas");
             if (template != null)
             {
-                var paper = Object.Instantiate(template, props);
-                paper.name = "TutorialPaper";
-                paper.transform.SetPositionAndRotation(o + TowerBuilder.Polar(TableR, TableAngle, y + 0.87f), Quaternion.Euler(90f, TowerBuilder.TangentYaw(TableAngle), 0f));
-                paper.transform.localScale = new Vector3(0.4f, 0.4f, template.transform.localScale.z);
-                var rb = paper.GetComponent<Rigidbody>();
-                if (rb != null) { rb.isKinematic = false; rb.useGravity = true; }
+                var paper = CanvasDesigns.SheetAt(template, "TutorialPaper", top + tableRot * new Vector3(0f, 0.015f, 0.02f), Quaternion.Euler(90f, tableYaw, 0f), 0.4f, false);
+                paper.transform.SetParent(props, true);
+                // Dos lienzos flotando en el aire, para probar sin agacharse.
+                CanvasDesigns.SheetAt(template, "Practice_Float_A", At(1.0f, 270f, 1.5f), Quaternion.Euler(0f, TowerBuilder.TangentYaw(270f), 0f), 0.5f, true).transform.SetParent(props, true);
+                CanvasDesigns.SheetAt(template, "Practice_Float_B", At(1.7f, 60f, 1.3f), Quaternion.Euler(0f, TowerBuilder.TangentYaw(60f), 0f), 0.5f, true).transform.SetParent(props, true);
             }
-            // 1) Marco para dejar el lienzo flotando; 2) lo mismo, pero de canto (clic derecho + mouse); 3) diana.
-            Frame(parent, material, props, "Exercise_Float", 60f, y, TutorialExercise.Kind.Float, "Note_Tutorial_Float", "<b>1</b> · Dejalo flotando");
-            Frame(parent, material, props, "Exercise_Upright", 110f, y, TutorialExercise.Kind.Upright, "Note_Tutorial_Upright", "<b>2</b> · Ponelo de canto");
+
+            // Objetos sueltos: una pila de cajas chicas, barriles, bancos, una silla, un banco largo y una caja grande.
+            var K = MovablesSetup.Kind.SmallBox;
+            MovablesSetup.Prop(props, material, "Practice_Box_A", K, At(0.9f, 160f), 8f);
+            MovablesSetup.Prop(props, material, "Practice_Box_B", K, At(1.4f, 175f), -10f);
+            MovablesSetup.Prop(props, material, "Practice_Box_C", K, At(1.12f, 167f, 0.42f), 25f);
+            MovablesSetup.Prop(props, material, "Practice_BigBox", MovablesSetup.Kind.BigBox, At(1.3f, 100f), 15f);
+            MovablesSetup.Prop(props, material, "Practice_Barrel_A", MovablesSetup.Kind.Barrel, At(2.0f, 195f), 0f);
+            MovablesSetup.Prop(props, material, "Practice_Barrel_B", MovablesSetup.Kind.Barrel, At(2.5f, 105f), 0f);
+            MovablesSetup.Prop(props, material, "Practice_Stool_A", MovablesSetup.Kind.Stool, At(2.0f, 232f), 20f);
+            MovablesSetup.Prop(props, material, "Practice_Stool_B", MovablesSetup.Kind.Stool, At(1.5f, 20f), -30f);
+            MovablesSetup.Prop(props, material, "Practice_Chair", MovablesSetup.Kind.Chair, At(2.2f, 135f), TowerBuilder.TangentYaw(135f) + 180f);
+            MovablesSetup.Prop(props, material, "Practice_Bench", MovablesSetup.Kind.Bench, At(2.9f, 80f), TowerBuilder.TangentYaw(80f));
+
+            // 1) Marco para dejar el lienzo flotando; 2) lo mismo, pero vertical (clic derecho + mouse gira); 3) diana en el muro.
+            Frame(parent, material, props, "Exercise_Float", FloatFrameAngle, y, TutorialExercise.Kind.Float, "Note_Tutorial_Float",
+                "<b>1</b> · Lienzo en el aire", "<b>E</b> agarrar · <b>E</b> soltar");
+            Frame(parent, material, props, "Exercise_Upright", UprightFrameAngle, y, TutorialExercise.Kind.Upright, "Note_Tutorial_Upright",
+                "<b>2</b> · Lienzo vertical", "<b>Clic der.</b> + mouse: girar");
             Target(parent, material, props, TargetAngle, y);
         }
 
-        /// <summary>Marco de practica: un bastidor de madera de pie sobre dos patas (no un poste suelto), con su farolito de «hecho».</summary>
-        private static void Frame(Transform parent, Material material, Transform props, string name, float angle, float y, TutorialExercise.Kind kind, string noteName, string text)
+        /// <summary>Marco de practica: un bastidor de madera de pie sobre dos patas, con su farolito de «hecho» y un cartel doble faz encima.</summary>
+        private static void Frame(Transform parent, Material material, Transform props, string name, float angle, float y, TutorialExercise.Kind kind, string noteName, string line1, string line2)
         {
             Vector3 center = parent.position + TowerBuilder.Polar(ExerciseR, angle, y + 1.3f);
             Quaternion rot = Quaternion.Euler(0f, TowerBuilder.TangentYaw(angle), 0f);
@@ -390,13 +428,11 @@ namespace SpellSimulator.EditorTools.Map
             var box = zone.AddComponent<BoxCollider>();
             box.isTrigger = true;
             box.size = new Vector3(w, h, 0.5f);
-            // Farolito sobre el bastidor y rotulo de la estacion arriba.
+            // Farolito sobre el bastidor y cartel arriba (se lee de los dos lados: se hace el ejercicio desde adentro y se llega desde el anillo).
             var glow = CheckLamp(parent, material, name + "_Lamp", TowerBuilder.Polar(ExerciseR, angle, y + 2.0f));
             zone.AddComponent<TutorialExercise>().Configure(kind, glow);
-            Vector3 view = new Vector3(0f, y, 0f);
-            Tag(parent, material, noteName, TowerBuilder.Polar(ExerciseR, angle, y + 2.45f), view, text);
-            if (kind == TutorialExercise.Kind.Upright)
-                Tag(parent, material, noteName + "_Hint", TowerBuilder.Polar(ExerciseR, angle, y + 2.8f), view, "<b>Clic der.</b> + mouse");
+            Note(parent, material, noteName, parent.position + TowerBuilder.Polar(ExerciseR, angle, y + 2.65f), parent.position + TowerBuilder.Polar(6f, angle, y + 2.65f),
+                line1 + "\n" + line2, 1.3f, 0.5f, 0.62f, true);
         }
 
         private static void Target(Transform parent, Material material, Transform props, float angle, float y)
@@ -410,11 +446,10 @@ namespace SpellSimulator.EditorTools.Map
             var plate = MapBuilder.Place("Exercise_Target", parent, MapBuilder.SaveMesh(b.Build("Tutorial_Target")), material, at, rot);
             plate.isStatic = true;
             plate.AddComponent<BoxCollider>().size = new Vector3(0.9f, 0.9f, 0.1f);
-            var glow = CheckLamp(parent, material, "Exercise_Target_Lamp", TowerBuilder.Polar(TowerBuilder.WallRadius(angle, 0.3f), angle, y + 2.35f));
+            var glow = CheckLamp(parent, material, "Exercise_Target_Lamp", TowerBuilder.Polar(TowerBuilder.WallRadius(angle, 0.3f), angle, y + 2.0f));
             plate.AddComponent<TutorialExercise>().Configure(TutorialExercise.Kind.Hit, glow);
-            MovablesSetup.Prop(props, material, "TutorialBox_C", MovablesSetup.Kind.SmallBox, parent.position + TowerBuilder.Polar(3.7f, angle + 14f, y + 0.02f), 0f);
-            Tag(parent, material, "Note_Tutorial_Target", TowerBuilder.Polar(TowerBuilder.WallRadius(angle, 0.3f) - 0.1f, angle, y + 2.75f), new Vector3(0f, y, 0f), "<b>3</b> · <b>Q</b> arrojá la caja");
-            Tag(parent, material, "Note_Tutorial_Target_2", TowerBuilder.Polar(TowerBuilder.WallRadius(angle, 0.3f) - 0.1f, angle, y + 2.5f), new Vector3(0f, y, 0f), "a la diana");
+            MovablesSetup.Prop(props, material, "TutorialBox_C", MovablesSetup.Kind.SmallBox, parent.position + TowerBuilder.Polar(3.3f, angle + 6f, y + 0.02f), 0f);
+            WallCard(parent, material, "Note_Tutorial_Target", angle, y, "<b>3</b> · Tirá una caja", "<b>Q</b> arrojar a la diana", 2.55f);
         }
 
         /// <summary>Baranda del borde interior del hueco de la rampa en un piso (la misma en el piso 2 y en el piso 1).</summary>
@@ -429,7 +464,7 @@ namespace SpellSimulator.EditorTools.Map
         // ---------------------------------------------------------------- nivel 3: objetos magicos
 
         /// <summary>Caballete del tutorial del viento (piso 1) y de la planta baja: posicion (angulo/radio) y a donde apunta.</summary>
-        public const float EaselWindAngle = 226f, EaselWindR = 3.9f, EaselDoorAngle = 245f, EaselDoorR = 4.4f;
+        public const float EaselWindAngle = 215f, EaselWindR = 3.5f, EaselDoorAngle = 240f, EaselDoorR = 3.2f;
         public const string EaselWindName = "Easel_Wind", EaselDoorName = "Easel_Door";
 
         private static void MagicFloor(Transform parent, Transform props, Material material)
@@ -478,10 +513,31 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 easelGround = o + TowerBuilder.Polar(EaselWindR, EaselWindAngle, y);
             MakeEasel(material, EaselWindName, easelGround, center, true);
 
-            // Carteles 11-13 (carteles.md), en el orden del recorrido: pluma, libro, lienzo. Se leen viniendo del este (llegada en 0).
-            Card(parent, material, "Note_Tutorial_Ink", 338f, 5.3f, y, TowerBuilder.Polar(5.3f, 3f, y), "<b>E</b> · Tomá la pluma", "<b>R</b> · Recargar tinta");
-            Card(parent, material, "Note_Tutorial_Book", 300f, 5.3f, y, TowerBuilder.Polar(5.3f, 325f, y), "<b>E</b> · Leé el Tomo I", "Es el viento");
-            Card(parent, material, "Note_Tutorial_Cloth", 252f, 5.3f, y, TowerBuilder.Polar(5.3f, 277f, y), "Calcá el viento azul", "<b>E</b> y apuntá a la cortina");
+            // Mesas del centro: la pluma, los tinteros y el libro del viento estan sobre StudyTable (TowerProps/MapDetails); cuadernos y hojas, en
+            // NotebookTable, mas lienzos flotando. Todo en el disco central: el anillo del recorrido queda libre.
+            var template = GameObject.Find("PaperCanvas");
+            if (template != null)
+            {
+                Vector3 nt = o + TowerProps.NotebookTableCenter + Vector3.up * 0.82f;
+                Quaternion ntRot = Quaternion.Euler(0f, TowerProps.NotebookTableYaw, 0f);
+                CanvasDesigns.NotebookAt(template, material, "Study_Notebook_A", nt + ntRot * new Vector3(-0.45f, 0.012f, 0.05f), ntRot * Quaternion.Euler(90f, 10f, 0f), 0.24f, 0.32f).transform.SetParent(props, true);
+                CanvasDesigns.NotebookAt(template, material, "Study_Notebook_B", nt + ntRot * new Vector3(-0.05f, 0.012f, -0.1f), ntRot * Quaternion.Euler(90f, -20f, 0f), 0.2f, 0.28f).transform.SetParent(props, true);
+                CanvasDesigns.SheetAt(template, "Study_Sheet_A", nt + ntRot * new Vector3(0.4f, 0.012f, 0.05f), ntRot * Quaternion.Euler(90f, 5f, 0f), 0.4f, false).transform.SetParent(props, true);
+                CanvasDesigns.SheetAt(template, "Study_Sheet_B", nt + ntRot * new Vector3(0.6f, 0.03f, -0.15f), ntRot * Quaternion.Euler(90f, 40f, 0f), 0.3f, false).transform.SetParent(props, true);
+                (string n, Vector3 p, float size)[] floating =
+                {
+                    ("Study_Float_A", o + new Vector3(-1.3f, y + 1.5f, 1.1f), 0.5f),
+                    ("Study_Float_B", o + new Vector3(-0.1f, y + 1.8f, -1.2f), 0.45f),
+                    ("Study_Float_C", o + new Vector3(-2.4f, y + 1.35f, 0.6f), 0.5f),
+                };
+                foreach (var (n, p, size) in floating)
+                    CanvasDesigns.SheetAt(template, n, p, Quaternion.Euler(0f, TowerBuilder.TangentYaw(Mathf.Repeat(Mathf.Atan2(p.z - o.z, p.x - o.x) * Mathf.Rad2Deg, 360f)), 0f), size, true).transform.SetParent(props, true);
+            }
+
+            // Carteles 11-13 (carteles.md): pegados al muro, en caras sin ventana y en el orden del recorrido (llegada al este, luego el sur).
+            WallCard(parent, material, "Note_Tutorial_Ink", 342f, y, "<b>E</b> · Tomá la pluma", "<b>R</b> · Recargar tinta");
+            WallCard(parent, material, "Note_Tutorial_Book", 306f, y, "<b>E</b> · Leé el Tomo I", "En la mesa: es el viento");
+            WallCard(parent, material, "Note_Tutorial_Cloth", 234f, y, "Calcá el viento azul", "<b>E</b> y apuntá a la cortina");
         }
 
         /// <summary>
@@ -500,9 +556,6 @@ namespace SpellSimulator.EditorTools.Map
             if (canvas != null && guide && canvas.GetComponent<SpellSimulator.Lab.TutorialPaperGuide>() == null)
                 canvas.AddComponent<SpellSimulator.Lab.TutorialPaperGuide>();
         }
-
-        /// <summary>Angulo (muro) del libro «Tomo I: el viento» del piso 1; lo usa MapDetails.LibraryBooks.</summary>
-        public const float WindBookAngle = 283f;
 
         // ---------------------------------------------------------------- nivel 4: la puerta
 
@@ -525,7 +578,8 @@ namespace SpellSimulator.EditorTools.Map
             // Contrapeso: un bloque de hierro colgado de una soga hasta el techo; hay que subirlo (columna de agua o de aire).
             var weight = new LowPolyMesh();
             weight.Box(Matrix4x4.identity, new Vector3(0.34f, 0.34f, 0.34f), Iron, Iron * 1.2f);
-            weight.Box(Matrix4x4.Translate(new Vector3(0f, 1.1f, 0f)), new Vector3(0.04f, 2.2f, 0.04f), WoodDark);
+            // Soga hasta el techo (el cielorraso esta a ~4,5 m): del centro del bloque (y 1,0) hasta 4,9.
+            weight.Box(Matrix4x4.Translate(new Vector3(0f, 1.95f, 0f)), new Vector3(0.04f, 3.9f, 0.04f), WoodDark);
             LatchBody(latches, material, "DoorLatch_Weight", weight, o + TowerBuilder.Polar(TowerBuilder.WallRadius(WeightAngle, 0.36f), WeightAngle, 1.0f), WeightAngle, new Vector3(0.34f, 0.34f, 0.34f), 3f, true);
 
             // Traba de piedra: un bloque contra el muro. La tierra con Crush (Wall Breaker) lo rompe.
@@ -541,7 +595,7 @@ namespace SpellSimulator.EditorTools.Map
 
             // Caballete de la planta baja (lienzo fijo apuntando al pestillo) y el cartel 14. Plantilla fantasma del viento tambien.
             MakeEasel(material, EaselDoorName, o + TowerBuilder.Polar(EaselDoorR, EaselDoorAngle, 0f), latches.Find("DoorLatch_Bar").position, true);
-            Card(parent, material, "Note_Tutorial_Door", 285f, 5.2f, 0f, TowerBuilder.Polar(5.2f, 310f, 0f), "Dibujá viento en el lienzo", "y apuntá al pestillo");
+            WallCard(parent, material, "Note_Tutorial_Door", 342f, 0f, "Dibujá viento en el lienzo", "y apuntá al pestillo");
         }
 
         private static void LatchBody(Transform parent, Material material, string name, LowPolyMesh mesh, Vector3 at, float angle, Vector3 colliderSize, float mass, bool liftOnly)
@@ -605,7 +659,7 @@ namespace SpellSimulator.EditorTools.Map
         /// Nota flotante: una tarjeta de pergamino con dos o tres palabras, centrada en <paramref name="at"/> y de cara a viewer.
         /// Es un cuerpo fisico sin gravedad (World.FloatingNote): el viento o un golpe la mueven y vuelve sola a su lugar.
         /// </summary>
-        private static void Note(Transform parent, Material material, string name, Vector3 at, Vector3 viewer, string text, float width = 0.92f, float height = 0.34f, float fontMax = 0f)
+        private static void Note(Transform parent, Material material, string name, Vector3 at, Vector3 viewer, string text, float width = 0.92f, float height = 0.34f, float fontMax = 0f, bool bothSides = false)
         {
             var b = new LowPolyMesh();
             b.Box(Matrix4x4.identity, new Vector3(width, height, 0.02f), new Color(0.97f, 0.93f, 0.8f));
@@ -640,6 +694,14 @@ namespace SpellSimulator.EditorTools.Map
             label.textWrappingMode = height > 0.4f ? TMPro.TextWrappingModes.Normal : TMPro.TextWrappingModes.NoWrap;
             label.color = new Color(0.14f, 0.08f, 0.04f);
             label.text = text;
+            if (bothSides)
+            {
+                // Misma leyenda por detras (el texto de TextMeshPro no se ve desde el reves).
+                var back = Object.Instantiate(labelGo, go.transform);
+                back.name = "LabelBack";
+                back.transform.localPosition = new Vector3(0f, 0f, 0.014f);
+                back.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            }
         }
     }
 }

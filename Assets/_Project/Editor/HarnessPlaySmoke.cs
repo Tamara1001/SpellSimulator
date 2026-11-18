@@ -372,13 +372,24 @@ namespace SpellSimulator.EditorTools
                     && GameObject.Find("WallBoard_Library") == null && GameObject.Find("DraftingTable") == null;
                 bool hugging = true;
                 string loose = "";
-                foreach (string n in new[] { "Chest_Library_A", "Crate_Library_A", "Chest_Study_A", "Crate_Study_A", "Chest_Tower2_A", "Chest_Tower2_B", "Crate_Tower2_A", "Workbench_Study", "Bookshelf" })
+                foreach (string n in new[] { "Chest_Library_A", "Crate_Library_A", "Bookshelf" })
                 {
                     var go = GameObject.Find(n);
                     if (go == null) continue;
                     float gap = SpellSimulator.EditorTools.Map.TowerBuilder.InnerRadius - Flat(go.transform.position);
                     if (gap > 0.9f) { hugging = false; loose += n + " "; }
                 }
+                // Carteles de pared pegados al muro, y la runa de oro fuera de la torre.
+                string farCards = "";
+                foreach (string n in new[] { "Note_Tutorial_Practice", "Note_Tutorial_Pile", "Note_Tutorial_Target", "Note_Tutorial_Ink", "Note_Tutorial_Book", "Note_Tutorial_Cloth", "Note_Tutorial_Door" })
+                {
+                    var card = GameObject.Find(n);
+                    if (card == null) { farCards += n + "(falta) "; continue; }
+                    if (SpellSimulator.EditorTools.Map.TowerBuilder.InnerRadius - Flat(card.transform.position) > 0.25f) farCards += n + " ";
+                }
+                var gold = GameObject.Find("ImpactGold_S");
+                bool goldOut = gold == null || Flat(gold.transform.position) > SpellSimulator.EditorTools.Map.TowerBuilder.BaseRadius + 2f;
+                Check(farCards.Length == 0 && goldOut, $"torre v2: carteles pegados al muro (lejos: {farCards}) y runa de oro fuera de la torre ({goldOut})");
                 Check(portalOut && noClutter && hugging, $"torre v2: portal fuera de la torre, sin estaciones ni alquimia y muebles pegados al muro (portal fuera {portalOut}, limpio {noClutter}, sueltos: {loose})");
             }
 

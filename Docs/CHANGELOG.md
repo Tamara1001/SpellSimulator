@@ -5,6 +5,19 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-18 — Torre v3: carteles al muro, pisos despejados y más cosas para probar
+
+Segunda crítica de Tamara a la torre (carteles que no se entienden o al revés, cosas en el camino, pisos vacíos o con muebles sin sentido, runa de oro en la torre).
+
+- **Bug de base:** `TowerBuilder.WallRadius` tenía las caras del muro corridas 9° (las caras del polígono están centradas en múltiplos de 18°, no en los vértices): los muebles quedaban hasta 7 cm adentro o afuera del muro. Corregido; todo lo pegado al muro va en el CENTRO de una cara (múltiplo de 18°) y sin ventana.
+- **Carteles:** nuevo `WallCard`: pegados al muro, de frente al centro, nunca en diagonal ni sobre el pasillo. Textos más claros: «Agarrar y soltar / Practicá en el centro», «Lienzo en el aire», «Lienzo vertical / Clic der. + mouse: girar» (antes «Ponelo de canto»), «Tirá una caja / Q arrojar a la diana». Los de práctica flotan sobre el marco y se leen de los dos lados.
+- **Piso 2:** pasillo del anillo libre salvo la pila; el centro es una zona de práctica llena (mesa con libros/maceta/vela, 2 marcos, diana, cajas, barriles, bancos, silla, banco largo y 2 lienzos flotantes).
+- **Piso 1:** sin estante en la llegada (353°) ni atril ni baúles ni pedestal. Todo el estudio en el centro: mesa con pluma, tinteros, libro del viento y cinturón; mesa de cuadernos y hojas; 3 lienzos flotantes. Caballete más cerca de la cortina (215°, r 3,5). Borradas las herramientas viejas que quedaban en el piso (`Pen_933_0`…).
+- **Planta baja:** estante a 216° y 144° (centro de cara), cajas solo en 108°/126° (no enterradas); pestillo 252°, contrapeso 288° y piedra 234° alrededor de la puerta (270°); caballete a 240° (la puerta queda libre); atril del libro de elementos a 324°; cartel único a 342°.
+- **Runa de oro:** sacada de la torre; ahora sobre un pedestal en el campo de entrenamiento.
+- **Harness:** `HarnessPlaySmoke` +1 chequeo (carteles pegados al muro y runa de oro fuera). Reach/floors/spell test igual que antes; 626 tests EditMode verdes.
+- **Pendiente:** el menú de inicio no se ve al dar Play en el editor de Tamara (en el harness y en mis capturas sí aparece): hace falta su captura de consola/Game view.
+
 ## 2026-11-17 — Torre v2, rehecha completa (proporciones, ventanas, terraza sellada, pisos y muebles)
 
 Tras la crítica de Tamara al paso 1 («terraza se puede pasar caminando, actividades mal acomodadas y mal formuladas, el piso del viento no se puede hacer, sigue el portal, escaleras finitas, muebles despegados, torre ancha y baja, todas las ventanas al sur»):

@@ -116,12 +116,14 @@ namespace SpellSimulator.EditorTools.Map
 
         /// <summary>
         /// Radio del centro de un mueble de <paramref name="depth"/> metros de fondo para que quede PEGADO a la cara interior del muro
-        /// (poligono de <see cref="Sides"/> lados) en ese angulo. Con yaw = <see cref="TangentYaw"/> el fondo es el eje local Z.
+        /// (poligono de <see cref="Sides"/> lados) en ese angulo. Con yaw = <see cref="TangentYaw"/> el fondo es el eje local Z. Para que el mueble
+        /// quede paralelo al muro, el angulo tiene que ser el CENTRO de una cara (multiplo de 18 grados).
         /// </summary>
         public static float WallRadius(float angleDeg, float depth)
         {
             float step = 360f / Sides;
-            float delta = (Mathf.Repeat(angleDeg, step) - step * 0.5f) * Mathf.Deg2Rad;
+            // Las caras del poligono estan CENTRADAS en los multiplos de 18 grados (vertices en 9, 27...): en ellos el muro esta a la apotema.
+            float delta = (Mathf.Repeat(angleDeg + step * 0.5f, step) - step * 0.5f) * Mathf.Deg2Rad;
             float apothem = InnerRadius * Mathf.Cos(step * 0.5f * Mathf.Deg2Rad);
             return apothem / Mathf.Cos(delta) - depth * 0.5f - 0.03f;
         }
@@ -555,11 +557,10 @@ namespace SpellSimulator.EditorTools.Map
 
             // Biblioteca (planta baja). Estantes altos donde la rampa deja altura (228 junto al atril, 292 al lado de la
             // puerta) y uno bajo bajo la rampa (143). El sureste queda para la estacion de viento y el oeste para la de agua.
-            tris += Shelf(props, material, 228f, 0f);
+            tris += Shelf(props, material, 216f, 0f);
             // (el estante de 292 grados se quito: ahi van las trabas de la puerta de la torre-tutorial, ver MapTutorial.DoorLocks)
-            tris += Shelf(props, material, 143f, 0f, null, 3);
-            // Estudio (primer piso): estantes donde la rampa de arriba deja altura y fuera del hueco de la de abajo.
-            tris += Shelf(props, material, 353f, FloorHeight);
+            tris += Shelf(props, material, 144f, 0f, null, 3);
+            // Estudio (primer piso): sin estantes (taparian la llegada de la rampa); los libros van en la mesa del centro.
 
             // Escritorio central (sobre la alfombra redonda) y mesa de lectura al este; el pasillo puerta-centro queda libre.
             tris += Table(props, material, "LibraryDesk", new Vector3(0f, 0f, 0.3f), 0f, 1.8f, 0.9f);

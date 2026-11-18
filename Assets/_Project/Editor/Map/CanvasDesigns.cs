@@ -117,6 +117,31 @@ namespace SpellSimulator.EditorTools.Map
             return go;
         }
 
+        /// <summary>Cuaderno agarrable con paginas (lo usa el tutorial de la torre).</summary>
+        internal static GameObject NotebookAt(GameObject template, Material material, string name, Vector3 position, Quaternion rotation, float width, float height)
+        {
+            var go = Grabbable(template, material, name, position, rotation, width, height, Dressing.Notebook);
+            AddPages(go);
+            return go;
+        }
+
+        /// <summary>Hoja de papel agarrable; con floating queda flotando en el aire donde se la pone (lienzo flotante).</summary>
+        internal static GameObject SheetAt(GameObject template, string name, Vector3 position, Quaternion rotation, float size, bool floating)
+        {
+            var go = Spawn(template, name, position, rotation, size, size);
+            var rb = go.GetComponent<Rigidbody>();
+            if (rb != null) { rb.isKinematic = false; rb.useGravity = !floating; }
+            var grab = go.GetComponent<PhysicalCanvas>();
+            if (grab != null)
+            {
+                var so = new SerializedObject(grab);
+                so.FindProperty("startFloating").boolValue = floating;
+                so.ApplyModifiedProperties();
+            }
+            if (go.GetComponent<Respawnable>() == null) go.AddComponent<Respawnable>();
+            return go;
+        }
+
         /// <summary>Cuaderno con paginas: NotebookPages con pageCount (se configura por SerializedObject).</summary>
         private static void AddPages(GameObject notebook)
         {

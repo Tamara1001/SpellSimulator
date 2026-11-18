@@ -17,8 +17,8 @@ namespace SpellSimulator.EditorTools.Map
         /// Lugar libre en la cubierta de la mesa de alquimia (local a la mesa, pivote en el piso): extremo +X, lado +Z,
         /// lejos de los frascos (x &lt;= 0.35) y del portatubos (x 0.4-0.8, z -0.3). Ver TowerProps.Alchemy.
         /// </summary>
-        private static readonly Vector3 AlchemyTableLocalSpot = new Vector3(0.7f, 0.822f, 0f);
-        private const string AlchemyTableName = "Workbench_Study";
+        private static readonly Vector3 AlchemyTableLocalSpot = new Vector3(-0.7f, 0.822f, 0f);
+        private const string AlchemyTableName = "StudyTable";
         private const float AlchemyTableYaw = 0f;
         private const float YawOnTable = -35f;
 
@@ -41,8 +41,7 @@ namespace SpellSimulator.EditorTools.Map
         {
             var table = GameObject.Find(AlchemyTableName);
             if (table != null) return table.transform.TransformPoint(AlchemyTableLocalSpot);
-            return MapBuilder.TowerOrigin() + TowerProps.StudyDeskCenter()
-                + Quaternion.Euler(0f, TowerBuilder.TangentYaw(TowerProps.StudyDeskAngle), 0f) * AlchemyTableLocalSpot;
+            return MapBuilder.TowerOrigin() + TowerProps.StudyTableCenter + Quaternion.Euler(0f, TowerProps.StudyTableYaw, 0f) * AlchemyTableLocalSpot;
         }
 
         public static void Build(Transform map, Material material, Vector3 origin)
