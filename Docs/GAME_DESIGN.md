@@ -86,8 +86,8 @@ descubre. El grimorio muestra cada glifo dibujándose solo, con su explicación.
 **E** agarra en la mano (herramientas, lienzos, estampas: quedan delante de la vista y las herramientas se ven sostenidas).
 **G** (mantener) es el modo "mover": sujeta lo apuntado a distancia como en Garry's Mod; la rueda lo acerca o aleja, **clic
 derecho + mouse** lo gira (la vista se congela), **Shift + rueda** lo inclina y **E** otra vez lo deja flotando donde está (**T** abre el grimorio). Sirve para
-juntar las mitades de un sello partido o apilar cajas con precisión. **X** hace zoom para ver de cerca; **1–4** cambian el grosor de la
-pluma (muy fino a grueso) para sellos chicos o enormes.
+juntar las mitades de un sello partido o apilar cajas con precisión. **X** hace zoom para ver de cerca; Para sellos chicos o enormes se
+agarra otro **pincel** (el grosor ya no se elige con teclas ni con la rueda: ver «Pinceles» abajo).
 
 ## Mundo inflamable (M6)
 Los **pinos** y el **mobiliario de la torre** (mesas, sillas, estantes, libros, caballetes) son de madera: arden, contagian a
@@ -200,7 +200,7 @@ Esquema (ADR-032/033). Se repasa en el grimorio (Tab → Controles).
 | | Equipar una herramienta o estampa del mundo | E (va al primer slot libre) | Grip de **cualquier mano** (esa pasa a ser la principal) |
 | | Elegir slot | 1, 2, 3 | B (toque): slot siguiente |
 | | Usar / deshacer | Clic izquierdo / clic derecho | Gatillo / A (o X) de la mano de la herramienta |
-| | Cambiar el grosor de la pluma o el tamaño de la goma | Rueda del mouse (sin nada agarrado) | Stick derecho arriba / abajo |
+| | Cambiar el tamaño de la goma | Rueda del mouse (sin nada agarrado) | Stick derecho arriba / abajo |
 | | Recargar tinta / cambiar la tinta activa (cinturón) / arrojar | R / V / Q | Mojar en un tintero / Y (toque) / B mantenido 0,6 s |
 | **Mano secundaria** (lo agarrado con E se arrastra) | Agarrar / dejar en el aire | E / E otra vez | Grip de cualquier mano: mantenerlo, o un toque corto lo deja «pegado» (otro apretón lo suelta) / soltarlo casi quieto (< 0,8 m/s) |
 | | Acercar o alejar (cuaderno: pasar de página) | Rueda | — (cuaderno: golpe del stick derecho a los costados) |
@@ -223,6 +223,9 @@ Con un lienzo agarrado se puede rotar, dar vuelta, dibujar sobre él y fijarlo a
 **Lienzos (2026-11-18, Docs/LIENZOS_PLAN.md):** solo hay dos objetos, el **Lienzo** (1 hoja) y la **Libreta** (hasta 8 hojas), con las mismas reglas
 (agarrar con E, dejar flotando con G, arrojar con Q, dar vuelta con F, Tab a pantalla). Tamaños S/M/L (`CanvasRules`): hojas cuadradas 0,35/0,55/1 m y
 rectangulares 0,3×0,4 / 0,5×0,7 / 1×1,4 m; libretas S de bolsillo circular (Ø 0,18 m), M la de siempre (0,24×0,32) y L (0,36×0,48).
+**Pinceles (Bloque B):** lápiz, pluma y pincel son el mismo objeto con otro grosor, punta y forma (`BrushSpec`, catálogo en `BrushRules`: pluma fina 4 mm,
+lápiz 8 mm, pincel 2 cm, pincel plano 4 cm, brocha 8 cm). No hay deslizador de grosor; el trazo grueso **no cambia el hechizo** (el reconocimiento rasteriza siempre
+con 2 px, probado en `BrushRulesTests`) y gasta algo más de tinta. Solo la goma conserva su rueda de tamaño.
 **Cara de disparo:** cada lienzo muestra con su marco por cuál cara sale el hechizo (dorado = la de dibujo, azul = la de atrás, con una flecha). El botón
 de la esquina del marco (apuntar + clic, gatillo en VR) la invierte sin mover el lienzo; F sigue dando vuelta el objeto.
 **Atriles:** el slot recibe el lienzo que se suelta (E) o se deja flotando (G) a menos de 0,85 m; si ya había otro, se cambian. Apuntando a la base y con

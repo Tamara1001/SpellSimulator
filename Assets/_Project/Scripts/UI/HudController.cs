@@ -707,8 +707,9 @@ namespace SpellSimulator.UI
             widthDots.Clear();
             widthLabel = null;
             lastWidth = -1;
-            widths.style.display = mainWidths != null ? DisplayStyle.Flex : DisplayStyle.None;
-            if (mainWidths == null) return;
+            bool hasWidths = mainWidths != null && mainWidths.WidthCount > 0;
+            widths.style.display = hasWidths ? DisplayStyle.Flex : DisplayStyle.None;
+            if (!hasWidths) return;
             int count = mainWidths.WidthCount;
             for (int i = 0; i < count; i++)
             {

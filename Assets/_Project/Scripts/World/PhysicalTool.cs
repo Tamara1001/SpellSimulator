@@ -84,6 +84,8 @@ namespace SpellSimulator.World
         private PlayerInputReader input;
         private float baseStrokeWidth;
         private int widthIndex = 2;
+        // Pincel (BrushSpec): el ancho de la pluma ya no se elige con la rueda; es el del pincel que se agarra.
+        private float penWidthMeters;
 
         /// <summary>(herramienta, usando) al empezar y terminar de dibujar/borrar/limpiar sobre un lienzo.</summary>
         public static event System.Action<PhysicalTool, bool> UseChanged;
@@ -105,8 +107,8 @@ namespace SpellSimulator.World
         // ---- Interfaz (HUD de abajo)
         public string HudName => toolName;
         public Color HudColor => kind == ToolKind.Pen ? fullInkColor : kind == ToolKind.Eraser ? new Color(0.93f, 0.62f, 0.66f) : new Color(0.92f, 0.87f, 0.74f);
-        private const string PenHints = "Clic: dibujar | Clic der.: deshacer | Rueda: grosor | R: tinta | Q: arrojar";
-        private const string PenHintsCycle = "Clic: dibujar | Clic der.: deshacer | Rueda: grosor | R: tinta | V: cambiar tinta | Q: arrojar";
+        private const string PenHints = "Clic: dibujar | Clic der.: deshacer | R: tinta | Q: arrojar";
+        private const string PenHintsCycle = "Clic: dibujar | Clic der.: deshacer | R: tinta | V: cambiar tinta | Q: arrojar";
         /// <summary>True si V puede cambiar la tinta (cinturon y cartuchos de 2+ clases). Lo mantiene PlayerInteractor al cambiar el stock.</summary>
         public static bool InkCycleAvailable { get; set; }
         public string HudHints => PlatformDetector.IsVR ? (kind == ToolKind.Pen ? "Gatillo o apoyar la punta: dibujar | A/X: deshacer | B: otro objeto | Y: tinta"
@@ -115,7 +117,10 @@ namespace SpellSimulator.World
             : kind == ToolKind.Eraser ? "Clic: borrar | Clic der.: deshacer | Rueda: tamaño | Q: arrojar" : "Clic: limpiar el lienzo | Q: arrojar";
         public float HudGauge => kind == ToolKind.Pen ? ink.Fraction : -1f;
         public int WidthIndex => widthIndex;
-        public int WidthCount => kind == ToolKind.Rag ? 0 : widthPresets.Length;
+        // Solo la goma tiene tamaños elegibles: los pinceles son pinceles de distinto grosor (BrushSpec), sin deslizador.
+        public int WidthCount => kind == ToolKind.Eraser ? widthPresets.Length : 0;
+        /// <summary>Ancho del trazo del pincel en metros (0 = el del lienzo).</summary>
+        public float PenWidthMeters => penWidthMeters;
         public float WidthSample(int index) => widthPresets[Mathf.Clamp(index, 0, widthPresets.Length - 1)] / widthPresets[widthPresets.Length - 1];
         public string WidthLabel(int index) => index >= 0 && index < widthNames.Length ? widthNames[index] : (index + 1).ToString();
         public InkReservoir Ink => ink;
@@ -131,11 +136,12 @@ namespace SpellSimulator.World
             if (raycastOrigin == null) raycastOrigin = transform;
             ApplyDefinition();
             baseStrokeWidth = strokeWidth;
+            penWidthMeters = baseStrokeWidth > 0f ? BrushRules.FromLegacyDefinition(baseStrokeWidth) : 0f;
 
             float stabilizer = PlatformDetector.IsVR ? vrStabilizerSpeed : pcStabilizerSpeed;
             switch (kind)
             {
-                case ToolKind.Pen: tool = new PenTool(stabilizer, baseStrokeWidth * StartPreset()); break;
+                case ToolKind.Pen: tool = new PenTool(stabilizer, penWidthMeters); break;
                 case ToolKind.Eraser: tool = new EraserTool((definition != null ? definition.eraseRadius : 0.025f) * StartPreset()); break;
                 default: tool = new RagTool(definition != null ? definition.wipeLengthToClear : 1.2f); break;
             }
@@ -166,18 +172,34 @@ namespace SpellSimulator.World
             }
         }
 
-        /// <summary>Rueda del mouse: grosor de la pluma o el radio de la goma (no cambia mientras se dibuja).</summary>
+        /// <summary>Convierte esta herramienta en el pincel <paramref name="spec"/> (restocker): ancho, nombre y gasto de tinta. Solo plumas y pinceles.</summary>
+        public void ApplyBrush(BrushSpec spec)
+        {
+            if (kind != ToolKind.Pen) return;
+            spec = BrushRules.Sanitize(spec);
+            toolName = spec.name;
+            prompt = null;
+            penWidthMeters = spec.widthMeters;
+            inkPerMeter = BrushRules.InkPerMeter(spec.widthMeters);
+            Brush = spec;
+            float stabilizer = PlatformDetector.IsVR ? vrStabilizerSpeed : pcStabilizerSpeed;
+            tool = new PenTool(stabilizer, penWidthMeters);
+        }
+
+        /// <summary>Ultimo pincel aplicado con <see cref="ApplyBrush"/> (nombre vacio = el del ToolDefinition).</summary>
+        public BrushSpec Brush { get; private set; }
+
+        /// <summary>Rueda del mouse: radio de la goma (no cambia mientras se dibuja). Los pinceles no tienen grosor elegible.</summary>
         public void CycleWidth(int delta)
         {
-            if (kind == ToolKind.Rag || currentCanvas != null) return;
+            if (kind != ToolKind.Eraser || currentCanvas != null) return;
             int count = widthPresets.Length;
             int next = Mathf.Clamp(widthIndex + delta, 0, count - 1);
             if (next == widthIndex) return;
             widthIndex = next;
             float stabilizer = PlatformDetector.IsVR ? vrStabilizerSpeed : pcStabilizerSpeed;
-            if (kind == ToolKind.Pen) tool = new PenTool(stabilizer, baseStrokeWidth * widthPresets[widthIndex]);
-            else tool = new EraserTool((definition != null ? definition.eraseRadius : 0.025f) * widthPresets[widthIndex]);
-            Hud.Notify("width", (kind == ToolKind.Pen ? "Grosor: " : "Tamaño de la goma: ") + WidthLabel(widthIndex), 2f);
+            tool = new EraserTool((definition != null ? definition.eraseRadius : 0.025f) * widthPresets[widthIndex]);
+            Hud.Notify("width", "Tamaño de la goma: " + WidthLabel(widthIndex), 2f);
         }
 
         private void ApplyDefinition()

@@ -549,6 +549,20 @@ namespace SpellSimulator.EditorTools
                 if (world != null) world.ResetWorld();
             }
 
+            // --- Lienzos B: pinceles sin deslizador de grosor.
+            PhysicalTool brushPen = null;
+            foreach (var pt in Object.FindObjectsByType<PhysicalTool>(FindObjectsSortMode.None)) if (pt.Kind == PhysicalTool.ToolKind.Pen) { brushPen = pt; break; }
+            if (brushPen != null)
+            {
+                float widthBefore = brushPen.PenWidthMeters;
+                brushPen.CycleWidth(1);
+                bool unchanged = brushPen.WidthCount == 0 && Mathf.Approximately(widthBefore, brushPen.PenWidthMeters);
+                brushPen.ApplyBrush(SpellSimulator.Core.BrushRules.Catalog[3]);
+                bool applied = Mathf.Approximately(brushPen.PenWidthMeters, SpellSimulator.Core.BrushRules.Catalog[3].widthMeters) && brushPen.HudName == SpellSimulator.Core.BrushRules.Catalog[3].name;
+                Check(unchanged && applied, $"lienzos B: la pluma no tiene grosor elegible (sin slider {unchanged}) y ApplyBrush la vuelve el pincel pedido ({applied})");
+            }
+            else failures.Add("lienzos B: no hay pluma en la escena");
+
             // --- Lienzos 0: sin poste del papel de prueba y «Limpiar efectos» (boton + despawn de marcas).
             bool noStand = GameObject.Find("LabPaperStand") == null;
             bool fxButton = false;

@@ -14,6 +14,12 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - Fix: `HarnessPlaySmoke.cs` tenia un `Split('\n')` roto con salto de linea literal (no compilaba).
 - Sutiles aun: viento (crush, spread, gravity, waterproof), tierra solida (cool, entwine, spread, gravity: el cuerpo es la roca), waterproof en general. Docs: `MODIFICADORES_AUDITORIA.md` (tandas 2 y 3 hechas, salvo la parte fisica de region/waterproof).
 
+## 2026-11-18 — Lienzos, bloque B: pinceles (BrushSpec) sin deslizador de grosor
+
+- `Core/BrushSpec.cs`: `BrushSpec` (grosor, punta, forma) y `BrushRules` (catálogo de 5 pinceles, ancho de los ToolDefinition viejos, gasto de tinta). `PhysicalTool.ApplyBrush` convierte una pluma en un pincel; el ancho del lápiz y el pincel de siempre no cambia.
+- Se quita el grosor elegible de plumas/pinceles (rueda, stick VR y fila de la HUD); la goma conserva su tamaño. Textos del grimorio y `GAME_DESIGN` actualizados.
+- Reconocimiento: `TensorRasterizer` usa 2 px fijos, así que el trazo grueso no lo afecta (test `BrushRulesTests`). Punta y forma son datos para el restocker; todavía no cambian cómo se estampa la tinta.
+
 ## 2026-11-18 — Lienzos, bloque A: lienzos unificados, cara de disparo y atriles con slot
 
 - `CanvasSpec`/`CanvasRules` (tamaños S/M/L, formas, 8 hojas máx.) con `CanvasRulesTests`; `CanvasDesigns` ajusta todo lienzo del mapa al preset más cercano (`Snap`).
