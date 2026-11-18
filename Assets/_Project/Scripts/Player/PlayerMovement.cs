@@ -93,6 +93,20 @@ namespace SpellSimulator.Player
             {
                 vrTuned = true;
                 rb.interpolation = RigidbodyInterpolation.Interpolate;
+                // Altura: el origen del visor va a los pies del cuerpo (suelo) y la cabeza queda a la altura real del jugador.
+                var xrOrigin = GetComponentInChildren<Unity.XR.CoreUtils.XROrigin>(true);
+                if (xrOrigin != null)
+                {
+                    xrOrigin.RequestedTrackingOriginMode = Unity.XR.CoreUtils.XROrigin.TrackingOriginMode.Floor;
+                    xrOrigin.transform.localPosition = new Vector3(0f, -standHeight * 0.5f, 0f);
+                    Transform offset = xrOrigin.CameraFloorOffsetObject != null ? xrOrigin.CameraFloorOffsetObject.transform : null;
+                    if (offset != null)
+                    {
+                        offset.localPosition = Vector3.zero;
+                        cameraRoot = offset;
+                        standCameraY = 0f;
+                    }
+                }
                 // Sin friccion contra paredes y esquinas: se desliza en vez de quedar pegado (el frenado ya es propio).
                 if (body != null)
                     body.sharedMaterial = new PhysicsMaterial("VrBody") { dynamicFriction = 0f, staticFriction = 0f, frictionCombine = PhysicsMaterialCombine.Minimum };
@@ -131,7 +145,10 @@ namespace SpellSimulator.Player
             if (prone) target = 2f; // tumbado: ignora Ctrl y no se levanta por agacharse
             else
             {
-                if (inputReader.IsCrouching || PhysicalCrouch()) crouching = true;
+                bool physical = PhysicalCrouch();
+                // VR: si te agachaste de verdad la camara ya bajo sola; con el boton se baja bastante mas que en PC.
+                crouchByBody = physical && !inputReader.IsCrouching;
+                if (inputReader.IsCrouching || physical) crouching = true;
                 else if (crouching && HasHeadroom(standHeight)) crouching = false;
                 target = crouching ? 1f : 0f;
             }
@@ -181,8 +198,13 @@ namespace SpellSimulator.Player
         /// <summary>Cuanto baja la camara para la postura t, interpolado por tramos.</summary>
         private float StanceCameraDrop(float t)
         {
-            return t <= 1f ? crouchCameraDrop * t : Mathf.Lerp(crouchCameraDrop, proneCameraDrop, t - 1f);
+            float drop = t <= 1f ? crouchCameraDrop * t : Mathf.Lerp(crouchCameraDrop, proneCameraDrop, t - 1f);
+            if (PlatformDetector.IsVR) drop *= crouchByBody ? 0f : VrCrouchDropFactor;
+            return drop;
         }
+
+        private bool crouchByBody;
+        private const float VrCrouchDropFactor = 1.9f;
 
         /// <summary>SphereCast hacia arriba desde la cabeza actual: hay lugar si nada bloquea hasta targetHeight.</summary>
         private bool HasHeadroom(float targetHeight)

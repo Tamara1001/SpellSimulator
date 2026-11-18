@@ -211,7 +211,8 @@ namespace SpellSimulator.UI
             state = State.Menu;
             if (input != null) input.Gate = InputGate.None;
             FocusMode.Enter();
-            if (!cameraTaken) TakeCamera(!wasPlaying || Time.timeSinceLevelLoad < 0.5f);
+            // VR: la camara es la cabeza del jugador, no se la lleva a la orbita del menu.
+            if (!cameraTaken && !PlatformDetector.IsVR) TakeCamera(!wasPlaying || Time.timeSinceLevelLoad < 0.5f);
             SetCanvases(false);
 
             hideAt = -1f;

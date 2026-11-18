@@ -147,7 +147,7 @@ namespace SpellSimulator.Learning
                 Row("A / X", "deshace (la otra: salta)", 44) +
                 Row("B", "toque: slot; mantener: arroja la herramienta", 44) +
                 Row("Stick der.", "lados: gira/página; arriba-abajo: grosor", 44) +
-                Row("Clic stick", "izq.: agacharse; der.: da vuelta la hoja", 44) +
+                Row("Clic stick", "izq.: agacharse; der.: menú", 44) +
                 Row("Y", "cambia la tinta; mantener: reinicia", 44)),
         };
 

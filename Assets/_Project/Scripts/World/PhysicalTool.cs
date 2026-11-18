@@ -109,7 +109,9 @@ namespace SpellSimulator.World
         private const string PenHintsCycle = "Clic: dibujar | Clic der.: deshacer | Rueda: grosor | R: tinta | V: cambiar tinta | Q: arrojar";
         /// <summary>True si V puede cambiar la tinta (cinturon y cartuchos de 2+ clases). Lo mantiene PlayerInteractor al cambiar el stock.</summary>
         public static bool InkCycleAvailable { get; set; }
-        public string HudHints => kind == ToolKind.Pen ? (InkCycleAvailable ? PenHintsCycle : PenHints)
+        public string HudHints => PlatformDetector.IsVR ? (kind == ToolKind.Pen ? "Gatillo o apoyar la punta: dibujar | A/X: deshacer | B: otro objeto | Y: tinta"
+                : kind == ToolKind.Eraser ? "Apoyá la goma o gatillo: borrar | A/X: deshacer el último trazo | B: otro objeto" : "Gatillo: limpiar el lienzo | B: otro objeto")
+            : kind == ToolKind.Pen ? (InkCycleAvailable ? PenHintsCycle : PenHints)
             : kind == ToolKind.Eraser ? "Clic: borrar | Clic der.: deshacer | Rueda: tamaño | Q: arrojar" : "Clic: limpiar el lienzo | Q: arrojar";
         public float HudGauge => kind == ToolKind.Pen ? ink.Fraction : -1f;
         public int WidthIndex => widthIndex;
@@ -207,13 +209,15 @@ namespace SpellSimulator.World
             col.enabled = false;
             transform.SetParent(holdPoint);
             transform.localPosition = Vector3.zero;
-            transform.localRotation = PlatformDetector.IsVR ? Quaternion.identity : Quaternion.Euler(PcHoldPitch, 0f, 0f);
+            // VR tambien: con la punta hacia adelante (como un lapiz en la mano) el rayo y el apoyo salen por donde se apunta.
+            transform.localRotation = Quaternion.Euler(PcHoldPitch, 0f, 0f);
         }
 
         public void OnDrop()
         {
             OnUseEnd();
             held = false;
+            TipPressing = false;
             transform.SetParent(null);
             rb.isKinematic = false;
             rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
@@ -350,6 +354,11 @@ namespace SpellSimulator.World
         /// largo de su normal. Se rehace cada cuadro desde la pose de la mano (sin estado ni fisica), asi la punta no tiembla y se
         /// desliza sobre el papel mientras la mano sigue de largo.
         /// </summary>
+        private void OnDisable()
+        {
+            if (held) TipPressing = false;
+        }
+
         private void LateUpdate()
         {
             if (!held || !PlatformDetector.IsVR || raycastOrigin == null || transform.parent == null) return;
@@ -360,6 +369,8 @@ namespace SpellSimulator.World
             int n = Physics.SphereCastNonAlloc(start, TipRadius, forward, tipHits, TipProbeBack + TipRadius, ~0, QueryTriggerInteraction.Collide);
             float bestDistance = float.MaxValue;
             Vector3 pushOffset = Vector3.zero;
+            bool pressedCanvas = false;
+            float pressDepth = 0f;
             Transform owner = transform.root;
             for (int i = 0; i < n; i++)
             {
@@ -374,8 +385,47 @@ namespace SpellSimulator.World
                 if (depth <= 0f) continue;
                 bestDistance = hit.distance;
                 pushOffset = hit.normal * Mathf.Min(depth, TipMaxPush);
+                pressedCanvas = isCanvas;
+                pressDepth = depth;
             }
             if (pushOffset != Vector3.zero) transform.position += pushOffset;
+            // Apoyar la punta contra un lienzo (apretando un poco) dibuja / borra sin gatillo; con histeresis para que no parpadee.
+            float need = TipPressing ? PressKeep : PressStart;
+            TipPressing = pressedCanvas && pressDepth > need;
+        }
+
+        private const float PressStart = 0.0062f, PressKeep = 0.0045f;
+
+        /// <summary>[VR] True mientras la punta de la herramienta en mano esta apoyada contra un lienzo (lo lee PlayerInputReader como gatillo).</summary>
+        public static bool TipPressing { get; private set; }
+
+        // Vista suavizada del rayo de la herramienta (VR): el temblor de la mano se amplifica con la distancia.
+        private Vector3 filteredOrigin, filteredDirection;
+        private int filterFrame = -100;
+
+        private void Stabilize(ref Vector3 origin, ref Vector3 direction)
+        {
+            int frame = Time.frameCount;
+            if (frame != filterFrame)
+            {
+                float dt = Mathf.Max(Time.unscaledDeltaTime, 1e-4f);
+                if (frame - filterFrame > 3)
+                {
+                    filteredOrigin = origin;
+                    filteredDirection = direction;
+                }
+                else
+                {
+                    // Quieto o con temblor = suavizado fuerte; movimiento decidido (rapido) = casi sin retraso.
+                    float rate = Vector3.Angle(filteredDirection, direction) / dt;
+                    float k = Mathf.Lerp(4f, 45f, Mathf.InverseLerp(15f, 150f, rate));
+                    filteredDirection = Vector3.Slerp(filteredDirection, direction, 1f - Mathf.Exp(-k * dt));
+                    filteredOrigin = Vector3.Lerp(filteredOrigin, origin, 1f - Mathf.Exp(-30f * dt));
+                }
+                filterFrame = frame;
+            }
+            origin = filteredOrigin;
+            direction = filteredDirection;
         }
 
         private static readonly RaycastHit[] focusHits = new RaycastHit[16];
@@ -421,7 +471,9 @@ namespace SpellSimulator.World
             {
                 // Punta cerca del papel: se dibuja justo bajo la punta (apoyar el lapiz); lejos: a distancia con el rayo.
                 if (TryContact(raycastOrigin.position, out uv, out canvas)) return true;
-                ray = new Ray(raycastOrigin.position, raycastOrigin.forward);
+                Vector3 aimOrigin = raycastOrigin.position, aimDirection = raycastOrigin.forward;
+                Stabilize(ref aimOrigin, ref aimDirection);
+                ray = new Ray(aimOrigin, aimDirection);
                 distance = vrContactDrawing ? vrContactReach : vrMaxDrawDistance;
             }
             else

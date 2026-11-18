@@ -62,10 +62,26 @@ namespace SpellSimulator.Player
             rayRight = vrMainRight;
             if (vrLeftController != null) vrPointerLineL = CreatePointer(vrLeftController.gameObject);
             if (vrPointerLineL != null) vrPointerLineL.enabled = false;
-            // La HUD de pantalla no se ve en el visor: un panel junto a la mano izquierda con la barra, la tinta y los avisos.
-            if (vrLeftController != null) gameObject.AddComponent<VrWristHud>().Init(this, vrLeftController);
-            // Menu y ayuda de controles (clic del stick derecho).
-            gameObject.AddComponent<VrMenu>().Init(this, inputReader, vrLeftController, vrRightController);
+            // La interfaz de PC (HUD y menu) no se ve en el visor: se dibuja en un panel flotante (clic del stick derecho = menu).
+            gameObject.AddComponent<VrUiPanel>().Init(this, inputReader);
+        }
+
+        /// <summary>[VR] Orientacion del controlador de esa mano.</summary>
+        public Quaternion VrHandRotation(bool right)
+        {
+            Transform hand = VrController(right);
+            return hand != null ? hand.rotation : cameraTransform.rotation;
+        }
+
+        /// <summary>[VR] True si la mano del rayo es la derecha.</summary>
+        public bool VrRayRight => rayRight;
+
+        /// <summary>[VR] Rayo de apuntado de una mano (el mismo que se usa para agarrar y apretar botones).</summary>
+        public Ray VrPointerRay(bool right)
+        {
+            Transform hand = VrController(right);
+            if (hand == null) return new Ray(cameraTransform.position, cameraTransform.forward);
+            return new Ray(hand.position, Quaternion.AngleAxis(vrRayPitchOffset, hand.right) * hand.forward);
         }
 
         /// <summary>[VR] Cambia la mano principal desde el menu (la herramienta equipada pasa a esa mano).</summary>
@@ -111,7 +127,7 @@ namespace SpellSimulator.Player
         /// </summary>
         private void HandleVrRelease()
         {
-            if (!PlatformDetector.IsVR || inventory.HandSecondary == null) return;
+            if (!PlatformDetector.IsVR || (inventory.HandSecondary == null && !IsDragging)) return;
             bool up = secondaryRight ? inputReader.VrGripUpRight : inputReader.VrGripUpLeft;
             bool down = secondaryRight ? inputReader.VrGripDownRight : inputReader.VrGripDownLeft;
             if (secondarySticky)

@@ -17,6 +17,15 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - **Gravedad de partículas (`spell.gravity`):** modula el `gravityModifier` en todos los sistemas Shuriken del hechizo, permitiendo flotación gradual o ingravidez.
 - **Rendimiento y arquitectura:** lógica pura en `SpellVisualModifierMath.cs` (sin `MonoBehaviour`), bucles indexados con cero allocations en `Update`, y suite de pruebas EditMode en `SpellVisualModifierMathTests.cs`.
 
+## 2026-11-18 — VR: interfaz de PC en panel flotante, altura, lápiz y objetos grandes
+
+- **Interfaz (`VrUiPanel`):** el HUD y el menú principal de PC (UI Toolkit, el mismo `PanelSettings`) se dibujan en una RenderTexture 1920x1080 mostrada en un cuadro delante de la cabeza (sigue la mirada con retraso; con el menú abierto queda quieto). Se apunta con el rayo de cualquier mano y el gatillo aprieta el botón (`NavigationSubmitEvent`). Clic del stick der. = menú (se quitó ahí el atajo de «dar vuelta la hoja»). El menú ya no se lleva la cámara a la órbita en VR. Se borraron `VrMenu` y `VrWristHud` (los de la 4.ª prueba).
+- **Altura:** el origen XR va a los pies del cuerpo (tracking Floor); agacharse con botón baja ~0,95 m (antes 0,5); agacharse de verdad no baja de más. (Antes la cabeza quedaba ~1 m por encima.)
+- **Viga del tutorial:** vuelve a ser obligatoria; en VR se abre un pasillo en el medio (zona `TutorialBypassZone`) que da por hecho «agacharse». La reja sigue igual.
+- **Lápiz:** en VR se sostiene con la punta hacia adelante (como en PC); apoyar la punta contra un lienzo (≥ 2 mm de presión) dibuja/borra sin gatillo (`PhysicalTool.TipPressing`); el rayo a distancia se suaviza según la velocidad (temblor); ayuda de controles de VR en `HudHints`.
+- **Objetos grandes** (cajas, rocas, grimorio): en VR ya no se pegan a la mano; se sostienen a distancia como en PC (`ObjectMover` con el rayo/rotación de la mano; stick der. adelante/atrás acerca/aleja; grip suelta, soltar quieto = flota, con envión = arroja).
+- Sin probar en el visor. Riesgos: orientación vertical de la textura del panel, y que el `PanelSettings.targetTexture` se aplique en caliente.
+
 ## 2026-11-18 — VR: lápiz con colisión y movimiento más suave
 
 - **Lápiz con colisión (`PhysicalTool.LateUpdate`):** la punta no atraviesa lienzos ni el mundo; se empuja la herramienta a lo largo de la normal de la superficie, recalculado cada cuadro desde la mano (sin estado), así la punta no tiembla y se desliza sobre el papel.

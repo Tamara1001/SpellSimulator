@@ -72,7 +72,8 @@ namespace SpellSimulator.Player
 
         private void Update()
         {
-            if (PlatformDetector.IsVR || cam == null) return;
+            if (cam == null || !cam.isActiveAndEnabled) cam = Camera.main;
+            if (cam == null) return;
 
             if (!holding) return;
 
@@ -80,6 +81,14 @@ namespace SpellSimulator.Player
             if (held == null || !held.gameObject.activeInHierarchy)
             {
                 ClearHeld();
+                return;
+            }
+
+            if (PlatformDetector.IsVR)
+            {
+                // Stick der. adelante/atras: acerca o aleja lo que se sostiene (analogico, ~2 m/s a fondo).
+                float push = inputReader.VrStickRight.y;
+                if (Mathf.Abs(push) > 0.3f) holdDistance = Mathf.Clamp(holdDistance + push * 2f * Time.deltaTime, minHoldDistance, maxHoldDistance);
                 return;
             }
 
@@ -113,26 +122,49 @@ namespace SpellSimulator.Player
                 if (!held.isKinematic) { held.linearVelocity = Vector3.zero; held.angularVelocity = Vector3.zero; }
                 return;
             }
-            Vector3 point = cam.transform.position + cam.transform.forward * holdDistance;
+            GetAim(out Vector3 aimOrigin, out Vector3 aimDirection, out Quaternion aimRotation);
+            Vector3 point = aimOrigin + aimDirection * holdDistance;
             if (held.isKinematic)
             {
                 // Cinematicos conducidos (el grimorio): se llevan con MovePosition/MoveRotation. Los demas (lienzo fijo a la camara) no.
                 if (grabbable != null && grabbable.DriveKinematic)
                 {
                     held.MovePosition(point);
-                    held.MoveRotation(cam.transform.rotation * relativeRotation);
+                    held.MoveRotation(aimRotation * relativeRotation);
                 }
                 return;
             }
             held.linearVelocity = Vector3.ClampMagnitude((point - held.position) * FollowGain, MaxLinearSpeed);
 
-            Quaternion targetRotation = cam.transform.rotation * relativeRotation;
+            Quaternion targetRotation = aimRotation * relativeRotation;
             Quaternion delta = targetRotation * Quaternion.Inverse(held.rotation);
             delta.ToAngleAxis(out float angle, out Vector3 axis);
             if (angle > 180f) angle -= 360f;
             Vector3 angular = axis * (angle * Mathf.Deg2Rad * RotationGain);
             held.angularVelocity = Vector3.ClampMagnitude(angular, MaxAngularSpeed);
         }
+
+        private bool aimRight = true;
+
+        /// <summary>De donde se lo sostiene: la camara en PC; en VR el rayo de la mano que lo agarro (gira con la muñeca).</summary>
+        private void GetAim(out Vector3 origin, out Vector3 direction, out Quaternion rotation)
+        {
+            if (PlatformDetector.IsVR && interactor != null)
+            {
+                Ray ray = interactor.VrPointerRay(aimRight);
+                origin = ray.origin;
+                direction = ray.direction;
+                rotation = interactor.VrHandRotation(aimRight);
+                return;
+            }
+            origin = cam.transform.position;
+            direction = cam.transform.forward;
+            rotation = cam.transform.rotation;
+        }
+
+        /// <summary>True si lo que se agarra es grande o un objeto de escena especial (grimorio): en VR no va a la mano, se sostiene a distancia.</summary>
+        public static bool PrefersRemote(Rigidbody rb) =>
+            rb != null && (rb.GetComponentInParent<IRemoteGrabbable>() != null || BoundsRadius(rb) > 0.28f);
 
         /// <summary>Da vuelta lo que se arrastra media vuelta sobre su propio eje vertical (F).</summary>
         public void Flip()
@@ -146,7 +178,8 @@ namespace SpellSimulator.Player
         /// <summary>Empieza a mover el cuerpo a la distancia dada. Devuelve false si ya se esta moviendo algo.</summary>
         public bool TryBegin(Rigidbody rb, float distance)
         {
-            if (holding || rb == null || PlatformDetector.IsVR || cam == null) return false;
+            if (cam == null || !cam.isActiveAndEnabled) cam = Camera.main;
+            if (holding || rb == null || cam == null) return false;
             Begin(rb, distance);
             return true;
         }
@@ -181,7 +214,9 @@ namespace SpellSimulator.Player
             minHoldDistance = Mathf.Max(MinDistance, radius * HoldRadiusFactor + HoldMargin);
             maxHoldDistance = Mathf.Max(MaxDistance, minHoldDistance + 1.5f);
             holdDistance = Mathf.Clamp(Mathf.Max(distance, minHoldDistance), minHoldDistance, maxHoldDistance);
-            relativeRotation = Quaternion.Inverse(cam.transform.rotation) * rb.rotation;
+            if (PlatformDetector.IsVR && interactor != null) aimRight = interactor.VrRayRight;
+            GetAim(out _, out _, out Quaternion aimRotationAtGrab);
+            relativeRotation = Quaternion.Inverse(aimRotationAtGrab) * rb.rotation;
 
             grabbable = rb.GetComponentInParent<IRemoteGrabbable>();
             if (grabbable != null)

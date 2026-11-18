@@ -205,7 +205,8 @@ Esquema (ADR-032/033). Se repasa en el grimorio (Tab → Controles).
 | **Mano secundaria** (lo agarrado con E se arrastra) | Agarrar / dejar en el aire | E / E otra vez | Grip de cualquier mano: mantenerlo, o un toque corto lo deja «pegado» (otro apretón lo suelta) / soltarlo casi quieto (< 0,8 m/s) |
 | | Acercar o alejar (cuaderno: pasar de página) | Rueda | — (cuaderno: golpe del stick derecho a los costados) |
 | | Rotar / inclinar (mas sensible) | Clic derecho + mouse / Shift + rueda | Girar la mano |
-| | Dar vuelta la hoja (sale de la vista completa) / lienzo a pantalla | F / Tab | Click del stick derecho / — |
+| | Dar vuelta la hoja (sale de la vista completa) / lienzo a pantalla | F / Tab | — / — |
+| | Menú principal (interfaz de PC en un panel flotante; rayo + gatillo) | Esc / grimorio | Click del stick derecho |
 | | Arrojar (ya no hay «soltar») | Q | Soltar el grip con la mano en movimiento (≥ 2 m/s) |
 | Moverse (VR) | Girar la vista | Mouse | Stick derecho a los costados: giro a saltos de 45° |
 | Menú | Grimorio en la mano / a pantalla y menú | T / Esc | Botón de menú izquierdo |

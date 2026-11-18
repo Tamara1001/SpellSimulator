@@ -279,7 +279,7 @@ namespace SpellSimulator.Player
             flipAction = new InputAction("Flip", InputActionType.Button);
             flipAction.AddBinding("<Keyboard>/f");
             flipAction.AddBinding("<Gamepad>/rightShoulder");
-            flipAction.AddBinding("<XRController>{RightHand}/thumbstickClicked"); // VR: click del stick derecho
+            // VR: sin atajo (el click del stick derecho abre el menu, ver VrUiPanel).
 
             focusAction = new InputAction("Focus", InputActionType.Button);
             focusAction.AddBinding("<Keyboard>/tab");
@@ -455,7 +455,8 @@ namespace SpellSimulator.Player
             VrTriggerDownRight = VrTriggerRight > 0.5f && prevTriggerRight <= 0.5f;
             prevTriggerLeft = VrTriggerLeft;
             prevTriggerRight = VrTriggerRight;
-            if (VrTrigger(VrMainRight) > 0.1f) IsUsingTool = true;
+            // Gatillo de la mano de la herramienta, o apoyar la punta contra un lienzo (dibujar / borrar por contacto).
+            if (VrTrigger(VrMainRight) > 0.1f || World.PhysicalTool.TipPressing) IsUsingTool = true;
             if (VrMainRight ? primaryRightAction.WasPressedThisFrame() : primaryLeftAction.WasPressedThisFrame()) IsSecondaryUsingTool = true;
 
             if (yButtonAction.WasPressedThisFrame()) { yDownAt = Time.unscaledTime; yHoldDone = false; }

@@ -193,9 +193,12 @@ namespace SpellSimulator.Player
             if (!(interactable is MonoBehaviour mb)) return false;
             if (interactable is Movable movable && !movable.CanLift) return false;
             // VR: una sola cosa agarrada a la vez (hay que soltar el grip de la otra primero).
-            if (PlatformDetector.IsVR && inventory.HandSecondary != null) return false;
+            if (PlatformDetector.IsVR && (inventory.HandSecondary != null || IsDragging)) return false;
 
-            if (PlatformDetector.IsVR || mover == null)
+            // VR: lo grande (cajas, rocas) y el grimorio no se pegan a la mano (marea): se sostienen a distancia, como en PC.
+            Rigidbody bodyOfItem = mb.GetComponentInParent<Rigidbody>();
+            bool remote = PlatformDetector.IsVR && mover != null && ObjectMover.PrefersRemote(bodyOfItem);
+            if ((PlatformDetector.IsVR && !remote) || mover == null)
             {
                 // VR: se lleva en la mano que la agarro (o en la otra, si esa lleva la herramienta).
                 GameObject item = mb.gameObject;
@@ -207,8 +210,16 @@ namespace SpellSimulator.Player
                 currentHovered = null;
                 return true;
             }
-            var rb = mb.GetComponentInParent<Rigidbody>();
+            var rb = bodyOfItem;
             if (rb == null) return false;
+            if (remote)
+            {
+                // El grip de esta mano lo suelta (HandleVrRelease): mismo seguimiento que lo agarrado en la mano.
+                secondaryRight = rayRight;
+                secondaryGrabFrame = Time.frameCount;
+                secondaryGrabTime = Time.unscaledTime;
+                secondarySticky = false;
+            }
             // El movedor marca el Holdable del cuerpo (ObjectMover.Begin).
             return mover.TryBegin(rb, Mathf.Max(distance, 0.9f));
         }

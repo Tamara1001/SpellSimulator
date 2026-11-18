@@ -113,15 +113,48 @@ namespace SpellSimulator.World
             if (Instance == this) Instance = null;
         }
 
+        private bool bypassBuilt;
+        private const float BypassWidth = 1.3f;
+
+        /// <summary>
+        /// VR: abre un pasillo en el medio de la viga (parte su collider en dos) con una zona que da por hecho «agacharse».
+        /// La reja de la bajada sigue cerrada hasta cumplir ambas cosas.
+        /// </summary>
+        private void BuildVrBypass()
+        {
+            if (bypassBuilt) return;
+            GameObject beam = GameObject.Find("Tutorial_Beam");
+            if (beam == null || !beam.TryGetComponent(out BoxCollider box)) return;
+            bypassBuilt = true;
+            float span = box.size.x;
+            if (span <= BypassWidth + 0.4f) return;
+            float half = (span - BypassWidth) * 0.5f;
+            Vector3 size = box.size;
+            Vector3 center = box.center;
+            box.size = new Vector3(half, size.y, size.z);
+            box.center = center + new Vector3(-(BypassWidth + half) * 0.5f, 0f, 0f);
+            var other = beam.AddComponent<BoxCollider>();
+            other.size = box.size;
+            other.center = center + new Vector3((BypassWidth + half) * 0.5f, 0f, 0f);
+
+            var zone = new GameObject("Tutorial_BeamBypass");
+            zone.transform.SetParent(beam.transform, false);
+            zone.transform.localPosition = center + new Vector3(0f, -0.9f, 0f);
+            var trigger = zone.AddComponent<BoxCollider>();
+            trigger.isTrigger = true;
+            trigger.size = new Vector3(BypassWidth, 2.4f, 0.9f);
+            zone.AddComponent<TutorialBypassZone>().Init(this);
+        }
+
         /// <summary>Empieza (o rearma) el tutorial: barrera puesta, faroles apagados y trabas en su lugar.</summary>
         public void Begin()
         {
             progress.Begin();
             VrTutorialTexts.Apply();
             TutorialExercise.ResetAll();
-            // VR: agacharse no es obligatorio (se puede por boton o con el cuerpo, pero la viga no traba la reja).
-            crouched = Player.PlatformDetector.IsVR;
+            crouched = false;
             jumped = false;
+            if (Player.PlatformDetector.IsVR) BuildVrBypass();
             if (props != null)
             {
                 props.GetComponentsInChildren(rearm);

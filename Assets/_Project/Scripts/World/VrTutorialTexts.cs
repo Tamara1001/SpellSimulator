@@ -17,8 +17,7 @@ namespace SpellSimulator.World
         {
             { "Note_Tutorial_Skip", "<b>Grip</b> · Saltear tutorial\nIr directo al Nexo" },
             { "Note_Tutorial_Move", "<b>Stick izq.</b> · Caminar\n<b>Stick der.</b> · Girar" },
-            { "Note_Tutorial_Crouch", "Opcional · <b>Clic stick izq.</b>\nAgacharse (o agachate)" },
-            { "Note_Tutorial_Gate", "Reja cerrada\nSaltá sobre el muro" },
+            { "Note_Tutorial_Crouch", "<b>Clic stick izq.</b> · Agacharse\nO pasá por el hueco del medio" },
             { "Note_Tutorial_Jump", "<b>A</b> / <b>X</b> · Saltar\n(el botón de la mano libre)" },
             { "Note_Tutorial_Practice", "<b>Grip</b> · Agarrar y soltar\nPracticá en el centro" },
             { "Note_Tutorial_Pile", "<b>Grip</b> · Mover las cajas\nDespejá la bajada" },
