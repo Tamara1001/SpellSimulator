@@ -4,7 +4,7 @@ using SpellSimulator.Interfaces;
 namespace SpellSimulator.Lab
 {
     /// <summary>Que hace un boton del banco de sellos. Los valores no se renumeran (estan serializados en la escena).</summary>
-    public enum LabBenchAction { Launch = 0, ResetSeal = 1, ResetGroup = 2, ClearDrawing = 3, DeleteSelected = 4, DeleteAll = 5 }
+    public enum LabBenchAction { Launch = 0, ResetSeal = 1, ResetGroup = 2, ClearDrawing = 3, DeleteSelected = 4, DeleteAll = 5, ClearEffects = 6 }
 
     /// <summary>
     /// Boton del banco de sellos (Laboratorio v2/v3): «Lanzar» llama a <see cref="LabSealBench.Launch"/>, «Por defecto» a
@@ -57,6 +57,9 @@ namespace SpellSimulator.Lab
                     case LabBenchAction.DeleteSelected:
                         helpLine = LabHelpStrip.Line("Borrar elegido", "Saca del campo la caja elegida (el papel se queda).");
                         break;
+                    case LabBenchAction.ClearEffects:
+                        helpLine = LabHelpStrip.Line("Limpiar efectos", "Saca los efectos de hechizos: rocas, fuego, agua, marcas. Cajas y papel se quedan.");
+                        break;
                     case LabBenchAction.DeleteAll:
                         helpLine = LabHelpStrip.Line("Borrar todo", "Saca cajas y viento del campo. El papel se queda.");
                         break;
@@ -105,6 +108,7 @@ namespace SpellSimulator.Lab
                 case LabBenchAction.ClearDrawing: prompt = "Borrar el dibujo del atril"; break;
                 case LabBenchAction.DeleteSelected: prompt = "Borrar el objeto elegido"; break;
                 case LabBenchAction.DeleteAll: prompt = "Borrar todo lo del campo"; break;
+case LabBenchAction.ClearEffects: prompt = "Limpiar los efectos de hechizos"; break;
                 default: prompt = "Reiniciar " + LabSealCatalog.GroupName(group); break;
             }
             return prompt;
@@ -123,6 +127,9 @@ namespace SpellSimulator.Lab
                     return;
                 case LabBenchAction.DeleteAll:
                     if (LabField.Current != null) LabField.Current.DeleteAll();
+                    return;
+                case LabBenchAction.ClearEffects:
+                    LabEffects.Clear();
                     return;
             }
             if (b == null) return;

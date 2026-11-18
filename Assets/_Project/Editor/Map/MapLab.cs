@@ -436,11 +436,10 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 paperAt = trackOrigin.TransformPoint(new Vector3(0f, LabSealSpec.DefaultPaperHeight, TrackStart + LabSealSpec.DefaultPaperDistance));
             DrawingCanvas paper = ClonePaper(fieldPaper, "LabBenchPaper", LabSealSpec.DefaultPaperSize, paperAt, root.rotation, true);
             if (paper == null) Debug.LogWarning("[MapLab] falta PaperCanvas en la escena: el banco no tiene papel de prueba.");
-            var stand = Part("LabPaperStand", fieldPaper, StandMesh(), material, Vector3.zero, Quaternion.identity);
-            stand.transform.position = GroundAt(root, new Vector3(0f, 0f, TrackStart + LabSealSpec.DefaultPaperDistance));
-            stand.transform.localScale = new Vector3(1f, LabSealSpec.DefaultPaperHeight, 1f);
+            // El papel de prueba flota (sin poste, Lienzos A0): se mueve y gira con los controles del banco.
+            Vector3 paperGround = GroundAt(root, new Vector3(0f, 0f, TrackStart + LabSealSpec.DefaultPaperDistance));
             var ring = Part("LabFieldRing", root, SelectionRingMesh(), material, Vector3.zero, Quaternion.identity);
-            ring.transform.position = stand.transform.position + Vector3.up * 0.03f;
+            ring.transform.position = paperGround + Vector3.up * 0.03f;
             ring.GetComponent<MeshRenderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
 
             Transform center = Panel(bench, material, LabBenchLayout.Center, "LabPanel_Center", out LowPolyMesh centerBody, out _);
@@ -453,7 +452,6 @@ namespace SpellSimulator.EditorTools.Map
             so.FindProperty("trackOrigin").objectReferenceValue = trackOrigin;
             so.FindProperty("trackStart").floatValue = TrackStart;
             so.FindProperty("sketchPad").objectReferenceValue = pad;
-            so.FindProperty("paperStand").objectReferenceValue = stand.transform;
             var files = so.FindProperty("spellFiles");
             List<TextAsset> spells = SpellFiles();
             files.arraySize = spells.Count;
@@ -753,9 +751,9 @@ namespace SpellSimulator.EditorTools.Map
             float slotsWidth = LabField.SlotCount * LabBenchLayout.CellPitch;
             Band(body, LabBenchLayout.SlotX, LabBenchLayout.SlotS, slotsWidth + 0.01f, LabBenchLayout.CellPitch + 0.012f, tone.Color);
             float buttonsS = (buttonRows[0] + buttonRows[1]) * 0.5f, buttonsDepth = buttonRows[0] - buttonRows[1] + bd + 0.012f;
-            Band(body, LabBenchLayout.ButtonBlockX, buttonsS, 3f * bp + 0.02f, buttonsDepth, box.Color);
+            Band(body, LabBenchLayout.ButtonBlockX, buttonsS, LabBenchLayout.ButtonColumns * bp + 0.02f, buttonsDepth, box.Color);
             GroupTitle(p, "Objetos del campo", LabBenchLayout.SlotX, LabBenchLayout.GridTitleS, slotsWidth);
-            GroupTitle(p, "Agregar y borrar", LabBenchLayout.ButtonBlockX, LabBenchLayout.GridTitleS, 3f * bp);
+            GroupTitle(p, "Agregar y borrar", LabBenchLayout.ButtonBlockX, LabBenchLayout.GridTitleS, LabBenchLayout.ButtonColumns * bp);
             var hint = Text(p, "SlotsHint", new Vector3(LabBenchLayout.SlotX, LabPanelLayout.TextY(LabPanelLayout.SurfaceTop), buttonRows[1]), Lying,
                 new Vector2(slotsWidth, 0.05f), 0.16f, TextLight, "Elegí un objeto y movelo abajo");
             hint.textWrappingMode = TextWrappingModes.Normal;
@@ -764,13 +762,16 @@ namespace SpellSimulator.EditorTools.Map
             MaterializeButton(p, material, LabSpawnKind.Box, "+ Caja", BoxGroup, At(LabBenchLayout.ButtonX(0), buttonRows[0]), ButtonIcon.Box);
             MaterializeButton(p, material, LabSpawnKind.Wind, "+ Viento", WindGroup, At(LabBenchLayout.ButtonX(1), buttonRows[0]), ButtonIcon.Wind);
             MaterializeButton(p, material, LabSpawnKind.Fire, "+ Fuego", FireGroup, At(LabBenchLayout.ButtonX(2), buttonRows[0]), ButtonIcon.Fire);
-            var del = Button(p, material, "LabDeleteSelected", "Lab_ButtonDeleteSelected", "Borrar\nelegido", DeleteButton, At(LabBenchLayout.ButtonX(0), buttonRows[1]), bw, bd, 0.15f, ButtonIcon.Cross);
+            var del = Button(p, material, "LabDeleteSelected", "Lab_ButtonDeleteSelected", "Borrar\nelegido", DeleteButton, At(LabBenchLayout.ButtonX(0), buttonRows[1]), bw, bd, 0.12f, ButtonIcon.Cross);
             del.AddComponent<LabBenchButton>().Configure(LabBenchAction.DeleteSelected, sealBench, del.GetComponent<MeshRenderer>());
-            var all = Button(p, material, "LabDeleteAll", "Lab_ButtonDeleteAll", "Borrar\ntodo", DeleteButton, At(LabBenchLayout.ButtonX(1), buttonRows[1]), bw, bd, 0.15f, ButtonIcon.Cross);
+            var all = Button(p, material, "LabDeleteAll", "Lab_ButtonDeleteAll", "Borrar\ntodo", DeleteButton, At(LabBenchLayout.ButtonX(1), buttonRows[1]), bw, bd, 0.12f, ButtonIcon.Cross);
             all.AddComponent<LabBenchButton>().Configure(LabBenchAction.DeleteAll, sealBench, all.GetComponent<MeshRenderer>());
             EditorUtility.SetDirty(del.GetComponent<LabBenchButton>());
             EditorUtility.SetDirty(all.GetComponent<LabBenchButton>());
-            var reset = Button(p, material, "LabReset", "Lab_ButtonReset", "Reiniciar\nentorno", NeutralButton, At(LabBenchLayout.ButtonX(2), buttonRows[1]), bw, bd, 0.15f, ButtonIcon.Reset);
+            var fx = Button(p, material, "LabClearEffects", "Lab_ButtonClearEffects", "Limpiar\nefectos", NeutralButton, At(LabBenchLayout.ButtonX(2), buttonRows[1]), bw, bd, 0.12f, ButtonIcon.Eraser);
+            fx.AddComponent<LabBenchButton>().Configure(LabBenchAction.ClearEffects, sealBench, fx.GetComponent<MeshRenderer>());
+            EditorUtility.SetDirty(fx.GetComponent<LabBenchButton>());
+            var reset = Button(p, material, "LabReset", "Lab_ButtonReset", "Reiniciar\nentorno", NeutralButton, At(LabBenchLayout.ButtonX(3), buttonRows[1]), bw, bd, 0.12f, ButtonIcon.Reset);
             Assign(reset.AddComponent<LabResetButton>(), "highlight", reset.GetComponent<MeshRenderer>());
 
             float[] rows = LabBenchLayout.RightRowS;
@@ -1086,7 +1087,7 @@ namespace SpellSimulator.EditorTools.Map
         private static void MaterializeButton(Transform parent, Material material, LabSpawnKind kind, string text, Color color, Vector3 local, ButtonIcon icon)
         {
             var go = Button(parent, material, "LabMaterialize_" + kind, "Lab_Button" + kind, text, color, local,
-                LabBenchLayout.ButtonWidth, LabBenchLayout.ButtonDepth, 0.16f, icon);
+                LabBenchLayout.ButtonWidth, LabBenchLayout.ButtonDepth, 0.12f, icon);
             var button = go.AddComponent<LabMaterializeButton>();
             AssignInt(button, "kind", (int)kind);
             Assign(button, "highlight", go.GetComponent<MeshRenderer>());

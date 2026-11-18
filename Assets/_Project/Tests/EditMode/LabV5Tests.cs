@@ -39,7 +39,7 @@ namespace SpellSimulator.Tests
                 foreach (float sx in new[] { -1f, 1f })
                     yield return new Vector2(LabBenchLayout.SlotX + sx * gridHalf, LabBenchLayout.SlotS);
                 foreach (float rowS in LabBenchLayout.ButtonRowS)
-                    for (int i = 0; i < 3; i++) yield return new Vector2(LabBenchLayout.ButtonX(i), rowS);
+                    for (int i = 0; i < LabBenchLayout.ButtonColumns; i++) yield return new Vector2(LabBenchLayout.ButtonX(i), rowS);
             }
         }
 
@@ -152,7 +152,7 @@ namespace SpellSimulator.Tests
 
             // Derecha: casillas a la izquierda, botones a la derecha (dos filas de tres), todo dentro del ala y arriba de la primera fila.
             Assert.LessOrEqual(LabBenchLayout.SlotX + gridHalf, LabBenchLayout.ButtonX(0) - LabBenchLayout.ButtonWidth * 0.5f, "casillas y botones no se pisan");
-            Assert.LessOrEqual(LabBenchLayout.ButtonX(2) + LabBenchLayout.ButtonWidth * 0.5f, half);
+            Assert.LessOrEqual(LabBenchLayout.ButtonX(LabBenchLayout.ButtonColumns - 1) + LabBenchLayout.ButtonWidth * 0.5f, half);
             Assert.GreaterOrEqual(LabBenchLayout.ButtonPitch, LabBenchLayout.ButtonWidth, "los botones no se pisan");
             Assert.GreaterOrEqual(LabBenchLayout.ButtonRowS[0] - LabBenchLayout.ButtonRowS[1], LabBenchLayout.ButtonDepth, "las filas de botones no se pisan");
             Assert.GreaterOrEqual(LabBenchLayout.ButtonRowS[1] - LabBenchLayout.ButtonDepth * 0.5f,

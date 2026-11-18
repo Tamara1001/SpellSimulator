@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-18 — Lienzos, bloque 0: laboratorio sin poste y «Limpiar efectos»
+
+- El papel de prueba del campo flota (se quitó `LabPaperStand`); sigue moviéndose y girando con los controles del banco (Lado/Distancia/Altura/Giro/Inclinac./Tam. papel).
+- Botón «Limpiar efectos» (`LabBenchAction.ClearEffects`, `Lab/LabEffects.cs`): despawnea manifestaciones, fragmentos, marcas/rocas del suelo y fuego de pasto; no toca cajas, papel ni lienzos. Sin efecto en red.
+- Botones del panel derecho: 2 filas de 4 (`LabBenchLayout.ButtonColumns`, paso 0,105 m).
+- Plan general: `Docs/LIENZOS_PLAN.md`. HarnessPlaySmoke: chequeo nuevo «lienzos 0» y primer error de consola en el resultado.
+
 ## 2026-11-18 — Modificadores VFX: Alto contraste, diferenciación clara de signos y corrección de ancla
 
 - **Diferenciación inconfundible de signos (`SpellManifestation.cs`, `SpellVisualModifierMath.cs`, `ElementVfx.cs`):**

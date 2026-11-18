@@ -61,10 +61,11 @@ namespace SpellSimulator.Lab
         public const float CellPitch = 0.085f;
         /// <summary>Izquierda: grilla de sigilos (2 filas) y de signos (3 filas) lado a lado, y la altura de sus titulos.</summary>
         public const float SigilGridS = 0.805f, SignGridS = 0.7625f, SigilGridX = -0.235f, SignGridX = 0.235f, GridTitleS = 0.908f;
-        /// <summary>Derecha: casillas del campo (P y 1..4) a la izquierda y botones a la derecha en dos filas de tres.</summary>
+        /// <summary>Derecha: casillas del campo (P y 1..4) a la izquierda y botones a la derecha en dos filas de cuatro.</summary>
         public const float SlotS = 0.85f, SlotX = -0.235f;
         public static readonly float[] ButtonRowS = { 0.85f, 0.75f };
-        public const float ButtonBlockX = 0.232f, ButtonPitch = 0.14f, ButtonWidth = 0.13f, ButtonDepth = 0.09f;
+        public const int ButtonColumns = 4;
+        public const float ButtonBlockX = 0.232f, ButtonPitch = 0.105f, ButtonWidth = 0.098f, ButtonDepth = 0.09f;
 
         // ---------------------------------------------------------------- atril (de arriba hacia abajo: lienzo, botones, pantalla)
 
@@ -88,8 +89,8 @@ namespace SpellSimulator.Lab
         /// <summary>X de la casilla <paramref name="index"/> del campo (P y 1..4, contiguas).</summary>
         public static float SlotCellX(int index, int count) => SlotX + (index - (count - 1) * 0.5f) * CellPitch;
 
-        /// <summary>X del boton <paramref name="index"/> (0..2) de una fila de botones.</summary>
-        public static float ButtonX(int index) => ButtonBlockX + (index - 1) * ButtonPitch;
+        /// <summary>X del boton <paramref name="index"/> (0..3) de una fila de botones.</summary>
+        public static float ButtonX(int index) => ButtonBlockX + (index - (ButtonColumns - 1) * 0.5f) * ButtonPitch;
 
         /// <summary>Ancho de un panel.</summary>
         public static float PanelWidth(int panel) => panel == Center ? CenterWidth : SideWidth;

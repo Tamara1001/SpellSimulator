@@ -27,6 +27,7 @@ namespace SpellSimulator.EditorTools
         private const int WarmupFrames = 40;
         private static readonly string ResultPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Logs", "harness-playsmoke.txt"));
 
+        private static string firstError;
         private static readonly List<string> failures = new List<string>();
         private static readonly StringBuilder passed = new StringBuilder();
         private static int errorLogs;
@@ -111,7 +112,7 @@ namespace SpellSimulator.EditorTools
         private static void Finish()
         {
             Application.logMessageReceived -= OnLog;
-            if (errorLogs > 0) failures.Add($"{errorLogs} errores/excepciones en la consola durante la prueba");
+            if (errorLogs > 0) failures.Add($"{errorLogs} errores/excepciones en la consola durante la prueba (primero: {firstError})");
 
             string result = failures.Count == 0 ? "PASS " + passed : "FAIL " + string.Join(" | ", failures) + " (ok: " + passed + ")";
             File.WriteAllText(ResultPath, result);
@@ -121,7 +122,11 @@ namespace SpellSimulator.EditorTools
 
         private static void OnLog(string condition, string stackTrace, LogType type)
         {
-            if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert) errorLogs++;
+            if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert)
+            {
+                if (errorLogs++ == 0) firstError = condition + " @ " + (stackTrace ?? "").Split('
+')[0];
+            }
         }
 
         private static void Check(bool ok, string name)
@@ -509,6 +514,13 @@ namespace SpellSimulator.EditorTools
             for (float end = Time.realtimeSinceStartup + 0.5f; Time.realtimeSinceStartup < end;) yield return null;
             LabOverlay.Visible = false;
             Check(toggled && !LabOverlay.Visible, "laboratorio: las lentes prenden y apagan el overlay");
+
+            // --- Lienzos 0: sin poste del papel de prueba y «Limpiar efectos» (boton + despawn de marcas).
+            bool noStand = GameObject.Find("LabPaperStand") == null;
+            bool fxButton = false;
+            foreach (var lb in Object.FindObjectsByType<LabBenchButton>(FindObjectsSortMode.None)) if (lb.name == "LabClearEffects") fxButton = true;
+            LabEffects.Clear();
+            Check(noStand && fxButton, $"lienzos 0: el papel del laboratorio flota (sin poste {noStand}) y existe «Limpiar efectos» ({fxButton})");
 
             // --- Laboratorio v2: banco de sellos, controles enlazados y viento visible.
             var bench = LabSealBench.Current;
