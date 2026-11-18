@@ -563,6 +563,30 @@ namespace SpellSimulator.EditorTools
             }
             else failures.Add("lienzos B: no hay pluma en la escena");
 
+            // --- Lienzos C: restocker (pinceles y lienzos a medida; lo sacado no se guarda).
+            var restocker = Object.FindFirstObjectByType<SpellSimulator.World.CanvasRestocker>();
+            if (restocker == null) failures.Add("lienzos C: no existe el restocker");
+            else
+            {
+                GameObject brushGo = restocker.DispenseBrush(2);
+                var brushTool = brushGo != null ? brushGo.GetComponent<PhysicalTool>() : null;
+                Check(brushTool != null && Mathf.Approximately(brushTool.PenWidthMeters, SpellSimulator.Core.BrushRules.Catalog[2].widthMeters),
+                    "lienzos C: el restocker da el pincel del catalogo con su grosor");
+                restocker.Press(SpellSimulator.World.RestockerAction.Kind, 0);
+                restocker.Press(SpellSimulator.World.RestockerAction.PagesMore, 0);
+                restocker.Press(SpellSimulator.World.RestockerAction.PagesMore, 0);
+                restocker.Press(SpellSimulator.World.RestockerAction.PagesMore, 0);
+                GameObject bookGo = restocker.DispenseCanvas();
+                var bookPages = bookGo != null ? bookGo.GetComponent<SpellSimulator.World.NotebookPages>() : null;
+                bool bookOk = bookPages != null && bookPages.PageCount == restocker.Selection.pages && bookPages.PageCount <= SpellSimulator.Canvas.CanvasRules.MaxPages
+                    && bookGo.GetComponent<SpellSimulator.World.PhysicalCanvas>() != null && bookGo.GetComponentInChildren<SpellSimulator.World.CanvasFrame>(true) != null;
+                Check(bookOk, "lienzos C: el restocker saca una libreta con las hojas elegidas, grabable y con marco");
+                for (int i = 0; i < SpellSimulator.Canvas.RestockRules.MaxSpawnedPerKind + 3; i++) restocker.DispenseBrush(0);
+                Check(restocker.SpawnedBrushes.Count <= SpellSimulator.Canvas.RestockRules.MaxSpawnedPerKind, "lienzos C: el tope de pinceles sacados se respeta");
+                foreach (var g in new List<GameObject>(restocker.SpawnedBrushes)) if (g != null) Object.Destroy(g);
+                if (bookGo != null) Object.Destroy(bookGo);
+            }
+
             // --- Lienzos 0: sin poste del papel de prueba y «Limpiar efectos» (boton + despawn de marcas).
             bool noStand = GameObject.Find("LabPaperStand") == null;
             bool fxButton = false;

@@ -128,6 +128,16 @@ namespace SpellSimulator.World
 
         /// <summary>Atril en cuyo slot esta acoplado (null = suelto).</summary>
         public CanvasEasel Easel { get; private set; }
+
+        /// <summary>Nombre del objeto en la HUD y el prompt (lienzos creados en juego).</summary>
+        public void SetObjectName(string name)
+        {
+            objectName = name;
+            prompt = null;
+            hudName = null;
+            hudNameExhausted = null;
+            promptExhausted = null;
+        }
         public bool Docked => Easel != null;
         /// <summary>Atril donde arranca el lienzo: el reinicio del mundo lo devuelve ahi.</summary>
         public CanvasEasel Home { get; set; }

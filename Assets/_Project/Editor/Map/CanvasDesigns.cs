@@ -75,6 +75,9 @@ namespace SpellSimulator.EditorTools.Map
 
             // Zonas de practica por la pradera (lago, senderos) con lienzos, carteles y props movibles.
             PracticeZones(map, template, material, towerOrigin, fieldOrigin);
+
+            // Restocker: pinceles y selector de lienzo / libreta (Bloque C).
+            MapRestocker.Build(map, towerOrigin);
         }
 
         private enum Dressing { None, Notebook, Framed }

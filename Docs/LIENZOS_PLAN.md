@@ -34,6 +34,10 @@ Decisiones tomadas con los defaults de Tamara: dirección de disparo = propuesta
 4. `CanvasDesigns` solo coloca: todo lienzo pasa por `Snap` (preset S/M/L más cercano) y recibe marco; los caballetes del campo y de las zonas de práctica son atriles con slot.
 5. Pendiente/limitaciones: la libreta S circular es un quad cuadrado con marco redondo (sin máscara circular del dibujo); los lienzos fijos del tutorial (caballetes `Easel_Wind/Door`, pizarras y placas de MapStructures/MapDetails) no se migran porque sus ejercicios dependen de que no se muevan.
 
+## Bloque C: restocker (2026-11-18)
+
+Mueble `Restocker` (`MapRestocker`, `CanvasRestocker`, `CanvasFactory`, `RestockRules`): pinceles del catalogo y selector lienzo/libreta (tamaño, forma, hojas). Lo sacado no se guarda y tiene tope de 8 por clase. Esta en la biblioteca de la torre (el Archivo aun no existe): moverlo cuando se construya. Falta probar a mano en VR el gatillo sobre los botones (`IPressable`).
+
 ## Puntos abiertos
 - ¿Aceptás la propuesta de dirección de disparo (1–3, con 4 opcional)?
 - Presets exactos de S/M/L (en metros) y diámetro de la libreta circular.

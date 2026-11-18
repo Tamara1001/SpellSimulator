@@ -12,6 +12,19 @@ namespace SpellSimulator.EditorTools.Map
         public static Material Gold => Get("CanvasFrameGold", CanvasRules.FrontFrame);
         public static Material Blue => Get("CanvasFrameBlue", CanvasRules.BackFrame);
 
+        /// <summary>Material liso URP/Lit de un color (muebles armados con primitivas: restocker).</summary>
+        public static Material Solid(string name, Color color)
+        {
+            string path = $"{Folder}/{name}.mat";
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (existing != null) return existing;
+            var m = new Material(Shader.Find("Universal Render Pipeline/Lit")) { name = name };
+            m.SetColor("_BaseColor", color);
+            m.SetFloat("_Smoothness", 0.15f);
+            AssetDatabase.CreateAsset(m, path);
+            return m;
+        }
+
         private static Material Get(string name, Color color)
         {
             string path = $"{Folder}/{name}.mat";

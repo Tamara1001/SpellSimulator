@@ -34,6 +34,16 @@ namespace SpellSimulator.World
             for (int i = 0; i < pageCount; i++) pages.Add(new DrawingSession());
         }
 
+        /// <summary>Cambia la cantidad de hojas (1..8) de una libreta recien creada en juego (restocker); vacia todo.</summary>
+        public void SetPageCount(int count)
+        {
+            count = Mathf.Clamp(count, 1, CanvasRules.MaxPages);
+            pageCount = count;
+            while (pages.Count < count) pages.Add(new DrawingSession());
+            if (pages.Count > count) pages.RemoveRange(count, pages.Count - count);
+            Page = Mathf.Min(Page, count - 1);
+        }
+
         /// <summary>Pasa de pagina (delta +1 / -1). En los extremos no da la vuelta: no hace nada.</summary>
         public void Turn(int delta)
         {

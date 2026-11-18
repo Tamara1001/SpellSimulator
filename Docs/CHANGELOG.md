@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-18 — Restocker: pinceles y selector de lienzo/libreta (Bloque C de LIENZOS_PLAN)
+
+- Mueble `Restocker` (armado por `MapRestocker` con primitivas): 5 pinceles del catalogo (`BrushRules`) y selector de tipo (lienzo/libreta), tamaño S/M/L, forma y hojas (1-8) con boton SACAR. Logica pura en `RestockRules` + `RestockRulesTests`.
+- `CanvasFactory` crea en juego el lienzo/libreta desde un `CanvasSpec` (marco de cara, hojas, tapa); `CanvasRestocker` lleva el tope (8 por clase, se borra el mas viejo) y no guarda nada: al recargar desaparece. En red no saca nada.
+- Ubicacion provisoria: biblioteca de la torre, junto a la mesa de trabajo (el Archivo de la pradera aun no existe; al construirlo basta mover el objeto).
+- Harness: checks «lienzos C» en `HarnessPlaySmoke`. Docs: `LIENZOS_PLAN.md`.
+
 ## 2026-11-18 — VFX de signos, segunda pasada: forma propia, region, tinta resistente y estabilidad
 
 - `SpellManifestation` (ahora `partial`): crush = onda de choque plana + escombros en golpes repetidos; billowing = nube opaca y grande que crece; focus = haz largo + punto de mira giratorio; gather = estelas planas hacia el sello; collection = nucleo estable sobre el sello + pulsos desde todos lados; repetition = flujo invertido (lluvia que cae al sello) + anillo-reloj. Base reducida a ~10 % con esos signos.

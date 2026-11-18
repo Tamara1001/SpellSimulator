@@ -52,6 +52,8 @@ namespace SpellSimulator.Canvas
         /// <summary>+1 si la cara con tinta es la visible, -1 si es la de atras (ver NoteInkViewer).</summary>
         public float InkSign => inkSign;
         public void SetInkSign(float sign) => inkSign = sign >= 0f ? 1f : -1f;
+        /// <summary>Por que cara sale el hechizo (lienzos creados en juego: restocker).</summary>
+        public void SetEmissionSide(EmissionSide side) => emissionSide = side;
         public Material BrushMaterial => brushMaterial;
 
         /// <summary>Normal de la cara visible del lienzo, en mundo.</summary>
