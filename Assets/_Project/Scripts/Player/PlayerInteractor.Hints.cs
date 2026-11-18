@@ -170,8 +170,9 @@ namespace SpellSimulator.Player
 
         private void HandleHover()
         {
-            bool vrRay = PlatformDetector.IsVR && vrRightController != null;
-            Transform origin = vrRay ? vrRightController : cameraTransform;
+            Transform vrRayHand = VrRayController;
+            bool vrRay = vrRayHand != null;
+            Transform origin = vrRay ? vrRayHand : cameraTransform;
             if (origin == null) return;
 
             Vector3 direction = vrRay ? Quaternion.AngleAxis(vrRayPitchOffset, origin.right) * origin.forward : origin.forward;
@@ -202,10 +203,14 @@ namespace SpellSimulator.Player
                 : currentHovered != null ? currentHovered.GetInteractionPrompt() : "";
             HoverHints = ComputeHoverHints();
 
-            if (vrPointerLine != null)
+            // VR: el puntero se ve solo en la mano del rayo.
+            LineRenderer line = vrRay && !rayRight ? vrPointerLineL : vrPointerLine;
+            if (vrPointerLine != null) vrPointerLine.enabled = vrRay && rayRight;
+            if (vrPointerLineL != null) vrPointerLineL.enabled = vrRay && !rayRight;
+            if (line != null)
             {
-                vrPointerLine.SetPosition(0, origin.position);
-                vrPointerLine.SetPosition(1, end);
+                line.SetPosition(0, origin.position);
+                line.SetPosition(1, end);
             }
         }
 

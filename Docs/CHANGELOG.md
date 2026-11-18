@@ -5,6 +5,16 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-18 — VR: manos simétricas, soltar con gestos y modelos de control
+
+Primera prueba de Tamara en Quest 3 (Air Link a Unity): el movimiento andaba, pero todo se agarraba con la derecha y las manos eran dos cubos grises que tapaban el lienzo.
+
+- **Entrada por mano** (`PlayerInputReader`): grip, gatillo y A/X de cada mano por separado. Gatillo y A/X valen para la mano de la herramienta; el grip de cualquiera agarra. Stick derecho: golpe a los costados = giro a saltos de 45° (`PlayerLook`) o página (si la mano lleva un cuaderno); arriba/abajo = slot. Y: toque cambia la tinta, mantener 1,5 s reinicia el mundo (antes un toque reiniciaba).
+- **Agarrar y soltar** (`PlayerInteractor.Vr.cs`): se agarra con la mano que aprieta el grip y se lleva mientras se mantenga; al soltar, la velocidad de la mano decide (≥ 1 m/s arroja, ≤ 0,35 m/s deja flotando si es fijable, si no cae). Herramientas y estampas pasan a la mano que las agarró. El rayo sale de la última mano usada, con puntero propio. B arroja la herramienta hacia donde apunta la mano. Corregido: el grip sobre perillas solo valía un frame.
+- **Manos:** los cubos fueron reemplazados por los modelos de control de los Starter Assets de XRI (`VrHandVisual`), sin colisionadores y escondidos mientras la mano lleva algo. Los pulsos hápticos van a la mano de la herramienta (`Haptics.MainHand`).
+- **Docs:** `GAME_DESIGN.md` (tabla de controles) y `GrimoireTexts.cs` (página «Realidad virtual») actualizados.
+- **Sin verificar en el visor:** compila, 626 tests EditMode y `HarnessPlaySmoke` en PASS (PC). Los umbrales de arrojar/flotar y la posición de lienzos en la mano derecha hay que ajustarlos probando en Quest.
+
 ## 2026-11-18 — Torre v3: carteles al muro, pisos despejados y más cosas para probar
 
 Segunda crítica de Tamara a la torre (carteles que no se entienden o al revés, cosas en el camino, pisos vacíos o con muebles sin sentido, runa de oro en la torre).

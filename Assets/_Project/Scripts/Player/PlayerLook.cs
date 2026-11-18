@@ -23,6 +23,9 @@ namespace SpellSimulator.Player
         [SerializeField, Tooltip("Velocidad (grados/s) con que el campo de vision baja y vuelve.")]
         private float zoomSpeed = 160f;
 
+        /// <summary>Grados de cada giro a saltos en VR.</summary>
+        public const float VrSnapTurnDegrees = 45f;
+
         private PlayerInputReader inputReader;
         private ObjectMover objectMover;
         private PlayerInteractor interactor;
@@ -47,7 +50,11 @@ namespace SpellSimulator.Player
 
         private void Update()
         {
-            if (PlatformDetector.IsVR) return;
+            if (PlatformDetector.IsVR)
+            {
+                HandleSnapTurn();
+                return;
+            }
             UpdateZoom();
 
             if (cameraTransform == null || !PlatformDetector.IsLookCaptured) return;
@@ -69,6 +76,19 @@ namespace SpellSimulator.Player
             float pitchSign = PlayerSettings.InvertY ? 1f : -1f;
             pitch = Mathf.Clamp(pitch + pitchSign * look.y, bottomClamp, topClamp);
             cameraTransform.localRotation = Quaternion.Euler(pitch, 0f, 0f);
+        }
+
+        /// <summary>
+        /// VR: golpe del stick derecho a un costado = giro a saltos alrededor de la cabeza (cómodo, sin marear). Si la mano lleva algo
+        /// con paginas, ese mismo golpe pasa la pagina (lo hace el interactor).
+        /// </summary>
+        private void HandleSnapTurn()
+        {
+            int flick = inputReader.VrFlickX;
+            if (flick == 0 || (interactor != null && interactor.HoldsPageable)) return;
+            Camera cam = Camera.main;
+            Vector3 pivot = cam != null ? cam.transform.position : transform.position;
+            transform.RotateAround(pivot, Vector3.up, flick * VrSnapTurnDegrees);
         }
 
         /// <summary>Baja el campo de vision mientras se mantiene X y lo devuelve al soltar. Solo PC.</summary>

@@ -95,7 +95,7 @@ namespace SpellSimulator.Player
         /// <summary>Lo que se agarro con E (mano secundaria), arrastrado o en la mano en VR. Null si nada.</summary>
         public GameObject SecondaryItem => inventory.Secondary;
 
-        private Transform MainHold => PlayerSettings.MainHandRight ? rightHoldPoint : leftHoldPoint;
+        private Transform MainHold => MainRight ? rightHoldPoint : leftHoldPoint;
         private bool IsDragging => mover != null && mover.IsHolding;
 
         private void Awake()
@@ -116,6 +116,7 @@ namespace SpellSimulator.Player
             if (vrRightController != null) rightHoldPoint = vrRightController;
             if (vrLeftController != null) leftHoldPoint = vrLeftController;
             if (vrRightController != null) vrPointerLine = CreatePointer(vrRightController.gameObject);
+            InitVr();
         }
 
         private LineRenderer CreatePointer(GameObject host)
@@ -143,6 +144,7 @@ namespace SpellSimulator.Player
                 inventory.ClearHandSecondary();
             }
             FollowMainHandSetting();
+            if (PlatformDetector.IsVR) UpdateVrHands();
             inventory.PollSecondary();
 
             // Con el lector de libros abierto el juego no recibe clics, rueda ni teclas de mano.
@@ -179,6 +181,7 @@ namespace SpellSimulator.Player
             HandleHotbarKeys();
             HandleHover();
             HandleInteraction();
+            HandleVrRelease();
             HandlePin();
             HandleClickPress();
             HandleManipulation();
@@ -208,7 +211,8 @@ namespace SpellSimulator.Player
 
             // Otra E deja en el aire lo que se arrastra (para soltarlo en el piso: Q lo arroja).
             if (IsDragging) { Release(LocalOwnerId, true); return; }
-            if (inventory.HandSecondary != null) { Release(LocalOwnerId, false); return; }
+            // En VR lo agarrado se suelta al soltar el grip (HandleVrRelease), no con otro apretón.
+            if (inventory.HandSecondary != null && !PlatformDetector.IsVR) { Release(LocalOwnerId, false); return; }
 
             if (hoveredPressable != null) { if (!hoveredPressable.PressWithClick) hoveredPressable.Press(); return; }
             if (currentHovered == null) return;
@@ -246,6 +250,9 @@ namespace SpellSimulator.Player
         private void HandleHotbarKeys()
         {
             int key = inputReader.HotbarKey;
+            // VR: golpe del stick derecho arriba / abajo = slot siguiente / anterior (pasando por el vacio, que guarda la herramienta).
+            if (key < 0 && PlatformDetector.IsVR && inputReader.VrSlotDelta != 0)
+                key = (inventory.ActiveSlot + inputReader.VrSlotDelta + SlotCount) % SlotCount;
             key = HotbarMath.ClampKey(key, SlotCount);
             if (key < 0) return;
             SelectSlotInternal(key);
@@ -255,7 +262,7 @@ namespace SpellSimulator.Player
 
         private void HandleClickPress()
         {
-            bool clicking = inputReader.IsUsingTool;
+            bool clicking = PointerHeld;
             bool pressed = clicking && !wasClicking;
             wasClicking = clicking;
             // En la vista completa de un cuadro del mundo (mapa) el clic sobre sus botones SI vale; en el modo dibujo no.
@@ -269,6 +276,12 @@ namespace SpellSimulator.Player
         private void HandleThrow()
         {
             if (!inputReader.IsThrowing) return;
+            // VR: B arroja la herramienta de la mano principal hacia donde apunta; lo agarrado se arroja soltando el grip con la mano en movimiento.
+            if (PlatformDetector.IsVR)
+            {
+                DropMain(true, MainThrowVelocity());
+                return;
+            }
             Vector3 velocity = IsDragging || inventory.HandSecondary != null
                 ? cameraTransform.forward * throwSpeed + Vector3.up * 1.2f
                 : MainThrowVelocity();
@@ -321,6 +334,8 @@ namespace SpellSimulator.Player
         private void HandlePageKeys()
         {
             int delta = inputReader.PageDelta;
+            // VR: golpe del stick derecho hacia los costados pasa la pagina de lo agarrado (si no tiene paginas, gira la vista: PlayerLook).
+            if (delta == 0 && PlatformDetector.IsVR) delta = inputReader.VrFlickX;
             if (delta == 0) return;
             var book = Learning.Grimoire.Instance;
             if (book != null && book.IsOpen) return;
@@ -367,7 +382,7 @@ namespace SpellSimulator.Player
                     return;
                 }
                 if (user.Ink.Missing <= 0f && (!(hoveredInkSource is World.Inkwell same) || user.LoadedInk == same.Kind)) return;
-                if (user.RefillFrom(hoveredInkSource) > 0f) Haptics.Pulse(HandType.Right, 0.3f, 0.08f);
+                if (user.RefillFrom(hoveredInkSource) > 0f) Haptics.Pulse(Haptics.MainHand, 0.3f, 0.08f);
                 Hud.Notify("inkinfo", $"{SpellSimulator.Core.InkKindInfo.DisplayName(user.LoadedInk)} {user.Ink.Fraction:P0}", 2.5f);
                 return;
             }
@@ -380,7 +395,7 @@ namespace SpellSimulator.Player
                 return;
             }
             user.LoadInk(kind);
-            Haptics.Pulse(HandType.Right, 0.3f, 0.08f);
+            Haptics.Pulse(Haptics.MainHand, 0.3f, 0.08f);
             Hud.Notify("inkinfo", $"{SpellSimulator.Core.InkKindInfo.DisplayName(kind)} | cartuchos {stock.CartridgeCount(kind)} ({stock.TotalUses(kind)} usos)", 2.5f);
         }
 

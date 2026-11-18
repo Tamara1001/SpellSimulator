@@ -197,18 +197,22 @@ Esquema (ADR-032/033). Se repasa en el grimorio (Tab → Controles).
 | | Correr / agacharse (mantener) / tumbarse (alterna) | Shift / C o Ctrl / Z | Click del stick izquierdo / — / — |
 | | Saltar / zoom (mantener) | Espacio / X | — |
 | **Mano principal** (barra de 3 slots) | Elegir slot | 1, 2, 3 | — |
-| | Equipar una herramienta o estampa del mundo | E (va al primer slot libre) | Grip |
-| | Usar / deshacer | Clic izquierdo / clic derecho | Gatillo / A |
+| | Equipar una herramienta o estampa del mundo | E (va al primer slot libre) | Grip de **cualquier mano** (esa pasa a ser la principal) |
+| | Elegir slot | 1, 2, 3 | Stick derecho arriba / abajo |
+| | Usar / deshacer | Clic izquierdo / clic derecho | Gatillo / A (o X) de la mano de la herramienta |
 | | Cambiar el grosor de la pluma o el tamaño de la goma | Rueda del mouse (sin nada agarrado) | — |
-| | Recargar tinta / cambiar la tinta activa (cinturón) / arrojar | R / V / Q | Mojar en un tintero / B |
-| **Mano secundaria** (lo agarrado con E se arrastra) | Agarrar / dejar en el aire | E / E otra vez | Grip |
-| | Acercar o alejar (cuaderno: pasar de página) | Rueda | — |
+| | Recargar tinta / cambiar la tinta activa (cinturón) / arrojar | R / V / Q | Mojar en un tintero / Y (toque) / B |
+| **Mano secundaria** (lo agarrado con E se arrastra) | Agarrar / dejar en el aire | E / E otra vez | Mantener el grip (de cualquier mano) / soltarlo casi quieto |
+| | Acercar o alejar (cuaderno: pasar de página) | Rueda | — (cuaderno: golpe del stick derecho a los costados) |
 | | Rotar / inclinar (mas sensible) | Clic derecho + mouse / Shift + rueda | Girar la mano |
 | | Dar vuelta la hoja (sale de la vista completa) / lienzo a pantalla | F / Tab | Click del stick derecho / — |
-| | Arrojar (ya no hay «soltar») | Q | B |
+| | Arrojar (ya no hay «soltar») | Q | Soltar el grip con la mano en movimiento (≥ 1 m/s) |
+| Moverse (VR) | Girar la vista | Mouse | Stick derecho a los costados: giro a saltos de 45° |
 | Menú | Grimorio en la mano / a pantalla y menú | T / Esc | Botón de menú izquierdo |
 | | Botones del grimorio | Apuntar + clic izquierdo | Apuntar + gatillo |
-| | Panel de depuración / reiniciar el mundo | F3 / Retroceso | — / Y |
+| | Panel de depuración / reiniciar el mundo | F3 / Retroceso | — / Y mantenido 1,5 s |
+
+En VR el rayo sale de la última mano que apretó grip o gatillo. Las manos se ven como el control y se esconden mientras llevan algo.
 | | Mapa de la torre a pantalla completa (apuntándolo, como cualquier superficie) / cerrarlo; con el cursor se tocan sus marcadores | Tab / Tab, V o Esc | — (en VR se lee apuntando con el rayo) |
 
 **Inventario:** la mano principal (derecha por defecto; se cambia en Opciones) tiene 3 slots (lápiz, goma, estampas, tinta...) y la

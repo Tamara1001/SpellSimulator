@@ -265,7 +265,7 @@ namespace SpellSimulator.World
 
             tool.OnPointerDrag(uv, currentCanvas);
             lastUv = uv;
-            if (PlatformDetector.IsVR && UsesInk) Haptics.Pulse(HandType.Right, Haptics.StrokeAmplitude, 0.02f);
+            if (PlatformDetector.IsVR && UsesInk) Haptics.Pulse(Haptics.MainHand, Haptics.StrokeAmplitude, 0.02f);
         }
 
         public void OnUseEnd()

@@ -23,8 +23,9 @@ namespace SpellSimulator.Player
 
         private void HandleManipulation()
         {
-            bool click = inputReader.IsUsingTool;
-            bool grip = PlatformDetector.IsVR && inputReader.IsInteracting;
+            bool click = PointerHeld;
+            // VR: el grip de la mano del rayo se mantiene (antes solo valia el frame en que se apretaba y la perilla se soltaba al instante).
+            bool grip = PlatformDetector.IsVR && inputReader.VrGripHeld(rayRight);
             bool clickPressed = click && !wasManipClick;
             bool gripPressed = grip && !wasManipGrip;
             wasManipClick = click;
@@ -74,10 +75,11 @@ namespace SpellSimulator.Player
 
         private ManipulationInput BuildInput(float wheel)
         {
-            bool vr = PlatformDetector.IsVR && vrRightController != null;
+            Transform vrHand = VrRayController;
+            bool vr = vrHand != null;
             if (vr)
             {
-                Transform hand = vrRightController;
+                Transform hand = vrHand;
                 Vector3 dir = Quaternion.AngleAxis(vrRayPitchOffset, hand.right) * hand.forward;
                 // Giro de la muñeca: angulo de "la derecha" del controlador alrededor del rayo, medido contra la horizontal.
                 float roll = 0f;

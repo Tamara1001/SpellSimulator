@@ -76,6 +76,7 @@ namespace SpellSimulator.Player
             {
                 DropHandSecondary();
                 if (hand.TryGetComponent(out IThrowable t)) t.Throw(velocity);
+                else if (hand.TryGetComponent(out Rigidbody handBody) && !handBody.isKinematic) handBody.linearVelocity = velocity;
                 return;
             }
             DropMain(true, velocity);
@@ -85,8 +86,8 @@ namespace SpellSimulator.Player
         private Vector3 MainThrowVelocity()
         {
             if (inventory.HeldMain == null) return Vector3.zero;
-            Transform view = PlatformDetector.IsVR && vrRightController != null ? vrRightController : cameraTransform;
-            return view.forward * throwSpeed + Vector3.up * 1.2f + (body != null ? body.linearVelocity : Vector3.zero);
+            Vector3 aim = PlatformDetector.IsVR ? VrMainAim() : cameraTransform.forward;
+            return aim * throwSpeed + Vector3.up * 1.2f + (body != null ? body.linearVelocity : Vector3.zero);
         }
 
         // ---------------------------------------------------------------- mano principal (efectos de escena)
@@ -95,6 +96,7 @@ namespace SpellSimulator.Player
         private bool PickUpToHotbar(IInteractable interactable)
         {
             if (!(interactable is MonoBehaviour mb)) return false;
+            if (PlatformDetector.IsVR) ChooseMainHandForPickup();
             int slot = inventory.FindPickupSlot();
             // Barra llena: se suelta lo del slot activo (sacandolo antes si estaba guardado).
             if (inventory.HotbarItem(slot) != null) { SelectSlotInternal(slot); DropMain(false, Vector3.zero); }
@@ -116,6 +118,7 @@ namespace SpellSimulator.Player
             GameObject next = inventory.HotbarItem(index);
             if (next != null)
             {
+                if (PlatformDetector.IsVR) AttachToMain(next);
                 next.SetActive(true);
                 next.TryGetComponent(out mainUsable);
             }
@@ -157,7 +160,7 @@ namespace SpellSimulator.Player
         /// <summary>Si cambia la mano principal en las opciones, lo equipado pasa a la otra mano.</summary>
         private void FollowMainHandSetting()
         {
-            bool right = PlayerSettings.MainHandRight;
+            bool right = MainRight;
             if (right == lastMainRight) return;
             lastMainRight = right;
             GameObject main = inventory.HeldMain;
@@ -175,14 +178,17 @@ namespace SpellSimulator.Player
         {
             if (!(interactable is MonoBehaviour mb)) return false;
             if (interactable is Movable movable && !movable.CanLift) return false;
+            // VR: una sola cosa agarrada a la vez (hay que soltar el grip de la otra primero).
+            if (PlatformDetector.IsVR && inventory.HandSecondary != null) return false;
 
             if (PlatformDetector.IsVR || mover == null)
             {
-                // VR: se lleva en la mano izquierda.
+                // VR: se lleva en la mano que la agarro (o en la otra, si esa lleva la herramienta).
                 GameObject item = mb.gameObject;
+                Transform holdHand = PlatformDetector.IsVR ? ChooseSecondaryHand() : leftHoldPoint;
                 inventory.SetHandSecondary(item);
                 Holdable.Mark(item, LocalOwnerId);
-                interactable.OnInteract(PlatformDetector.IsVR && vrLeftController != null ? vrLeftController : leftHoldPoint);
+                interactable.OnInteract(holdHand);
                 currentHovered = null;
                 return true;
             }

@@ -72,6 +72,44 @@ namespace SpellSimulator.Player
         public int HotbarKey { get; private set; } = -1;
         private InputAction[] hotbarActions;
 
+        // ---------------------------------------------------------------- VR (Touch): una entrada por mano
+        /// <summary>Segundos que hay que mantener Y (control izquierdo) para reiniciar el mundo; un toque corto cambia la tinta.</summary>
+        public const float VrResetHoldSeconds = 1.5f;
+        private const float VrInkTapSeconds = 0.4f;
+        private const float VrFlickOn = 0.75f;
+        private const float VrFlickOff = 0.4f;
+
+        /// <summary>[VR] True si la mano principal es la derecha: su gatillo usa la herramienta y su A/X deshace. Lo fija el interactor.</summary>
+        public bool VrMainRight { get; set; } = true;
+        /// <summary>[VR] Grip de cada mano: se apreta este frame / se suelta este frame / esta apretado.</summary>
+        public bool VrGripDownLeft { get; private set; }
+        public bool VrGripDownRight { get; private set; }
+        public bool VrGripUpLeft { get; private set; }
+        public bool VrGripUpRight { get; private set; }
+        public bool VrGripHeldLeft { get; private set; }
+        public bool VrGripHeldRight { get; private set; }
+        /// <summary>[VR] Recorrido del gatillo de cada mano (0 a 1) y si se paso del medio este frame.</summary>
+        public float VrTriggerLeft { get; private set; }
+        public float VrTriggerRight { get; private set; }
+        public bool VrTriggerDownLeft { get; private set; }
+        public bool VrTriggerDownRight { get; private set; }
+        /// <summary>[VR] Golpe del stick derecho hacia los costados (-1 / +1): gira a saltos o pasa la pagina. Solo el frame del golpe.</summary>
+        public int VrFlickX { get; private set; }
+        /// <summary>[VR] Golpe del stick derecho hacia arriba (+1) o abajo (-1): cambia de slot de la barra. Solo el frame del golpe.</summary>
+        public int VrSlotDelta { get; private set; }
+
+        private InputAction gripLeftAction, gripRightAction, triggerLeftAction, triggerRightAction;
+        private InputAction primaryLeftAction, primaryRightAction, yButtonAction, stickRightAction;
+        private float prevTriggerLeft, prevTriggerRight;
+        private float yDownAt = -1f;
+        private bool yHoldDone;
+        private bool stickArmed = true;
+
+        /// <summary>[VR] Grip apretado de esa mano.</summary>
+        public bool VrGripHeld(bool right) => right ? VrGripHeldRight : VrGripHeldLeft;
+        /// <summary>[VR] Recorrido del gatillo de esa mano.</summary>
+        public float VrTrigger(bool right) => right ? VrTriggerRight : VrTriggerLeft;
+
         /// <summary>Grosor de la pluma: teclas 5, 6, 7, 8, 9 y 0 (0 a 5). -1 si no se apreto ninguna.</summary>
         public int WidthPreset { get; private set; } = -1;
 
@@ -132,20 +170,20 @@ namespace SpellSimulator.Player
             interactAction = new InputAction("Interact", InputActionType.Button);
             interactAction.AddBinding("<Keyboard>/e");
             interactAction.AddBinding("<Gamepad>/rightTrigger");
-            interactAction.AddBinding("<XRController>{RightHand}/grip"); // VR: apretar el puño para agarrar
+            // VR: el grip de cada mano se lee aparte (gripLeftAction / gripRightAction) y se suma a IsInteracting en Update.
 
             // Usar Herramienta (Click Izquierdo, Left Trigger de Gamepad, o Gatillo del controlador VR)
             // Definido como Value/Axis para que lea correctamente el recorrido del gatillo analógico
             useToolAction = new InputAction("UseTool", InputActionType.Value, "Axis");
             useToolAction.AddBinding("<Mouse>/leftButton");
             useToolAction.AddBinding("<Gamepad>/leftTrigger");
-            useToolAction.AddBinding("<XRController>{RightHand}/trigger"); // VR: gatillo para dibujar
+            // VR: el gatillo de la mano principal se suma a IsUsingTool en Update (triggerLeftAction / triggerRightAction).
 
             // Uso Secundario (Click Derecho, Boton East de Gamepad, o Boton A del controlador VR)
             secondaryUseToolAction = new InputAction("SecondaryUseTool", InputActionType.Button);
             secondaryUseToolAction.AddBinding("<Mouse>/rightButton");
             secondaryUseToolAction.AddBinding("<Gamepad>/buttonEast");
-            secondaryUseToolAction.AddBinding("<XRController>{RightHand}/primaryButton"); // VR: Boton A para castear/undo
+            // VR: A (derecha) o X (izquierda) de la mano principal se suma a IsSecondaryUsingTool en Update (deshacer).
 
             // Recargar tinta
             reloadAction = new InputAction("Reload", InputActionType.Button);
@@ -157,7 +195,24 @@ namespace SpellSimulator.Player
             resetWorldAction = new InputAction("ResetWorld", InputActionType.Button);
             resetWorldAction.AddBinding("<Keyboard>/backspace");
             resetWorldAction.AddBinding("<Gamepad>/select");
-            resetWorldAction.AddBinding("<XRController>{LeftHand}/secondaryButton");
+            // VR: Y (izquierda) se lee en Update (toque = cambiar tinta, mantener = reiniciar el mundo).
+
+            gripLeftAction = new InputAction("GripL", InputActionType.Button);
+            gripLeftAction.AddBinding("<XRController>{LeftHand}/grip");
+            gripRightAction = new InputAction("GripR", InputActionType.Button);
+            gripRightAction.AddBinding("<XRController>{RightHand}/grip");
+            triggerLeftAction = new InputAction("TriggerL", InputActionType.Value, expectedControlType: "Axis");
+            triggerLeftAction.AddBinding("<XRController>{LeftHand}/trigger");
+            triggerRightAction = new InputAction("TriggerR", InputActionType.Value, expectedControlType: "Axis");
+            triggerRightAction.AddBinding("<XRController>{RightHand}/trigger");
+            primaryLeftAction = new InputAction("PrimaryL", InputActionType.Button);
+            primaryLeftAction.AddBinding("<XRController>{LeftHand}/primaryButton");
+            primaryRightAction = new InputAction("PrimaryR", InputActionType.Button);
+            primaryRightAction.AddBinding("<XRController>{RightHand}/primaryButton");
+            yButtonAction = new InputAction("YButton", InputActionType.Button);
+            yButtonAction.AddBinding("<XRController>{LeftHand}/secondaryButton");
+            stickRightAction = new InputAction("StickR", InputActionType.Value, expectedControlType: "Vector2");
+            stickRightAction.AddBinding("<XRController>{RightHand}/thumbstick");
 
             proneAction = new InputAction("Prone", InputActionType.Button);
             proneAction.AddBinding("<Gamepad>/dpad/down");
@@ -234,6 +289,10 @@ namespace SpellSimulator.Player
 
         private void OnEnable()
         {
+            gripLeftAction.Enable(); gripRightAction.Enable();
+            triggerLeftAction.Enable(); triggerRightAction.Enable();
+            primaryLeftAction.Enable(); primaryRightAction.Enable();
+            yButtonAction.Enable(); stickRightAction.Enable();
             reloadAction.Enable();
             inkCycleAction.Enable();
             runAction.Enable();
@@ -267,6 +326,10 @@ namespace SpellSimulator.Player
 
         private void OnDisable()
         {
+            gripLeftAction.Disable(); gripRightAction.Disable();
+            triggerLeftAction.Disable(); triggerRightAction.Disable();
+            primaryLeftAction.Disable(); primaryRightAction.Disable();
+            yButtonAction.Disable(); stickRightAction.Disable();
             reloadAction.Disable();
             inkCycleAction.Disable();
             runAction.Disable();
@@ -348,7 +411,66 @@ namespace SpellSimulator.Player
             IsTogglingFocus = focusAction.triggered;
             PageDelta = (pageNextAction.triggered ? 1 : 0) - (pagePrevAction.triggered ? 1 : 0);
             Scroll = scrollAction.ReadValue<float>();
+            ReadVr();
             if (Gate != InputGate.Full) ApplyGate();
+        }
+
+        /// <summary>
+        /// [VR] Lee los controles Touch y los suma a las acciones de siempre: grip de cualquier mano = interactuar, gatillo de la mano
+        /// principal = usar, A/X de la mano principal = deshacer, Y (toque) = cambiar tinta, Y (mantener) = reiniciar, stick derecho
+        /// (golpe) = girar / pasar pagina / cambiar de slot. Sin control conectado todo da cero y no cambia nada de PC.
+        /// </summary>
+        private void ReadVr()
+        {
+            VrGripDownLeft = gripLeftAction.WasPressedThisFrame();
+            VrGripDownRight = gripRightAction.WasPressedThisFrame();
+            VrGripUpLeft = gripLeftAction.WasReleasedThisFrame();
+            VrGripUpRight = gripRightAction.WasReleasedThisFrame();
+            VrGripHeldLeft = gripLeftAction.IsPressed();
+            VrGripHeldRight = gripRightAction.IsPressed();
+            if (VrGripDownLeft || VrGripDownRight) IsInteracting = true;
+
+            VrTriggerLeft = triggerLeftAction.ReadValue<float>();
+            VrTriggerRight = triggerRightAction.ReadValue<float>();
+            VrTriggerDownLeft = VrTriggerLeft > 0.5f && prevTriggerLeft <= 0.5f;
+            VrTriggerDownRight = VrTriggerRight > 0.5f && prevTriggerRight <= 0.5f;
+            prevTriggerLeft = VrTriggerLeft;
+            prevTriggerRight = VrTriggerRight;
+            if (VrTrigger(VrMainRight) > 0.1f) IsUsingTool = true;
+            if (VrMainRight ? primaryRightAction.WasPressedThisFrame() : primaryLeftAction.WasPressedThisFrame()) IsSecondaryUsingTool = true;
+
+            if (yButtonAction.WasPressedThisFrame()) { yDownAt = Time.unscaledTime; yHoldDone = false; }
+            else if (yDownAt >= 0f && !yHoldDone && yButtonAction.IsPressed() && Time.unscaledTime - yDownAt >= VrResetHoldSeconds)
+            {
+                IsResettingWorld = true;
+                yHoldDone = true;
+            }
+            if (yButtonAction.WasReleasedThisFrame())
+            {
+                if (!yHoldDone && yDownAt >= 0f && Time.unscaledTime - yDownAt < VrInkTapSeconds) IsCyclingInk = true;
+                yDownAt = -1f;
+            }
+
+            VrFlickX = 0;
+            VrSlotDelta = 0;
+            Vector2 stick = stickRightAction.ReadValue<Vector2>();
+            float mag = stick.magnitude;
+            if (!stickArmed) { if (mag < VrFlickOff) stickArmed = true; }
+            else if (mag > VrFlickOn)
+            {
+                stickArmed = false;
+                if (Mathf.Abs(stick.x) > Mathf.Abs(stick.y)) VrFlickX = stick.x > 0f ? 1 : -1;
+                else VrSlotDelta = stick.y > 0f ? 1 : -1;
+            }
+        }
+
+        private void ClearVrFrame()
+        {
+            VrGripDownLeft = VrGripDownRight = VrGripUpLeft = VrGripUpRight = false;
+            VrGripHeldLeft = VrGripHeldRight = false;
+            VrTriggerDownLeft = VrTriggerDownRight = false;
+            VrFlickX = 0;
+            VrSlotDelta = 0;
         }
 
         /// <summary>
@@ -363,6 +485,7 @@ namespace SpellSimulator.Player
             bool typing = Gate == InputGate.Typing;
             MoveValue = Vector2.zero;
             LookValue = Vector2.zero;
+            ClearVrFrame();
             IsJumping = IsInteracting = IsSecondaryUsingTool = IsReloading = IsCyclingInk = IsResettingWorld = false;
             IsRunning = IsTogglingProne = IsZooming = IsRemoteGrabbing = IsRotateHeld = IsTogglingDebug = false;
             IsTogglingBookFocus = IsPinning = IsCrouching = IsThrowing = IsFlipping = IsTogglingFocus = false;

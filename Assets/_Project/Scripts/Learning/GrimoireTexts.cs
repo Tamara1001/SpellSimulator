@@ -141,13 +141,13 @@ namespace SpellSimulator.Learning
                 Row("E / Clic rueda", "lo deja flotando", 44) +
                 Row("Q", "arroja", 44),
                 "Realidad virtual",
-                Row("Gatillo", "dibuja", 44) +
-                Row("Agarre", "agarra", 44) +
-                Row("A", "deshace", 44) +
-                Row("B", "arroja", 44) +
-                Row("Stick izq.", "clic: corre", 44) +
-                Row("Stick der.", "clic: da vuelta la hoja", 44) +
-                Row("Y", "reinicia el mundo", 44)),
+                Row("Gatillo", "dibuja (mano de la herramienta)", 44) +
+                Row("Agarre", "agarra con esa mano; al soltar cae", 44) +
+                Row("Soltar", "rápido: arroja; quieto: flota", 44) +
+                Row("A / X · B", "deshace · arroja la herramienta", 44) +
+                Row("Stick der.", "lados: gira o pasa página; arriba/abajo: slot", 44) +
+                Row("Clic stick", "izq.: corre; der.: da vuelta la hoja", 44) +
+                Row("Y", "cambia la tinta; mantener: reinicia", 44)),
         };
 
         /// <summary>Texto de la pagina izquierda del indice de glifos.</summary>

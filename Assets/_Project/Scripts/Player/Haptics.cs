@@ -13,6 +13,9 @@ namespace SpellSimulator.Player
         public const float StrokeAmplitude = 0.08f;
         public const float CastAmplitude = 0.8f;
 
+        /// <summary>Mano que lleva la herramienta (la fija el interactor en VR): a ella van los pulsos de uso.</summary>
+        public static HandType MainHand = HandType.Right;
+
         public static void Pulse(HandType hand, float amplitude, float seconds)
         {
             amplitude = Mathf.Clamp01(amplitude);
