@@ -44,6 +44,7 @@ namespace SpellSimulator.Output
             Frame = frame;
             this.look = look;
             SpellPlan plan = spell.plan ?? SpellPlan.Inert();
+            SpellPlan originalPlan = plan; // Conservar el plan original con todos los signos modificadores
             bodySeconds = Mathf.Clamp(spell.duration - 1.5f, MinBodySeconds, MaxBodySeconds) * (plan.Leak ? 1.5f : 1f);
             startTime = Time.time;
             transform.SetPositionAndRotation(frame.Origin, frame.Facing(frame.Normal));
@@ -53,7 +54,10 @@ namespace SpellSimulator.Output
             float speed = (2f + 8f * spell.force) * look.speed;
             float density = look.density * Mathf.Clamp(0.5f + spell.quality, 0.5f, 1.5f);
 
-            charge = Track("Charge", look, frame.Origin, frame.Facing(frame.Normal), s);
+            ElementVariant variant = SpellVisualModifierMath.ResolveVariant(spell.element, look.crystalline);
+            float effGravity = SpellVisualModifierMath.CalculateEffectiveGravity(look.gravity, spell.gravity);
+
+            charge = Track("Charge", look, frame.Origin, frame.Facing(frame.Normal), s, local: false, effGravity);
             Shape(charge, ParticleSystemShapeType.Circle, s * 1.4f, 0f);
             Speed(charge, -speed * 0.25f, s * 0.35f);
             Emit(charge, 40f * density);
@@ -64,40 +68,42 @@ namespace SpellSimulator.Output
 
             if (plan.Has(PlanPrimitive.Burst))
             {
-                var burst = Track("Burst", look, frame.Origin, frame.Facing(frame.Normal), s);
-                Shape(burst, ParticleSystemShapeType.Hemisphere, s * 0.4f, 0f);
+                var burst = Track("Burst", look, frame.Origin, frame.Facing(frame.Normal), s, local: false, effGravity);
+                float burstRadius = s * 0.4f * (1f + 0.5f * Mathf.Max(0f, spell.spread));
+                Shape(burst, ParticleSystemShapeType.Hemisphere, burstRadius, 0f);
                 Speed(burst, speed * 0.6f, look.lifetime);
                 AddBurst(burst, Mathf.RoundToInt(220f * density * (1f + spell.strength) * (solidEarth ? 0.25f : 1f)));
             }
 
-            if (solidEarth) plan = SpellPlan.Inert(); // sin chorro, abanico, vortice, orbe ni succion de particulas
+            if (solidEarth) plan = SpellPlan.Inert(); // sin chorro, abanico, vortice, orbe ni succion de particulas base
 
             if (plan.Has(PlanPrimitive.Jet))
             {
                 Vector3 dir = frame.Direction(plan.Aim);
                 float length = s * (4f + 10f * spell.range);
                 float jetSpeed = speed * Mathf.Clamp(1f + plan.Aim.magnitude * 0.25f, 1f, 2f);
-                var jet = Track("Jet", look, frame.Origin, frame.Facing(dir), s);
-                float cone = Mathf.Lerp(18f, 3f, Mathf.Clamp01((plan.Focus - 1f) * 0.8f + spell.focus * 0.5f));
-                Shape(jet, ParticleSystemShapeType.Cone, s * 0.35f / plan.Focus, cone);
+                var jet = Track("Jet", look, frame.Origin, frame.Facing(dir), s, local: false, effGravity);
+                float cone = SpellVisualModifierMath.CalculateConeAngle(18f, spell.spread, spell.focus, plan.Focus);
+                float coneRadius = SpellVisualModifierMath.CalculateConeRadius(s * 0.35f, spell.spread, plan.Focus);
+                Shape(jet, ParticleSystemShapeType.Cone, coneRadius, cone);
                 Speed(jet, jetSpeed, length / jetSpeed);
                 AddBody(jet, 420f * density, impacts: true);
             }
 
             if (plan.Has(PlanPrimitive.Fan))
             {
-                var fan = Track("Fan", look, frame.Origin + frame.Normal * s * 0.1f, frame.Facing(frame.Normal), s);
-                Shape(fan, ParticleSystemShapeType.Circle, s * 0.5f, 0f);
+                var fan = Track("Fan", look, frame.Origin + frame.Normal * s * 0.1f, frame.Facing(frame.Normal), s, local: false, effGravity);
+                float fanRadius = s * 0.5f * (1f + 0.6f * Mathf.Max(0f, spell.spread));
+                Shape(fan, ParticleSystemShapeType.Circle, fanRadius, 0f);
                 Speed(fan, speed * (0.6f + 0.4f * Mathf.Min(plan.Dispersion, 2f)), (s * (3f + 6f * spell.range)) / speed);
-                // Abanico = lamina radial sobre el plano del papel: particulas finas y casi sin flotacion, para que se
-                // lea como una erupcion plana y no como una nube que tapa la camara (prueba manual 2026-10-07).
-                Thin(fan, FanSizeFactor, FanGravityFactor * look.gravity);
+                // Abanico = lamina radial sobre el plano del papel: particulas finas y casi sin flotacion.
+                Thin(fan, FanSizeFactor, FanGravityFactor * effGravity);
                 AddBody(fan, 360f * density, impacts: true);
             }
 
             if (plan.Has(PlanPrimitive.Vortex))
             {
-                var vortex = Track("Vortex", look, frame.Origin, frame.Facing(frame.Normal), s, local: true);
+                var vortex = Track("Vortex", look, frame.Origin, frame.Facing(frame.Normal), s, local: true, effGravity);
                 Shape(vortex, ParticleSystemShapeType.Circle, s * 0.9f, 0f);
                 Speed(vortex, 0.3f, look.lifetime * 1.6f);
                 var vel = vortex.velocityOverLifetime;
@@ -112,7 +118,7 @@ namespace SpellSimulator.Output
             if (plan.Has(PlanPrimitive.Hold))
             {
                 Vector3 holdPoint = frame.Point(plan.Hold.At) + frame.Normal * s * 0.3f;
-                var orb = Track("Hold", look, holdPoint, frame.Facing(frame.Normal), s, local: true);
+                var orb = Track("Hold", look, holdPoint, frame.Facing(frame.Normal), s, local: true, 0f);
                 Shape(orb, ParticleSystemShapeType.Sphere, s * 0.3f, 0f);
                 Speed(orb, 0.15f, look.lifetime);
                 var main = orb.main;
@@ -126,7 +132,7 @@ namespace SpellSimulator.Output
 
             if (plan.Has(PlanPrimitive.Intake))
             {
-                var intake = Track("Intake", look, frame.Origin, frame.Facing(frame.Normal), s, local: true);
+                var intake = Track("Intake", look, frame.Origin, frame.Facing(frame.Normal), s, local: true, effGravity);
                 float reach = s * 4f;
                 Shape(intake, ParticleSystemShapeType.Sphere, reach, 0f);
                 var shape = intake.shape;
@@ -154,6 +160,9 @@ namespace SpellSimulator.Output
                 glow.intensity = 0f;
             }
 
+            // Pistas visuales distintivas por elemento para los 10 signos de la Tanda 1
+            ApplySignTracks(originalPlan, variant, s, speed, density, effGravity);
+
             charge.Play();
         }
 
@@ -164,23 +173,28 @@ namespace SpellSimulator.Output
             {
                 struck = true;
                 charge.Stop(true, ParticleSystemStopBehavior.StopEmitting);
-                foreach (var (system, count) in bursts)
+                for (int i = 0; i < bursts.Count; i++)
                 {
-                    system.Play();
-                    system.Emit(count);
+                    var item = bursts[i];
+                    item.system.Play();
+                    item.system.Emit(item.count);
                 }
-                foreach (var (system, rate) in bodyTracks)
+                for (int i = 0; i < bodyTracks.Count; i++)
                 {
-                    var emission = system.emission;
-                    emission.rateOverTime = rate;
-                    system.Play();
+                    var item = bodyTracks[i];
+                    var emission = item.system.emission;
+                    emission.rateOverTime = item.rate;
+                    item.system.Play();
                 }
             }
 
             if (struck && !released && t >= StrikeSeconds + bodySeconds)
             {
                 released = true;
-                foreach (var (system, _) in bodyTracks) system.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                for (int i = 0; i < bodyTracks.Count; i++)
+                {
+                    bodyTracks[i].system.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                }
             }
 
             if (glow != null) glow.intensity = lightIntensity * Envelope(t);
@@ -208,9 +222,194 @@ namespace SpellSimulator.Output
 
         // ---------------------------------------------------------------- construccion de pistas
 
-        private ParticleSystem Track(string trackName, ElementLook look, Vector3 position, Quaternion rotation, float scale, bool local = false)
+        private ParticleSystem Track(string trackName, ElementLook look, Vector3 position, Quaternion rotation, float scale,
+            bool local = false, float? gravityOverride = null)
         {
-            return ElementVfx.Create(trackName, transform, look, position, rotation, scale, local);
+            return ElementVfx.Create(trackName, transform, look, position, rotation, scale, local, gravityOverride);
+        }
+
+        /// <summary>Construye pistas de partículas específicas y visualmente diferenciadas para cada signo modificador.</summary>
+        private void ApplySignTracks(SpellPlan plan, ElementVariant variant, float s, float speed, float density, float effGravity)
+        {
+            if (plan.Crush > 0f)
+            {
+                var p = SpellVisualModifierMath.GetCrushParams(variant, plan.Crush, s);
+                var crush = Track("Sign_Crush", look, Frame.Origin, Frame.Facing(Frame.Normal), s, local: false, effGravity);
+                Shape(crush, p.shapeType, p.shapeRadiusFactor * s, p.shapeAngle);
+                Speed(crush, speed * p.speedFactor, look.lifetime * p.lifetimeFactor);
+                ApplyColor(crush, p.startColor, p.endColor);
+                ApplySize(crush, look.size * s * p.sizeFactor);
+                AddBurst(crush, Mathf.RoundToInt(p.burstCount * density));
+            }
+
+            if (plan.Orb > 0f)
+            {
+                var p = SpellVisualModifierMath.GetOrbParams(variant, plan.Orb, s);
+                Vector3 orbPoint = plan.Hold != null ? Frame.Point(plan.Hold.At) + Frame.Normal * s * 0.3f : Frame.Origin + Frame.Normal * s * 0.5f;
+                var orb = Track("Sign_Orb", look, orbPoint, Frame.Facing(Frame.Normal), s, local: true, 0f);
+                Shape(orb, p.shapeType, p.shapeRadiusFactor * s, p.shapeAngle);
+                Speed(orb, speed * p.speedFactor, look.lifetime * p.lifetimeFactor);
+                ApplyColor(orb, p.startColor, p.endColor);
+                ApplySize(orb, look.size * s * p.sizeFactor);
+                var vel = orb.velocityOverLifetime;
+                vel.enabled = true;
+                vel.space = ParticleSystemSimulationSpace.Local;
+                vel.orbitalZ = new ParticleSystem.MinMaxCurve(p.orbitalSpeed);
+                vel.radial = new ParticleSystem.MinMaxCurve(p.radialSpeed * s);
+                AddBody(orb, p.rateFactor * density, impacts: false);
+            }
+
+            if (plan.Billow > 0f)
+            {
+                var p = SpellVisualModifierMath.GetBillowingParams(variant, plan.Billow, s);
+                var billow = Track("Sign_Billowing", look, Frame.Origin + Frame.Normal * s * 0.2f, Frame.Facing(Frame.Normal), s, local: false, effGravity * 0.2f);
+                Shape(billow, p.shapeType, p.shapeRadiusFactor * s, p.shapeAngle);
+                Speed(billow, speed * p.speedFactor, look.lifetime * p.lifetimeFactor);
+                ApplyColor(billow, p.startColor, p.endColor);
+                ApplySize(billow, look.size * s * p.sizeFactor);
+                var noise = billow.noise;
+                noise.enabled = true;
+                noise.strength = (look.turbulence + 0.5f) * s;
+                noise.frequency = 0.75f;
+                AddBody(billow, p.rateFactor * density, impacts: false);
+            }
+
+            if (plan.Cool > 0f)
+            {
+                var p = SpellVisualModifierMath.GetCoolParams(variant, plan.Cool, s);
+                var cool = Track("Sign_Cool", look, Frame.Origin + Frame.Normal * s * 0.15f, Frame.Facing(Frame.Normal), s, local: false, effGravity + 0.15f);
+                Shape(cool, p.shapeType, p.shapeRadiusFactor * s, p.shapeAngle);
+                Speed(cool, speed * p.speedFactor, look.lifetime * p.lifetimeFactor);
+                ApplyColor(cool, p.startColor, p.endColor);
+                ApplySize(cool, look.size * s * p.sizeFactor);
+                AddBody(cool, p.rateFactor * density, impacts: false);
+                if (glow != null) glow.color = Color.Lerp(glow.color, p.startColor, 0.45f * Mathf.Clamp01(plan.Cool));
+            }
+
+            if (plan.Empower > 0f)
+            {
+                var p = SpellVisualModifierMath.GetEmpowerParams(variant, plan.Empower, s);
+                var empower = Track("Sign_Empower", look, Frame.Origin + Frame.Normal * s * 0.1f, Frame.Facing(Frame.Normal), s, local: false, effGravity);
+                Shape(empower, p.shapeType, p.shapeRadiusFactor * s, p.shapeAngle);
+                Speed(empower, speed * p.speedFactor, look.lifetime * p.lifetimeFactor);
+                ApplyColor(empower, p.startColor, p.endColor);
+                ApplySize(empower, look.size * s * p.sizeFactor);
+                AddBody(empower, p.rateFactor * density, impacts: true);
+                AddBurst(empower, Mathf.RoundToInt(p.burstCount * density));
+                lightIntensity *= (1f + 0.35f * plan.Empower * p.lightIntensityBoost);
+            }
+
+            if (plan.Entwine > 0f)
+            {
+                var p = SpellVisualModifierMath.GetEntwineParams(variant, plan.Entwine, s);
+                var entwine = Track("Sign_Entwine", look, Frame.Origin, Frame.Facing(Frame.Normal), s, local: true, effGravity);
+                Shape(entwine, p.shapeType, p.shapeRadiusFactor * s, p.shapeAngle);
+                Speed(entwine, speed * p.speedFactor, look.lifetime * p.lifetimeFactor);
+                ApplyColor(entwine, p.startColor, p.endColor);
+                ApplySize(entwine, look.size * s * p.sizeFactor);
+                var vel = entwine.velocityOverLifetime;
+                vel.enabled = true;
+                vel.space = ParticleSystemSimulationSpace.Local;
+                vel.orbitalZ = new ParticleSystem.MinMaxCurve(p.orbitalSpeed);
+                vel.radial = new ParticleSystem.MinMaxCurve(p.radialSpeed * s);
+                vel.z = new ParticleSystem.MinMaxCurve(speed * 0.4f);
+                AddBody(entwine, p.rateFactor * density, impacts: false);
+            }
+
+            if (plan.Target > 0f)
+            {
+                var p = SpellVisualModifierMath.GetFocusAimParams(variant, plan.Target, s);
+                Vector3 aimDir = Frame.Direction(plan.Aim);
+                var focusAim = Track("Sign_FocusAim", look, Frame.Origin, Frame.Facing(aimDir), s, local: false, 0f);
+                Shape(focusAim, p.shapeType, p.shapeRadiusFactor * s, p.shapeAngle);
+                float beamSpeed = speed * p.speedFactor;
+                Speed(focusAim, beamSpeed, (s * (5f + 12f * Spell.range)) / beamSpeed);
+                ApplyColor(focusAim, p.startColor, p.endColor);
+                ApplySize(focusAim, look.size * s * p.sizeFactor);
+                AddBody(focusAim, p.rateFactor * density, impacts: false);
+            }
+
+            if (plan.Gather > 0f || plan.Collection > 0f)
+            {
+                float gatherPower = Mathf.Max(plan.Gather, plan.Collection);
+                var p = SpellVisualModifierMath.GetGatherParams(variant, gatherPower, s);
+                var gather = Track("Sign_Gather", look, Frame.Origin, Frame.Facing(Frame.Normal), s, local: true, 0f);
+                float reach = s * p.shapeRadiusFactor;
+                Shape(gather, p.shapeType, reach, p.shapeAngle);
+                var shape = gather.shape;
+                shape.radiusThickness = 0.15f;
+                float inSpeed = speed * p.speedFactor;
+                Speed(gather, inSpeed, reach / Mathf.Max(0.01f, Mathf.Abs(inSpeed)));
+                ApplyColor(gather, p.startColor, p.endColor);
+                ApplySize(gather, look.size * s * p.sizeFactor);
+                var vel = gather.velocityOverLifetime;
+                vel.enabled = true;
+                vel.space = ParticleSystemSimulationSpace.Local;
+                vel.orbitalZ = new ParticleSystem.MinMaxCurve(p.orbitalSpeed);
+                AddBody(gather, p.rateFactor * density, impacts: false);
+            }
+
+            if (plan.Repetition > 0f)
+            {
+                var p = SpellVisualModifierMath.GetRepetitionParams(variant, plan.Repetition, s);
+                var rep = Track("Sign_Repetition", look, Frame.Origin + Frame.Normal * s * 0.1f, Frame.Facing(Frame.Normal), s, local: true, 0f);
+                Shape(rep, p.shapeType, p.shapeRadiusFactor * s, p.shapeAngle);
+                Speed(rep, speed * p.speedFactor, look.lifetime * p.lifetimeFactor);
+                ApplyColor(rep, p.startColor, p.endColor);
+                ApplySize(rep, look.size * s * p.sizeFactor);
+                var vel = rep.velocityOverLifetime;
+                vel.enabled = true;
+                vel.space = ParticleSystemSimulationSpace.Local;
+                vel.orbitalZ = new ParticleSystem.MinMaxCurve(p.orbitalSpeed);
+                AddBody(rep, p.rateFactor * density, impacts: false);
+                AddBurst(rep, Mathf.RoundToInt(p.burstCount * density));
+            }
+
+            if (plan.Weave > 0f)
+            {
+                Vector3 aimDir = Frame.Direction(plan.Aim);
+                var pA = SpellVisualModifierMath.GetWeaveParams(variant, plan.Weave, s, isSecondStrand: false);
+                var pB = SpellVisualModifierMath.GetWeaveParams(variant, plan.Weave, s, isSecondStrand: true);
+
+                Vector3 posA = Frame.Origin + Frame.Right * (s * 0.15f * pA.shapeRadiusFactor);
+                var weaveA = Track("Sign_Weave_A", look, posA, Frame.Facing(aimDir), s, local: true, effGravity);
+                Shape(weaveA, pA.shapeType, s * 0.15f * pA.shapeRadiusFactor, 0f);
+                Speed(weaveA, speed * pA.speedFactor, look.lifetime * pA.lifetimeFactor);
+                ApplyColor(weaveA, pA.startColor, pA.endColor);
+                ApplySize(weaveA, look.size * s * pA.sizeFactor);
+                var velA = weaveA.velocityOverLifetime;
+                velA.enabled = true;
+                velA.space = ParticleSystemSimulationSpace.Local;
+                velA.orbitalZ = new ParticleSystem.MinMaxCurve(pA.orbitalSpeed);
+                velA.z = new ParticleSystem.MinMaxCurve(speed * 0.75f);
+                AddBody(weaveA, pA.rateFactor * density, impacts: false);
+
+                Vector3 posB = Frame.Origin - Frame.Right * (s * 0.15f * pB.shapeRadiusFactor);
+                var weaveB = Track("Sign_Weave_B", look, posB, Frame.Facing(aimDir), s, local: true, effGravity);
+                Shape(weaveB, pB.shapeType, s * 0.15f * pB.shapeRadiusFactor, 0f);
+                Speed(weaveB, speed * pB.speedFactor, look.lifetime * pB.lifetimeFactor);
+                ApplyColor(weaveB, pB.startColor, pB.endColor);
+                ApplySize(weaveB, look.size * s * pB.sizeFactor);
+                var velB = weaveB.velocityOverLifetime;
+                velB.enabled = true;
+                velB.space = ParticleSystemSimulationSpace.Local;
+                velB.orbitalZ = new ParticleSystem.MinMaxCurve(pB.orbitalSpeed);
+                velB.z = new ParticleSystem.MinMaxCurve(speed * 0.75f);
+                AddBody(weaveB, pB.rateFactor * density, impacts: false);
+            }
+        }
+
+        private static void ApplyColor(ParticleSystem ps, Color start, Color end)
+        {
+            var col = ps.colorOverLifetime;
+            col.enabled = true;
+            col.color = new ParticleSystem.MinMaxGradient(SpellVisualModifierMath.CreateGradient(start, end));
+        }
+
+        private static void ApplySize(ParticleSystem ps, float size)
+        {
+            var main = ps.main;
+            main.startSize = new ParticleSystem.MinMaxCurve(size * 0.8f, size * 1.3f);
         }
 
         /// <summary>Pista del cuerpo: se prende en el golpe con su tasa; suma las capas del look y, si choca, sus impactos.</summary>
@@ -218,8 +417,9 @@ namespace SpellSimulator.Output
         {
             bodyTracks.Add((track, rate));
             if (look.layers != null)
-                foreach (var layer in look.layers)
+                for (int i = 0; i < look.layers.Length; i++)
                 {
+                    var layer = look.layers[i];
                     if (layer == null || layer.material == null) continue;
                     var ps = ElementVfx.AddLayer(track, layer, scale);
                     bodyTracks.Add((ps, rate * layer.density * layer.layerRatio));
@@ -232,8 +432,9 @@ namespace SpellSimulator.Output
         {
             bursts.Add((track, count));
             if (look.layers != null)
-                foreach (var layer in look.layers)
+                for (int i = 0; i < look.layers.Length; i++)
                 {
+                    var layer = look.layers[i];
                     if (layer == null || layer.material == null) continue;
                     var ps = ElementVfx.AddLayer(track, layer, scale);
                     bursts.Add((ps, Mathf.RoundToInt(count * layer.density * layer.layerRatio)));

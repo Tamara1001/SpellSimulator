@@ -20,7 +20,7 @@ namespace SpellSimulator.Output
         };
 
         public static ParticleSystem Create(string name, Transform parent, ElementLook look, Vector3 position, Quaternion rotation,
-            float scale, bool local = false)
+            float scale, bool local = false, float? gravityOverride = null)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
@@ -35,18 +35,18 @@ namespace SpellSimulator.Output
             main.simulationSpace = local ? ParticleSystemSimulationSpace.Local : ParticleSystemSimulationSpace.World;
             var emission = ps.emission;
             emission.rateOverTime = 0f;
-            Apply(ps, look, scale);
+            Apply(ps, look, scale, gravityOverride);
             return ps;
         }
 
         /// <summary>Aplica el look (material, malla, color, tamanio, gravedad, giro, estelas) a un sistema ya armado.</summary>
-        public static void Apply(ParticleSystem ps, ElementLook look, float scale)
+        public static void Apply(ParticleSystem ps, ElementLook look, float scale, float? gravityOverride = null)
         {
             var main = ps.main;
             main.maxParticles = Mathf.Max(8, Mathf.RoundToInt(look.maxParticles * SpellSimulator.Rendering.GraphicsQuality.ParticleScale));
             main.startSize = new ParticleSystem.MinMaxCurve(look.size * scale * 1.2f, look.size * scale * 2.4f);
             main.startColor = Color.white;
-            main.gravityModifier = look.gravity;
+            main.gravityModifier = gravityOverride ?? look.gravity;
 
             var col = ps.colorOverLifetime;
             col.enabled = true;
@@ -136,14 +136,14 @@ namespace SpellSimulator.Output
         }
 
         /// <summary>Capa que acompania una pista: copia forma y movimiento, cambia el look. Hermana de la pista.</summary>
-        public static ParticleSystem AddLayer(ParticleSystem track, ElementLook layer, float scale)
+        public static ParticleSystem AddLayer(ParticleSystem track, ElementLook layer, float scale, float? gravityOverride = null)
         {
             var go = Object.Instantiate(track.gameObject, track.transform.parent);
             go.name = $"{track.name}_{layer.name}";
             go.transform.SetPositionAndRotation(track.transform.position, track.transform.rotation);
             var ps = go.GetComponent<ParticleSystem>();
             ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
-            Apply(ps, layer, scale);
+            Apply(ps, layer, scale, gravityOverride);
             var main = ps.main;
             if (!Mathf.Approximately(layer.layerSpeed, 1f))
             {

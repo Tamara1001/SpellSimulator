@@ -5,6 +5,18 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-18 — Saltear tutorial: sin pared invisible en la puerta
+
+- `TowerTutorial.Skip()` apaga los colliders de las trabas de la puerta (el sensor de viento invisible `DoorLatch_Bar` bloqueaba el vano); `ResetTutorial` los reactiva. Sin probar a mano.
+
+## 2026-11-18 — Modificadores VFX: Tanda 1 (signos y parámetros visuales visibles)
+
+- **Tanda 1 de auditoría (`Docs/MODIFICADORES_AUDITORIA.md` 3.5, 3.6, 3.3, 3.4 y 4.3–4.5):** se hicieron visibles en el VFX (`SpellManifestation.cs`) los 10 signos modificadores presentes en `SpellPlan`: `crush` (estallido de fractura/impacto), `orb` (membrana/caja esférica orbital), `billowing` (nubes voluminosas y lentas), `cool` (tinte frío y vaho gélido), `empower` (sobretensión energética y multiplicador de luz), `entwine` (zarcillos constrictores en espiral), `focus` (mira fija/haz guía directo), `gather`/`collection` (succión centrípeta), `repetition` (inversión temporal y pulsos de eco) y `weave` (emisores gemelos en doble hélice desfasada 180°).
+- **Diferenciación elemental sextupla:** cada signo cuenta con parámetros visuales únicos (forma, color, tamaño, emisión y dinámica orbital/radial) para Fuego, Agua, Viento, Tierra, Cristal (Tierra cristalina) y Luz mediante `ElementLook`.
+- **Apertura de cono (`spell.spread`):** el ángulo y radio del cono ahora combinan la apertura de dispersión con el foco y la convergencia en todos los elementos.
+- **Gravedad de partículas (`spell.gravity`):** modula el `gravityModifier` en todos los sistemas Shuriken del hechizo, permitiendo flotación gradual o ingravidez.
+- **Rendimiento y arquitectura:** lógica pura en `SpellVisualModifierMath.cs` (sin `MonoBehaviour`), bucles indexados con cero allocations en `Update`, y suite de pruebas EditMode en `SpellVisualModifierMathTests.cs`.
+
 ## 2026-11-18 — VR: lápiz con colisión y movimiento más suave
 
 - **Lápiz con colisión (`PhysicalTool.LateUpdate`):** la punta no atraviesa lienzos ni el mundo; se empuja la herramienta a lo largo de la normal de la superficie, recalculado cada cuadro desde la mano (sin estado), así la punta no tiembla y se desliza sobre el papel.
