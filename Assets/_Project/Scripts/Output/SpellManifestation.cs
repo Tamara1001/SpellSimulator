@@ -9,7 +9,7 @@ namespace SpellSimulator.Output
     /// orbe, succion) con los tiempos de animation-spec.md R-01 (carga, golpe, cuerpo, liberacion, resplandor).
     /// El look sale de ElementLook; la forma y la fuerza, del SpellIR y su SpellPlan.
     /// </summary>
-    public class SpellManifestation : MonoBehaviour
+    public partial class SpellManifestation : MonoBehaviour
     {
         // R-01: solo el cuerpo se estira.
         public const float ChargeSeconds = 0.45f;
@@ -77,12 +77,12 @@ namespace SpellSimulator.Output
             // Regla: cuando hay un signo dominante la emision base (Jet/Burst) baja a 20-30%
             bool hasDominantSign = originalPlan.Crush > 0f || originalPlan.Orb > 0f || originalPlan.Billow > 0f || originalPlan.Cool > 0f
                 || originalPlan.Empower > 0f || originalPlan.Entwine > 0f || originalPlan.Target > 0f || originalPlan.Gather > 0f
-                || originalPlan.Collection > 0f || originalPlan.Repetition > 0f || originalPlan.Weave > 0f;
+                || originalPlan.Collection > 0f || originalPlan.Repetition > 0f || originalPlan.Weave > 0f || originalPlan.Directed > 0f;
 
             float baseDampen = 1.0f;
             if (originalPlan.Orb > 0f) baseDampen = 0.20f; // orb: columna base reducida al 20%
-            else if (originalPlan.Billow > 0f) baseDampen = 0.22f; // billowing: base reducida
-            else if (originalPlan.Target > 0f) baseDampen = 0.20f; // focus: base reducida
+            else if (originalPlan.Crush > 0f || originalPlan.Billow > 0f || originalPlan.Target > 0f || originalPlan.Gather > 0f
+                || originalPlan.Collection > 0f || originalPlan.Repetition > 0f || originalPlan.Directed > 0f) baseDampen = 0.10f; // signos con forma propia: la base casi no se ve
             else if (hasDominantSign) baseDampen = 0.25f; // regla general 20-30%
 
             charge = Track("Charge", look, spawnOrigin, frame.Facing(frame.Normal), s, local: false, effGravity);
@@ -99,7 +99,7 @@ namespace SpellSimulator.Output
                 float burstRadius = s * 0.4f * (1f + 0.5f * Mathf.Max(0f, spell.spread)) * burstSpreadMul;
                 Shape(burst, ParticleSystemShapeType.Hemisphere, burstRadius, 0f);
                 Speed(burst, speed * 0.6f, look.lifetime);
-                float burstDampen = hasDominantSign ? 0.3f : 1.0f;
+                float burstDampen = hasDominantSign ? (baseDampen < 0.15f ? 0.12f : 0.3f) : 1.0f;
                 AddBurst(burst, Mathf.RoundToInt(220f * density * (1f + spell.strength) * (solidEarth ? 0.25f : 1f) * burstDampen));
             }
 
@@ -193,6 +193,11 @@ namespace SpellSimulator.Output
             // Pistas visuales distintivas por elemento para los signos modificadores
             ApplySignTracks(originalPlan, variant, s, speed, density, effGravity);
 
+            // region (cerco por elemento), tinta resistente y estabilidad del trazo
+            ApplyRegion(originalPlan, variant, spawnOrigin, s, speed, density);
+            ApplyWaterproof(variant, spawnOrigin, s);
+            ApplyStability(spawnOrigin, s);
+
             // cool: tinte azul/blanco forzado en TODAS las particulas del hechizo
             if (originalPlan.Cool > 0f)
             {
@@ -233,7 +238,7 @@ namespace SpellSimulator.Output
                 }
             }
 
-            if (glow != null) glow.intensity = lightIntensity * Envelope(t);
+            if (glow != null) glow.intensity = lightIntensity * Envelope(t) * FlickerFactor();
             if (t > StrikeSeconds + bodySeconds + ReleaseSeconds + AfterglowSeconds + 2f) Destroy(gameObject);
         }
 
@@ -273,12 +278,12 @@ namespace SpellSimulator.Output
             if (plan.Crush > 0f)
             {
                 var p = SpellVisualModifierMath.GetCrushParams(variant, plan.Crush, s);
-                // crush: fragmentos solidos grandes cayendo/estallando (usar mesh de ParticleSystemRenderer con cubos/rocas chicas) y destello de choque
-                var crush = Track("Sign_Crush", look, anchor + Frame.Normal * (s * 0.1f), Frame.Facing(Frame.Normal), s, local: false, gravityOverride: 0.85f);
+                // crush: golpe seco. Onda de choque plana que se expande por el suelo + escombros pesados que caen + destello.
+                var crush = Track("Sign_Crush", look, anchor + Frame.Normal * (s * 0.1f), Frame.Facing(Frame.Normal), s, local: false, gravityOverride: 1.2f);
                 Shape(crush, p.shapeType, p.shapeRadiusFactor * s, p.shapeAngle);
-                Speed(crush, speed * p.speedFactor, look.lifetime * p.lifetimeFactor);
+                Speed(crush, speed * p.speedFactor * 0.9f, look.lifetime * p.lifetimeFactor);
                 ApplyColor(crush, p.startColor, p.endColor);
-                ApplySize(crush, look.size * s * p.sizeFactor);
+                ApplySize(crush, look.size * s * p.sizeFactor * 1.3f);
 
                 var renderer = crush.GetComponent<ParticleSystemRenderer>();
                 Mesh meshToUse = look.mesh != null ? look.mesh : ElementVfx.GetCubeMesh();
@@ -300,7 +305,18 @@ namespace SpellSimulator.Output
                 rot.y = new ParticleSystem.MinMaxCurve(-4f, 4f);
                 rot.z = new ParticleSystem.MinMaxCurve(-4f, 4f);
 
-                AddBurst(crush, Mathf.RoundToInt(p.burstCount * density));
+                RepeatingBurst(crush, Mathf.RoundToInt(p.burstCount * density * 0.6f), 0.8f);
+
+                // Onda de choque: anillo plano que sale hacia afuera pegado al suelo
+                var shock = Track("Sign_Crush_Shock", look, anchor + Frame.Normal * (s * 0.04f), Frame.Facing(Frame.Normal), s, local: false, gravityOverride: 0f);
+                Shape(shock, ParticleSystemShapeType.Circle, s * 0.25f, 0f);
+                var shockShape = shock.shape;
+                shockShape.radiusThickness = 0f;
+                Speed(shock, speed * 2.4f, 0.55f);
+                ApplyColor(shock, Color.white, p.startColor);
+                ApplySize(shock, look.size * s * 1.4f);
+                Stretch(shock, 0.12f, 1.6f);
+                RepeatingBurst(shock, Mathf.RoundToInt(220f * density), 0.8f);
 
                 // Destello de choque
                 var flash = Track("Sign_Crush_Flash", look, anchor + Frame.Normal * (s * 0.2f), Frame.Facing(Frame.Normal), s, local: false, gravityOverride: 0f);
@@ -349,17 +365,22 @@ namespace SpellSimulator.Output
             if (plan.Billow > 0f)
             {
                 var p = SpellVisualModifierMath.GetBillowingParams(variant, plan.Billow, s);
-                // billowing: nube enorme lenta y esponjosa (particulas 3-4x mas grandes, velocidad baja) con la base reducida
-                var billow = Track("Sign_Billowing", look, anchor + Frame.Normal * (s * 0.25f), Frame.Facing(Frame.Normal), s, local: false, gravityOverride: -0.04f);
-                Shape(billow, ParticleSystemShapeType.Sphere, s * 1.1f * p.shapeRadiusFactor, 0f);
-                Speed(billow, speed * 0.15f, look.lifetime * 2.2f);
-                ApplyColor(billow, p.startColor, p.endColor);
-                ApplySize(billow, look.size * s * p.sizeFactor);
+                // billowing: nube enorme, lenta, opaca y esponjosa: particulas grandes que crecen, ruido fuerte y casi sin base.
+                var billow = Track("Sign_Billowing", look, anchor + Frame.Normal * (s * 0.35f), Frame.Facing(Frame.Normal), s, local: false, gravityOverride: -0.05f);
+                Shape(billow, ParticleSystemShapeType.Sphere, s * 1.0f * p.shapeRadiusFactor, 0f);
+                Speed(billow, speed * 0.12f, look.lifetime * 2.6f);
+                Color cloudStart = p.startColor; cloudStart.a = Mathf.Max(cloudStart.a, 0.6f);
+                Color cloudEnd = p.endColor; cloudEnd.a = 0f;
+                ApplyColor(billow, cloudStart, cloudEnd);
+                ApplySize(billow, look.size * s * p.sizeFactor * 3.2f);
+                var grow = billow.sizeOverLifetime;
+                grow.enabled = true;
+                grow.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 0.55f, 1f, 1.7f));
                 var noise = billow.noise;
                 noise.enabled = true;
-                noise.strength = (look.turbulence + 1.2f) * s;
-                noise.frequency = 0.45f;
-                AddBody(billow, p.rateFactor * density * 1.6f, impacts: false);
+                noise.strength = (look.turbulence + 1.5f) * s;
+                noise.frequency = 0.4f;
+                AddBody(billow, p.rateFactor * density * 2.4f, impacts: false);
             }
 
             if (plan.Cool > 0f)
@@ -421,112 +442,142 @@ namespace SpellSimulator.Output
             if (plan.Target > 0f)
             {
                 var p = SpellVisualModifierMath.GetFocusAimParams(variant, plan.Target, s);
-                // focus: haz fino y brillante tipo laser hacia delante y base reducida
+                // focus: haz fino, brillante y largo tipo laser + punto de mira en el extremo; casi sin base.
                 Vector3 aimDir = Frame.Direction(plan.Aim);
                 var focusAim = Track("Sign_FocusAim", look, anchor, Frame.Facing(aimDir), s, local: false, gravityOverride: 0f);
-                Shape(focusAim, ParticleSystemShapeType.Cone, s * 0.05f, 0.8f);
-                float beamSpeed = speed * p.speedFactor * 1.3f;
-                Speed(focusAim, beamSpeed, (s * (6f + 14f * Spell.range)) / beamSpeed);
+                Shape(focusAim, ParticleSystemShapeType.Cone, s * 0.04f, 0.4f);
+                float beamLength = s * (7f + 14f * Spell.range);
+                float beamSpeed = speed * p.speedFactor * 1.6f;
+                Speed(focusAim, beamSpeed, beamLength / beamSpeed);
                 ApplyColor(focusAim, Color.white, p.startColor);
-                ApplySize(focusAim, look.size * s * 0.65f);
-                AddBody(focusAim, p.rateFactor * density * 2.5f, impacts: false);
+                ApplySize(focusAim, look.size * s * 0.9f);
+                AddBody(focusAim, p.rateFactor * density * 3f, impacts: false);
 
-                // Resplandor del laser en la base
                 var muzzle = Track("Sign_Focus_Muzzle", look, anchor, Frame.Facing(aimDir), s, local: false, gravityOverride: 0f);
                 Shape(muzzle, ParticleSystemShapeType.Sphere, s * 0.08f, 0f);
                 Speed(muzzle, 0.1f, 0.2f);
                 ApplyColor(muzzle, Color.white, p.startColor);
-                ApplySize(muzzle, s * 1.2f);
-                AddBody(muzzle, 30f, impacts: false);
+                ApplySize(muzzle, s * 1.4f);
+                AddBody(muzzle, 40f, impacts: false);
+
+                // Punto de mira: anillo que gira en el extremo del haz
+                var reticle = Track("Sign_Focus_Reticle", look, anchor + aimDir * (beamLength * 0.55f), Frame.Facing(aimDir), s, local: true, gravityOverride: 0f);
+                Shape(reticle, ParticleSystemShapeType.Circle, s * 0.45f, 0f);
+                var reticleShape = reticle.shape;
+                reticleShape.radiusThickness = 0f;
+                Speed(reticle, 0f, 0.5f);
+                ApplyColor(reticle, Color.white, p.startColor);
+                ApplySize(reticle, look.size * s * 0.8f);
+                var reticleVel = reticle.velocityOverLifetime;
+                reticleVel.enabled = true;
+                reticleVel.space = ParticleSystemSimulationSpace.Local;
+                reticleVel.orbitalZ = new ParticleSystem.MinMaxCurve(3.5f);
+                reticleVel.radial = new ParticleSystem.MinMaxCurve(-0.3f * s);
+                AddBody(reticle, 70f, impacts: false);
             }
 
             if (plan.Gather > 0f)
             {
                 var p = SpellVisualModifierMath.GetGatherParams(variant, plan.Gather, s);
-                // gather: particulas convergiendo visiblemente hacia el sello (velocidad radial hacia adentro)
-                var gather = Track("Sign_Gather", look, anchor, Frame.Facing(Frame.Normal), s, local: true, gravityOverride: 0f);
-                float reach = s * p.shapeRadiusFactor;
-                Shape(gather, p.shapeType, reach, p.shapeAngle);
+                // gather: corrientes planas que se arrastran por el suelo hacia el sello (estelas, espiral), desde un radio grande.
+                var gather = Track("Sign_Gather", look, anchor + Frame.Normal * (s * 0.05f), Frame.Facing(Frame.Normal), s, local: true, gravityOverride: 0f);
+                float reach = s * 3.0f;
+                Shape(gather, ParticleSystemShapeType.Circle, reach, 0f);
                 var shape = gather.shape;
-                shape.radiusThickness = 0.05f;
-                float inSpeed = speed * p.speedFactor;
-                Speed(gather, inSpeed, reach / Mathf.Max(0.01f, Mathf.Abs(inSpeed)));
-                ApplyColor(gather, p.startColor, p.endColor);
-                ApplySize(gather, look.size * s * p.sizeFactor * 1.5f);
+                shape.radiusThickness = 0.15f;
+                float inSpeed = speed * 1.1f;
+                Speed(gather, 0f, reach / inSpeed);
+                Color streakStart = Color.Lerp(p.startColor, Color.white, 0.4f); streakStart.a = 1f;
+                ApplyColor(gather, streakStart, p.endColor);
+                ApplySize(gather, look.size * s * p.sizeFactor * 1.4f);
                 var vel = gather.velocityOverLifetime;
                 vel.enabled = true;
                 vel.space = ParticleSystemSimulationSpace.Local;
-                vel.orbitalZ = new ParticleSystem.MinMaxCurve(p.orbitalSpeed);
-                vel.radial = new ParticleSystem.MinMaxCurve(-speed * 1.8f);
-                AddBody(gather, p.rateFactor * density * 1.8f, impacts: false);
+                vel.orbitalZ = new ParticleSystem.MinMaxCurve(1.6f);
+                vel.radial = new ParticleSystem.MinMaxCurve(-inSpeed);
+                Stretch(gather, 0.22f, 2.2f);
+                AddBody(gather, 220f * density, impacts: false);
             }
 
             if (plan.Collection > 0f)
             {
                 var p = SpellVisualModifierMath.GetCollectionParams(variant, plan.Collection, s);
-                // collection: pulsos periodicos hacia un punto sobre el sello
-                Vector3 targetPoint = anchor + Frame.Normal * (s * 0.45f);
+                // collection: lo reunido queda suspendido: un nucleo brillante estable sobre el sello y pulsos que llegan de todos lados.
+                Vector3 targetPoint = anchor + Frame.Normal * (s * 0.9f);
+                var core = Track("Sign_Collection_Core", look, targetPoint, Frame.Facing(Frame.Normal), s, local: true, gravityOverride: 0f);
+                Shape(core, ParticleSystemShapeType.Sphere, s * 0.22f, 0f);
+                Speed(core, 0.05f, 0.7f);
+                Color coreStart = Color.Lerp(p.startColor, Color.white, 0.55f); coreStart.a = 1f;
+                ApplyColor(core, coreStart, p.endColor);
+                ApplySize(core, s * 0.55f);
+                var coreVel = core.velocityOverLifetime;
+                coreVel.enabled = true;
+                coreVel.space = ParticleSystemSimulationSpace.Local;
+                coreVel.orbitalZ = new ParticleSystem.MinMaxCurve(3f);
+                AddBody(core, 110f, impacts: false);
+
                 var col = Track("Sign_Collection", look, targetPoint, Frame.Facing(Frame.Normal), s, local: true, gravityOverride: 0f);
-                float reach = s * p.shapeRadiusFactor;
-                Shape(col, p.shapeType, reach, 0f);
+                float reach = s * 2.6f;
+                Shape(col, ParticleSystemShapeType.Sphere, reach, 0f);
                 var shape = col.shape;
-                shape.radiusThickness = 0.05f;
-                float inSpeed = speed * p.speedFactor;
-                Speed(col, inSpeed, reach / Mathf.Max(0.01f, Mathf.Abs(inSpeed)));
-                ApplyColor(col, p.startColor, p.endColor);
-                ApplySize(col, look.size * s * p.sizeFactor * 1.4f);
+                shape.radiusThickness = 0f;
+                float inSpeed = speed * 1.0f;
+                Speed(col, 0f, reach / inSpeed);
+                ApplyColor(col, Color.white, p.startColor);
+                ApplySize(col, look.size * s * p.sizeFactor * 0.7f);
                 var vel = col.velocityOverLifetime;
                 vel.enabled = true;
                 vel.space = ParticleSystemSimulationSpace.Local;
-                vel.radial = new ParticleSystem.MinMaxCurve(p.radialSpeed * speed);
+                vel.radial = new ParticleSystem.MinMaxCurve(-inSpeed);
+                Stretch(col, 0.07f, 1.2f);
 
                 var emission = col.emission;
                 emission.rateOverTime = 0f;
-                int pulseCount = Mathf.RoundToInt(p.burstCount * density);
+                int pulseCount = Mathf.RoundToInt(70f * density);
                 var pulseBurst = new ParticleSystem.Burst(0.0f, (short)pulseCount);
                 pulseBurst.cycleCount = 15;
-                pulseBurst.repeatInterval = 0.35f;
+                pulseBurst.repeatInterval = 0.45f;
                 emission.SetBursts(new[] { pulseBurst });
                 bodyTracks.Add((col, 0f));
-
-                var flash = Track("Sign_Collection_Flash", look, targetPoint, Frame.Facing(Frame.Normal), s, local: true, gravityOverride: 0f);
-                Shape(flash, ParticleSystemShapeType.Sphere, s * 0.15f, 0f);
-                Speed(flash, 0.2f, 0.22f);
-                ApplyColor(flash, p.startColor, p.endColor);
-                ApplySize(flash, s * 1.2f);
-                var flashEmission = flash.emission;
-                flashEmission.rateOverTime = 0f;
-                var flashBurstObj = new ParticleSystem.Burst(0.2f, (short)4);
-                flashBurstObj.cycleCount = 15;
-                flashBurstObj.repeatInterval = 0.35f;
-                flashEmission.SetBursts(new[] { flashBurstObj });
-                bodyTracks.Add((flash, 0f));
             }
 
             if (plan.Repetition > 0f)
             {
                 var p = SpellVisualModifierMath.GetRepetitionParams(variant, plan.Repetition, s);
-                // repetition: particulas que vuelven al sello (reflujo) con destello
-                var rep = Track("Sign_Repetition", look, anchor, Frame.Facing(Frame.Normal), s, local: true, gravityOverride: 0f);
-                Shape(rep, p.shapeType, p.shapeRadiusFactor * s * 1.8f, p.shapeAngle);
-                Speed(rep, speed * 0.4f, look.lifetime * p.lifetimeFactor * 1.2f);
-                ApplyColor(rep, p.startColor, p.endColor);
-                ApplySize(rep, look.size * s * p.sizeFactor * 1.5f);
-
+                // repetition: el tiempo corre al reves. Lluvia de particulas que CAE hacia el sello desde lo alto (flujo invertido,
+                // palida, se achica al llegar) + anillo que gira como reloj + destellos periodicos.
+                float height = s * 3.4f;
+                var rep = Track("Sign_Repetition", look, anchor + Frame.Normal * height, Frame.Facing(-Frame.Normal), s, local: true, gravityOverride: 0f);
+                Shape(rep, ParticleSystemShapeType.Circle, s * 0.8f, 0f);
+                float fall = speed * 0.8f;
+                Speed(rep, 0f, height / fall);
+                Color paleStart = Color.Lerp(p.startColor, Color.white, 0.6f); paleStart.a = 0.2f;
+                Color paleEnd = Color.white; paleEnd.a = 1f;
+                ApplyColor(rep, paleStart, paleEnd);
+                ApplySize(rep, look.size * s * p.sizeFactor * 1.3f);
+                var shrink = rep.sizeOverLifetime;
+                shrink.enabled = true;
+                shrink.size = new ParticleSystem.MinMaxCurve(1f, AnimationCurve.EaseInOut(0f, 1.2f, 1f, 0.25f));
                 var vel = rep.velocityOverLifetime;
                 vel.enabled = true;
                 vel.space = ParticleSystemSimulationSpace.Local;
-                vel.z = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(
-                    new Keyframe(0f, speed * 0.6f),
-                    new Keyframe(0.4f, 0f),
-                    new Keyframe(1f, -speed * 1.2f)
-                ));
-                vel.radial = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(
-                    new Keyframe(0f, 0.25f * s),
-                    new Keyframe(0.5f, 0f),
-                    new Keyframe(1f, -0.8f * s)
-                ));
-                AddBody(rep, p.rateFactor * density * 1.4f, impacts: false);
+                vel.z = new ParticleSystem.MinMaxCurve(fall);
+                vel.orbitalZ = new ParticleSystem.MinMaxCurve(-1.2f);
+                Stretch(rep, 0.1f, 1.8f);
+                AddBody(rep, 170f * density, impacts: false);
+
+                var ring = Track("Sign_Repetition_Ring", look, anchor + Frame.Normal * (s * 0.15f), Frame.Facing(Frame.Normal), s, local: true, gravityOverride: 0f);
+                Shape(ring, ParticleSystemShapeType.Circle, s * 1.35f, 0f);
+                var ringShape = ring.shape;
+                ringShape.radiusThickness = 0f;
+                Speed(ring, 0f, 0.7f);
+                ApplyColor(ring, Color.white, p.startColor);
+                ApplySize(ring, look.size * s * 0.8f);
+                var ringVel = ring.velocityOverLifetime;
+                ringVel.enabled = true;
+                ringVel.space = ParticleSystemSimulationSpace.Local;
+                ringVel.orbitalZ = new ParticleSystem.MinMaxCurve(-4f);
+                AddBody(ring, 120f, impacts: false);
 
                 var flash = Track("Sign_Repetition_Flash", look, anchor, Frame.Facing(Frame.Normal), s, local: true, gravityOverride: 0f);
                 Shape(flash, ParticleSystemShapeType.Sphere, s * 0.2f, 0f);
@@ -535,13 +586,11 @@ namespace SpellSimulator.Output
                 ApplySize(flash, s * 1.8f);
                 var flashEmission = flash.emission;
                 flashEmission.rateOverTime = 0f;
-                int flashBurst = Mathf.RoundToInt(p.burstCount * density * 0.4f);
-                var repBurstObj = new ParticleSystem.Burst(0.0f, (short)flashBurst);
+                var repBurstObj = new ParticleSystem.Burst(0.0f, (short)Mathf.RoundToInt(p.burstCount * density * 0.4f));
                 repBurstObj.cycleCount = 10;
                 repBurstObj.repeatInterval = 0.45f;
                 flashEmission.SetBursts(new[] { repBurstObj });
                 bodyTracks.Add((flash, 0f));
-                AddBurst(rep, Mathf.RoundToInt(p.burstCount * density));
             }
 
             if (plan.Weave > 0f)
@@ -602,6 +651,26 @@ namespace SpellSimulator.Output
             var col = ps.colorOverLifetime;
             col.enabled = true;
             col.color = new ParticleSystem.MinMaxGradient(SpellVisualModifierMath.CreateGradient(start, end));
+        }
+
+        /// <summary>Rafaga que se repite durante el cuerpo (golpes sucesivos); se prende con el golpe como el resto del cuerpo.</summary>
+        private void RepeatingBurst(ParticleSystem ps, int count, float interval)
+        {
+            var emission = ps.emission;
+            emission.rateOverTime = 0f;
+            var burst = new ParticleSystem.Burst(0f, (short)Mathf.Clamp(count, 1, 600));
+            burst.cycleCount = 12;
+            burst.repeatInterval = interval;
+            emission.SetBursts(new[] { burst });
+            bodyTracks.Add((ps, 0f));
+        }
+
+        private static void Stretch(ParticleSystem ps, float velocityScale, float lengthScale)
+        {
+            var r = ps.GetComponent<ParticleSystemRenderer>();
+            r.renderMode = ParticleSystemRenderMode.Stretch;
+            r.velocityScale = velocityScale;
+            r.lengthScale = lengthScale;
         }
 
         private static void ApplySize(ParticleSystem ps, float size)

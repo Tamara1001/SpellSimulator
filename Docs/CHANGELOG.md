@@ -5,6 +5,15 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-18 — VFX de signos, segunda pasada: forma propia, region, tinta resistente y estabilidad
+
+- `SpellManifestation` (ahora `partial`): crush = onda de choque plana + escombros en golpes repetidos; billowing = nube opaca y grande que crece; focus = haz largo + punto de mira giratorio; gather = estelas planas hacia el sello; collection = nucleo estable sobre el sello + pulsos desde todos lados; repetition = flujo invertido (lluvia que cae al sello) + anillo-reloj. Base reducida a ~10 % con esos signos.
+- `region` (`SpellManifestationExtras.ApplyRegion`): anillo de fuego, cortina de agua, muro de viento, perimetro de luz, domo de cristal y cerco de polvo de tierra.
+- `waterproof`: anillo de destellos palidos que repele gotas. `stability` baja: ruido en particulas, chispas (`Sign_Unstable_Crackle`) y parpadeo de luz. Logica pura en `SpellVisualExtrasMath` + `SpellVisualExtrasMathTests`.
+- Harness `HarnessModifierMatrix`: encuadre aislado (capa propia, fondo liso y disco de suelo, sin arboles ni postes), cuerpos fisicos del hechizo incluidos y borrados entre capturas, espera en tiempo real para tierra/cristal (anclaje) y 3 extras (region, waterproof, stability_low) fuera del conteo: `DONE n=84 extras=18`.
+- Fix: `HarnessPlaySmoke.cs` tenia un `Split('\n')` roto con salto de linea literal (no compilaba).
+- Sutiles aun: viento (crush, spread, gravity, waterproof), tierra solida (cool, entwine, spread, gravity: el cuerpo es la roca), waterproof en general. Docs: `MODIFICADORES_AUDITORIA.md` (tandas 2 y 3 hechas, salvo la parte fisica de region/waterproof).
+
 ## 2026-11-18 — Lienzos, bloque 0: laboratorio sin poste y «Limpiar efectos»
 
 - El papel de prueba del campo flota (se quitó `LabPaperStand`); sigue moviéndose y girando con los controles del banco (Lado/Distancia/Altura/Giro/Inclinac./Tam. papel).

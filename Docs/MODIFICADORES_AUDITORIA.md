@@ -133,3 +133,9 @@ Esta tabla audita cómo cada variable escalar del dibujo, parámetro de `SpellIR
   - **Focus (Mira):** Trazar una estela tenue o línea de partículas entre el sello y la posición del objetivo fijado (`Health`).
   - **Repetition:** Efecto de inversión de tiempo con partículas que se absorben hacia el sello y destello temporal.
   - **Weave:** Generar dos emisores gemelos con desfase orbital helicoidal en el módulo `velocityOverLifetime` para que las trayectorias de partículas se entrelacen visualmente en una trenza.
+
+---
+
+## 5. Estado (2026-11-18)
+
+Hecho en VFX: los 11 signos con forma propia (segunda pasada), `region` por elemento, `waterproof` (anillo visual) y `stability` (ruido, chispas, parpadeo). Pendiente: efectos fisicos de `region` (muro que desvia, perimetro que delimita) y de `waterproof` en `MagicWorld`/`SealBreaker`.

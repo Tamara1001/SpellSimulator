@@ -23,7 +23,7 @@ namespace SpellSimulator.EditorTools
         private static IEnumerator routine;
         private static readonly StringBuilder report = new StringBuilder();
         private static int startFrame = -1;
-        private static int captureCount;
+        private static int captureCount, extraCount;
 
         private struct Variant
         {
@@ -38,8 +38,12 @@ namespace SpellSimulator.EditorTools
             new Variant("billowing", 1f), new Variant("cool", 1f), new Variant("empower", 1f),
             new Variant("entwine", 1f), new Variant("focus", 1f), new Variant("gather", 1f),
             new Variant("collection", 1f), new Variant("repetition", 1f), new Variant("weave", 1f),
-            new Variant("spread_high", 0f), new Variant("gravity_low", 0f)
+            new Variant("spread_high", 0f), new Variant("gravity_low", 0f),
+            // Extras (no cuentan en n=84): region, tinta resistente, estabilidad baja.
+            new Variant("region", 1f), new Variant("waterproof", 1f), new Variant("stability_low", 0.2f)
         };
+
+        private static bool IsExtra(string id) => id == "region" || id == "waterproof" || id == "stability_low";
 
         [MenuItem("SpellSimulator/Harness/Modifier Matrix")]
         public static void Run()
@@ -65,7 +69,7 @@ namespace SpellSimulator.EditorTools
                 if (!more)
                 {
                     routine = null;
-                    File.WriteAllText(ResultPath, "DONE n=" + captureCount + "\n" + report);
+                    File.WriteAllText(ResultPath, "DONE n=" + captureCount + " extras=" + extraCount + "\n" + report);
                     EditorApplication.isPlaying = false;
                 }
                 return;
@@ -76,6 +80,7 @@ namespace SpellSimulator.EditorTools
             SessionState.SetBool(FlagKey, false);
             report.Clear();
             captureCount = 0;
+            extraCount = 0;
             routine = CaptureMatrix();
         }
 
@@ -106,6 +111,7 @@ namespace SpellSimulator.EditorTools
                 foreach (var variant in Variants)
                 {
                     var spell = CreateSpell(element.Type, element.Sigil, variant);
+                    SnapshotColliders();
                     var manifestation = output.SpawnSpellEffect(spell, canvas, new Vector2(0.5f, 0.5f));
                     if (manifestation == null)
                     {
@@ -114,14 +120,22 @@ namespace SpellSimulator.EditorTools
                     }
                     manifestation.FastForward(SpellManifestation.ChargeSeconds + SpellManifestation.StrikeSeconds + 0.7f);
                     yield return null;
+                    // Tierra y cristal son cuerpos fisicos que nacen/caen en tiempo real: se espera para ver donde quedan (anclaje al suelo).
+                    if (element.Type == ElementType.Earth)
+                    {
+                        float until = Time.realtimeSinceStartup + 1.6f;
+                        while (Time.realtimeSinceStartup < until) yield return null;
+                    }
+                    if (manifestation == null) { report.AppendLine($"{element.Id}_{variant.Id} ERROR manifestacion destruida"); continue; }
 
                     string file = Path.GetFullPath(Path.Combine(CaptureDirectory, $"mod_{element.Id}_{variant.Id}.png"));
                     string hash = Capture(file, manifestation.Frame.Origin, manifestation.Frame.Normal, manifestation);
                     string duplicate = hashesForElement.TryGetValue(hash, out string original) ? " DUPLICADO_DE=" + original : string.Empty;
                     if (duplicate.Length == 0) hashesForElement.Add(hash, variant.Id);
                     report.AppendLine($"{element.Id}_{variant.Id} {hash}{duplicate}");
-                    captureCount++;
+                    if (IsExtra(variant.Id)) extraCount++; else captureCount++;
                     UnityEngine.Object.Destroy(manifestation.gameObject);
+                    DestroyNewBodies();
                     // No se llama a ResetWorld: destruia el DrawingCanvas y rompia las capturas siguientes.
                     yield return null;
                 }
@@ -168,11 +182,37 @@ namespace SpellSimulator.EditorTools
                 case "weave": plan.Weave = variant.Value; break;
                 case "spread_high": spell.spread = 1f; break;
                 case "gravity_low": spell.gravity = 0.1f; break;
+                case "region": plan.Directed = 1f; break;
+                case "waterproof": spell.waterproof = true; break;
+                case "stability_low": spell.stability = variant.Value; break;
             }
             return spell;
         }
 
-        private const int IsolatedLayer = 31;
+        private const int IsolatedLayer = 29;
+        private static readonly HashSet<int> preexisting = new HashSet<int>();
+        private static Vector3 snapshotCenter;
+
+        /// <summary>Anota los colliders que ya existen cerca del sello para distinguir lo que crea el hechizo (rocas, muros, cristales).</summary>
+        private static void SnapshotColliders()
+        {
+            var canvas = UnityEngine.Object.FindFirstObjectByType<DrawingCanvas>();
+            snapshotCenter = canvas != null ? canvas.transform.position : Vector3.zero;
+            preexisting.Clear();
+            foreach (var col in Physics.OverlapSphere(snapshotCenter, 12f, ~0, QueryTriggerInteraction.Collide))
+                preexisting.Add(col.GetInstanceID());
+        }
+
+        /// <summary>Borra los cuerpos que dejo el hechizo para que no contaminen la captura siguiente.</summary>
+        private static void DestroyNewBodies()
+        {
+            foreach (var col in Physics.OverlapSphere(snapshotCenter, 12f, ~0, QueryTriggerInteraction.Collide))
+            {
+                if (col == null || preexisting.Contains(col.GetInstanceID())) continue;
+                if (col.GetComponentInParent<DrawingCanvas>() != null) continue;
+                UnityEngine.Object.Destroy(col.attachedRigidbody != null ? col.attachedRigidbody.gameObject : col.gameObject);
+            }
+        }
 
         private static void SetLayerRecursively(GameObject root, int layer)
         {
@@ -185,6 +225,9 @@ namespace SpellSimulator.EditorTools
             var go = new GameObject("HarnessModifierMatrixCam");
             var texture = new RenderTexture(width, height, 24);
             Texture2D image = null;
+            GameObject ground = null;
+            Material groundMaterial = null;
+            var movedLayers = new List<(GameObject go, int layer)>();
             var previous = RenderTexture.active;
             try
             {
@@ -213,20 +256,32 @@ namespace SpellSimulator.EditorTools
                 }
                 string boundsText = hasBounds ? live.ToString() : "sin particulas";
                 report.AppendLine("  bounds=" + boundsText + " origen=" + target + " normal=" + normal);
-                Vector3 position = focus + side * 1.2f;
-                bool found = false;
-                foreach (float distance in new[] { reach, reach * 0.8f, reach * 0.6f, reach * 0.4f })
+                // Aislado: solo se renderiza la capa del efecto sobre un fondo liso y un disco de suelo en el plano del sello,
+                // asi arboles, postes y paredes no tapan nada (y se ve si el efecto queda hundido bajo el plano).
+                camera.clearFlags = CameraClearFlags.SolidColor;
+                camera.backgroundColor = new Color(0.16f, 0.19f, 0.25f, 1f);
+                camera.cullingMask = 1 << IsolatedLayer;
+                camera.nearClipPlane = 0.05f;
+                ground = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+                UnityEngine.Object.DestroyImmediate(ground.GetComponent<Collider>());
+                ground.layer = IsolatedLayer;
+                ground.transform.SetPositionAndRotation(target - n * 0.01f, Quaternion.FromToRotation(Vector3.up, n));
+                ground.transform.localScale = new Vector3(reach * 3f, 0.01f, reach * 3f);
+                var groundShader = Shader.Find("Universal Render Pipeline/Lit") ?? Shader.Find("Standard");
+                groundMaterial = new Material(groundShader);
+                groundMaterial.color = new Color(0.36f, 0.5f, 0.3f, 1f);
+                ground.GetComponent<Renderer>().sharedMaterial = groundMaterial;
+                SetLayerRecursively(manifestation.gameObject, IsolatedLayer);
+                // Cuerpos fisicos del hechizo (rocas, cristales, agua) cerca del sello: se mueven un momento a la capa aislada.
+                foreach (var col in Physics.OverlapSphere(target, 3.5f, ~0, QueryTriggerInteraction.Ignore))
                 {
-                    foreach (Vector3 dir in new[] { side, -side, Vector3.Cross(n, side).normalized, -Vector3.Cross(n, side).normalized })
-                    {
-                        Vector3 candidate = focus + dir * distance;
-                        if (Physics.Linecast(focus, candidate, ~0, QueryTriggerInteraction.Ignore)) continue;
-                        position = candidate;
-                        found = true;
-                        break;
-                    }
-                    if (found) break;
+                    if (col == null || col.gameObject.layer == IsolatedLayer) continue;
+                    if (preexisting.Contains(col.GetInstanceID()) || col.bounds.size.magnitude > 8f) continue; // solo lo que creo el hechizo
+                    if (col.GetComponentInParent<SpellManifestation>() != null) continue;
+                    movedLayers.Add((col.gameObject, col.gameObject.layer));
+                    col.gameObject.layer = IsolatedLayer;
                 }
+                Vector3 position = focus + side * reach + Vector3.up * (reach * 0.3f);
                 go.transform.position = position;
                 go.transform.LookAt(focus);
                 camera.fieldOfView = 42f;
@@ -246,6 +301,9 @@ namespace SpellSimulator.EditorTools
             {
                 RenderTexture.active = previous;
                 if (image != null) UnityEngine.Object.DestroyImmediate(image);
+                foreach (var moved in movedLayers) if (moved.go != null) moved.go.layer = moved.layer;
+                if (ground != null) UnityEngine.Object.DestroyImmediate(ground);
+                if (groundMaterial != null) UnityEngine.Object.DestroyImmediate(groundMaterial);
                 texture.Release();
                 UnityEngine.Object.DestroyImmediate(texture);
                 UnityEngine.Object.DestroyImmediate(go);

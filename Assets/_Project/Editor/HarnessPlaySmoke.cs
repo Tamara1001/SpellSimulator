@@ -124,8 +124,7 @@ namespace SpellSimulator.EditorTools
         {
             if (type == LogType.Error || type == LogType.Exception || type == LogType.Assert)
             {
-                if (errorLogs++ == 0) firstError = condition + " @ " + (stackTrace ?? "").Split('
-')[0];
+                if (errorLogs++ == 0) firstError = condition + " @ " + (stackTrace ?? "").Split('\n')[0];
             }
         }
 
@@ -514,6 +513,41 @@ namespace SpellSimulator.EditorTools
             for (float end = Time.realtimeSinceStartup + 0.5f; Time.realtimeSinceStartup < end;) yield return null;
             LabOverlay.Visible = false;
             Check(toggled && !LabOverlay.Visible, "laboratorio: las lentes prenden y apagan el overlay");
+
+            // --- Lienzos A: marco de cara de disparo, atril con slot (acoplar, cambiar, girar) y libretas de 8 hojas maximo.
+            var easelGo = Find("Easel_Field");
+            var easelComp = easelGo != null ? easelGo.GetComponent<SpellSimulator.World.CanvasEasel>() : null;
+            var slotted = easelComp != null ? easelComp.Occupant : null;
+            Check(easelComp != null && slotted != null && slotted.Docked, "lienzos A: el atril del campo arranca con su lienzo acoplado al slot");
+            var frame = slotted != null ? slotted.GetComponentInChildren<SpellSimulator.World.CanvasFrame>(true) : null;
+            if (frame != null)
+            {
+                var face0 = frame.Face;
+                frame.Toggle();
+                bool flipped = frame.Face != face0 && frame.Canvas.InkSign == SpellSimulator.Canvas.CanvasRules.InkSign(frame.Face);
+                frame.Toggle();
+                Check(flipped && frame.Face == face0, "lienzos A: el boton del marco invierte la cara de disparo (InkSign) y vuelve");
+            }
+            else failures.Add("lienzos A: el lienzo del atril no tiene CanvasFrame");
+            if (easelComp != null && slotted != null)
+            {
+                float yaw0 = easelGo.transform.eulerAngles.y;
+                easelComp.Press();
+                float dyaw = Mathf.DeltaAngle(yaw0, easelGo.transform.eulerAngles.y);
+                Check(Mathf.Abs(dyaw - SpellSimulator.Canvas.CanvasRules.EaselTurnStep) < 0.5f && slotted.Docked, "lienzos A: girar el atril gira el lienzo acoplado con el");
+                // Cambio: un lienzo suelto cerca del slot entra y el anterior sale.
+                var other = Find("Notebook_A");
+                var otherCanvas = other != null ? other.GetComponent<SpellSimulator.World.PhysicalCanvas>() : null;
+                if (otherCanvas != null)
+                {
+                    other.transform.position = easelComp.Slot.position + easelComp.Slot.forward * 0.4f;
+                    bool snapped = SpellSimulator.World.CanvasEasel.TrySnap(otherCanvas);
+                    Check(snapped && easelComp.Occupant == otherCanvas && !slotted.Docked, "lienzos A: acercar una libreta al atril ocupado cambia los lienzos");
+                    var pagesComp = other.GetComponent<SpellSimulator.World.NotebookPages>();
+                    Check(pagesComp != null && pagesComp.PageCount == SpellSimulator.Canvas.CanvasRules.MaxPages, "lienzos A: la libreta tiene 8 hojas");
+                }
+                if (world != null) world.ResetWorld();
+            }
 
             // --- Lienzos 0: sin poste del papel de prueba y «Limpiar efectos» (boton + despawn de marcas).
             bool noStand = GameObject.Find("LabPaperStand") == null;
