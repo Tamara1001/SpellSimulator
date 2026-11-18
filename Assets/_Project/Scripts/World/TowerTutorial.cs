@@ -119,7 +119,8 @@ namespace SpellSimulator.World
             progress.Begin();
             VrTutorialTexts.Apply();
             TutorialExercise.ResetAll();
-            crouched = false;
+            // VR: agacharse no es obligatorio (se puede por boton o con el cuerpo, pero la viga no traba la reja).
+            crouched = Player.PlatformDetector.IsVR;
             jumped = false;
             if (props != null)
             {

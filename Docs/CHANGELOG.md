@@ -5,6 +5,15 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-18 — VR, 4.ª prueba: causa raíz (Camera.main nulo), menú VR, dibujo por contacto, perillas
+
+- **Causa raíz:** la cámara del visor no tenía el tag `MainCamera`, así que `Camera.main` era null en VR. Eso rompía: el avance según la mirada (caminaba según el cuerpo, que solo gira con el giro a saltos), la HUD de la muñeca (hotbar), agacharse, el giro y el enderezado de lo agarrado. `PlatformDetector` ahora etiqueta la cámara VR.
+- **Menú VR** (`VrMenu`, clic del stick der.): panel flotante con Continuar, Controles (ayuda), mano principal, saltear tutorial, ir al Nexo, salir. Rayo de cualquier mano + gatillo; bloquea la entrada mientras está abierto.
+- **Dibujo por contacto:** punta a ≤ 3,5 cm de un lienzo = el trazo cae bajo la punta; más lejos sigue el rayo a distancia (`PhysicalTool.TryContact`).
+- **Perillas del laboratorio:** además del giro de muñeca, el stick der. las gira (analógico); con una perilla capturada el stick no gira al jugador.
+- **Tutorial VR:** agacharse ya no es obligatorio (la reja pide solo saltar).
+- Sin probar en el visor.
+
 ## 2026-11-18 — VR, 3.ª prueba: giro con el stick, agacharse real, manos vacías al empezar, carteles con controles VR
 
 - **Giro con stick der.:** el giro a saltos rotaba el transform pero el Rigidbody (con interpolación) lo pisaba; ahora se le pasa la nueva pose (`PlayerLook.HandleSnapTurn`).

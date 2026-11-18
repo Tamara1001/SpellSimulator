@@ -226,7 +226,14 @@ namespace SpellSimulator.Lab
                     if (input.IsVR)
                     {
                         unwrappedRoll = LabControlMath.UnwrapAngle(unwrappedRoll, input.WristRoll);
-                        next = LabControlMath.DeltaToValue(startValue, unwrappedRoll - startRoll, min, max, VrFullRangeDegrees);
+                        if (Mathf.Abs(input.PointerDelta.x) > 1e-4f)
+                        {
+                            // Stick der.: gira la perilla sin torcer la muñeca (respaldo del giro por muñeca). La muñeca retoma desde aca.
+                            next = LabControlMath.DeltaToValue(dragValue, input.PointerDelta.x, min, max, PcFullRangeDrag);
+                            startValue = next;
+                            startRoll = unwrappedRoll;
+                        }
+                        else next = LabControlMath.DeltaToValue(startValue, unwrappedRoll - startRoll, min, max, VrFullRangeDegrees);
                     }
                     else
                     {

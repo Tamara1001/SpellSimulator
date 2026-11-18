@@ -85,7 +85,10 @@ namespace SpellSimulator.Player
                 float roll = 0f;
                 Vector3 reference = Vector3.Cross(Vector3.up, dir);
                 if (reference.sqrMagnitude > 1e-4f) roll = Vector3.SignedAngle(reference.normalized, hand.right, dir);
-                return new ManipulationInput(Vector2.zero, hand.position, roll, hand.position, dir, hand.right, wheel, true);
+                // Stick der. (analogico) = giro de perillas sin torcer la muñeca: ~1 s a fondo recorre casi todo el rango.
+                Vector2 stick = inputReader.VrStickRight;
+                var stickDelta = new Vector2(Mathf.Abs(stick.x) > 0.25f ? stick.x * 300f * Time.deltaTime : 0f, 0f);
+                return new ManipulationInput(stickDelta, hand.position, roll, hand.position, dir, hand.right, wheel, true);
             }
             Transform cam = cameraTransform;
             return new ManipulationInput(inputReader.LookValue, cam.position, 0f, cam.position, cam.forward, cam.right, wheel, false);

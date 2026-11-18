@@ -343,6 +343,36 @@ namespace SpellSimulator.World
         }
 
         private static readonly RaycastHit[] focusHits = new RaycastHit[16];
+        private static readonly Collider[] contactHits = new Collider[8];
+        private const float ContactRadius = 0.035f;
+
+        /// <summary>
+        /// [VR] Dibujo por contacto: si la punta esta a menos de ~3,5 cm de un lienzo, el trazo cae en el punto del lienzo mas cercano
+        /// a la punta (como apoyar un lapiz en el papel), sin importar hacia donde apunte la mano.
+        /// </summary>
+        private bool TryContact(Vector3 tip, out Vector2 uv, out DrawingCanvas canvas)
+        {
+            uv = Vector2.zero;
+            canvas = null;
+            int n = Physics.OverlapSphereNonAlloc(tip, ContactRadius, contactHits, canvasLayer, QueryTriggerInteraction.Collide);
+            float best = float.MaxValue;
+            for (int i = 0; i < n; i++)
+            {
+                if (!contactHits[i].TryGetComponent(out DrawingCanvas c)) continue;
+                Vector3 normal = c.FaceNormal;
+                Vector3 onPlane = contactHits[i].ClosestPoint(tip);
+                float side = Vector3.Dot(normal, tip - onPlane);
+                // Punta delante o detras (o dentro) del lienzo: el rayo sale siempre desde el lado de la punta.
+                if (side < 0f) normal = -normal;
+                float distance = Mathf.Abs(Vector3.Dot(normal, tip - onPlane));
+                if (distance >= best) continue;
+                best = distance;
+                canvas = c;
+                var ray = new Ray(tip + normal * 0.02f, -normal);
+                uv = c.GetUVFromRay(ray, onPlane);
+            }
+            return canvas != null;
+        }
 
         private bool TryShootLaser(out Vector2 uv, out DrawingCanvas canvas, bool allowInscribe = false)
         {
@@ -353,6 +383,8 @@ namespace SpellSimulator.World
             float distance;
             if (PlatformDetector.IsVR)
             {
+                // Punta cerca del papel: se dibuja justo bajo la punta (apoyar el lapiz); lejos: a distancia con el rayo.
+                if (TryContact(raycastOrigin.position, out uv, out canvas)) return true;
                 ray = new Ray(raycastOrigin.position, raycastOrigin.forward);
                 distance = vrContactDrawing ? vrContactReach : vrMaxDrawDistance;
             }

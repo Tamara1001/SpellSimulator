@@ -64,6 +64,16 @@ namespace SpellSimulator.Player
             if (vrPointerLineL != null) vrPointerLineL.enabled = false;
             // La HUD de pantalla no se ve en el visor: un panel junto a la mano izquierda con la barra, la tinta y los avisos.
             if (vrLeftController != null) gameObject.AddComponent<VrWristHud>().Init(this, vrLeftController);
+            // Menu y ayuda de controles (clic del stick derecho).
+            gameObject.AddComponent<VrMenu>().Init(this, inputReader, vrLeftController, vrRightController);
+        }
+
+        /// <summary>[VR] Cambia la mano principal desde el menu (la herramienta equipada pasa a esa mano).</summary>
+        public void SetMainHandVr(bool right)
+        {
+            SetVrMainHand(right);
+            rayRight = right;
+            AttachToMain(inventory.HeldMain);
         }
 
         private void SetVrMainHand(bool right)

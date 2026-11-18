@@ -86,7 +86,7 @@ namespace SpellSimulator.Player
         private void HandleSnapTurn()
         {
             int flick = inputReader.VrFlickX;
-            if (flick == 0 || (interactor != null && interactor.HoldsPageable)) return;
+            if (flick == 0 || (interactor != null && (interactor.HoldsPageable || interactor.IsManipulating))) return;
             Camera cam = Camera.main;
             Vector3 pivot = cam != null ? cam.transform.position : transform.position;
             transform.RotateAround(pivot, Vector3.up, flick * VrSnapTurnDegrees);

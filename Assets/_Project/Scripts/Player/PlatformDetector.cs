@@ -30,6 +30,13 @@ namespace SpellSimulator.Player
 
             if (pcRig != null) pcRig.SetActive(!IsVR);
             if (vrRig != null) vrRig.SetActive(IsVR);
+            // La camara del visor no tiene el tag MainCamera (solo la de PC): sin esto Camera.main daba null en VR y fallaban el
+            // avance segun la mirada, la HUD de la muñeca, agacharse, el giro y varias cosas mas.
+            if (IsVR && vrRig != null)
+            {
+                Camera vrCamera = vrRig.GetComponentInChildren<Camera>(true);
+                if (vrCamera != null) vrCamera.tag = "MainCamera";
+            }
             SetCursorLocked(!IsVR);
 
             Debug.Log($"[PlatformDetector] Modo: {(IsVR ? "VR" : "PC")}");

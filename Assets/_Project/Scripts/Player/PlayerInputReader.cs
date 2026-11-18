@@ -95,6 +95,8 @@ namespace SpellSimulator.Player
         public bool VrTriggerDownRight { get; private set; }
         /// <summary>[VR] Golpe del stick derecho hacia los costados (-1 / +1): gira a saltos o pasa la pagina. Solo el frame del golpe.</summary>
         public int VrFlickX { get; private set; }
+        /// <summary>[VR] Stick derecho, valor analogico (cero fuera de VR o con la entrada bloqueada).</summary>
+        public Vector2 VrStickRight { get; private set; }
         /// <summary>[VR] Golpe del stick derecho hacia arriba (+1) o abajo (-1): cambia de slot de la barra. Solo el frame del golpe.</summary>
         public int VrSlotDelta { get; private set; }
         /// <summary>[VR] Golpe del stick derecho hacia arriba (+1) o abajo (-1): cambia el grosor de la herramienta. Solo el frame del golpe.</summary>
@@ -494,6 +496,7 @@ namespace SpellSimulator.Player
             VrFlickX = 0;
             VrWidthDelta = 0;
             Vector2 stick = stickRightAction.ReadValue<Vector2>();
+            VrStickRight = stick;
             float mag = stick.magnitude;
             if (!stickArmed) { if (mag < VrFlickOff) stickArmed = true; }
             else if (mag > VrFlickOn)
@@ -512,6 +515,7 @@ namespace SpellSimulator.Player
             VrFlickX = 0;
             VrSlotDelta = 0;
             VrWidthDelta = 0;
+            VrStickRight = Vector2.zero;
         }
 
         /// <summary>
