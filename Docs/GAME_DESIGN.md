@@ -220,6 +220,14 @@ En VR el rayo sale de la última mano que apretó grip o gatillo. Las manos se v
 secundaria uno solo: lo que se agarra con E (lienzo, caja, el grimorio) y se arrastra por el mundo, siempre visible en la barra.
 Con un lienzo agarrado se puede rotar, dar vuelta, dibujar sobre él y fijarlo a la pantalla (V).
 
+**Lienzos (2026-11-18, Docs/LIENZOS_PLAN.md):** solo hay dos objetos, el **Lienzo** (1 hoja) y la **Libreta** (hasta 8 hojas), con las mismas reglas
+(agarrar con E, dejar flotando con G, arrojar con Q, dar vuelta con F, Tab a pantalla). Tamaños S/M/L (`CanvasRules`): hojas cuadradas 0,35/0,55/1 m y
+rectangulares 0,3×0,4 / 0,5×0,7 / 1×1,4 m; libretas S de bolsillo circular (Ø 0,18 m), M la de siempre (0,24×0,32) y L (0,36×0,48).
+**Cara de disparo:** cada lienzo muestra con su marco por cuál cara sale el hechizo (dorado = la de dibujo, azul = la de atrás, con una flecha). El botón
+de la esquina del marco (apuntar + clic, gatillo en VR) la invierte sin mover el lienzo; F sigue dando vuelta el objeto.
+**Atriles:** el slot recibe el lienzo que se suelta (E) o se deja flotando (G) a menos de 0,85 m; si ya había otro, se cambian. Apuntando a la base y con
+clic el atril gira 45° y el lienzo con él (así se elige hacia dónde dispara). Los caballetes del tutorial siguen fijos.
+
 ## Decisiones (2026-10-07)
 1. **Auto-activación**: el hechizo se lanza solo al **cerrar el anillo**. El secundario de las herramientas es deshacer.
    Consecuencia de diseño (canon): *el anillo se cierra al final*. Si el anillo ya estaba cerrado y el sello era

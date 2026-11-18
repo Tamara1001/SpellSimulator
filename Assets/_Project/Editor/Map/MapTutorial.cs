@@ -554,7 +554,7 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 toTarget = target - ground;
             toTarget.y = 0f;
             float yaw = Mathf.Atan2(-toTarget.x, -toTarget.z) * Mathf.Rad2Deg;   // el +Z del caballete (cara visible) mira al lado contrario
-            CanvasDesigns.Easel(template, material, name, ground, yaw);
+            CanvasDesigns.Easel(template, material, name, ground, yaw, false);
             var canvas = GameObject.Find(name + "_Canvas");
             // El hechizo sale por el lado contrario a quien dibuja (hacia el objetivo), no por la cara con tinta.
             var dc = canvas != null ? canvas.GetComponent<DrawingCanvas>() : null;

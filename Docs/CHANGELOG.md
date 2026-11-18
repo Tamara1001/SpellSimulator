@@ -14,6 +14,13 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - Fix: `HarnessPlaySmoke.cs` tenia un `Split('\n')` roto con salto de linea literal (no compilaba).
 - Sutiles aun: viento (crush, spread, gravity, waterproof), tierra solida (cool, entwine, spread, gravity: el cuerpo es la roca), waterproof en general. Docs: `MODIFICADORES_AUDITORIA.md` (tandas 2 y 3 hechas, salvo la parte fisica de region/waterproof).
 
+## 2026-11-18 — Lienzos, bloque A: lienzos unificados, cara de disparo y atriles con slot
+
+- `CanvasSpec`/`CanvasRules` (tamaños S/M/L, formas, 8 hojas máx.) con `CanvasRulesTests`; `CanvasDesigns` ajusta todo lienzo del mapa al preset más cercano (`Snap`).
+- Marco de cara de disparo (`CanvasFrame`, `CanvasFaceButton`, `CanvasFrameBuilder`): dorado/azul + flecha; el botón de la esquina invierte `InkSign` sin mover el lienzo.
+- Atriles con slot (`CanvasEasel`): acople al soltar/dejar flotando cerca, cambio de lienzo, giro de 45° con clic en la base. `PhysicalCanvas` suma `Dock/Eject/Home`. Los caballetes del tutorial siguen fijos.
+- `NotebookPages`: máximo 8 hojas. Docs: `GAME_DESIGN.md` (lienzos), `LIENZOS_PLAN.md` (plan y limitaciones).
+
 ## 2026-11-18 — Lienzos, bloque 0: laboratorio sin poste y «Limpiar efectos»
 
 - El papel de prueba del campo flota (se quitó `LabPaperStand`); sigue moviéndose y girando con los controles del banco (Lado/Distancia/Altura/Giro/Inclinac./Tam. papel).

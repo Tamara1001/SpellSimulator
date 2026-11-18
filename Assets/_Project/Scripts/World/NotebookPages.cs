@@ -16,8 +16,8 @@ namespace SpellSimulator.World
     [RequireComponent(typeof(DrawingCanvas))]
     public class NotebookPages : MonoBehaviour, IPageable, IResettable
     {
-        [SerializeField, Min(1), Tooltip("Cantidad de paginas del cuaderno.")]
-        private int pageCount = 10;
+        [SerializeField, Range(1, CanvasRules.MaxPages), Tooltip("Cantidad de hojas de la libreta (maximo 8).")]
+        private int pageCount = CanvasRules.DefaultPages;
 
         private DrawingCanvas canvas;
         private SpellCaster caster;
@@ -30,6 +30,7 @@ namespace SpellSimulator.World
         private void Awake()
         {
             canvas = GetComponent<DrawingCanvas>();
+            pageCount = Mathf.Clamp(pageCount, 1, CanvasRules.MaxPages);
             for (int i = 0; i < pageCount; i++) pages.Add(new DrawingSession());
         }
 

@@ -26,6 +26,14 @@ Problema: el atril fijo no se gira con la muñeca, y F entre «terminé de dibuj
 3. En un **atril**, el slot decide la dirección: el atril se orienta (gira sobre su base con E + rueda / agarre) y el lienzo hereda esa orientación; además el botón del marco lo invierte sin mover el atril.
 4. Opcional: pequeña ventana de gracia (~0,5 s) tras dibujar el último glifo para invertir con F antes del cast. Solo si 1–3 no alcanzan.
 
+## Bloque A: plan y estado (2026-11-18)
+Decisiones tomadas con los defaults de Tamara: dirección de disparo = propuestas 1–3 (la gracia del punto 4 queda para si hace falta); libreta M = la actual.
+1. `Canvas/CanvasSpec.cs`: `CanvasSpec` (tipo, tamaño, forma, hojas, cara) y `CanvasRules` (dimensiones, `Nearest` para migrar tamaños viejos, 8 hojas máx., cara de disparo = `InkSign`, slot y giro del atril). Tests: `CanvasRulesTests`.
+2. Marco: `World/CanvasFrame` + `CanvasFaceButton` + `CanvasFrameBuilder` (cubos primitivos, sirve en editor y en juego para el restocker). Materiales dorado/azul por `CanvasFrameMaterials` (Editor).
+3. Atril: `World/CanvasEasel` (slot, acople al soltar/flotar, cambio, giro) y `PhysicalCanvas.Dock/Eject/Home`.
+4. `CanvasDesigns` solo coloca: todo lienzo pasa por `Snap` (preset S/M/L más cercano) y recibe marco; los caballetes del campo y de las zonas de práctica son atriles con slot.
+5. Pendiente/limitaciones: la libreta S circular es un quad cuadrado con marco redondo (sin máscara circular del dibujo); los lienzos fijos del tutorial (caballetes `Easel_Wind/Door`, pizarras y placas de MapStructures/MapDetails) no se migran porque sus ejercicios dependen de que no se muevan.
+
 ## Puntos abiertos
 - ¿Aceptás la propuesta de dirección de disparo (1–3, con 4 opcional)?
 - Presets exactos de S/M/L (en metros) y diámetro de la libreta circular.

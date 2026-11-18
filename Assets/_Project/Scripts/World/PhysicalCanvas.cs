@@ -126,6 +126,52 @@ namespace SpellSimulator.World
         // Un lienzo que cayo (soltado o arrojado) se acuesta cara arriba; uno apoyado de pie desde el arranque no.
         private bool settling;
 
+        /// <summary>Atril en cuyo slot esta acoplado (null = suelto).</summary>
+        public CanvasEasel Easel { get; private set; }
+        public bool Docked => Easel != null;
+        /// <summary>Atril donde arranca el lienzo: el reinicio del mundo lo devuelve ahi.</summary>
+        public CanvasEasel Home { get; set; }
+
+        /// <summary>Centro de la superficie en mundo (el pivote puede no estar en el centro).</summary>
+        public Vector3 WorldCenter => canvas != null ? canvas.WorldCenter : transform.position;
+
+        /// <summary>Acopla el lienzo al slot de un atril: queda quieto (sin vaiven ni caida) en la pose pedida.</summary>
+        public void Dock(Vector3 slotPosition, Quaternion rotation, CanvasEasel easel)
+        {
+            if (focused) SetFocus(null, false);
+            if (Easel != null && Easel != easel) Easel.Release(this);
+            Easel = easel;
+            holdParent = null;
+            remoteHeld = false;
+            transform.SetParent(null);
+            if (!rb.isKinematic) { rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+            rb.isKinematic = true;
+            col.isTrigger = true;
+            settling = false;
+            floating = true;
+            floatTimed = false;
+            Vector3 offset = canvas != null ? rotation * canvas.CenterOffsetLocalScaled : Vector3.zero;
+            floatAnchor = slotPosition - offset;
+            floatRotation = rotation;
+            StartPose(floatAnchor, rotation, false);
+        }
+
+        /// <summary>Sale del slot hacia <paramref name="position"/> y queda flotando (el cambio de lienzo en un atril).</summary>
+        public void Eject(Vector3 position)
+        {
+            Undock();
+            transform.position = position;
+            StartFloating(true);
+        }
+
+        private void Undock()
+        {
+            if (Easel == null) return;
+            CanvasEasel e = Easel;
+            Easel = null;
+            e.Release(this);
+        }
+
         /// <summary>True si esta flotando en el aire (se replica en red).</summary>
         public bool IsFloating => floating;
 
@@ -144,6 +190,7 @@ namespace SpellSimulator.World
 
         public void OnRemoteGrab()
         {
+            Undock();
             remoteHeld = true;
             if (focused) SetFocus(null, false);
             floating = false;
@@ -164,11 +211,13 @@ namespace SpellSimulator.World
             transform.SetParent(null);
             if (pin) StartFloating(true);
             else Fall();
+            CanvasEasel.TrySnap(this);
         }
 
         /// <summary>Reinicio del mundo: vuelve a su estado de fisica inicial (la pose la repone Respawnable).</summary>
         public void ResetToInitial()
         {
+            Undock();
             if (focused) SetFocus(null, false);
             holdParent = null;
             floating = false;
@@ -181,6 +230,7 @@ namespace SpellSimulator.World
             rb.useGravity = initialGravity;
             rb.linearDamping = initialDrag;
             if (startFloating) StartFloating();
+            if (Home != null) Home.Place(this);
         }
 
         private void Start()
@@ -199,6 +249,7 @@ namespace SpellSimulator.World
 
         public void OnInteract(Transform holdPoint)
         {
+            Undock();
             holdParent = holdPoint;
             floating = false;
             animating = false;
@@ -219,14 +270,20 @@ namespace SpellSimulator.World
             holdParent = null;
             transform.SetParent(null);
             Fall(); // al soltar cae y se acuesta cara arriba; G lo deja flotando
+            CanvasEasel.TrySnap(this); // cerca de un atril se acopla a su slot
         }
 
         /// <summary>G: lo deja flotando en el aire, enderezado, con un vaiven suave. El interactor ya lo solto.</summary>
-        public void Pin() => StartFloating(true);
+        public void Pin()
+        {
+            StartFloating(true);
+            CanvasEasel.TrySnap(this);
+        }
 
         /// <summary>Arrojado (Q): cae con fisica y se acuesta con la cara hacia arriba.</summary>
         public void Throw(Vector3 velocity)
         {
+            Undock();
             floating = false;
             animating = false;
             transform.SetParent(null);
@@ -319,6 +376,12 @@ namespace SpellSimulator.World
                     // Enfocado: no cae (se vuelve a contar el minuto).
                     if (focused) floatSince = GameClock.Time;
                     else if (PinMath.ShouldRelease(GameClock.Time, floatSince, FloatSeconds)) { Fall(); return; }
+                }
+                if (Easel != null)
+                {
+                    // Acoplado a un atril: quieto en la pose del slot.
+                    transform.SetPositionAndRotation(floatAnchor, floatRotation);
+                    return;
                 }
                 float t = Time.time * bobSpeed + bobPhase; // visual
                 // Tres ondas de periodos distintos: se mueve sin repetirse de forma obvia.

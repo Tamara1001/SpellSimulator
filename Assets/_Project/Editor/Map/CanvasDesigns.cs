@@ -80,14 +80,25 @@ namespace SpellSimulator.EditorTools.Map
         private enum Dressing { None, Notebook, Framed }
 
         /// <summary>Paginas por cuaderno (NotebookPages.pageCount).</summary>
-        private const int NotebookPageCount = 10;
+        private const int NotebookPageCount = CanvasRules.MaxPages;
 
         /// <summary>Margen (m) del marco de madera que sobresale del papel (ver Dress, Dressing.Framed).</summary>
         private const float FrameMargin = 0.045f;
 
         // ---------------------------------------------------------------- piezas
 
-        private static GameObject Spawn(GameObject template, string name, Vector3 position, Quaternion rotation, float width, float height)
+        /// <summary>Ajusta un ancho × alto viejo al preset S/M/L mas parecido (CanvasRules) y devuelve el spec: todos los lienzos del mapa salen de ahi.</summary>
+        private static CanvasSpec Snap(string name, ref float width, ref float height)
+        {
+            var kind = name.Contains("Notebook") ? CanvasKind.Notebook : CanvasKind.Sheet;
+            CanvasSpec spec = CanvasRules.Nearest(kind, width, height);
+            Vector2 d = CanvasRules.Dimensions(spec);
+            width = d.x;
+            height = d.y;
+            return spec;
+        }
+
+        private static GameObject Spawn(GameObject template, string name, Vector3 position, Quaternion rotation, float width, float height, CanvasSpec spec)
         {
             var old = GameObject.Find(name);
             if (old != null) Object.DestroyImmediate(old);
@@ -96,6 +107,9 @@ namespace SpellSimulator.EditorTools.Map
             go.transform.SetPositionAndRotation(position, rotation);
             go.transform.localScale = new Vector3(width, height, template.transform.localScale.z);
             SetInkSide(go);
+            var drawing = go.GetComponent<DrawingCanvas>();
+            if (drawing != null && go.GetComponentInChildren<CanvasFrame>(true) == null)
+                CanvasFrameBuilder.Attach(drawing, CanvasFrameMaterials.Gold, CanvasFrameMaterials.Blue, spec.shape);
             Undo.RegisterCreatedObjectUndo(go, name);
             return go;
         }
@@ -104,7 +118,8 @@ namespace SpellSimulator.EditorTools.Map
         private static GameObject Grabbable(GameObject template, Material material, string name, Vector3 position, Quaternion rotation,
             float width, float height, Dressing dressing)
         {
-            var go = Spawn(template, name, position, rotation, width, height);
+            CanvasSpec spec = Snap(name, ref width, ref height);
+            var go = Spawn(template, name, position, rotation, width, height, spec);
             var rb = go.GetComponent<Rigidbody>();
             rb.isKinematic = false;
             rb.useGravity = true;
@@ -112,7 +127,7 @@ namespace SpellSimulator.EditorTools.Map
             if (grab != null)
             {
                 var so = new SerializedObject(grab);
-                so.FindProperty("objectName").stringValue = name.StartsWith("Notebook") ? "cuaderno" : "lienzo grande";
+                so.FindProperty("objectName").stringValue = spec.kind == CanvasKind.Notebook ? "libreta" : "lienzo";
                 so.FindProperty("startFloating").boolValue = false;
                 so.ApplyModifiedProperties();
             }
@@ -132,7 +147,9 @@ namespace SpellSimulator.EditorTools.Map
         /// <summary>Hoja de papel agarrable; con floating queda flotando en el aire donde se la pone (lienzo flotante).</summary>
         internal static GameObject SheetAt(GameObject template, string name, Vector3 position, Quaternion rotation, float size, bool floating)
         {
-            var go = Spawn(template, name, position, rotation, size, size);
+            float sw = size, sh = size;
+            CanvasSpec spec = Snap(name, ref sw, ref sh);
+            var go = Spawn(template, name, position, rotation, sw, sh, spec);
             var rb = go.GetComponent<Rigidbody>();
             if (rb != null) { rb.isKinematic = false; rb.useGravity = !floating; }
             var grab = go.GetComponent<PhysicalCanvas>();
@@ -198,7 +215,8 @@ namespace SpellSimulator.EditorTools.Map
         private static GameObject Fixed(GameObject template, Material material, string name, Vector3 position, Quaternion rotation,
             float width, float height, Dressing dressing)
         {
-            var go = Spawn(template, name, position, rotation, width, height);
+            CanvasSpec spec = Snap(name, ref width, ref height);
+            var go = Spawn(template, name, position, rotation, width, height, spec);
             var grab = go.GetComponent<PhysicalCanvas>();
             if (grab != null) Object.DestroyImmediate(grab);
             go.GetComponent<Rigidbody>().isKinematic = true;
@@ -265,7 +283,11 @@ namespace SpellSimulator.EditorTools.Map
 
         // ---------------------------------------------------------------- soportes
 
-        internal static void Easel(GameObject template, Material material, string name, Vector3 ground, float yaw)
+        /// <summary>
+        /// Caballete. Con <paramref name="slotted"/> es un atril con slot (CanvasEasel): el lienzo se agarra, se cambia acercando otro
+        /// y se gira el atril con clic en la base. Sin slot (tutorial) el lienzo queda fijo: sus ejercicios dependen de el.
+        /// </summary>
+        internal static void Easel(GameObject template, Material material, string name, Vector3 ground, float yaw, bool slotted = true)
         {
             var old = GameObject.Find(name);
             if (old != null) Object.DestroyImmediate(old);
@@ -292,12 +314,34 @@ namespace SpellSimulator.EditorTools.Map
             float lean = Mathf.Atan2(frontBottomZ - frontTopZ, legHeight);
             Vector3 faceLocal = new Vector3(0f, Mathf.Sin(lean), Mathf.Cos(lean));
             Vector3 topLocal = new Vector3(0f, Mathf.Cos(lean), -Mathf.Sin(lean));
-            const float canvasY = 1.3f;
+            const float canvasY = 1.25f;
             Vector3 onPlane = new Vector3(0f, canvasY, frontBottomZ + (frontTopZ - frontBottomZ) * canvasY / legHeight);
             Vector3 center = onPlane + faceLocal * 0.035f;
-            var canvas = Fixed(template, material, name + "_Canvas", root.transform.TransformPoint(center),
-                Quaternion.LookRotation(-(root.transform.rotation * faceLocal), root.transform.rotation * topLocal), 0.9f, 1.2f, Dressing.None);
+            Quaternion canvasRotation = Quaternion.LookRotation(-(root.transform.rotation * faceLocal), root.transform.rotation * topLocal);
+            if (!slotted)
+            {
+                var fixedCanvas = Fixed(template, material, name + "_Canvas", root.transform.TransformPoint(center), canvasRotation, 0.9f, 1.2f, Dressing.None);
+                fixedCanvas.transform.SetParent(root.transform, true);
+                Undo.RegisterCreatedObjectUndo(root, name);
+                return;
+            }
+
+            // Atril con slot: lienzo L rectangular agarrable (acoplado al arrancar), slot con la pose y base solida para girarlo.
+            var canvas = Grabbable(template, material, name + "_Canvas", root.transform.TransformPoint(center), canvasRotation, 1.0f, 1.4f, Dressing.None);
+            canvas.GetComponent<Rigidbody>().isKinematic = true;
             canvas.transform.SetParent(root.transform, true);
+            var respawn = canvas.GetComponent<Respawnable>();
+            if (respawn != null) Object.DestroyImmediate(respawn);
+            var slot = new GameObject("Slot").transform;
+            slot.SetParent(root.transform, false);
+            slot.localPosition = center;
+            slot.localRotation = Quaternion.LookRotation(faceLocal, topLocal);
+            var foot = root.AddComponent<BoxCollider>();
+            foot.center = new Vector3(0f, 0.06f, -0.3f);
+            foot.size = new Vector3(1.1f, 0.12f, 1.5f);
+            var easel = root.AddComponent<CanvasEasel>();
+            easel.Configure(slot, canvas.GetComponent<PhysicalCanvas>());
+            EditorUtility.SetDirty(easel);
             Undo.RegisterCreatedObjectUndo(root, name);
         }
 
