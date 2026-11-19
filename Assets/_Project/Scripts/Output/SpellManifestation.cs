@@ -85,14 +85,19 @@ namespace SpellSimulator.Output
                 || originalPlan.Collection > 0f || originalPlan.Repetition > 0f || originalPlan.Directed > 0f) baseDampen = 0.10f; // signos con forma propia: la base casi no se ve
             else if (hasDominantSign) baseDampen = 0.25f; // regla general 20-30%
 
+            // Signos con forma propia: ellos SON el efecto. No se lanza la base generica (rafaga, chorro, abanico...) debajo.
+            // La fisica (MagicField) sigue leyendo el plan completo; esto solo apaga las particulas genericas.
+            bool ownShape = originalPlan.Crush > 0f || originalPlan.Orb > 0f || originalPlan.Billow > 0f || originalPlan.Target > 0f
+                || originalPlan.Gather > 0f || originalPlan.Collection > 0f || originalPlan.Repetition > 0f || originalPlan.Directed > 0f;
+
             charge = Track("Charge", look, spawnOrigin, frame.Facing(frame.Normal), s, local: false, effGravity);
             Shape(charge, ParticleSystemShapeType.Circle, s * 1.4f, 0f);
             Speed(charge, -speed * 0.25f, s * 0.35f);
-            Emit(charge, 40f * density * (hasDominantSign ? 0.4f : 1f));
+            Emit(charge, 40f * density * (ownShape ? 0.15f : hasDominantSign ? 0.4f : 1f));
 
             bool solidEarth = spell.element == ElementType.Earth && !look.crystalline;
 
-            if (plan.Has(PlanPrimitive.Burst))
+            if (plan.Has(PlanPrimitive.Burst) && !ownShape)
             {
                 var burst = Track("Burst", look, spawnOrigin, frame.Facing(frame.Normal), s, local: false, effGravity);
                 float burstSpreadMul = spell.spread > 0.6f ? 2.0f : 1.0f;
@@ -103,7 +108,7 @@ namespace SpellSimulator.Output
                 AddBurst(burst, Mathf.RoundToInt(220f * density * (1f + spell.strength) * (solidEarth ? 0.25f : 1f) * burstDampen));
             }
 
-            if (solidEarth) plan = SpellPlan.Inert(); // sin chorro, abanico, vortice, orbe ni succion de particulas base
+            if (solidEarth || ownShape) plan = SpellPlan.Inert(); // sin chorro, abanico, vortice, orbe ni succion de particulas base
 
             if (plan.Has(PlanPrimitive.Jet))
             {

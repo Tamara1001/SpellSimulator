@@ -18,6 +18,11 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - Ubicacion provisoria: biblioteca de la torre, junto a la mesa de trabajo (el Archivo de la pradera aun no existe; al construirlo basta mover el objeto).
 - Harness: checks «lienzos C» en `HarnessPlaySmoke`. Docs: `LIENZOS_PLAN.md`.
 
+## 2026-11-18 — VFX: signos con forma propia sin la base generica debajo
+
+- `SpellManifestation`: con crush, orb, billowing, focus, gather, collection, repetition o region ya no se lanza la rafaga/chorro/abanico generico (misma distancia y tamano en todos los hechizos, sobre todo en fuego): el signo es el efecto. La fisica (`MagicField`) sigue leyendo el plan completo. Cool, empower, entwine y weave siguen modificando la base.
+- Pendiente (propuesto, sin implementar): float y levitation sin efecto fisico claro sobre objetos apoyados en el papel (`MagicField` solo sostiene con `Hold`, y float no genera `Hold`).
+
 ## 2026-11-18 — VFX de signos, segunda pasada: forma propia, region, tinta resistente y estabilidad
 
 - `SpellManifestation` (ahora `partial`): crush = onda de choque plana + escombros en golpes repetidos; billowing = nube opaca y grande que crece; focus = haz largo + punto de mira giratorio; gather = estelas planas hacia el sello; collection = nucleo estable sobre el sello + pulsos desde todos lados; repetition = flujo invertido (lluvia que cae al sello) + anillo-reloj. Base reducida a ~10 % con esos signos.
