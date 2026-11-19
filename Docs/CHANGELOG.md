@@ -36,6 +36,12 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - Ubicacion provisoria: biblioteca de la torre, junto a la mesa de trabajo (el Archivo de la pradera aun no existe; al construirlo basta mover el objeto).
 - Harness: checks «lienzos C» en `HarnessPlaySmoke`. Docs: `LIENZOS_PLAN.md`.
 
+## 2026-11-18 — Float y levitation: fisica propia sobre objetos y VFX distintos
+
+- `MagicField.ApplyLevitationSigns` + `LevitationMath` (con tests): float = zona suelta, lo liviano (<= 40 kg) pierde casi todo el peso, sube despacio hasta una altura y se mece; levitation = agarre firme, la caja queda suspendida a una altura fija y anclada al eje (con viento se desplaza hacia donde apunta el signo). Antes solo funcionaba `Hold` (y float no lo generaba). Float/levitation solos ya no empujan con la rafaga ni la exposicion.
+- VFX: float = motas grandes que suben y se mecen; levitation = haz fino + anillos que suben. Sin base generica debajo cuando van solos (con columnas el chorro sigue).
+- Harness `HarnessModifierMatrix`: variantes float y levitation con una caja de 1 kg (informa altura); filtros `SessionState` OnlyElements/OnlyVariants. Fuego/agua: float 0.5-0.8 m subiendo, levitation 0.47 m estable. Viento/luz dependen de la escala del sello (viento levantaba a ~4 m, luz casi no despega): revisar a mano.
+
 ## 2026-11-18 — VFX: signos con forma propia sin la base generica debajo
 
 - `SpellManifestation`: con crush, orb, billowing, focus, gather, collection, repetition o region ya no se lanza la rafaga/chorro/abanico generico (misma distancia y tamano en todos los hechizos, sobre todo en fuego): el signo es el efecto. La fisica (`MagicField`) sigue leyendo el plan completo. Cool, empower, entwine y weave siguen modificando la base.

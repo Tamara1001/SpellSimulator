@@ -18,6 +18,64 @@ namespace SpellSimulator.Output
             return SpellVisualExtrasMath.Flicker(jitter, Mathf.PerlinNoise(Time.time * 14f, 0.37f));
         }
 
+        private static float SignLength(SpellPlan plan, string id)
+        {
+            float total = 0f;
+            for (int i = 0; i < plan.Signs.Count; i++) if (plan.Signs[i].Id == id) total += plan.Signs[i].Length;
+            return total;
+        }
+
+        /// <summary>
+        /// Float: motas grandes y suaves que suben despacio y se mecen (sin direccion). Levitation: haz fino hacia arriba y anillos que suben
+        /// y se achican, como el agarre que sostiene un orbe a una altura fija.
+        /// </summary>
+        private void ApplyLevitation(SpellPlan plan, Vector3 anchor, float s, float density)
+        {
+            float floatLen = SignLength(plan, "float");
+            float levLen = SignLength(plan, "levitation");
+            Vector3 up = Frame.Normal;
+            Color tint = look.color != null && look.color.colorKeys.Length > 0 ? look.color.Evaluate(0.2f) : Color.white;
+            tint.a = 1f;
+            Color fade = new Color(tint.r, tint.g, tint.b, 0f);
+            if (floatLen > 0f)
+            {
+                float h = LevitationMath.HoverHeight(true, s, floatLen);
+                var motes = Track("Sign_Float", look, anchor + up * (s * 0.1f), Frame.Facing(up), s, local: false, gravityOverride: -0.04f);
+                Shape(motes, ParticleSystemShapeType.Circle, s * 1.7f, 0f);
+                Speed(motes, 0.55f, h / 0.55f * 0.9f);
+                ApplyColor(motes, Color.Lerp(tint, Color.white, 0.5f), fade);
+                ApplySize(motes, look.size * s * 0.9f);
+                var n = motes.noise; n.enabled = true; n.strength = 0.45f * s; n.frequency = 0.7f;
+                var sol = motes.sizeOverLifetime; sol.enabled = true;
+                sol.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.2f), new Keyframe(0.25f, 1f), new Keyframe(1f, 0.4f)));
+                AddBody(motes, 38f * density, impacts: false);
+            }
+            if (levLen > 0f)
+            {
+                float h = LevitationMath.HoverHeight(false, s, levLen);
+                var beam = Track("Sign_Levitation_Beam", look, anchor, Frame.Facing(up), s, local: true, gravityOverride: 0f);
+                Shape(beam, ParticleSystemShapeType.Circle, s * 0.35f, 0f);
+                Speed(beam, h * 2.2f, 0.45f);
+                ApplyColor(beam, Color.white, fade);
+                ApplySize(beam, look.size * s * 0.3f);
+                Stretch(beam, 0.35f, 2.6f);
+                var bv = beam.velocityOverLifetime; bv.enabled = true; bv.space = ParticleSystemSimulationSpace.Local;
+                bv.z = new ParticleSystem.MinMaxCurve(h * 2.2f);
+                AddBody(beam, 140f * density, impacts: false);
+
+                var ring = Track("Sign_Levitation_Rings", look, anchor + up * (s * 0.05f), Frame.Facing(up), s, local: true, gravityOverride: 0f);
+                Shape(ring, ParticleSystemShapeType.Circle, s * 1.3f, 0f);
+                var rs = ring.shape; rs.radiusThickness = 0f;
+                Speed(ring, 0f, 1f);
+                ApplyColor(ring, Color.Lerp(tint, Color.white, 0.4f), fade);
+                ApplySize(ring, look.size * s * 0.35f);
+                var rv = ring.velocityOverLifetime; rv.enabled = true; rv.space = ParticleSystemSimulationSpace.Local;
+                rv.z = new ParticleSystem.MinMaxCurve(h * 0.9f);
+                rv.radial = new ParticleSystem.MinMaxCurve(-s * 0.9f);
+                RepeatingBurst(ring, Mathf.RoundToInt(60f * density), 0.55f);
+            }
+        }
+
         /// <summary>Region: la magia no sale en chorro sino que dibuja un cerco propio de cada elemento.</summary>
         private void ApplyRegion(SpellPlan plan, ElementVariant variant, Vector3 anchor, float s, float speed, float density)
         {

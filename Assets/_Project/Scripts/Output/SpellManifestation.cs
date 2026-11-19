@@ -88,7 +88,10 @@ namespace SpellSimulator.Output
             // Signos con forma propia: ellos SON el efecto. No se lanza la base generica (rafaga, chorro, abanico...) debajo.
             // La fisica (MagicField) sigue leyendo el plan completo; esto solo apaga las particulas genericas.
             bool ownShape = originalPlan.Crush > 0f || originalPlan.Orb > 0f || originalPlan.Billow > 0f || originalPlan.Target > 0f
-                || originalPlan.Gather > 0f || originalPlan.Collection > 0f || originalPlan.Repetition > 0f || originalPlan.Directed > 0f;
+                || originalPlan.Gather > 0f || originalPlan.Collection > 0f || originalPlan.Repetition > 0f || originalPlan.Directed > 0f
+                // float/levitation solos (sin columnas): el signo es el efecto; con columnas el chorro sigue siendo el cuerpo
+                || ((SignLength(originalPlan, "float") > 0f || SignLength(originalPlan, "levitation") > 0f)
+                    && originalPlan.Aim.magnitude < 0.05f && originalPlan.Dispersion < 0.05f && Mathf.Abs(originalPlan.Circulation) < 0.05f);
 
             charge = Track("Charge", look, spawnOrigin, frame.Facing(frame.Normal), s, local: false, effGravity);
             Shape(charge, ParticleSystemShapeType.Circle, s * 1.4f, 0f);
@@ -200,6 +203,7 @@ namespace SpellSimulator.Output
 
             // region (cerco por elemento), tinta resistente y estabilidad del trazo
             ApplyRegion(originalPlan, variant, spawnOrigin, s, speed, density);
+            ApplyLevitation(originalPlan, spawnOrigin, s, density);
             ApplyWaterproof(variant, spawnOrigin, s);
             ApplyStability(spawnOrigin, s);
 

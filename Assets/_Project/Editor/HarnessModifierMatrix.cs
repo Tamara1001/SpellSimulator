@@ -40,10 +40,11 @@ namespace SpellSimulator.EditorTools
             new Variant("collection", 1f), new Variant("repetition", 1f), new Variant("weave", 1f),
             new Variant("spread_high", 0f), new Variant("gravity_low", 0f),
             // Extras (no cuentan en n=84): region, tinta resistente, estabilidad baja.
-            new Variant("region", 1f), new Variant("waterproof", 1f), new Variant("stability_low", 0.2f)
+            new Variant("region", 1f), new Variant("waterproof", 1f), new Variant("stability_low", 0.2f),
+            new Variant("float", 1f), new Variant("levitation", 1f)
         };
 
-        private static bool IsExtra(string id) => id == "region" || id == "waterproof" || id == "stability_low";
+        private static bool IsExtra(string id) => id == "region" || id == "waterproof" || id == "stability_low" || id == "float" || id == "levitation";
 
         [MenuItem("SpellSimulator/Harness/Modifier Matrix")]
         public static void Run()
@@ -107,9 +108,13 @@ namespace SpellSimulator.EditorTools
                 new { Id = "luz", Type = ElementType.Light, Sigil = "light" }
             })
             {
+                string onlyEl = SessionState.GetString("HarnessModifierMatrix.OnlyElements", "");
+                if (onlyEl.Length > 0 && !(";" + onlyEl + ";").Contains(";" + element.Id + ";")) continue;
+                string onlyVar = SessionState.GetString("HarnessModifierMatrix.OnlyVariants", "");
                 var hashesForElement = new Dictionary<string, string>();
                 foreach (var variant in Variants)
                 {
+                    if (onlyVar.Length > 0 && !(";" + onlyVar + ";").Contains(";" + variant.Id + ";")) continue;
                     var spell = CreateSpell(element.Type, element.Sigil, variant);
                     SnapshotColliders();
                     var manifestation = output.SpawnSpellEffect(spell, canvas, new Vector2(0.5f, 0.5f));
@@ -118,6 +123,27 @@ namespace SpellSimulator.EditorTools
                         report.AppendLine($"{element.Id}_{variant.Id} ERROR sin manifestacion");
                         continue;
                     }
+                    // float/levitation: una caja de 1 kg sobre el sello; se espera en tiempo real y se informa a que altura queda.
+                    Rigidbody box = null;
+                    if (variant.Id == "float" || variant.Id == "levitation")
+                    {
+                        var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                        cube.transform.localScale = Vector3.one * 0.2f;
+                        cube.transform.position = manifestation.Frame.Origin + manifestation.Frame.Normal * 0.12f;
+                        box = cube.AddComponent<Rigidbody>();
+                        box.mass = 1f;
+                        float until0 = Time.time + 1.9f; // tiempo de simulacion (no real): el Editor sin foco corre la fisica mas lento
+                        float maxH = 0f;
+                        while (Time.time < until0 && manifestation != null)
+                        {
+                            maxH = Mathf.Max(maxH, Vector3.Dot(box.position - manifestation.Frame.Origin, manifestation.Frame.Normal));
+                            yield return null;
+                        }
+                        report.AppendLine($"  caja max {maxH:F2} m");
+                        if (manifestation != null)
+                            { string cajaTxt = $"  caja {variant.Id}: altura {Vector3.Dot(box.position - manifestation.Frame.Origin, manifestation.Frame.Normal):F2} m, vel {box.linearVelocity.magnitude:F2} m/s"; report.AppendLine(cajaTxt); File.AppendAllText(ResultPath + ".live", element.Id + " " + cajaTxt + "\n"); }
+                    }
+                    if (manifestation == null) { report.AppendLine($"{element.Id}_{variant.Id} ERROR manifestacion destruida"); continue; }
                     manifestation.FastForward(SpellManifestation.ChargeSeconds + SpellManifestation.StrikeSeconds + 0.7f);
                     yield return null;
                     // Tierra y cristal son cuerpos fisicos que nacen/caen en tiempo real: se espera para ver donde quedan (anclaje al suelo).
@@ -185,6 +211,11 @@ namespace SpellSimulator.EditorTools
                 case "region": plan.Directed = 1f; break;
                 case "waterproof": spell.waterproof = true; break;
                 case "stability_low": spell.stability = variant.Value; break;
+                case "float":
+                case "levitation":
+                    plan.Aim = Vector3.zero; plan.Budget = 0f; plan.Primitives = PlanPrimitive.Burst;
+                    plan.Signs.Add(new SignReading { Id = variant.Id, Manifestation = Manifestations.Levitation, At = Vector2.zero, Length = 1f, Facing = Vector2.up, FacingTrust = 1f });
+                    break;
             }
             return spell;
         }

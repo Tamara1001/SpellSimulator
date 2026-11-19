@@ -121,7 +121,7 @@ namespace SpellSimulator.Output
             Vector3 offset = point - frame.Origin;
             float best = 0f;
 
-            if (plan.Has(PlanPrimitive.Burst) && t < SpellManifestation.StrikeSeconds)
+            if (plan.Has(PlanPrimitive.Burst) && t < SpellManifestation.StrikeSeconds && !IsLevitationOnly())
             {
                 float radius = frame.Scale * 3f;
                 if (Vector3.Dot(offset, frame.Normal) >= -0.1f)
@@ -175,7 +175,7 @@ namespace SpellSimulator.Output
             if (!burstApplied && plan.Has(PlanPrimitive.Burst))
             {
                 burstApplied = true;
-                ApplyBurst();
+                if (!IsLevitationOnly()) ApplyBurst(); // float/levitation solos no empujan: sostienen
             }
 
             if (!signsApplied)
@@ -187,6 +187,7 @@ namespace SpellSimulator.Output
 
             if (!manifestation.InBody) return;
             float envelope = manifestation.Envelope(t);
+            ApplyLevitationSigns(envelope);
             if (plan.Cool > 0f) ApplyCool(envelope);
             if (plan.Entwine > 0f) ApplyEntwine(envelope);
             if (plan.Gather > 0f) ApplyGather(envelope);
@@ -266,6 +267,73 @@ namespace SpellSimulator.Output
 
 
         // ---------------------------------------------------------------- signos de la wiki de WHA (cool, entwine, gather, orb, focus, empower)
+
+        /// <summary>
+        /// Float: zona suelta sobre el papel, lo liviano pierde peso, sube despacio y se mece. Levitation (sin agarre propio de Hold):
+        /// lo de arriba queda suspendido a una altura fija y anclado al eje; con viento se desplaza hacia donde apunta el signo.
+        /// </summary>
+        private bool IsLevitationOnly()
+        {
+            bool any = false;
+            for (int i = 0; i < plan.Signs.Count; i++) if (plan.Signs[i].Id == "float" || plan.Signs[i].Id == "levitation") { any = true; break; }
+            return any && plan.Aim.magnitude < 0.05f && plan.Dispersion < 0.05f && Mathf.Abs(plan.Circulation) < 0.05f;
+        }
+
+        private void ApplyLevitationSigns(float envelope)
+        {
+            float floatLen = 0f, levLen = 0f;
+            Vector2 levFacing = Vector2.zero;
+            for (int i = 0; i < plan.Signs.Count; i++)
+            {
+                var s = plan.Signs[i];
+                if (s.Id == "float") floatLen += s.Length;
+                else if (s.Id == "levitation") { levLen += s.Length; levFacing += s.Facing * s.Length; }
+            }
+            if (floatLen > 0f) HoverZone(true, floatLen, Vector3.zero, envelope);
+            if (levLen > 0f && plan.Hold == null)
+            {
+                Vector3 drift = Vector3.zero;
+                if (spell.element == ElementType.Wind && levFacing.sqrMagnitude > 1e-4f)
+                    drift = frame.Direction(new Vector3(levFacing.x, levFacing.y, 0f).normalized) * 2.2f;
+                HoverZone(false, levLen, drift, envelope);
+            }
+        }
+
+        private void HoverZone(bool isFloat, float length, Vector3 drift, float envelope)
+        {
+            float target = LevitationMath.HoverHeight(isFloat, frame.Scale, length);
+            float radius = frame.Scale * (2f + 0.6f * Mathf.Min(length, 3f));
+            int n = Gather(frame.Origin + frame.Normal * target * 0.5f, radius + target);
+            float time = Time.time;
+            for (int i = 0; i < n; i++)
+            {
+                var rb = bodies[i];
+                if (IsPlayerBody(rb) || rb.GetComponent<World.PhysicalCanvas>() != null) continue;
+                float maxMass = isFloat ? LevitationMath.FloatMaxMass : LevitationMath.LevitationMaxMass;
+                if (rb.mass > maxMass * 4f) continue;
+                Vector3 off = rb.worldCenterOfMass - frame.Origin;
+                float height = Vector3.Dot(off, frame.Normal);
+                if (height < -0.1f) continue;
+                Vector3 lateral = off - frame.Normal * height;
+                float lateralDist = lateral.magnitude;
+                if (lateralDist > radius) continue;
+
+                Vector3 vel = rb.linearVelocity;
+                float vUp = Vector3.Dot(vel, frame.Normal);
+                float bob = Mathf.Sin(time * 1.7f + rb.GetInstanceID() * 0.37f);
+                float cancel = rb.useGravity ? LevitationMath.GravityCancel(isFloat, rb.mass) : 0f;
+                Vector3 a = frame.Normal * LevitationMath.VerticalAcceleration(isFloat, height, vUp, target, 0f, 0f, bob);
+                // El peso se cancela casi entero mientras dura el cuerpo (si se atenuara con la envolvente, la caja no despegaria).
+                Vector3 weight = -Physics.gravity * cancel * Mathf.Clamp01(envelope * 3f);
+                if (lateralDist > 1e-3f)
+                {
+                    Vector3 dir = lateral / lateralDist;
+                    a += dir * LevitationMath.LateralAcceleration(isFloat, lateralDist, Vector3.Dot(vel, dir));
+                }
+                a += drift * (1f - Mathf.Clamp01(lateralDist / radius)); // el viento arrastra mas en el centro; cerca del borde ya lo suelta
+                rb.AddForce(Vector3.ClampMagnitude(a * envelope + weight, MaxAcceleration), ForceMode.Acceleration);
+            }
+        }
 
         /// <summary>Cool: enfria lo reactivo de la zona (calor negativo).</summary>
         private void ApplyCool(float envelope)
