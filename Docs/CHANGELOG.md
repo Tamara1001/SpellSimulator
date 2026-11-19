@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-19 — Un solo caballete para todo el mundo: 4 patas, botón con E y los del tutorial ya no se caen
+
+- `CanvasDesigns.Easel` es el único caballete (campo, zonas de práctica, tutorial y el lienzo gigante): A de madera con 2 montantes adelante y **2 patas atrás** (el hechizo sale entre ellas sin tocar la madera), maderas que se tocan en el perfil, travesaños y tablero inferior. Las variantes solo cambian el tamaño (`width` x `height`, masa según el área). Se reemplazaron los soportes `Stand` viejos (gigante y zona «enmarcada»).
+- Botón de invertir: ahora se usa con **E** (antes con clic, y no mostraba ningún aviso al apuntarlo); avisa en pantalla el sentido elegido.
+- Tutorial: `Easel_Earth`/`Easel_Door` se volcaban porque el lienzo cinemático anidado empujaba a la madera; `EaselCollisionFilter` ignora esas colisiones (medido en Play: quedan de pie y dormidos).
+- Tests 684 y smoke PASS. Sin probar a mano en PC/VR.
+
 ## 2026-11-19 — Puestos del Archivo: lapiceros con plumas reales, tintas, sellos y libreta circular
 
 - **Cinco modelos de pluma/pincel** (`ToolModels`): pluma fina (la de siempre), lápiz hexagonal, pincel redondo, pincel plano y brocha; crecen de tamaño con el grosor. Plantillas `Pen`, `Pencil`, `Brush`, `FlatBrush`, `BigBrush` (las tres nuevas con `BrushTier`, que aplica ancho y nombre del catálogo). Se repartieron por las mesas de la biblioteca, el piso 1, el escritorio de cuadernos y el campo (sobre todo lápiz, pincel y pincel plano).

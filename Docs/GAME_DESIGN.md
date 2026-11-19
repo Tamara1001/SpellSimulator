@@ -227,9 +227,9 @@ rectangulares 0,3×0,4 / 0,5×0,7 / 1×1,4 m; libretas S de bolsillo circular (�
 lápiz 8 mm, pincel 2 cm, pincel plano 4 cm, brocha 8 cm). No hay deslizador de grosor; el trazo grueso **no cambia el hechizo** (el reconocimiento rasteriza siempre
 con 2 px, probado en `BrushRulesTests`) y gasta algo más de tinta. Solo la goma conserva su rueda de tamaño.
 **Dirección de disparo (sin marcos):** todo lienzo dispara por el lado que mira, la cara donde se escribe. Los lienzos y libretas sueltos se dan vuelta con **F**
-al dibujar. Los atriles tienen un botón con dos flechas circulares al pie del frente (apuntar + clic, gatillo en VR) que invierte el **sentido del atril**, o sea de
+al dibujar. Los atriles tienen un botón con dos flechas circulares al pie del frente (apuntar + clic, gatillo en VR) que invierte el **sentido del atril** (con E al apuntarlo), o sea de
 cualquier lienzo que tenga puesto; al sacar el lienzo del atril vuelve a disparar normal.
-**Atriles:** son caballetes en A (sin base, sin lápices ni herramientas: solo el lugar del lienzo y el botón de invertir), objetos físicos pesados (como las cajas): se agarran, se empujan, caen y los afecta el mundo; el lienzo puesto los sigue. El slot recibe el lienzo
+**Atriles:** hay UN solo modelo de caballete en todo el mundo (variantes solo de tamaño): un A con dos patas delante y dos atrás. Son caballetes en A (sin base, sin lápices ni herramientas: solo el lugar del lienzo y el botón de invertir), objetos físicos pesados (como las cajas): se agarran, se empujan, caen y los afecta el mundo; el lienzo puesto los sigue. El slot recibe el lienzo
 que se suelta (E) o se deja flotando (G) a menos de 0,85 m; si ya había otro, se cambian. Los caballetes del tutorial tienen el mismo cuerpo y también se mueven (su lienzo va fijo y apunta a su blanco).
 
 ## Decisiones (2026-10-07)

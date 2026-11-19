@@ -150,12 +150,9 @@ namespace SpellSimulator.EditorTools.Map
                     break;
                 case 1:
                     // Lienzo enmarcado de pie sobre su soporte, banco enfrente y maceta.
-                    var rotation = StandingRotation(v, 0f);
-                    Stand(material, $"Stand_{id}", ground, rotation);
-                    Parent(GameObject.Find($"Stand_{id}"), root);
-                    var canvas = Grabbable(template, material, $"Canvas_{id}", StandingPosition(ground, rotation, 1.6f), rotation, 1.4f, 1.6f, Dressing.Framed);
-                    canvas.GetComponent<Rigidbody>().isKinematic = true;
-                    canvas.transform.SetParent(root, true);
+                    // Caballete grande (misma estructura que los demas).
+                    Easel(template, material, $"Easel_{id}_Big", ground, yaw, true, 1.4f, 1.6f, $"Canvas_{id}");
+                    Parent(GameObject.Find($"Easel_{id}_Big"), root);
                     MovablesSetup.Prop(root, material, $"Bench_{id}", MovablesSetup.Kind.Bench, At(0f, 2.4f), yaw, true);
                     MovablesSetup.Prop(root, material, $"Pot_{id}", MovablesSetup.Kind.Pot, At(1.7f, 0.3f), 0f, true);
                     MovablesSetup.Prop(root, material, $"BigBox_{id}", MovablesSetup.Kind.BigBox, At(-2.0f, -0.6f), 10f, true);

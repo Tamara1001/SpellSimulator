@@ -51,7 +51,7 @@ namespace SpellSimulator.EditorTools.Map
             // Las pizarras de las estaciones de agua/viento, la mesa de dibujo y el caballete del estudio ya no estan en la torre:
             // los lienzos fijos del tutorial son los caballetes de MapTutorial (piso 1 y planta baja). Se borran los de builds anteriores
             // (cuelgan de la raiz de la escena, no de Map).
-            foreach (string retired in new[] { "WallBoard_Library", "BigCanvas_Library", "DraftingTable", "Easel_Study", "Easel_Study_Canvas" })
+            foreach (string retired in new[] { "WallBoard_Library", "BigCanvas_Library", "DraftingTable", "Easel_Study", "Easel_Study_Canvas", "Stand_GiantCanvas_Field", "GiantCanvas_Field" })
             {
                 var stale = GameObject.Find(retired);
                 if (stale != null) Object.DestroyImmediate(stale);
@@ -62,11 +62,9 @@ namespace SpellSimulator.EditorTools.Map
             // Posiciones relativas al atril (TrainingLayout): el entrenamiento ya no esta en el campo viejo.
             float trainingYaw = TrainingLayout.YawDegrees;
             Vector3 giantBase = MapBuilder.TrainingGround(TrainingLayout.GiantStand);
-            Quaternion giantRotation = StandingRotation(fieldOrigin - giantBase, 0f);
-            Stand(material, "Stand_GiantCanvas_Field", giantBase, giantRotation);
-            // De pie sobre su soporte y quieto hasta que se lo agarre (si no, la gravedad lo tumba al arrancar).
-            Grabbable(template, material, "GiantCanvas_Field", StandingPosition(giantBase, giantRotation, 2.2f),
-                giantRotation, 3f, 2.2f, Dressing.Framed).GetComponent<Rigidbody>().isKinematic = true;
+            Vector3 toField = fieldOrigin - giantBase;
+            // El mismo caballete del resto del mundo, en version grande.
+            Easel(template, material, "Easel_GiantCanvas_Field", giantBase, Mathf.Atan2(toField.x, toField.z) * Mathf.Rad2Deg, true, 3f, 2.2f, "GiantCanvas_Field");
             Grabbable(template, material, "GiantPaper_Field", MapBuilder.TrainingGround(TrainingLayout.GiantPaper) + new Vector3(0f, 0.15f, 0f),
                 Quaternion.Euler(0f, trainingYaw, 0f) * Quaternion.Euler(90f, 20f, 0f), 3.5f, 3.5f, Dressing.None);
 
@@ -172,45 +170,6 @@ namespace SpellSimulator.EditorTools.Map
             so.ApplyModifiedProperties();
         }
 
-        /// <summary>
-        /// Rotacion de un lienzo de pie: la cara mira a faceDirection (horizontal) y el borde de arriba se inclina
-        /// leanDegrees hacia atras. El mesh mira a -Z, asi que la cara visible es -forward (como en Easel).
-        /// </summary>
-        private static Quaternion StandingRotation(Vector3 faceDirection, float leanDegrees)
-        {
-            Vector3 face = Vector3.ProjectOnPlane(faceDirection, Vector3.up).normalized;
-            float lean = leanDegrees * Mathf.Deg2Rad;
-            Vector3 normal = face * Mathf.Cos(lean) + Vector3.up * Mathf.Sin(lean);
-            Vector3 top = Vector3.up * Mathf.Cos(lean) - face * Mathf.Sin(lean);
-            return Quaternion.LookRotation(-normal, top);
-        }
-
-        /// <summary>Centro de un lienzo de pie cuyo borde de abajo (con marco) apoya en bottom.</summary>
-        private static Vector3 StandingPosition(Vector3 bottom, Quaternion rotation, float height) =>
-            bottom + rotation * Vector3.up * (height * 0.5f + FrameMargin);
-
-        /// <summary>Soportes de madera (dos patas y un travesaño) detras de un lienzo de pie, con la base en el piso.</summary>
-        private static void Stand(Material material, string name, Vector3 ground, Quaternion rotation)
-        {
-            var old = GameObject.Find(name);
-            if (old != null) Object.DestroyImmediate(old);
-            var root = new GameObject(name);
-            root.transform.SetPositionAndRotation(ground, rotation);
-            var b = new LowPolyMesh();
-            // En el espacio del soporte el lienzo mira a -Z: las patas van detras (+Z), desde el piso hasta la espalda.
-            foreach (float sx in new[] { -0.8f, 0.8f })
-            {
-                Vector3 bottom = new Vector3(sx, 0f, 0.6f);
-                Vector3 top = new Vector3(sx, 1.4f, 0.03f);
-                Vector3 axis = top - bottom;
-                b.Box(Matrix4x4.TRS((bottom + top) / 2f, Quaternion.FromToRotation(Vector3.up, axis), Vector3.one), new Vector3(0.08f, axis.magnitude, 0.08f), Wood);
-            }
-            b.Box(Matrix4x4.TRS(new Vector3(0f, 0.5f, 0.4f), Quaternion.identity, Vector3.one), new Vector3(1.8f, 0.07f, 0.07f), DarkWood);
-            root.AddComponent<MeshFilter>().sharedMesh = MapBuilder.SaveMesh(b.Build($"Stand_{name}"));
-            root.AddComponent<MeshRenderer>().sharedMaterial = material;
-            Undo.RegisterCreatedObjectUndo(root, name);
-        }
-
         /// <summary>Lienzo fijo (no se agarra): pizarra, caballete, mesa.</summary>
         private static GameObject Fixed(GameObject template, Material material, string name, Vector3 position, Quaternion rotation,
             float width, float height, Dressing dressing)
@@ -284,40 +243,50 @@ namespace SpellSimulator.EditorTools.Map
         // ---------------------------------------------------------------- soportes
 
         /// <summary>
-        /// Caballete en A (dos montantes inclinados, una pata trasera y travesaños), sin base ni herramientas. Siempre es un objeto
-        /// fisico pesado (Movable). Con <paramref name="slotted"/> trae un slot (CanvasEasel) para poner, sacar y cambiar el lienzo y
-        /// un boton de flechas circulares que invierte el sentido de disparo. Sin slot (tutorial) el lienzo queda fijo al caballete:
-        /// sus ejercicios dependen de el, pero el caballete entero se puede mover.
+        /// UNICO caballete del mundo: A de madera con dos montantes inclinados adelante, DOS patas atras (el hechizo sale entre ellas, sin
+        /// tocarlas), travesaños y un tablero abajo. Sin herramientas ni bandeja. Siempre es un objeto fisico pesado (Movable).
+        /// Las variantes solo cambian el tamaño (<paramref name="width"/> x <paramref name="height"/> del lienzo), nunca la estructura.
+        /// Con <paramref name="slotted"/> trae un slot (CanvasEasel) para poner, sacar y cambiar el lienzo y un boton de flechas circulares
+        /// que invierte el sentido de disparo. Sin slot (tutorial) el lienzo queda fijo al caballete: sus ejercicios dependen de el, pero
+        /// el caballete entero se puede mover.
         /// </summary>
-        internal static void Easel(GameObject template, Material material, string name, Vector3 ground, float yaw, bool slotted = true)
+        internal static void Easel(GameObject template, Material material, string name, Vector3 ground, float yaw, bool slotted = true,
+            float width = 1.0f, float height = 1.4f, string canvasName = null)
         {
             var old = GameObject.Find(name);
             if (old != null) Object.DestroyImmediate(old);
             var root = new GameObject(name);
             root.transform.SetPositionAndRotation(ground, Quaternion.Euler(0f, yaw, 0f));
             var b = new LowPolyMesh();
-            // El lienzo mira a +Z. Montantes delanteros inclinados hacia atras y una pata trasera de apoyo.
-            const float frontBottomZ = 0.3f, frontTopZ = -0.05f, legHeight = 1.9f, rearBottomZ = -0.95f, rearTopZ = -0.12f;
+            // El lienzo mira a +Z. Todo se calcula desde el tamaño del lienzo; el borde de abajo queda a 0,55 m del piso.
+            const float canvasBottom = 0.55f;
+            float legHeight = height + canvasBottom;                 // donde termina el lienzo
+            float legTop = legHeight + 0.05f;                        // los montantes sobresalen un poco
+            float half = width * 0.5f + 0.12f;                       // mitad de la separacion de los montantes abajo
+            float depth = legHeight / 1.9f;                          // la huella crece con la altura
+            float frontBottomZ = 0.3f * depth, frontTopZ = -0.05f * depth, rearBottomZ = -0.95f * depth;
             float lean = Mathf.Atan2(frontBottomZ - frontTopZ, legHeight);
             Vector3 faceLocal = new Vector3(0f, Mathf.Sin(lean), Mathf.Cos(lean));
             Vector3 topLocal = new Vector3(0f, Mathf.Cos(lean), -Mathf.Sin(lean));
             Quaternion planeRotation = Quaternion.LookRotation(faceLocal, topLocal);
             Vector3 OnPlane(float x, float y) => new Vector3(x, y, frontBottomZ + (frontTopZ - frontBottomZ) * y / legHeight);
 
-            void Leg(Vector3 bottom, Vector3 top, float width, float depth, Color color)
+            // Viga entre dos puntos (los extremos quedan dentro de las piezas que une, asi las maderas se tocan).
+            void Beam(Vector3 a, Vector3 c, float thickness, Color color, bool collider)
             {
-                Vector3 axis = top - bottom;
+                Vector3 axis = c - a;
                 Quaternion rot = Quaternion.FromToRotation(Vector3.up, axis);
-                b.Box(Matrix4x4.TRS((bottom + top) / 2f, rot, Vector3.one), new Vector3(width, axis.magnitude, depth), color);
+                b.Box(Matrix4x4.TRS((a + c) / 2f, rot, Vector3.one), new Vector3(thickness, axis.magnitude, thickness), color);
+                if (!collider) return;
                 var part = new GameObject("Col_Leg");
                 part.transform.SetParent(root.transform, false);
-                part.transform.localPosition = (bottom + top) / 2f;
+                part.transform.localPosition = (a + c) / 2f;
                 part.transform.localRotation = rot;
-                part.AddComponent<BoxCollider>().size = new Vector3(width, axis.magnitude, depth);
+                part.AddComponent<BoxCollider>().size = new Vector3(thickness, axis.magnitude, thickness);
             }
-            void Board(float x, float y, Vector3 size, Color color, bool collider)
+            void Board(float y, Vector3 size, Color color, bool collider)
             {
-                Vector3 pos = OnPlane(x, y);
+                Vector3 pos = OnPlane(0f, y);
                 b.Box(Matrix4x4.TRS(pos, planeRotation, Vector3.one), size, color);
                 if (!collider) return;
                 var part = new GameObject("Col_Board");
@@ -326,31 +295,39 @@ namespace SpellSimulator.EditorTools.Map
                 part.transform.localRotation = planeRotation;
                 part.AddComponent<BoxCollider>().size = size;
             }
-            Leg(new Vector3(-0.5f, 0f, frontBottomZ), new Vector3(-0.42f, legHeight, frontTopZ), 0.07f, 0.06f, Wood);
-            Leg(new Vector3(0.5f, 0f, frontBottomZ), new Vector3(0.42f, legHeight, frontTopZ), 0.07f, 0.06f, Wood);
-            Leg(new Vector3(0f, 0f, rearBottomZ), new Vector3(0f, legHeight - 0.1f, rearTopZ), 0.07f, 0.06f, DarkWood);
-            // Travesaños: arriba, uno ancho abajo donde apoya el lienzo (lleva el boton) y un arriostre hacia la pata trasera.
-            Board(0f, 1.97f, new Vector3(1.0f, 0.07f, 0.07f), DarkWood, false);
-            Board(0f, 0.45f, new Vector3(1.0f, 0.22f, 0.05f), DarkWood, true);
-            b.Box(Matrix4x4.TRS(new Vector3(0f, 1.0f, -0.3f), Quaternion.identity, Vector3.one), new Vector3(0.05f, 0.05f, 0.5f), DarkWood);
+
+            float topX = half - 0.07f;
+            Vector3 FrontLeg(float side, float t) => Vector3.Lerp(new Vector3(side * half, 0f, frontBottomZ), new Vector3(side * topX, legTop, frontTopZ), t);
+            Vector3 RearLeg(float side, float t) => Vector3.Lerp(new Vector3(side * (half - 0.06f), 0f, rearBottomZ), new Vector3(side * topX, legTop - 0.1f, frontTopZ - 0.04f), t);
+            foreach (float side in new[] { -1f, 1f })
+            {
+                Beam(FrontLeg(side, 0f), FrontLeg(side, 1f), 0.07f, Wood, true);        // montante delantero
+                Beam(RearLeg(side, 0f), RearLeg(side, 1f), 0.07f, DarkWood, true);      // pata trasera (una a cada lado)
+                Beam(FrontLeg(side, 0.45f), RearLeg(side, 0.45f), 0.04f, DarkWood, false); // arriostre lateral entre las dos patas del lado
+            }
+            Beam(RearLeg(-1f, 0.3f), RearLeg(1f, 0.3f), 0.04f, DarkWood, false);          // arriostre entre las patas traseras (bajo el lienzo)
+            Board(legHeight + 0.01f, new Vector3(half * 2f, 0.08f, 0.08f), DarkWood, false); // travesaño de arriba
+            Board(0.45f, new Vector3(half * 2f - 0.1f, 0.22f, 0.05f), DarkWood, true);       // tablero de abajo (lleva el boton)
             var mesh = MapBuilder.SaveMesh(b.Build($"Easel_{name}"));
             root.AddComponent<MeshFilter>().sharedMesh = mesh;
             root.AddComponent<MeshRenderer>().sharedMaterial = material;
 
-            const float canvasY = 1.25f;
-            Vector3 center = OnPlane(0f, canvasY) + faceLocal * 0.035f;
+            Vector3 center = OnPlane(0f, canvasBottom + height * 0.5f) + faceLocal * 0.035f;
             Quaternion canvasRotation = Quaternion.LookRotation(-(root.transform.rotation * faceLocal), root.transform.rotation * topLocal);
+            string canvasId = canvasName ?? name + "_Canvas";
+            float mass = Mathf.Clamp(EaselMass * width * height / 1.4f, 15f, 80f);
             if (!slotted)
             {
-                var fixedCanvas = Fixed(template, material, name + "_Canvas", root.transform.TransformPoint(center), canvasRotation, 0.9f, 1.2f, Dressing.None);
+                var fixedCanvas = Fixed(template, material, canvasId, root.transform.TransformPoint(center), canvasRotation, width, height, Dressing.None);
                 fixedCanvas.transform.SetParent(root.transform, true);
-                MovablesSetup.MakeMovable(root, EaselMass, "caballete", MovablesSetup.WoodProfile());
+                MovablesSetup.MakeMovable(root, mass, "caballete", MovablesSetup.WoodProfile());
+                root.AddComponent<EaselCollisionFilter>(); // el lienzo cinematico anidado no debe empujar a la madera
                 Undo.RegisterCreatedObjectUndo(root, name);
                 return;
             }
 
-            // Atril con slot: lienzo L rectangular agarrable (acoplado al arrancar) y el boton de invertir el sentido.
-            var canvas = Grabbable(template, material, name + "_Canvas", root.transform.TransformPoint(center), canvasRotation, 1.0f, 1.4f, Dressing.None);
+            // Atril con slot: lienzo agarrable (acoplado al arrancar) y el boton de invertir el sentido.
+            var canvas = Grabbable(template, material, canvasId, root.transform.TransformPoint(center), canvasRotation, width, height, Dressing.None);
             canvas.GetComponent<Rigidbody>().isKinematic = true;
             canvas.transform.SetParent(root.transform, true);
             var respawn = canvas.GetComponent<Respawnable>();
@@ -363,7 +340,7 @@ namespace SpellSimulator.EditorTools.Map
             easel.Configure(slot, canvas.GetComponent<PhysicalCanvas>());
             ReverseButton(root.transform, easel, OnPlane(0f, 0.45f) + faceLocal * 0.03f, planeRotation);
             // Mismas fisicas que las cajas y demas objetos pesados: rigidbody + Movable (agarrable), reaccion de la madera y reinicio.
-            MovablesSetup.MakeMovable(root, EaselMass, "atril", MovablesSetup.WoodProfile());
+            MovablesSetup.MakeMovable(root, mass, "atril", MovablesSetup.WoodProfile());
             EditorUtility.SetDirty(easel);
             Undo.RegisterCreatedObjectUndo(root, name);
         }

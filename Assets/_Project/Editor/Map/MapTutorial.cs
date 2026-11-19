@@ -3,6 +3,7 @@ using UnityEngine;
 using SpellSimulator.Canvas;
 using SpellSimulator.World;
 using SpellSimulator.World.Map;
+using SpellSimulator.Lab;
 
 namespace SpellSimulator.EditorTools.Map
 {
@@ -45,6 +46,8 @@ namespace SpellSimulator.EditorTools.Map
         /// </summary>
         public const float ClothAngle = 195f, ClothHeight = 2.85f, ClothLift = 0.1f;
         public const string ClothName = "TutorialCloth";
+        /// <summary>Hueco entre la bisagra y la pared: con menos, la esquina de la hoja roza el muro y la puerta no gira (medido en Play).</summary>
+        private const float HingeGap = 0.26f;
 
         /// <summary>
         /// Planta baja: la puerta empieza trabada y se destraba de tres formas, en el muro al este de la puerta (270): un pestillo que el viento
@@ -63,6 +66,8 @@ namespace SpellSimulator.EditorTools.Map
         private static readonly Color Iron = new Color(0.2f, 0.2f, 0.23f);
         private static readonly Color GlassOff = new Color(0.28f, 0.26f, 0.24f);
         private static readonly Color Magic = new Color(1.5f, 0.7f, 2.6f);
+        /// <summary>Llama de los faroles encendidos: HDR mas fuerte que el farol comun de la torre (el emisivo la hace brillar sin luz real).</summary>
+        private static readonly Color LampLit = new Color(3.8f, 2.6f, 1.1f);
         private static readonly Color LeverRed = new Color(0.72f, 0.16f, 0.12f);
 
         public static TowerTutorial Build(Transform map, Material material, Vector3 origin)
@@ -204,19 +209,27 @@ namespace SpellSimulator.EditorTools.Map
         }
 
         /// <summary>Farolito apagado con su luz como hijo (se enciende al cumplir la accion). Devuelve la luz.</summary>
-        private static GameObject CheckLamp(Transform parent, Material material, string name, Vector3 local)
+        private static GameObject CheckLamp(Transform parent, Material material, string name, Vector3 local, float pole = 0f)
         {
             var body = new LowPolyMesh();
             body.Box(Matrix4x4.Translate(new Vector3(0f, 0.12f, 0f)), new Vector3(0.2f, 0.03f, 0.2f), Iron);
+            body.Box(Matrix4x4.Translate(new Vector3(0f, 0.16f, 0f)), new Vector3(0.1f, 0.05f, 0.1f), Iron);
             body.Box(Matrix4x4.Translate(new Vector3(0f, -0.12f, 0f)), new Vector3(0.2f, 0.03f, 0.2f), Iron);
             body.Box(Matrix4x4.identity, new Vector3(0.14f, 0.21f, 0.14f), GlassOff);
+            // Poste de hierro hasta el piso: el farol queda alto y se ve desde lejos.
+            if (pole > 0.2f)
+            {
+                body.Box(Matrix4x4.Translate(new Vector3(0f, -0.12f - (pole - 0.12f) * 0.5f, 0f)), new Vector3(0.05f, pole - 0.12f, 0.05f), Iron);
+                body.Box(Matrix4x4.Translate(new Vector3(0f, -pole + 0.03f, 0f)), new Vector3(0.24f, 0.06f, 0.24f), Iron);
+            }
             var glow = new LowPolyMesh();
-            glow.Box(Matrix4x4.identity, new Vector3(0.17f, 0.22f, 0.17f), TowerBuilder.LanternGlow);
+            glow.Box(Matrix4x4.identity, new Vector3(0.18f, 0.24f, 0.18f), LampLit);
             Vector3 at = parent.position + local;
             var lamp = MapBuilder.Place(name, parent, MapBuilder.SaveMesh(body.Build("Tutorial_" + name)), material, at, Quaternion.identity);
             lamp.isStatic = false;
             var lit = MapBuilder.Place("Glow", lamp.transform, MapBuilder.SaveMesh(glow.Build("Tutorial_" + name + "Glow")), material, at, Quaternion.identity);
             lit.isStatic = false;
+            lit.AddComponent<TutorialLampGlow>();
             lit.SetActive(false);
             return lit;
         }
@@ -231,19 +244,22 @@ namespace SpellSimulator.EditorTools.Map
             // Uno por nivel, en el muro, donde se llega al pasarlo: pie de cada rampa y, el ultimo, sobre la puerta.
             (float angle, float y)[] spots =
             {
-                (TowerBuilder.RampStart[2] - 14f, TowerBuilder.FloorHeight * 2f + 2.3f),
-                (TowerBuilder.RampStart[1] - 14f, TowerBuilder.FloorHeight + 2.3f),
-                (TowerBuilder.RampStart[0] - 14f, 2.3f),
+                (TowerBuilder.RampStart[2] - 14f, TowerBuilder.FloorHeight * 2f + 3.1f),
+                (TowerBuilder.RampStart[1] - 14f, TowerBuilder.FloorHeight + 3.1f),
+                (TowerBuilder.RampStart[0] - 14f, 3.1f),
                 (TutorialRules.DoorAngle, TowerBuilder.DoorHeight + 0.45f),
             };
             var body = new LowPolyMesh();
-            body.Box(Matrix4x4.Translate(new Vector3(0f, 0.17f, 0f)), new Vector3(0.2f, 0.04f, 0.2f), Iron);
-            body.Box(Matrix4x4.Translate(new Vector3(0f, -0.17f, 0f)), new Vector3(0.2f, 0.04f, 0.2f), Iron);
-            body.Box(Matrix4x4.Translate(new Vector3(0f, 0f, 0.14f)), new Vector3(0.05f, 0.05f, 0.2f), Iron);
-            body.Box(Matrix4x4.identity, new Vector3(0.13f, 0.3f, 0.13f), GlassOff);
+            // Farol de pared grande (1,5x): brazo largo al muro, tapa con remate y base; se ve desde el otro lado del piso.
+            body.Box(Matrix4x4.Translate(new Vector3(0f, 0.26f, 0f)), new Vector3(0.3f, 0.06f, 0.3f), Iron);
+            body.Box(Matrix4x4.Translate(new Vector3(0f, 0.32f, 0f)), new Vector3(0.14f, 0.07f, 0.14f), Iron);
+            body.Box(Matrix4x4.Translate(new Vector3(0f, -0.26f, 0f)), new Vector3(0.3f, 0.06f, 0.3f), Iron);
+            body.Box(Matrix4x4.Translate(new Vector3(0f, 0f, 0.2f)), new Vector3(0.07f, 0.07f, 0.34f), Iron);
+            body.Box(Matrix4x4.Translate(new Vector3(0f, -0.1f, 0.3f)), new Vector3(0.05f, 0.36f, 0.05f), Iron);
+            body.Box(Matrix4x4.identity, new Vector3(0.2f, 0.46f, 0.2f), GlassOff);
             Mesh bodyMesh = MapBuilder.SaveMesh(body.Build("Tutorial_Lamp"));
             var glow = new LowPolyMesh();
-            glow.Box(Matrix4x4.identity, new Vector3(0.16f, 0.31f, 0.16f), TowerBuilder.LanternGlow);
+            glow.Box(Matrix4x4.identity, new Vector3(0.24f, 0.47f, 0.24f), LampLit);
             Mesh glowMesh = MapBuilder.SaveMesh(glow.Build("Tutorial_LampGlow"));
 
             var glows = new GameObject[spots.Length];
@@ -255,6 +271,7 @@ namespace SpellSimulator.EditorTools.Map
                 var lamp = MapBuilder.Place($"TutorialLamp_{i + 1}", parent, bodyMesh, material, at, Quaternion.LookRotation(outward.normalized));
                 var lit = MapBuilder.Place("Glow", lamp.transform, glowMesh, material, at, lamp.transform.rotation);
                 lit.isStatic = false;
+                lit.AddComponent<TutorialLampGlow>();
                 lit.SetActive(false);
                 glows[i] = lit;
             }
@@ -371,26 +388,14 @@ namespace SpellSimulator.EditorTools.Map
         {
             Vector3 At(float r, float angle, float dy = 0.02f) => o + TowerBuilder.Polar(r, angle, y + dy);
 
-            // Objetos sueltos: una pila de cajas chicas, barriles, bancos, una silla, un banco largo y una caja grande (sin mesa en el camino).
-            var K = MovablesSetup.Kind.SmallBox;
-            MovablesSetup.Prop(props, material, "Practice_Box_A", K, At(0.9f, 160f), 8f);
-            MovablesSetup.Prop(props, material, "Practice_Box_B", K, At(1.4f, 175f), -10f);
-            MovablesSetup.Prop(props, material, "Practice_Box_C", K, At(1.12f, 167f, 0.42f), 25f);
-            MovablesSetup.Prop(props, material, "Practice_BigBox", MovablesSetup.Kind.BigBox, At(1.3f, 100f), 15f);
-            MovablesSetup.Prop(props, material, "Practice_Barrel_A", MovablesSetup.Kind.Barrel, At(2.0f, 195f), 0f);
-            MovablesSetup.Prop(props, material, "Practice_Barrel_B", MovablesSetup.Kind.Barrel, At(2.3f, 55f), 0f);
-            MovablesSetup.Prop(props, material, "Practice_Stool_A", MovablesSetup.Kind.Stool, At(2.0f, 232f), 20f);
-            MovablesSetup.Prop(props, material, "Practice_Stool_B", MovablesSetup.Kind.Stool, At(1.5f, 20f), -30f);
-            MovablesSetup.Prop(props, material, "Practice_Chair", MovablesSetup.Kind.Chair, At(1.3f, 215f), TowerBuilder.TangentYaw(215f) + 180f);
-            MovablesSetup.Prop(props, material, "Practice_Bench", MovablesSetup.Kind.Bench, At(2.9f, 22f), TowerBuilder.TangentYaw(22f));
+            // Lo minimo para practicar agarrar y apilar, en el lado sudeste (el pasillo y el centro quedan libres): una caja grande con una chica
+            // encima, otra chica suelta y un barril.
+            MovablesSetup.Prop(props, material, "Practice_BigBox", MovablesSetup.Kind.BigBox, At(2.7f, 28f), 15f);
+            MovablesSetup.Prop(props, material, "Practice_Box_A", MovablesSetup.Kind.SmallBox, At(2.7f, 28f, 0.84f), -10f);
+            MovablesSetup.Prop(props, material, "Practice_Box_B", MovablesSetup.Kind.SmallBox, At(2.3f, 48f), 8f);
+            MovablesSetup.Prop(props, material, "Practice_Barrel_A", MovablesSetup.Kind.Barrel, At(2.8f, 6f), 0f);
 
             var template = GameObject.Find("PaperCanvas");
-            if (template != null)
-            {
-                // Dos lienzos flotando en el aire, para probar sin agacharse.
-                CanvasDesigns.SheetAt(template, "Practice_Float_A", At(1.0f, 270f, 1.5f), Quaternion.Euler(0f, TowerBuilder.TangentYaw(270f), 0f), 0.5f, true).transform.SetParent(props, true);
-                CanvasDesigns.SheetAt(template, "Practice_Float_B", At(1.7f, 60f, 1.3f), Quaternion.Euler(0f, TowerBuilder.TangentYaw(60f), 0f), 0.5f, true).transform.SetParent(props, true);
-            }
 
             PaperStation(parent, material, props, template, "Exercise_Float", FloatAngle, y, TutorialExercise.Kind.Float, "Note_Tutorial_Float",
                 "<b>1</b> · Lienzo en el aire", "Llevalo al papel fantasma");
@@ -409,16 +414,7 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 foot = parent.position + TowerBuilder.Polar(StationR, angle, y);
             float yaw = TowerBuilder.TangentYaw(angle);
 
-            // Pedestal de piedra: zocalo, fuste y tapa.
-            var b = new LowPolyMesh();
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.06f, 0f)), new Vector3(0.62f, 0.12f, 0.62f), Stone * 0.92f);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.48f, 0f)), new Vector3(0.4f, 0.72f, 0.4f), Stone, Stone * 1.08f);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, PedestalTop - 0.04f, 0f)), new Vector3(0.66f, 0.08f, 0.66f), Stone * 1.1f);
-            var pedestal = MapBuilder.Place(name + "_Pedestal", parent, MapBuilder.SaveMesh(b.Build("Tutorial_" + name + "Pedestal")), material, foot, Quaternion.Euler(0f, yaw, 0f));
-            pedestal.isStatic = true;
-            var col = pedestal.AddComponent<BoxCollider>();
-            col.center = new Vector3(0f, PedestalTop * 0.5f, 0f);
-            col.size = new Vector3(0.66f, PedestalTop, 0.66f);
+            Pedestal(parent, material, name, foot, yaw);
 
             // Hoja acostada sobre el pedestal (se agarra con E).
             PhysicalCanvas paper = null;
@@ -433,10 +429,64 @@ namespace SpellSimulator.EditorTools.Map
             var spot = new GameObject(name);
             spot.transform.SetParent(parent, false);
             spot.transform.position = foot + Vector3.up * GhostHeight;
-            var glow = CheckLamp(parent, material, name + "_Lamp", TowerBuilder.Polar(StationR + 0.55f, angle, y + PedestalTop + 0.2f));
+            var glow = CheckLamp(parent, material, name + "_Lamp", TowerBuilder.Polar(StationR + 0.55f, angle, y + 1.75f), 1.75f);
             var exercise = spot.AddComponent<TutorialExercise>();
             exercise.Configure(kind, glow);
             exercise.ConfigurePaper(paper, PaperSize, yaw);
+            Note(parent, material, noteName, foot + Vector3.up * 2.45f, parent.position + new Vector3(0f, y + 2.45f, 0f), line1 + "\n" + line2, 1.3f, 0.5f, 0.62f, true);
+        }
+
+        /// <summary>Pedestal de piedra (zocalo, fuste y tapa) con su collider; el pie queda en <paramref name="foot"/> y la tapa a <see cref="PedestalTop"/>.</summary>
+        private static void Pedestal(Transform parent, Material material, string name, Vector3 foot, float yaw)
+        {
+            var b = new LowPolyMesh();
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.06f, 0f)), new Vector3(0.62f, 0.12f, 0.62f), Stone * 0.92f);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.48f, 0f)), new Vector3(0.4f, 0.72f, 0.4f), Stone, Stone * 1.08f);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, PedestalTop - 0.04f, 0f)), new Vector3(0.66f, 0.08f, 0.66f), Stone * 1.1f);
+            var pedestal = MapBuilder.Place(name + "_Pedestal", parent, MapBuilder.SaveMesh(b.Build("Tutorial_" + name + "Pedestal")), material, foot, Quaternion.Euler(0f, yaw, 0f));
+            pedestal.isStatic = true;
+            var col = pedestal.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, PedestalTop * 0.5f, 0f);
+            col.size = new Vector3(0.66f, PedestalTop, 0.66f);
+        }
+
+        /// <summary>
+        /// Mini tutorial de calco (piso 1): pedestal con un papel acostado y, sobre el, la plantilla fantasma de un glifo (<paramref name="glyphId"/>:
+        /// "earth", "column" o "ring"). Al dibujar encima algo que la copia (Lab.TutorialTraceStation + TutorialTraceRules) se completa el
+        /// TutorialExercise de la estacion y se enciende su farolito. HOOK: ese farolito (<c>name + "_Lamp"/Glow</c>) y TutorialExercise.Complete/Done
+        /// son lo que hay que enlazar si otra logica de faroles quiere reaccionar.
+        /// </summary>
+        private static void TraceStation(Transform parent, Material material, Transform props, GameObject template, string name, float angle, float y,
+            string glyphId, string noteName, string line1, string line2)
+        {
+            Vector3 foot = parent.position + TowerBuilder.Polar(StationR, angle, y);
+            float yaw = TowerBuilder.TangentYaw(angle);
+            Pedestal(parent, material, name, foot, yaw);
+            // El papel se lee desde el centro del piso: su arriba apunta hacia afuera (la baranda), no hacia el costado.
+            Vector3 outward = TowerBuilder.Polar(1f, angle, 0f);
+            float paperYaw = Mathf.Atan2(outward.x, outward.z) * Mathf.Rad2Deg;
+
+            var exerciseGo = new GameObject(name);
+            exerciseGo.transform.SetParent(parent, false);
+            exerciseGo.transform.position = foot + Vector3.up * PedestalTop;
+            var glow = CheckLamp(parent, material, name + "_Lamp", TowerBuilder.Polar(StationR + 0.55f, angle, y + PedestalTop + 0.2f));
+            var exercise = exerciseGo.AddComponent<TutorialExercise>();
+            exercise.Configure(TutorialExercise.Kind.Trace, glow);
+
+            if (template != null)
+            {
+                var sheet = CanvasDesigns.SheetAt(template, name + "_Paper", foot + Vector3.up * (PedestalTop + 0.015f), Quaternion.Euler(90f, paperYaw, 0f), PaperSize, false);
+                sheet.transform.SetParent(props, true);
+                var guide = sheet.AddComponent<TutorialPaperGuide>();
+                var gso = new SerializedObject(guide);
+                gso.FindProperty("glyphId").stringValue = glyphId;
+                gso.FindProperty("showAim").boolValue = false;
+                gso.FindProperty("ghostColor").colorValue = EarthGhost;
+                gso.ApplyModifiedProperties();
+                var trace = sheet.AddComponent<TutorialTraceStation>();
+                trace.Configure(exercise);
+                EditorUtility.SetDirty(trace);
+            }
             Note(parent, material, noteName, foot + Vector3.up * 2.45f, parent.position + new Vector3(0f, y + 2.45f, 0f), line1 + "\n" + line2, 1.3f, 0.5f, 0.62f, true);
         }
 
@@ -445,14 +495,27 @@ namespace SpellSimulator.EditorTools.Map
         {
             Vector3 at = parent.position + TowerBuilder.Polar(TargetR, angle, y + 1.3f);
             Quaternion rot = Quaternion.LookRotation(-TowerBuilder.Polar(1f, angle, 0f));   // la cara mira al centro
+            // Diana redonda: tablero de madera, anillos rojo / blanco / rojo / blanco y un centro dorado en relieve (+Z mira al centro del piso);
+            // dos postes detras la apoyan en el piso (el eje Y de los frustums se gira a +Z con Rx(90)).
             var b = new LowPolyMesh();
-            b.Box(Matrix4x4.identity, new Vector3(0.9f, 0.9f, 0.1f), WoodDark);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0f, -0.06f)), new Vector3(0.6f, 0.6f, 0.04f), new Color(0.85f, 0.25f, 0.2f));
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0f, -0.08f)), new Vector3(0.25f, 0.25f, 0.04f), new Color(0.97f, 0.93f, 0.8f));
+            Matrix4x4 R = Matrix4x4.Rotate(Quaternion.Euler(90f, 0f, 0f));
+            Color red = new Color(0.82f, 0.18f, 0.14f), white = new Color(0.95f, 0.91f, 0.8f), gold = new Color(1.4f, 1.0f, 0.3f);
+            b.Frustum(R, 0.52f, 0.52f, -0.06f, 0.04f, 20, WoodDark, true, true);
+            (float r, float z0, float z1, Color c)[] rings =
+            {
+                (0.46f, 0.04f, 0.055f, red), (0.37f, 0.055f, 0.07f, white), (0.28f, 0.07f, 0.085f, red), (0.19f, 0.085f, 0.1f, white),
+            };
+            foreach (var ring in rings) b.Frustum(R, ring.r, ring.r, ring.z0, ring.z1, 20, ring.c, true, false);
+            b.Frustum(R, 0.1f, 0.03f, 0.1f, 0.2f, 12, gold, true, false);
+            b.Box(Matrix4x4.Translate(new Vector3(-0.3f, -0.65f, -0.14f)), new Vector3(0.08f, 1.3f, 0.08f), WoodDark);
+            b.Box(Matrix4x4.Translate(new Vector3(0.3f, -0.65f, -0.14f)), new Vector3(0.08f, 1.3f, 0.08f), WoodDark);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, -0.3f, -0.14f)), new Vector3(0.68f, 0.07f, 0.07f), WoodDark);
             var plate = MapBuilder.Place("Exercise_Target", parent, MapBuilder.SaveMesh(b.Build("Tutorial_Target")), material, at, rot);
             plate.isStatic = true;
-            plate.AddComponent<BoxCollider>().size = new Vector3(0.9f, 0.9f, 0.1f);
-            var glow = CheckLamp(parent, material, "Exercise_Target_Lamp", TowerBuilder.Polar(TargetR - 0.1f, angle, y + 2.0f));
+            var targetCol = plate.AddComponent<BoxCollider>();
+            targetCol.center = new Vector3(0f, 0f, 0.02f);
+            targetCol.size = new Vector3(1.04f, 1.04f, 0.2f);
+            var glow = CheckLamp(parent, material, "Exercise_Target_Lamp", TowerBuilder.Polar(TargetR - 0.1f, angle, y + 2.0f), 2.0f);
             plate.AddComponent<TutorialExercise>().Configure(TutorialExercise.Kind.Hit, glow);
             MovablesSetup.Prop(props, material, "TutorialBox_C", MovablesSetup.Kind.SmallBox, parent.position + TowerBuilder.Polar(2.5f, angle - 8f, y + 0.02f), 0f);
             Note(parent, material, "Note_Tutorial_Target", parent.position + TowerBuilder.Polar(TargetR - 0.15f, angle, y + 2.55f), parent.position + new Vector3(0f, y + 2.55f, 0f),
@@ -472,7 +535,7 @@ namespace SpellSimulator.EditorTools.Map
         // ---------------------------------------------------------------- nivel 3: objetos magicos
 
         /// <summary>Caballete del tutorial de la tierra (piso 1) y del viento (planta baja): posicion (angulo/radio) y a donde apunta.</summary>
-        public const float EaselEarthAngle = 215f, EaselEarthR = 3.5f, EaselDoorAngle = 250f, EaselDoorR = 3.8f;
+        public const float EaselEarthAngle = 250f, EaselEarthR = 3.5f, EaselDoorAngle = 250f, EaselDoorR = 3.8f;
         public const string EaselEarthName = "Easel_Earth", EaselDoorName = "Easel_Door";
 
         private static void MagicFloor(Transform parent, Transform props, Material material)
@@ -483,7 +546,7 @@ namespace SpellSimulator.EditorTools.Map
             HoleRail(rails, parent, material, "Tutorial_Rail_1", y, o);
 
             // La puerta: una hoja de pared a baranda (hueco de 4 cm a cada lado) que gira sobre una bisagra fisica del lado de la pared. Cuerpo fisico con HingeJoint.
-            float inner = TowerBuilder.RampInner + 0.07f, outer = TowerBuilder.InnerRadius - 0.06f, width = outer - inner;
+            float inner = TowerBuilder.RampInner + 0.07f, outer = TowerBuilder.InnerRadius - HingeGap, width = outer - inner;
             float mid = (inner + outer) * 0.5f;
             var cloth = new LowPolyMesh();
             Color sack = new Color(0.58f, 0.37f, 0.22f), sackDark = new Color(0.47f, 0.29f, 0.17f); // tablones de una puerta pesada
@@ -519,48 +582,56 @@ namespace SpellSimulator.EditorTools.Map
 
             // Lienzo FIJO inclinado en un caballete, de cara a quien dibuja y apuntando a la tela, con la plantilla fantasma del viento y la
             // flecha de apunte siempre visible. Esta cerca de la tela (el viento tiene poco alcance).
+            // Caballete del viento de la version anterior: cuelga de la raiz de la escena (no de Map), sobrevivia al Build y quedaba EN EL MISMO
+            // LUGAR que el de tierra (dos lienzos coincidentes: lo dibujado no se veia y las plantillas de viento y tierra se superponian).
+            foreach (string retired in new[] { "Easel_Wind_Canvas", "Easel_Wind" })
+            {
+                var stale = GameObject.Find(retired);
+                if (stale != null) Object.DestroyImmediate(stale);
+            }
             Vector3 easelGround = o + TowerBuilder.Polar(EaselEarthR, EaselEarthAngle, y);
-            MakeEasel(material, EaselEarthName, easelGround, center, true, "thrown_rock", EarthGhost);
+            MakeEasel(material, EaselEarthName, easelGround, center, true, "", EarthGhost, "earth");
 
-            // Mesas del centro: la pluma, los tinteros y el libro del viento estan sobre StudyTable (TowerProps/MapDetails); cuadernos y hojas, en
-            // NotebookTable, mas lienzos flotando. Todo en el disco central: el anillo del recorrido queda libre.
+            // Mesas del centro (TowerProps): la mesa grande lleva dos plumas, una goma, un tintero normal y el libro de la tierra; la chica, dos
+            // plumas. Cada una tiene UN lienzo acostado (a la izquierda, lejos de las herramientas). Lo que sobraba se mudo al campo (MapBuilder).
             var template = GameObject.Find("PaperCanvas");
             if (template != null)
             {
+                Vector3 study = o + TowerProps.StudyTableCenter + Vector3.up * 0.82f;
+                Quaternion studyRot = Quaternion.Euler(0f, TowerProps.StudyTableYaw, 0f);
+                CanvasDesigns.SheetAt(template, "Study_Sheet_A", study + studyRot * new Vector3(-0.6f, 0.012f, 0.05f), studyRot * Quaternion.Euler(90f, 8f, 0f), 0.4f, false).transform.SetParent(props, true);
                 Vector3 nt = o + TowerProps.NotebookTableCenter + Vector3.up * 0.82f;
                 Quaternion ntRot = Quaternion.Euler(0f, TowerProps.NotebookTableYaw, 0f);
-                CanvasDesigns.NotebookAt(template, material, "Study_Notebook_A", nt + ntRot * new Vector3(-0.45f, 0.012f, 0.05f), ntRot * Quaternion.Euler(90f, 10f, 0f), 0.24f, 0.32f).transform.SetParent(props, true);
-                CanvasDesigns.NotebookAt(template, material, "Study_Notebook_B", nt + ntRot * new Vector3(-0.05f, 0.012f, -0.1f), ntRot * Quaternion.Euler(90f, -20f, 0f), 0.2f, 0.28f).transform.SetParent(props, true);
-                CanvasDesigns.SheetAt(template, "Study_Sheet_A", nt + ntRot * new Vector3(0.4f, 0.012f, 0.05f), ntRot * Quaternion.Euler(90f, 5f, 0f), 0.4f, false).transform.SetParent(props, true);
-                CanvasDesigns.SheetAt(template, "Study_Sheet_B", nt + ntRot * new Vector3(0.6f, 0.03f, -0.15f), ntRot * Quaternion.Euler(90f, 40f, 0f), 0.3f, false).transform.SetParent(props, true);
-                (string n, Vector3 p, float size)[] floating =
-                {
-                    ("Study_Float_A", o + new Vector3(-1.3f, y + 1.5f, 1.1f), 0.5f),
-                    ("Study_Float_B", o + new Vector3(-0.1f, y + 1.8f, -1.2f), 0.45f),
-                    ("Study_Float_C", o + new Vector3(-2.4f, y + 1.35f, 0.6f), 0.5f),
-                };
-                foreach (var (n, p, size) in floating)
-                    CanvasDesigns.SheetAt(template, n, p, Quaternion.Euler(0f, TowerBuilder.TangentYaw(Mathf.Repeat(Mathf.Atan2(p.z - o.z, p.x - o.x) * Mathf.Rad2Deg, 360f)), 0f), size, true).transform.SetParent(props, true);
+                CanvasDesigns.SheetAt(template, "Study_Sheet_B", nt + ntRot * new Vector3(-0.38f, 0.012f, 0f), ntRot * Quaternion.Euler(90f, -6f, 0f), 0.4f, false).transform.SetParent(props, true);
             }
+
+            // Tres mini tutoriales de calco, en las MISMAS posiciones que las estaciones del piso 2 (FloatAngle, UprightAngle, TargetAngle a StationR):
+            // sigilo de tierra, columna y el circulo que lo encierra. Cada uno: pedestal, papel con plantilla fantasma, farolito de "hecho" y cartel.
+            TraceStation(parent, material, props, template, "Trace_Earth", FloatAngle, y, "earth", "Note_Tutorial_TraceEarth",
+                "<b>1</b> · El sigilo de tierra", "Calcá la plantilla");
+            TraceStation(parent, material, props, template, "Trace_Column", UprightAngle, y, "column", "Note_Tutorial_TraceColumn",
+                "<b>2</b> · Una columna", "Calcá la plantilla");
+            TraceStation(parent, material, props, template, "Trace_Ring", TargetAngle, y, TutorialPaperGuide.RingId, "Note_Tutorial_TraceRing",
+                "<b>3</b> · El círculo", "Cerrá el anillo");
 
             // Carteles 11-13 (carteles.md): pegados al muro, en caras sin ventana y en el orden del recorrido (llegada al este, luego el sur).
             WallCard(parent, material, "Note_Tutorial_Ink", 342f, y, "<b>E</b> · Tomá la pluma", "<b>R</b> · Recargar tinta");
             WallCard(parent, material, "Note_Tutorial_Book", 306f, y, "<b>E</b> · Leé el Tomo II", "En la mesa: es la tierra");
-            WallCard(parent, material, "Note_Tutorial_Cloth", 234f, y, "Calcá la tierra marrón", "<b>E</b> y apuntá a la puerta");
+            WallCard(parent, material, "Note_Tutorial_Cloth", 234f, y, "Dibujá la tierra y cerrá el anillo", "Agarrá la roca (<b>E</b>) y tirala (<b>Q</b>)");
         }
 
         /// <summary>
         /// Caballete con lienzo fijo de cara al jugador que apunta a <paramref name="target"/>. El lienzo emite por detras (lado opuesto
         /// a quien mira), asi que el caballete se gira con la cara visible hacia el lado contrario al objetivo.
         /// </summary>
-        private static void MakeEasel(Material material, string name, Vector3 ground, Vector3 target, bool guide, string recipe, Color ghost)
+        private static void MakeEasel(Material material, string name, Vector3 ground, Vector3 target, bool guide, string recipe, Color ghost, string glyph = "")
         {
             var template = GameObject.Find("PaperCanvas");
             if (template == null) { Debug.LogWarning("[Mapa] sin PaperCanvas: no se arma el caballete " + name); return; }
             Vector3 toTarget = target - ground;
             toTarget.y = 0f;
             float yaw = Mathf.Atan2(-toTarget.x, -toTarget.z) * Mathf.Rad2Deg;   // el +Z del caballete (cara visible) mira al lado contrario
-            CanvasDesigns.Easel(template, material, name, ground, yaw, false);
+            CanvasDesigns.Easel(template, material, name, ground, yaw, false, 0.9f, 1.2f);
             var canvas = GameObject.Find(name + "_Canvas");
             // El hechizo sale por el lado contrario a quien dibuja (hacia el objetivo), no por la cara con tinta.
             var dc = canvas != null ? canvas.GetComponent<DrawingCanvas>() : null;
@@ -576,6 +647,13 @@ namespace SpellSimulator.EditorTools.Map
                 if (paperGuide == null) paperGuide = canvas.AddComponent<SpellSimulator.Lab.TutorialPaperGuide>();
                 var gso = new SerializedObject(paperGuide);
                 gso.FindProperty("recipeId").stringValue = recipe;
+                // Con glifo: sigilo + anillo (sin signos), mas chico que el anillo para que se lea como sello.
+                if (!string.IsNullOrEmpty(glyph))
+                {
+                    gso.FindProperty("glyphId").stringValue = glyph;
+                    gso.FindProperty("withRing").boolValue = true;
+                    gso.FindProperty("glyphSize").floatValue = 0.3f;
+                }
                 gso.FindProperty("ghostColor").colorValue = ghost;
                 gso.ApplyModifiedProperties();
             }
