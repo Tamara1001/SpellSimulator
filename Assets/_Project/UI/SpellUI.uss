@@ -14,6 +14,7 @@
     --amber: rgb(232, 150, 52);
     --danger: rgb(214, 74, 52);
     -unity-font-style: normal;
+    -unity-font: url("project:///Assets/_Project/Art/Fonts/Nunito-Regular.ttf"); /* fuente de cuerpo (Docs/UI_ESTETICA.md); el menu la hereda */
 }
 
 .screen {
@@ -838,6 +839,7 @@
 /* ------------------------------------------------------------ lector de libros */
 
 .reader {
+    -unity-font: url("project:///Assets/_Project/Art/Fonts/Lora-Regular.ttf"); /* libros: Lora */
     position: absolute;
     left: 0; top: 0; right: 0; bottom: 0;
     align-items: center;

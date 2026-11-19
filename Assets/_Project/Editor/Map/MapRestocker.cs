@@ -170,7 +170,7 @@ namespace SpellSimulator.EditorTools.Map
             Part(shop, PrimitiveType.Cylinder, "SignChainL", p.metal, new Vector3(-0.62f, 2.12f, -0.8f), new Vector3(0.012f, 0.22f, 0.012f));
             Part(shop, PrimitiveType.Cylinder, "SignChainR", p.metal, new Vector3(0.62f, 2.12f, -0.8f), new Vector3(0.012f, 0.22f, 0.012f));
             Part(shop, PrimitiveType.Cube, "Sign", p.darkWood, new Vector3(0f, 1.94f, -0.8f), new Vector3(1.5f, 0.3f, 0.04f));
-            Text(shop, "SignText", new Vector3(0f, 1.94f, -0.83f), title, 0.095f, p.brass.color, null, new Vector2(1.5f, 0.3f));
+            Text(shop, "SignText", new Vector3(0f, 1.94f, -0.83f), title, 0.095f, p.brass.color, null, new Vector2(1.5f, 0.3f), sign: true);
         }
 
         // ---------------------------------------------------------------- tienda de plumas
@@ -335,14 +335,14 @@ namespace SpellSimulator.EditorTools.Map
             return go.transform;
         }
 
-        private static TMP_Text Text(Transform parent, string name, Vector3 local, string text, float fontSize, Color color, Quaternion? rotation, Vector2 size)
+        private static TMP_Text Text(Transform parent, string name, Vector3 local, string text, float fontSize, Color color, Quaternion? rotation, Vector2 size, bool sign = false)
         {
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             go.transform.localPosition = local;
             go.transform.localRotation = rotation ?? Quaternion.identity;
             var label = go.AddComponent<TextMeshPro>();
-            if (SignFont != null) label.font = SignFont; // tipografia de carteles (Docs/UI_ESTETICA.md)
+            if (sign && SignFont != null) label.font = SignFont; // titulos de cartel en Caveat Brush; el resto usa la fuente por defecto (Nunito)
             label.rectTransform.sizeDelta = size;
             label.enableAutoSizing = false;
             label.fontSize = fontSize * 10f;

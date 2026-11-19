@@ -198,6 +198,7 @@ namespace SpellSimulator.Learning
             var go = new GameObject(name);
             go.transform.SetParent(parent, false);
             var t = go.AddComponent<TextMeshPro>();
+            if (SpellSimulator.UI.UiFonts.Book != null) t.font = SpellSimulator.UI.UiFonts.Book; // el grimorio es un libro: Lora
             t.rectTransform.sizeDelta = size;
             t.fontSize = fontSize;
             t.alignment = alignment;

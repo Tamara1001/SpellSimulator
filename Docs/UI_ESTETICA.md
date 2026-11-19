@@ -6,13 +6,15 @@ tags: [doc, ui, estetica]
 Objetivo: que carteles, pizarras, HUD y libros se sientan parte del mundo (*Witch Hat Atelier*, low-poly cartoon), no rectángulos negros con Liberation Sans.
 
 ## Tipografía
-| Uso | Fuente | Estado |
+| Uso | Fuente | Dónde se aplica |
 |---|---|---|
-| Carteles, rótulos de puestos, pizarras | **Caveat Brush** | Hecha y en uso en los dos puestos del Archivo. |
-| HUD, avisos, lecturas cortas, botones, rótulos de datos | **Nunito** | Asset generado (`Nunito SDF.asset`); falta migrar el HUD. |
-| Libros, grimorio, notas y textos narrativos largos | **Lora** (serif) | Asset generado (`Lora SDF.asset`); falta migrar libros y grimorio. |
+| Carteles y títulos de puestos | **Caveat Brush** | Título de las dos tiendas y carteles de práctica (`FontBuilder.LoadSignFont`, `UiFonts.Sign`). |
+| HUD, menú, rótulos, pizarras, plaquetas, laboratorio, mapa de la torre | **Nunito** | Fuente **por defecto de TMP** (todo texto sin fuente explícita) y `:root` de `SpellUI.uss` (HUD y menú, UI Toolkit). |
+| Grimorio y lector de libros | **Lora** | `GrimoireTexts.MakeText` (TMP 3D) y `.reader` en `SpellUI.uss`. |
 
-Fuentes en `Assets/_Project/Art/Fonts/` (todas OFL, licencias incluidas); assets TMP generados con `SpellSimulator/Fuentes/Generar tipografias` (`FontBuilder.cs`, atlas estático). Acceso desde editor: `FontBuilder.LoadSignFont/LoadBodyFont/LoadBookFont`.
+Assets: TTF en `Assets/_Project/Art/Fonts/` (OFL incluidas); assets TMP en `Assets/_Project/Resources/Fonts/` (generados por `SpellSimulator/Fuentes/Generar tipografias`, `FontBuilder.cs`, con Liberation Sans de respaldo para glifos que falten). Acceso en runtime: `UI/UiFonts.cs`. El panel de debug (F3) sigue en Liberation Sans a propósito.
+Las fuentes de Google son variables: Unity usa la instancia Regular y sintetiza la negrita.
+**Si regenerás las fuentes, reconstruí el mapa** (`MapBuilder.Build()`): los GUID de los assets cambian.
 
 Juego de caracteres del asset: ASCII, acentos, ñ, ¿ ¡ y los signos `· × − « » – — … °`. Si un texto usa otro carácter, agregarlo a `FontBuilder.Characters` y regenerar.
 
@@ -28,5 +30,5 @@ Juego de caracteres del asset: ASCII, acentos, ñ, ¿ ¡ y los signos `· × −
 - Los carteles se arman con `TextMeshPro` en mundo; el tamaño mínimo legible a 1,5 m es ~6 cm de altura de letra.
 
 ## Pendiente
-- Migrar el HUD a Nunito y libros/grimorio a Lora (cambia assets TMP en varias escenas/prefabs: hacerlo vía el builder de UI, no a mano).
-- Versión de «tienda» para el resto del Archivo (rótulos de nichos).
+- Revisar a mano el HUD y el lector de libros con Nunito/Lora (la migración se verificó por código y consola, no a ojo).
+- Carteles del resto del Archivo (rótulos de nichos) con Caveat Brush.

@@ -11,9 +11,9 @@ namespace SpellSimulator.EditorTools
     /// </summary>
     public static class FontBuilder
     {
-        public const string SignFontPath = "Assets/_Project/Art/Fonts/CaveatBrush SDF.asset";
-        public const string BodyFontPath = "Assets/_Project/Art/Fonts/Nunito SDF.asset";
-        public const string BookFontPath = "Assets/_Project/Art/Fonts/Lora SDF.asset";
+        public const string SignFontPath = "Assets/_Project/Resources/Fonts/CaveatBrush SDF.asset";
+        public const string BodyFontPath = "Assets/_Project/Resources/Fonts/Nunito SDF.asset";
+        public const string BookFontPath = "Assets/_Project/Resources/Fonts/Lora SDF.asset";
 
         // ASCII imprimible + espanol (acentos, ñ, ¿ ¡) + signos usados en los carteles (·, ×, −, «, »).
         private const string Characters =
@@ -23,9 +23,11 @@ namespace SpellSimulator.EditorTools
         [MenuItem("SpellSimulator/Fuentes/Generar tipografias")]
         public static void Build()
         {
+            if (!AssetDatabase.IsValidFolder("Assets/_Project/Resources/Fonts")) AssetDatabase.CreateFolder("Assets/_Project/Resources", "Fonts");
             BuildOne("Assets/_Project/Art/Fonts/CaveatBrush-Regular.ttf", SignFontPath, "CaveatBrush");
             BuildOne("Assets/_Project/Art/Fonts/Nunito-Regular.ttf", BodyFontPath, "Nunito");
             BuildOne("Assets/_Project/Art/Fonts/Lora-Regular.ttf", BookFontPath, "Lora");
+            SetTmpDefault();
         }
 
         private static void BuildOne(string sourcePath, string assetPath, string name)
@@ -41,6 +43,9 @@ namespace SpellSimulator.EditorTools
             asset.material.name = name + " Material";
             AssetDatabase.AddObjectToAsset(asset.atlasTexture, asset);
             AssetDatabase.AddObjectToAsset(asset.material, asset);
+            // Lo que no tenga glifo (flechas, simbolos raros) cae a Liberation Sans en vez de mostrar un cuadrado.
+            var liberation = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>("Assets/TextMesh Pro/Resources/Fonts & Materials/LiberationSans SDF.asset");
+            if (liberation != null) asset.fallbackFontAssetTable = new System.Collections.Generic.List<TMP_FontAsset> { liberation };
             asset.TryAddCharacters(Characters, out string missing);
             if (!string.IsNullOrEmpty(missing)) Debug.LogWarning($"[FontBuilder] {name}: caracteres sin glifo: {missing}");
             // Estatico: el texto de juego no pide glifos nuevos en ejecucion (si hace falta otro caracter, agregarlo a Characters y regenerar).
@@ -48,6 +53,19 @@ namespace SpellSimulator.EditorTools
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
             Debug.Log("[FontBuilder] generado " + assetPath);
+        }
+
+        /// <summary>Nunito pasa a ser la fuente por defecto de TextMeshPro: todo texto sin fuente explicita (HUD 3D, laboratorio, rotulos) la usa.</summary>
+        private static void SetTmpDefault()
+        {
+            var settings = AssetDatabase.LoadAssetAtPath<TMP_Settings>("Assets/TextMesh Pro/Resources/TMP Settings.asset");
+            var body = LoadBodyFont();
+            if (settings == null || body == null) { Debug.LogWarning("[FontBuilder] no se pudo fijar la fuente por defecto de TMP"); return; }
+            var so = new SerializedObject(settings);
+            so.FindProperty("m_defaultFontAsset").objectReferenceValue = body;
+            so.ApplyModifiedProperties();
+            EditorUtility.SetDirty(settings);
+            AssetDatabase.SaveAssets();
         }
 
         public static TMP_FontAsset LoadBodyFont() => AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(BodyFontPath);

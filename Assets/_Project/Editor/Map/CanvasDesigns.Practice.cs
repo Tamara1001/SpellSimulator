@@ -215,6 +215,8 @@ namespace SpellSimulator.EditorTools.Map
             labelGo.transform.SetParent(go.transform, false);
             labelGo.transform.localPosition = new Vector3(0f, 1.45f, -0.03f);
             var label = labelGo.AddComponent<TMPro.TextMeshPro>();
+            var signFont = SpellSimulator.EditorTools.FontBuilder.LoadSignFont();
+            if (signFont != null) label.font = signFont; // carteles de practica en Caveat Brush
             label.rectTransform.sizeDelta = new Vector2(0.95f, 0.5f);
             label.alignment = TMPro.TextAlignmentOptions.Center;
             label.enableAutoSizing = true;
