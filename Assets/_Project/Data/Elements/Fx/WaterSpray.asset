@@ -55,6 +55,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   maxParticles: 120
   trails: 0
+  variation: 0
   trailLifetime: 0.4
   gravity: 1.6
   speed: 2.2
@@ -68,6 +69,7 @@ MonoBehaviour:
   layerSpeed: 1
   impactCount: 4
   impactChance: 0.45
+  crystalline: 0
   emitsLight: 0
   lightColor: {r: 1, g: 1, b: 1, a: 1}
   lightIntensity: 2

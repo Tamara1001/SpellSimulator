@@ -91,6 +91,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   maxParticles: 140
   trails: 0
+  variation: 0
   trailLifetime: 0.4
   gravity: 1.6
   speed: 0.8

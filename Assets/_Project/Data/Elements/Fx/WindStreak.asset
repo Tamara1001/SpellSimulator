@@ -43,7 +43,7 @@ MonoBehaviour:
     m_ColorSpace: -1
     m_NumColorKeys: 2
     m_NumAlphaKeys: 4
-  size: 0.035
+  size: 0.05
   stretch: 0
   mesh: {fileID: 0}
   spin: 0
@@ -55,19 +55,21 @@ MonoBehaviour:
     m_RotationOrder: 4
   maxParticles: 36
   trails: 1
+  variation: 0.5
   trailLifetime: 0.6
   gravity: 0
   speed: 1
-  lifetime: 0.7
-  turbulence: 0.7
+  lifetime: 0.8
+  turbulence: 2.2
   density: 1
   layers: []
   impacts: []
   crumble: 0
-  layerRatio: 0.09
+  layerRatio: 0.07
   layerSpeed: 1.05
   impactCount: 4
   impactChance: 0.5
+  crystalline: 0
   emitsLight: 0
   lightColor: {r: 1, g: 1, b: 1, a: 1}
   lightIntensity: 2

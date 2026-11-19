@@ -5,6 +5,15 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-19 — VFX de fuego y viento: llamas, humo, brasas y rizos de aire
+
+- Shader `SpellParticle`: tres formas procedurales nuevas (sin texturas): `_Shape 5` llama (lengua con ruido que sube y se erosiona al envejecer, núcleo caliente), `6` humo (bocanada irregular) y `7` rizo de aire (arco en C que gira).
+- Fuego: cuerpo de llamas aditivas (blanco-amarillo → naranja → rojo) + capas `FireSmoke` (humo oscuro que sube lento) y `FireEmber` (brasas con estela corta). Presupuesto 160+70+50 partículas.
+- Viento: capa `WindCurl` (rizos giratorios) como lectura principal, cuerpo de motas más tenue (stretch 3→1) y estelas más curvas (turbulencia 2.2) y menos numerosas. Ojo: `FallMist` y `LabWindVisual` comparten el look Wind.
+- `ElementLook.variation`: variación de opacidad por partícula. Todo se genera con `ElementVfxSetup` (menú «Setup Element Looks», ahora incluye fuego).
+- Pendiente: agua y luz.
+- Docs: este changelog.
+
 ## 2026-11-19 — Sin marcos de cara, atriles físicos, puerta de la torre hacia afuera y puerta con bisagra en el piso de viento
 
 - Se quitan los marcos dorado/azul, la flecha y el botón del marco (`CanvasFrame`, `CanvasFaceButton`, `CanvasFrameBuilder`) y `FiringFace`: todo lienzo dispara por la cara donde se escribe (como antes de Bloque A); F da vuelta los sueltos.

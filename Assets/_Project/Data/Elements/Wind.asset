@@ -44,7 +44,7 @@ MonoBehaviour:
     m_NumColorKeys: 2
     m_NumAlphaKeys: 4
   size: 0.045
-  stretch: 3
+  stretch: 1
   mesh: {fileID: 0}
   spin: 0
   sizeOverLife:
@@ -55,13 +55,15 @@ MonoBehaviour:
     m_RotationOrder: 4
   maxParticles: 200
   trails: 0
+  variation: 0.5
   trailLifetime: 0.4
   gravity: 0
   speed: 1.6
   lifetime: 0.7
   turbulence: 1.2
-  density: 0.45
+  density: 0.35
   layers:
+  - {fileID: 11400000, guid: e64f3ec9884a2874995e786bd1b03e0f, type: 2}
   - {fileID: 11400000, guid: a62f25b93dda66e459551f38bb9d5bba, type: 2}
   - {fileID: 11400000, guid: 54b9159d015481f4998684960ff20708, type: 2}
   impacts: []
@@ -70,6 +72,7 @@ MonoBehaviour:
   layerSpeed: 1
   impactCount: 4
   impactChance: 0.5
+  crystalline: 0
   emitsLight: 0
   lightColor: {r: 1, g: 1, b: 1, a: 1}
   lightIntensity: 0

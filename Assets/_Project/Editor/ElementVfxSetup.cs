@@ -29,6 +29,7 @@ namespace SpellSimulator.EditorTools
             var rock = RockMaterial();
             var shard = ShardMesh();
 
+            SetupFire();
             SetupWater(water, puff);
             SetupWind(leaf, streak);
             SetupEarth(rock, shard, puff);
@@ -36,6 +37,74 @@ namespace SpellSimulator.EditorTools
 
             AssetDatabase.SaveAssets();
             Debug.Log("[VFX Setup] Looks de agua, viento y tierra actualizados.");
+        }
+
+        // ---------------------------------------------------------------- fuego
+
+        /// <summary>
+        /// Fuego: lenguas con ruido que se erosionan al envejecer (nucleo blanco-amarillo, borde naranja/rojo), humo oscuro
+        /// que sube mas lento y brasas que saltan. Todo procedural en SpellParticle (_Shape 5/6), sin texturas.
+        /// </summary>
+        private static void SetupFire()
+        {
+            var flame = FlameMaterial();
+            var smokeMat = ParticleMaterial("SpellSmoke", 6f, new Color(0.62f, 0.6f, 0.6f));
+            var ember = AssetDatabase.LoadAssetAtPath<Material>(MaterialsDir + "/SpellParticleAdditive.mat");
+
+            var smoke = Look("FireSmoke");
+            Base(smoke, smokeMat, Gradient(
+                new[] { (new Color(0.34f, 0.26f, 0.22f), 0f), (new Color(0.3f, 0.28f, 0.28f), 0.4f), (new Color(0.42f, 0.42f, 0.45f), 1f) },
+                new[] { (0f, 0f), (0.55f, 0.25f), (0.35f, 0.65f), (0f, 1f) }), size: 0.38f, gravity: -0.16f, lifetime: 1.3f, turbulence: 0.5f);
+            smoke.sizeOverLife = new AnimationCurve(new Keyframe(0f, 0.5f), new Keyframe(1f, 1.9f));
+            smoke.variation = 0.4f;
+            smoke.layerRatio = 0.5f;
+            smoke.layerSpeed = 0.55f;
+            smoke.maxParticles = 70;
+            Save(smoke);
+
+            var sparks = Look("FireEmber");
+            Base(sparks, ember, Gradient(
+                new[] { (new Color(1f, 0.9f, 0.45f), 0f), (new Color(1f, 0.5f, 0.1f), 0.5f), (new Color(0.8f, 0.14f, 0.04f), 1f) },
+                new[] { (0f, 0f), (1f, 0.08f), (0.8f, 0.6f), (0f, 1f) }), size: 0.018f, gravity: -0.25f, lifetime: 1.1f, turbulence: 1.4f);
+            sparks.sizeOverLife = new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.2f));
+            sparks.stretch = 0.8f;
+            sparks.variation = 0.5f;
+            sparks.layerRatio = 0.3f;
+            sparks.layerSpeed = 1.5f;
+            sparks.maxParticles = 50;
+            Save(sparks);
+
+            var main = Load("Fire");
+            Base(main, flame, Gradient(
+                new[] { (new Color(1f, 0.97f, 0.7f), 0f), (new Color(1f, 0.62f, 0.14f), 0.3f), (new Color(0.92f, 0.2f, 0.05f), 0.65f), (new Color(0.35f, 0.06f, 0.02f), 1f) },
+                new[] { (1f, 0f), (0.95f, 0.3f), (0.55f, 0.65f), (0f, 1f) }), size: 0.42f, gravity: -0.3f, lifetime: 1.0f, turbulence: 0.5f);
+            main.sizeOverLife = new AnimationCurve(new Keyframe(0f, 0.55f), new Keyframe(0.25f, 1.2f), new Keyframe(1f, 0.55f));
+            main.variation = 0.25f;
+            main.density = 0.6f;
+            main.maxParticles = 160;
+            main.layers = new[] { smoke, sparks };
+            main.impacts = null;
+            main.emitsLight = true;
+            Save(main);
+        }
+
+        private static Material FlameMaterial()
+        {
+            string path = $"{MaterialsDir}/SpellFlame.mat";
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null)
+            {
+                mat = new Material(AssetDatabase.LoadAssetAtPath<Material>(MaterialsDir + "/SpellParticleAdditive.mat"));
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            mat.SetFloat("_Additive", 1f);
+            mat.SetFloat("_SrcBlend", 1f);
+            mat.SetFloat("_DstBlend", 1f);
+            mat.SetFloat("_Shape", 5f);
+            mat.SetFloat("_Intensity", 1.5f);
+            mat.SetColor("_RimColor", new Color(1f, 0.93f, 0.55f));
+            EditorUtility.SetDirty(mat);
+            return mat;
         }
 
         // ---------------------------------------------------------------- agua
@@ -80,13 +149,26 @@ namespace SpellSimulator.EditorTools
 
         private static void SetupWind(Material leaf, Material streak)
         {
+            var curl = Look("WindCurl");
+            Base(curl, ParticleMaterial("SpellCurl", 7f, new Color(1f, 1f, 1f)), Gradient(
+                new[] { (new Color(0.86f, 0.95f, 1f), 0f), (new Color(0.78f, 0.9f, 1f), 1f) },
+                new[] { (0f, 0f), (0.8f, 0.25f), (0.5f, 0.65f), (0f, 1f) }), size: 0.55f, gravity: 0f, lifetime: 0.85f, turbulence: 0.5f);
+            curl.sizeOverLife = new AnimationCurve(new Keyframe(0f, 0.45f), new Keyframe(1f, 1.7f));
+            curl.spin = 140f;
+            curl.variation = 0.6f;
+            curl.layerRatio = 1.3f;
+            curl.layerSpeed = 0.9f;
+            curl.maxParticles = 80;
+            Save(curl);
+
             var lines = Look("WindStreak");
             Base(lines, streak, Gradient(
                 new[] { (new Color(0.92f, 0.98f, 1f), 0f), (Color.white, 1f) },
-                new[] { (0f, 0f), (0.9f, 0.15f), (0.7f, 0.6f), (0f, 1f) }), size: 0.035f, gravity: 0f, lifetime: 0.7f, turbulence: 0.7f);
+                new[] { (0f, 0f), (0.9f, 0.15f), (0.7f, 0.6f), (0f, 1f) }), size: 0.05f, gravity: 0f, lifetime: 0.8f, turbulence: 2.2f);
+            lines.variation = 0.5f;
             lines.trails = true;
             lines.trailLifetime = 0.6f;
-            lines.layerRatio = 0.09f;
+            lines.layerRatio = 0.07f;
             lines.layerSpeed = 1.05f;
             lines.maxParticles = 36;
             Save(lines);
@@ -107,11 +189,12 @@ namespace SpellSimulator.EditorTools
             Base(main, AssetDatabase.LoadAssetAtPath<Material>(AlphaParticlePath), Gradient(
                 new[] { (new Color(0.9f, 0.97f, 1f), 0f), (new Color(0.82f, 0.93f, 1f), 1f) },
                 new[] { (0f, 0f), (0.14f, 0.2f), (0.08f, 0.7f), (0f, 1f) }), size: 0.045f, gravity: 0f, lifetime: 0.7f, turbulence: 1.2f);
-            main.stretch = 3f;
+            main.stretch = 1f;
             main.speed = 1.6f;
-            main.density = 0.45f;
+            main.density = 0.35f;
+            main.variation = 0.5f;
             main.maxParticles = 200;
-            main.layers = new[] { lines, leaves };
+            main.layers = new[] { curl, lines, leaves };
             main.impacts = null;
             Save(main);
         }
@@ -331,6 +414,7 @@ namespace SpellSimulator.EditorTools
             look.spin = 0f;
             look.stretch = 0f;
             look.trails = false;
+            look.variation = 0f;
             look.sizeOverLife = new AnimationCurve();
             look.density = 1f;
             look.speed = 1f;

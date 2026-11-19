@@ -28,6 +28,8 @@ namespace SpellSimulator.Output
         public int maxParticles = 1500;
         [Tooltip("Estelas curvas (Trails) de ancho size: pocas particulas, barato.")]
         public bool trails;
+        [Tooltip("Variacion de opacidad entre particulas (0 = todas iguales, 1 = algunas casi invisibles): rompe el aspecto uniforme.")]
+        [Range(0f, 1f)] public float variation;
         [Tooltip("Vida de la estela relativa a la de la particula.")]
         public float trailLifetime = 0.4f;
 

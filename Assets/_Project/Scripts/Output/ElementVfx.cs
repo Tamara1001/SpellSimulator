@@ -57,7 +57,9 @@ namespace SpellSimulator.Output
             var main = ps.main;
             main.maxParticles = Mathf.Max(8, Mathf.RoundToInt(look.maxParticles * SpellSimulator.Rendering.GraphicsQuality.ParticleScale));
             main.startSize = new ParticleSystem.MinMaxCurve(look.size * scale * 1.2f, look.size * scale * 2.4f);
-            main.startColor = Color.white;
+            main.startColor = look.variation > 0f
+                ? new ParticleSystem.MinMaxGradient(Color.white, new Color(1f, 1f, 1f, 1f - Mathf.Clamp01(look.variation)))
+                : new ParticleSystem.MinMaxGradient(Color.white);
             main.gravityModifier = gravityOverride ?? look.gravity;
 
             var col = ps.colorOverLifetime;
