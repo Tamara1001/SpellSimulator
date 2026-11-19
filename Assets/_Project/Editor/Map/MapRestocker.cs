@@ -101,14 +101,14 @@ namespace SpellSimulator.EditorTools.Map
             Transform brushOut = Anchor(penShop, "BrushOutput", new Vector3(0f, CounterTop + 0.14f, -0.42f), Quaternion.identity);
 
             // ---- Almacen de lienzos ----
-            Frame(canvasShop, p, p.blue, p.cloudB, "LIENZOS Y LIBRETAS");
-            TMP_Text canvasReadout = Text(canvasShop, "CanvasReadout", new Vector3(0f, 1.72f, 0.42f), "", 0.065f, new Color(0.95f, 0.9f, 0.7f), null, new Vector2(1.5f, 0.45f));
+            const float canvasShopWidth = 3.9f;
+            Frame(canvasShop, p, p.blue, p.cloudB, "LIENZOS Y LIBRETAS", canvasShopWidth);
+            Text(canvasShop, "Note", new Vector3(0f, 1.72f, 0.42f), "Agarrá el que quieras\nse repone solo", 0.065f, new Color(0.95f, 0.9f, 0.7f), null, new Vector2(1.5f, 0.45f));
             PaperRolls(canvasShop, p);
-            CanvasStack(canvasShop, p);
-            OrderPanel(canvasShop, component, p);
+            Piles(canvasShop, component, p, canvasShopWidth);
             Transform canvasOut = Anchor(canvasShop, "CanvasOutput", new Vector3(-0.6f, 1.3f, -0.95f), Quaternion.Euler(0f, 180f, 0f));
 
-            component.Configure(penClone.GetComponent<PhysicalTool>(), paper, p.leather, brushOut, canvasOut, canvasReadout, brushReadout);
+            component.Configure(penClone.GetComponent<PhysicalTool>(), paper, p.leather, brushOut, canvasOut, null, brushReadout);
             EditorUtility.SetDirty(component);
             Undo.RegisterCreatedObjectUndo(root, RootName);
         }
@@ -126,20 +126,21 @@ namespace SpellSimulator.EditorTools.Map
         }
 
         /// <summary>Mostrador, trastienda, postes, toldo rayado con flecos, farol y cartel colgante.</summary>
-        private static void Frame(Transform shop, Palette p, Material clothA, Material clothB, string title)
+        private static void Frame(Transform shop, Palette p, Material clothA, Material clothB, string title, float width = 2.8f)
         {
-            const float width = 2.8f;
-            Part(shop, PrimitiveType.Cube, "Counter", p.wood, new Vector3(0f, 0.45f, -0.3f), new Vector3(2.6f, 0.9f, 0.5f), solid: true);
-            Part(shop, PrimitiveType.Cube, "CounterTop", p.darkWood, new Vector3(0f, 0.915f, -0.3f), new Vector3(2.72f, 0.03f, 0.62f), solid: true);
-            for (int i = 0; i < 6; i++) // tablones verticales del frente
-                Part(shop, PrimitiveType.Cube, "Slat" + i, i % 2 == 0 ? p.plank : p.wood, new Vector3(-1.08f + i * 0.432f, 0.45f, -0.555f), new Vector3(0.41f, 0.84f, 0.015f));
+            Part(shop, PrimitiveType.Cube, "Counter", p.wood, new Vector3(0f, 0.45f, -0.3f), new Vector3(width - 0.2f, 0.9f, 0.5f), solid: true);
+            Part(shop, PrimitiveType.Cube, "CounterTop", p.darkWood, new Vector3(0f, 0.915f, -0.3f), new Vector3(width - 0.08f, 0.03f, 0.62f), solid: true);
+            int slats = Mathf.RoundToInt((width - 0.2f) / 0.43f);
+            float slatWidth = (width - 0.2f) / slats;
+            for (int i = 0; i < slats; i++) // tablones verticales del frente
+                Part(shop, PrimitiveType.Cube, "Slat" + i, i % 2 == 0 ? p.plank : p.wood, new Vector3(-(width - 0.2f) * 0.5f + slatWidth * (i + 0.5f), 0.45f, -0.555f), new Vector3(slatWidth - 0.02f, 0.84f, 0.015f));
             Part(shop, PrimitiveType.Cube, "BackWall", p.plank, new Vector3(0f, 1.2f, 0.5f), new Vector3(width, 2.4f, 0.08f), solid: true);
             Part(shop, PrimitiveType.Cube, "Batten0", p.darkWood, new Vector3(0f, 0.7f, 0.455f), new Vector3(width, 0.06f, 0.02f));
             Part(shop, PrimitiveType.Cube, "Batten1", p.darkWood, new Vector3(0f, 2.05f, 0.455f), new Vector3(width, 0.06f, 0.02f));
             Part(shop, PrimitiveType.Cube, "ReadoutBoard", p.board, new Vector3(0f, 1.72f, 0.44f), new Vector3(1.6f, 0.5f, 0.03f));
             Part(shop, PrimitiveType.Cube, "ReadoutFrame", p.darkWood, new Vector3(0f, 1.72f, 0.46f), new Vector3(1.7f, 0.6f, 0.02f));
 
-            foreach (float x in new[] { -1.38f, 1.38f })
+            foreach (float x in new[] { -(width * 0.5f - 0.02f), width * 0.5f - 0.02f })
             {
                 Part(shop, PrimitiveType.Cylinder, "PostFront", p.darkWood, new Vector3(x, 1.2f, -0.62f), new Vector3(0.1f, 1.2f, 0.1f), solid: true);
                 Part(shop, PrimitiveType.Cylinder, "PostBack", p.darkWood, new Vector3(x, 1.35f, 0.5f), new Vector3(0.1f, 1.35f, 0.1f), solid: true);
@@ -159,9 +160,9 @@ namespace SpellSimulator.EditorTools.Map
                     new Vector3(stripeWidth * 0.62f, stripeWidth * 0.62f, 0.02f), euler: new Vector3(0f, 0f, 45f));
 
             // Farol: cadena y esfera calida (sin luz real: cuesta en Quest).
-            Part(shop, PrimitiveType.Cylinder, "LanternChain", p.metal, new Vector3(1.0f, 2.34f, -0.55f), new Vector3(0.015f, 0.12f, 0.015f));
-            Part(shop, PrimitiveType.Sphere, "Lantern", p.lantern, new Vector3(1.0f, 2.12f, -0.55f), new Vector3(0.2f, 0.26f, 0.2f));
-            Part(shop, PrimitiveType.Cube, "LanternCap", p.darkWood, new Vector3(1.0f, 2.27f, -0.55f), new Vector3(0.13f, 0.03f, 0.13f));
+            Part(shop, PrimitiveType.Cylinder, "LanternChain", p.metal, new Vector3(width * 0.5f - 0.4f, 2.34f, -0.55f), new Vector3(0.015f, 0.12f, 0.015f));
+            Part(shop, PrimitiveType.Sphere, "Lantern", p.lantern, new Vector3(width * 0.5f - 0.4f, 2.12f, -0.55f), new Vector3(0.2f, 0.26f, 0.2f));
+            Part(shop, PrimitiveType.Cube, "LanternCap", p.darkWood, new Vector3(width * 0.5f - 0.4f, 2.27f, -0.55f), new Vector3(0.13f, 0.03f, 0.13f));
 
             // Cartel colgante con el nombre.
             Part(shop, PrimitiveType.Cylinder, "SignChainL", p.metal, new Vector3(-0.62f, 2.12f, -0.8f), new Vector3(0.012f, 0.22f, 0.012f));
@@ -248,56 +249,66 @@ namespace SpellSimulator.EditorTools.Map
                 Part(shop, PrimitiveType.Cylinder, "CrateRoll" + i, p.cream, new Vector3(-1.2f + i * 0.25f, 1.1f, 0.3f), new Vector3(0.16f, 0.13f, 0.16f), euler: new Vector3(90f, 0f, 0f));
         }
 
-        private static void CanvasStack(Transform shop, Palette p)
+        /// <summary>Las nueve pilas: tres libretas (8 hojas) y cuatro hojas sueltas sobre el mostrador, y las dos hojas L en peanas del piso a los lados.</summary>
+        private static void Piles(Transform shop, CanvasRestocker owner, Palette p, float width)
         {
-            // Pila de lienzos y libretas sobre el mostrador (a la izquierda), decorativa: lo que se saca sale delante.
-            for (int i = 0; i < 4; i++)
-                Part(shop, PrimitiveType.Cube, "StackCanvas" + i, i % 2 == 0 ? p.cream : p.blue, new Vector3(-0.95f + (i % 2) * 0.03f, CounterTop + 0.012f + i * 0.026f, -0.28f),
-                    new Vector3(0.44f, 0.022f, 0.44f), euler: new Vector3(0f, i * 11f - 14f, 0f));
-            for (int i = 0; i < 2; i++)
-                Part(shop, PrimitiveType.Cube, "StackBook" + i, p.leather, new Vector3(-0.38f, CounterTop + 0.03f + i * 0.055f, -0.3f), new Vector3(0.3f, 0.05f, 0.24f), euler: new Vector3(0f, i * 18f - 9f, 0f));
+            CanvasSpec[] counter =
+            {
+                CanvasSpec.Notebook(CanvasSize.S), CanvasSpec.Notebook(CanvasSize.M), CanvasSpec.Notebook(CanvasSize.L),
+                CanvasSpec.Sheet(CanvasSize.S, CanvasShape.Square), CanvasSpec.Sheet(CanvasSize.S, CanvasShape.Rect),
+                CanvasSpec.Sheet(CanvasSize.M, CanvasShape.Square), CanvasSpec.Sheet(CanvasSize.M, CanvasShape.Rect),
+            };
+            const float gap = 0.13f;
+            float total = -gap;
+            foreach (CanvasSpec s in counter) total += CanvasRules.Dimensions(s).x + gap;
+            float x = -total * 0.5f;
+            for (int i = 0; i < counter.Length; i++)
+            {
+                float w = CanvasRules.Dimensions(counter[i]).x;
+                Pile(shop, owner, p, "Pile" + i, counter[i], new Vector3(x + w * 0.5f, CounterTop, -0.3f), 0.1f, true);
+                x += w + gap;
+            }
+            float sideX = width * 0.5f + 0.9f;
+            Pile(shop, owner, p, "PileLSquare", CanvasSpec.Sheet(CanvasSize.L, CanvasShape.Square), new Vector3(-sideX, 0f, -0.2f), 0.12f, false);
+            Pile(shop, owner, p, "PileLRect", CanvasSpec.Sheet(CanvasSize.L, CanvasShape.Rect), new Vector3(sideX, 0f, -0.2f), 0.12f, false);
         }
 
-        /// <summary>Tablero de pedido inclinado sobre el mostrador (derecha): cinco botones redondos y un boton grande SACAR.</summary>
-        private static void OrderPanel(Transform shop, CanvasRestocker owner, Palette p)
+        /// <summary>Una peana con pila de papel (o de libretas) y el lienzo real de exhibicion flotando encima; rotulo al frente.</summary>
+        private static void Pile(Transform shop, CanvasRestocker owner, Palette p, string name, CanvasSpec spec, Vector3 baseLocal, float footHeight, bool onCounter)
         {
-            var panel = new GameObject("OrderPanel").transform;
-            panel.SetParent(shop, false);
-            panel.localPosition = new Vector3(0.62f, CounterTop + 0.08f, -0.3f);
-            panel.localRotation = Quaternion.Euler(-25f, 0f, 0f);
-            Part(panel, PrimitiveType.Cube, "PanelBoard", p.darkWood, Vector3.zero, new Vector3(1.3f, 0.04f, 0.5f), solid: true);
-            Part(panel, PrimitiveType.Cube, "PanelInset", p.board, new Vector3(0f, 0.022f, 0f), new Vector3(1.22f, 0.006f, 0.42f));
-            Part(shop, PrimitiveType.Cube, "PanelLegL", p.darkWood, new Vector3(0.0f, CounterTop + 0.04f, -0.22f), new Vector3(0.04f, 0.1f, 0.3f));
-            Part(shop, PrimitiveType.Cube, "PanelLegR", p.darkWood, new Vector3(1.24f, CounterTop + 0.04f, -0.22f), new Vector3(0.04f, 0.1f, 0.3f));
+            Vector2 d = CanvasRules.Dimensions(spec);
+            var pile = new GameObject(name);
+            pile.transform.SetParent(shop, false);
+            pile.transform.localPosition = baseLocal;
+            bool notebook = spec.kind == CanvasKind.Notebook;
+            Material stackMat = notebook ? p.leather : p.cream;
+            Part(pile.transform, PrimitiveType.Cube, "Foot", p.darkWood, new Vector3(0f, footHeight * 0.5f, 0f), new Vector3(d.x + 0.06f, footHeight, 0.3f));
+            float stackHeight = notebook ? 0.09f : 0.06f;
+            if (spec.shape == CanvasShape.Round)
+                Part(pile.transform, PrimitiveType.Cylinder, "Stack", stackMat, new Vector3(0f, footHeight + stackHeight * 0.5f, 0f), new Vector3(d.x, stackHeight * 0.5f, d.x));
+            else
+                Part(pile.transform, PrimitiveType.Cube, "Stack", stackMat, new Vector3(0f, footHeight + stackHeight * 0.5f, 0f), new Vector3(d.x, stackHeight, 0.24f));
+            if (!notebook) Part(pile.transform, PrimitiveType.Cube, "StackEdge", p.blue, new Vector3(0f, footHeight + stackHeight * 0.5f, -0.121f), new Vector3(d.x, stackHeight * 0.3f, 0.004f));
 
-            string[] labels = { "Tipo", "Tamaño", "Forma", "Hojas −", "Hojas +" };
-            RestockerAction[] actions = { RestockerAction.Kind, RestockerAction.Size, RestockerAction.Shape, RestockerAction.PagesLess, RestockerAction.PagesMore };
-            string[] prompts = { "Cambiar: lienzo / libreta", "Cambiar el tamaño (S, M, L)", "Cambiar la forma (cuadrado / rectangular)", "Una hoja menos", "Una hoja más" };
-            for (int i = 0; i < labels.Length; i++)
-                RoundButton(panel, owner, "Select" + i, p.teal, new Vector3(-0.5f + i * 0.25f, 0.025f, 0.1f), 0.2f, labels[i], actions[i], prompts[i], 0.045f);
-            RoundButton(panel, owner, "Dispense", p.green, new Vector3(0f, 0.025f, -0.12f), 0.3f, "SACAR", RestockerAction.DispenseCanvas, "Sacar el lienzo o la libreta elegidos", 0.075f);
-        }
-
-        // ---------------------------------------------------------------- piezas
-
-        private static void RoundButton(Transform parent, CanvasRestocker owner, string name, Material material, Vector3 local, float diameter, string label, RestockerAction action,
-            string prompt, float labelSize)
-        {
-            var go = Part(parent, PrimitiveType.Cylinder, name, material, local, new Vector3(diameter, 0.018f, diameter), solid: true);
-            var capsule = go.GetComponent<CapsuleCollider>();
-            if (capsule != null) Object.DestroyImmediate(capsule);
-            var box = go.AddComponent<BoxCollider>();
-            box.size = new Vector3(1f, 3f, 1f);
-            var button = go.AddComponent<RestockerButton>();
-            button.Configure(owner, action, 0, prompt);
-            EditorUtility.SetDirty(button);
-            Text(parent, name + "_Label", local + new Vector3(0f, 0.02f, 0f), label, labelSize, Color.white, Lying, new Vector2(diameter * 1.1f, diameter * 0.6f));
+            const float hover = 0.14f;
+            float centerY = footHeight + stackHeight + hover + d.y * 0.5f;
+            Transform anchor = Anchor(pile.transform, "DisplayAnchor", new Vector3(0f, centerY, 0f), Quaternion.identity);
+            string label = (notebook ? "Libreta " : "Hoja ") + spec.size + (spec.shape == CanvasShape.Rect && !notebook ? " rect." : "") + $"\n{Mathf.RoundToInt(d.x * 100f)}×{Mathf.RoundToInt(d.y * 100f)} cm";
+            if (onCounter)
+                Plaque(shop, p, name + "_Plaque", new Vector3(baseLocal.x, 0.62f, -0.556f), label, Mathf.Max(0.42f, d.x + 0.06f));
+            else
+                Plaque(pile.transform, p, name + "_Plaque", new Vector3(0f, 0.2f, -0.24f), label, 0.6f);
+            var comp = pile.AddComponent<CanvasPile>();
+            comp.Configure(owner, anchor, spec);
+            EditorUtility.SetDirty(comp);
         }
 
         private static void Plaque(Transform shop, Palette p, string name, Vector3 local, string text, float width)
         {
-            Part(shop, PrimitiveType.Cube, name, p.darkWood, local, new Vector3(width, 0.14f, 0.012f));
-            Text(shop, name + "_Text", local + new Vector3(0f, 0f, -0.012f), text, 0.07f, p.cream.color, null, new Vector2(width, 0.14f));
+            bool twoLines = text.Contains("\n");
+            float h = twoLines ? 0.2f : 0.14f;
+            Part(shop, PrimitiveType.Cube, name, p.darkWood, local, new Vector3(width, h, 0.012f));
+            Text(shop, name + "_Text", local + new Vector3(0f, 0f, -0.012f), text, twoLines ? 0.05f : 0.07f, p.cream.color, null, new Vector2(width, h));
         }
 
         private static GameObject Part(Transform parent, PrimitiveType type, string name, Material material, Vector3 local, Vector3 size, Vector3? euler = null, bool solid = false)

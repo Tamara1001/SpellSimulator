@@ -13,6 +13,12 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - Piso 1 (viento): la «tela» pasa a ser una hoja de tablones con `HingeJoint` (eje vertical, pegada a la pared) y resorte flojo: viento, agua o una caja la abren con fisicas (no se teletransporta); una vez abierta queda donde la dejan y deja pasar al jugador; el rearme del tutorial la cierra.
 - Docs: `GAME_DESIGN.md`, `LIENZOS_PLAN.md`.
 
+## 2026-11-18 — Almacén de lienzos: pilas con lienzos reales (sin botones)
+- El selector (Tipo/Tamaño/Forma/Hojas/SACAR) se reemplazó por **9 pilas** con un lienzo real flotando sobre cada una: 3 libretas (S redonda, M, L; **siempre 8 hojas**) y 6 hojas sueltas (S/M/L × cuadrada/rectangular). Las dos L van en peanas de piso a los lados del puesto.
+- Nuevo `CanvasPile` (Scripts/World): cuando el jugador agarra el lienzo de exhibición (deja de flotar) la pila repone otro igual; lo llevado cuenta para el tope de 8 sacados de `CanvasRestocker` (`SpawnDisplay`/`Release`). `PhysicalCanvas.PinUntimed()` lo deja flotando sin el límite de 60 s. En red no hay exhibición.
+- Verificado en Play: las 9 pilas aparecen y al sacar una se repone (59 → 60 lienzos). Falta probar a mano el agarre con mouse/VR.
+- Costo: 9 lienzos de exhibición suman 9 RenderTextures permanentes (vigilar en Quest).
+
 ## 2026-11-18 — Restocker rehecho como dos puestos en el Archivo
 - `MapRestocker` arma ahora la **Tienda de plumas** (cinco tarros con un pincel cada uno; tocar el tarro saca ese pincel) y el **Almacén de lienzos** (rollos, pilas y un tablero de pedido inclinado con botones redondos y SACAR), con toldo rayado, farol y cartel. Mismo `CanvasRestocker` y mismas acciones: la lógica no cambia.
 - Ya no están en la torre: van a la entrada del Archivo, en (±7,5, +5,5) respecto de (0,−46), girados 25° hacia el camino. El plano del Archivo (Antigravity) los ponía en z = +11,5, pero ahí quedaban dentro del entrenamiento y de su línea de tiro; se corrieron.

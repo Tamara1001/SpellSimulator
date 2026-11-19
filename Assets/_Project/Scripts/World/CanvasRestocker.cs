@@ -101,6 +101,19 @@ namespace SpellSimulator.World
             return go;
         }
 
+        /// <summary>Lienzo de exhibicion de una pila (<see cref="CanvasPile"/>): flota sin limite, no cuenta para el tope y no avisa. En red no saca nada.</summary>
+        public GameObject SpawnDisplay(CanvasSpec spec, Vector3 position, Quaternion rotation)
+        {
+            if (NetSession.Exists || paperTemplate == null) return null;
+            GameObject go = CanvasFactory.Spawn(paperTemplate, spec, position, rotation, coverMaterial);
+            var physical = go.GetComponent<PhysicalCanvas>();
+            if (physical != null) physical.PinUntimed();
+            return go;
+        }
+
+        /// <summary>Un lienzo de exhibicion se llevo: pasa a contar para el tope de sacados (al pasarse se borra el mas viejo).</summary>
+        public void Release(GameObject go) => Track(spawnedCanvases, go);
+
         private static void Track(List<GameObject> list, GameObject go)
         {
             list.RemoveAll(x => x == null);

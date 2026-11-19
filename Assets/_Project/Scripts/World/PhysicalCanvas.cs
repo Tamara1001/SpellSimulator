@@ -301,6 +301,13 @@ namespace SpellSimulator.World
             CanvasEasel.TrySnap(this);
         }
 
+        /// <summary>Lo deja flotando sin limite de tiempo (los lienzos de exhibicion de las pilas del almacen; ver <see cref="CanvasPile"/>).</summary>
+        public void PinUntimed()
+        {
+            StartFloating(false);
+            CanvasEasel.TrySnap(this);
+        }
+
         /// <summary>Arrojado (Q): cae con fisica y se acuesta con la cara hacia arriba.</summary>
         public void Throw(Vector3 velocity)
         {
