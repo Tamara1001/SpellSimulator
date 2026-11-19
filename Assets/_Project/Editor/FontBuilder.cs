@@ -6,13 +6,14 @@ using UnityEngine.TextCore.LowLevel;
 namespace SpellSimulator.EditorTools
 {
     /// <summary>
-    /// Genera los assets SDF de TextMeshPro de las tipografias del proyecto (Docs/UI_ESTETICA.md). Hoy: «Caveat Brush» para carteles y rotulos.
+    /// Genera los assets SDF de TextMeshPro de las tipografias del proyecto (Docs/UI_ESTETICA.md). «Caveat Brush» (carteles), «Nunito» (HUD y lecturas) y «Lora» (libros y textos narrativos).
     /// Ejecutar: menu SpellSimulator/Fuentes/Generar tipografias (o llamar a <see cref="Build"/>).
     /// </summary>
     public static class FontBuilder
     {
         public const string SignFontPath = "Assets/_Project/Art/Fonts/CaveatBrush SDF.asset";
-        private const string SourcePath = "Assets/_Project/Art/Fonts/CaveatBrush-Regular.ttf";
+        public const string BodyFontPath = "Assets/_Project/Art/Fonts/Nunito SDF.asset";
+        public const string BookFontPath = "Assets/_Project/Art/Fonts/Lora SDF.asset";
 
         // ASCII imprimible + espanol (acentos, ñ, ¿ ¡) + signos usados en los carteles (·, ×, −, «, »).
         private const string Characters =
@@ -22,26 +23,35 @@ namespace SpellSimulator.EditorTools
         [MenuItem("SpellSimulator/Fuentes/Generar tipografias")]
         public static void Build()
         {
-            var font = AssetDatabase.LoadAssetAtPath<Font>(SourcePath);
-            if (font == null) { Debug.LogError("[FontBuilder] falta " + SourcePath); return; }
-            if (AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(SignFontPath) != null) AssetDatabase.DeleteAsset(SignFontPath);
+            BuildOne("Assets/_Project/Art/Fonts/CaveatBrush-Regular.ttf", SignFontPath, "CaveatBrush");
+            BuildOne("Assets/_Project/Art/Fonts/Nunito-Regular.ttf", BodyFontPath, "Nunito");
+            BuildOne("Assets/_Project/Art/Fonts/Lora-Regular.ttf", BookFontPath, "Lora");
+        }
+
+        private static void BuildOne(string sourcePath, string assetPath, string name)
+        {
+            var font = AssetDatabase.LoadAssetAtPath<Font>(sourcePath);
+            if (font == null) { Debug.LogError("[FontBuilder] falta " + sourcePath); return; }
+            if (AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(assetPath) != null) AssetDatabase.DeleteAsset(assetPath);
 
             var asset = TMP_FontAsset.CreateFontAsset(font, 90, 9, GlyphRenderMode.SDFAA, 1024, 1024, AtlasPopulationMode.Dynamic, true);
-            asset.name = "CaveatBrush SDF";
-            AssetDatabase.CreateAsset(asset, SignFontPath);
-            asset.atlasTexture.name = "CaveatBrush Atlas";
-            asset.material.name = "CaveatBrush Material";
+            asset.name = name + " SDF";
+            AssetDatabase.CreateAsset(asset, assetPath);
+            asset.atlasTexture.name = name + " Atlas";
+            asset.material.name = name + " Material";
             AssetDatabase.AddObjectToAsset(asset.atlasTexture, asset);
             AssetDatabase.AddObjectToAsset(asset.material, asset);
             asset.TryAddCharacters(Characters, out string missing);
-            if (!string.IsNullOrEmpty(missing)) Debug.LogWarning("[FontBuilder] caracteres sin glifo: " + missing);
-            // Estatico: los carteles no cambian en juego, asi que no se necesita el atlas dinamico.
+            if (!string.IsNullOrEmpty(missing)) Debug.LogWarning($"[FontBuilder] {name}: caracteres sin glifo: {missing}");
+            // Estatico: el texto de juego no pide glifos nuevos en ejecucion (si hace falta otro caracter, agregarlo a Characters y regenerar).
             asset.atlasPopulationMode = AtlasPopulationMode.Static;
             EditorUtility.SetDirty(asset);
             AssetDatabase.SaveAssets();
-            Debug.Log("[FontBuilder] generado " + SignFontPath);
+            Debug.Log("[FontBuilder] generado " + assetPath);
         }
 
+        public static TMP_FontAsset LoadBodyFont() => AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(BodyFontPath);
+        public static TMP_FontAsset LoadBookFont() => AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(BookFontPath);
         public static TMP_FontAsset LoadSignFont() => AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(SignFontPath);
     }
 }

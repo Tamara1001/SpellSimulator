@@ -8,9 +8,11 @@ Objetivo: que carteles, pizarras, HUD y libros se sientan parte del mundo (*Witc
 ## Tipografía
 | Uso | Fuente | Estado |
 |---|---|---|
-| Carteles, rótulos de puestos, pizarras | **Caveat Brush** (OFL, Google Fonts) | Hecha: `Assets/_Project/Art/Fonts/CaveatBrush-Regular.ttf` + asset TMP `CaveatBrush SDF.asset` (generado con `SpellSimulator/Fuentes/Generar tipografias`, `FontBuilder.cs`). Ya la usan los dos puestos del Archivo. |
-| Cuerpo y lecturas largas (HUD, libros, grimorio) | **Nunito** (OFL) o Lora | Pendiente: decidir y generar con el mismo `FontBuilder`. En VR conviene trazo grueso. |
-| Títulos solemnes (portadas de libros, torre) | IM Fell English o Cormorant SC | Opcional. |
+| Carteles, rótulos de puestos, pizarras | **Caveat Brush** | Hecha y en uso en los dos puestos del Archivo. |
+| HUD, avisos, lecturas cortas, botones, rótulos de datos | **Nunito** | Asset generado (`Nunito SDF.asset`); falta migrar el HUD. |
+| Libros, grimorio, notas y textos narrativos largos | **Lora** (serif) | Asset generado (`Lora SDF.asset`); falta migrar libros y grimorio. |
+
+Fuentes en `Assets/_Project/Art/Fonts/` (todas OFL, licencias incluidas); assets TMP generados con `SpellSimulator/Fuentes/Generar tipografias` (`FontBuilder.cs`, atlas estático). Acceso desde editor: `FontBuilder.LoadSignFont/LoadBodyFont/LoadBookFont`.
 
 Juego de caracteres del asset: ASCII, acentos, ñ, ¿ ¡ y los signos `· × − « » – — … °`. Si un texto usa otro carácter, agregarlo a `FontBuilder.Characters` y regenerar.
 
@@ -26,5 +28,5 @@ Juego de caracteres del asset: ASCII, acentos, ñ, ¿ ¡ y los signos `· × −
 - Los carteles se arman con `TextMeshPro` en mundo; el tamaño mínimo legible a 1,5 m es ~6 cm de altura de letra.
 
 ## Pendiente
-- Elegir fuente de cuerpo y migrar HUD / grimorio / libros (cambia assets TMP de todo el proyecto).
+- Migrar el HUD a Nunito y libros/grimorio a Lora (cambia assets TMP en varias escenas/prefabs: hacerlo vía el builder de UI, no a mano).
 - Versión de «tienda» para el resto del Archivo (rótulos de nichos).
