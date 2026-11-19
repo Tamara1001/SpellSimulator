@@ -67,7 +67,7 @@ cosas que el generador crea. Dos mecanismos para no perder trabajo:
 - **Windows**: build normal; smoke test del exe **sin** `-nographics` (la calibración del modelo necesita GPU), buscar «Modo: PC» y «Pose calibrada: True» en el log.
 - **WebGL (itch.io)**: `SpellSimulator/Build/WebGL (itch.io)` (release, Gzip, sin hilos) o `WebGL (diagnostico)`. Salida en `Builds/WebGL`
   (ignorada por git); resultado en `Logs/build-webgl.txt`. Tarda 10-20 min la primera vez. Comprimir `Builds/WebGL` **con `index.html` en la raíz del zip** y subirlo a itch.io
-  (tipo HTML). En WebGL el reconocimiento corre en CPU (no hay compute shaders). Ver KI-103/KI-104.
+  (tipo HTML). No hay `butler` en esta máquina: la subida es manual desde el panel de itch.io (Edit game → Uploads → reemplazar el zip y marcar «This file will be played in the browser»). En WebGL el reconocimiento corre en CPU (no hay compute shaders). Ver KI-103/KI-104.
 - **Quest (Android/OpenXR)**: todavía sin build estable (M7). La lógica de plataforma va solo por `PlatformDetector.IsVR`.
 
 ## 7. Cosas que sorprenden

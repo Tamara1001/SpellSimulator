@@ -14,6 +14,14 @@ namespace SpellSimulator.Lab
     public class TutorialPaperGuide : MonoBehaviour
     {
         [SerializeField] private string recipeId = "gust";
+        [SerializeField, Tooltip("Si no esta vacio, la plantilla es este glifo suelto del diccionario (o «ring» = un circulo) en vez de una receta, centrado en el papel.")]
+        private string glyphId = "";
+        [SerializeField, Tooltip("Rayo que muestra hacia donde sale el hechizo. Apagado en los calcos sueltos del pedestal.")]
+        private bool showAim = true;
+        [SerializeField, Range(0.2f, 1f), Tooltip("Lado de la plantilla de un glifo suelto, como fraccion del papel.")]
+        private float glyphSize = 0.62f;
+        [SerializeField, Tooltip("Dibuja ademas el anillo del sello alrededor del glifo (sigilo + anillo, sin signos).")]
+        private bool withRing;
         [SerializeField] private float aimLength = 3f;
 
         [SerializeField, Tooltip("Color de la plantilla fantasma (azul para el viento, marron para la tierra).")]
@@ -43,9 +51,45 @@ namespace SpellSimulator.Lab
             Shader shader = Shader.Find("Sprites/Default");
             if (shader == null) return;
             lineMaterial = new Material(shader);
-            BuildAim();
+            if (showAim) BuildAim();
             BuildGhost();
         }
+
+        /// <summary>Plantilla de un calco suelto: glifo del diccionario o circulo, ajustada al centro del papel (cuadrado unidad). Null si no hay.</summary>
+        public static List<List<Vector2>> GlyphStrokes(string id, float size, bool withRing = false)
+        {
+            if (string.IsNullOrEmpty(id)) return null;
+            List<List<Vector2>> raw;
+            if (id == RingId) raw = TutorialTraceRules.Circle();
+            else
+            {
+                var bench = FindFirstObjectByType<LabSealBench>();
+                raw = bench != null ? bench.GlyphTemplate(id) : null;
+            }
+            if (raw == null || raw.Count == 0) return null;
+            var ro = new List<IReadOnlyList<Vector2>>(raw.Count);
+            foreach (var s in raw) ro.Add(s);
+            List<List<Vector2>> fitted = TutorialTraceRules.FitToSquare(ro, size);
+            if (withRing && id != RingId)
+                foreach (var ring in TutorialTraceRules.FitToSquare(ToReadOnly(TutorialTraceRules.Circle()), RingSize)) fitted.Add(ring);
+            return fitted;
+        }
+
+        private static IReadOnlyList<IReadOnlyList<Vector2>> ToReadOnly(List<List<Vector2>> strokes)
+        {
+            var r = new List<IReadOnlyList<Vector2>>(strokes.Count);
+            foreach (var s in strokes) r.Add(s);
+            return r;
+        }
+
+        /// <summary>Lado del anillo de un sigilo + anillo (fraccion del papel).</summary>
+        public const float RingSize = 0.86f;
+
+        /// <summary>Id especial de plantilla: un circulo (el anillo del sello).</summary>
+        public const string RingId = "ring";
+        public string GlyphId => glyphId;
+        public float GlyphSize => glyphSize;
+        public bool WithRing => withRing;
 
         private void OnDestroy()
         {
@@ -71,13 +115,13 @@ namespace SpellSimulator.Lab
         private void BuildGhost()
         {
             var bench = FindFirstObjectByType<LabSealBench>();
-            List<List<Vector2>> strokes = bench != null ? bench.RecipeStrokes(recipeId) : null;
+            List<List<Vector2>> strokes = !string.IsNullOrEmpty(glyphId) ? GlyphStrokes(glyphId, glyphSize, withRing) : bench != null ? bench.RecipeStrokes(recipeId) : null;
             if (strokes == null || canvas == null) return;
             var root = new GameObject("GhostTemplate").transform;
             root.SetParent(transform, false);
             Vector2 iso = canvas.UvToIsotropic;
             float width = 0.010f / Mathf.Max(1e-4f, Mathf.Abs(transform.lossyScale.x));
-            Vector3 lift = canvas.FaceNormal * 0.003f;
+            Vector3 lift = canvas.FaceNormal * 0.006f;
             for (int k = 0; k < strokes.Count; k++)
             {
                 List<Vector2> pts = strokes[k];

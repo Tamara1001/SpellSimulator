@@ -4,13 +4,13 @@ using UnityEngine;
 namespace SpellSimulator.World
 {
     /// <summary>
-    /// Ejercicio OPCIONAL del piso 2 del tutorial (no traba nada): dejar un lienzo flotando donde marca un papel fantasma
+    /// Ejercicio OPCIONAL del tutorial (no traba nada): calcar un glifo en un papel (Trace; lo detecta Lab.TutorialTraceStation y llama a Complete), dejar un lienzo flotando donde marca un papel fantasma
     /// (acostado o parado) o acertar un tiro a la diana. Al cumplirse enciende su farolito; el reinicio del tutorial lo apaga.
     /// En los de lienzo solo cuenta el papel de SU pedestal, ya soltado y flotando en el lugar del fantasma (no basta con pasar cerca).
     /// </summary>
     public class TutorialExercise : MonoBehaviour
     {
-        public enum Kind { Float, Upright, Hit }
+        public enum Kind { Float, Upright, Hit, Trace }
 
         [SerializeField] private Kind kind;
         [SerializeField] private GameObject glow;
@@ -71,7 +71,7 @@ namespace SpellSimulator.World
         /// <summary>Papel fantasma semitransparente con borde, en el lugar y la postura que se piden (no es un lienzo: no tiene collider).</summary>
         private void BuildGhost()
         {
-            if (kind == Kind.Hit || ghost != null) return;
+            if (kind == Kind.Hit || kind == Kind.Trace || ghost != null) return;
             Shader shader = Shader.Find("Sprites/Default");
             if (shader == null) return;
             ghostMaterial = new Material(shader);
@@ -105,7 +105,7 @@ namespace SpellSimulator.World
 
         private void Update()
         {
-            if (done || kind == Kind.Hit || paper == null) return;
+            if (done || kind == Kind.Hit || kind == Kind.Trace || paper == null) return;
             checkTimer += Time.deltaTime;
             if (checkTimer < CheckPeriod) return;
             float dt = checkTimer;

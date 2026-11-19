@@ -49,6 +49,24 @@ El **Archivo** es el corazón del aprendizaje intermedio: una **biblioteca al ai
 
 ---
 
+## Estado real (2026-11-19)
+
+> Lo de abajo (§4) es el diseño original; **lo construido difiere**. Fuente de verdad: `Assets/_Project/Editor/Map/MapRestocker.cs` (se llama desde `CanvasDesigns.Build`).
+
+Los puestos NO están en `(±5.5, +11.5)` (caía dentro del campo de entrenamiento): están en el borde norte del claro, respecto del centro del Archivo `(0, −46)`, con el frente hacia la torre (+Z mundo):
+
+| Puesto | Local `(x, z)` | Guiñada | Qué muestra |
+|---|---|---|---|
+| Tienda de plumas | `(−7.5, 5.5)` | +25° | 5 lapiceros (pluma fina 4 mm, lápiz 8, pincel 20, pincel plano 40, brocha 80) con 5/5/5/4/3 plumas reales cada uno |
+| Almacén de lienzos | `(+7.5, 5.5)` | −25° | 7 pilas en el mostrador (libretas S circular/M/L, hojas S y M cuadradas y rectangulares) + 2 hojas L en bahías laterales bajo el mismo toldo (ancho 6,5 m, mostrador 3,9 m) |
+| Puesto de tintas | `(−2.6, 6.6)` | +12° | 3 bandejas × 3 frascos portátiles (normal, poderosa ×2,5, resistente); E guarda el frasco como cartucho de 5 usos |
+| Puesto de sellos | `(+2.6, 6.6)` | −12° | sellos S (×3), M (×2) y L (×1) vacíos, clonados de `Stamp_S_0/M_1/L_2` |
+
+**Mecánica común:** cada hueco clona un objeto REAL desde una plantilla desactivada (hija de `Restocker`) y lo deja quieto; cuando el jugador se lo lleva, `DisplayStock` (plumas, frascos, sellos) o `CanvasPile` (lienzos, libretas) repone otro. En sesiones de red no se exhibe nada. Los lienzos de exhibición flotan sin límite (`PhysicalCanvas.PinUntimed`) y los llevados cuentan para el tope de `RestockRules.MaxSpawnedPerKind`.
+**Libretas:** siempre 8 hojas (`CanvasRules.DefaultPages`); la libreta S es circular y sus hojas son un disco.
+**Tipografía:** títulos de cartel en Lora, plaquetas y pizarras en Nunito ([UI_ESTETICA](../UI_ESTETICA.md)).
+**Pendiente del Archivo:** la rotonda en sí (suelo, columnas, nichos, atriles, portal; fases 1-4 del §5) sigue sin construirse; las coordenadas de §4 deben leerse como históricas.
+
 ## 4. Tiendas al Aire Libre (Acceso Norte)
 
 Ubicadas a ambos lados del camino principal de llegada, creando una plazoleta comercial previa al arco de entrada.

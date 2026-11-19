@@ -226,6 +226,8 @@ rectangulares 0,3×0,4 / 0,5×0,7 / 1×1,4 m; libretas S de bolsillo circular (�
 **Pinceles (Bloque B):** lápiz, pluma y pincel son el mismo objeto con otro grosor, punta y forma (`BrushSpec`, catálogo en `BrushRules`: pluma fina 4 mm,
 lápiz 8 mm, pincel 2 cm, pincel plano 4 cm, brocha 8 cm). No hay deslizador de grosor; el trazo grueso **no cambia el hechizo** (el reconocimiento rasteriza siempre
 con 2 px, probado en `BrushRulesTests`) y gasta algo más de tinta. Solo la goma conserva su rueda de tamaño.
+
+**Puestos del Archivo (2026-11-19):** a la entrada del Archivo hay cuatro puestos de bazar. Todo lo exhibido es un objeto real: se agarra con E (plumas, pinceles, lienzos, libretas, sellos) o se guarda con E (frascos de tinta → cartucho de 5 usos) y el hueco repone otro solo; no hay botones. Plumas: cinco lapiceros, uno por tamaño del catálogo, con modelo propio (pluma fina, lápiz, pincel, pincel plano, brocha). Libretas: siempre 8 hojas; la S es circular y sus hojas también. Tintas: normal, poderosa (×2,5 de potencia) y resistente (sirve bajo el agua). Sellos: S, M y L vacíos (se cargan con un glifo desde el grimorio). Ver [Archivo/ARCHIVO_PLAN](Archivo/ARCHIVO_PLAN.md#estado-real-2026-11-19).
 **Dirección de disparo (sin marcos):** todo lienzo dispara por el lado que mira, la cara donde se escribe. Los lienzos y libretas sueltos se dan vuelta con **F**
 al dibujar. Los atriles tienen un botón con dos flechas circulares al pie del frente (apuntar + clic, gatillo en VR) que invierte el **sentido del atril** (con E al apuntarlo), o sea de
 cualquier lienzo que tenga puesto; al sacar el lienzo del atril vuelve a disparar normal.

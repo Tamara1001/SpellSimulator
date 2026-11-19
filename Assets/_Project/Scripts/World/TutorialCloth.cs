@@ -20,7 +20,7 @@ namespace SpellSimulator.World
 
         private const float PlayerHold = 0.2f;
         /// <summary>Puerta con bisagra: limites del giro (°) y resorte/freno que la mantienen cerrada hasta que algo la empuje.</summary>
-        private const float HingeLimit = 110f, HingeSpring = 4f, HingeDamper = 3f, OpenHingeDamper = 1.5f;
+        private const float HingeLimit = 110f, HingeSpring = 4f, HingeDamper = 3f, OpenHingeDamper = 1.5f, OpenSwingSpeed = 3f;
 
         [SerializeField, Tooltip("Puerta con HingeJoint (eje vertical) en vez de resorte lineal: viento, agua o una caja la abren de verdad.")]
         private bool hinged;
@@ -181,8 +181,16 @@ namespace SpellSimulator.World
             opened = true;
             openedAt = Time.time;
             Releases++;
-            SetIgnorePlayer(true);
-            if (hinged) SetHingeHeld(false);
+            // La puerta con bisagra sigue chocando con el jugador (es todo fisica); la tela y el resto si lo atraviesan.
+            if (!hinged) SetIgnorePlayer(true);
+            if (hinged)
+            {
+                // Al soltarse sigue el empujon (un golpe seco la abre apenas un grado): se le da un giro para que quede abierta de verdad y el
+                // pasillo libre, ya que ahora SI choca con el jugador. Despues sigue siendo fisica pura (limites del giro, rozamiento).
+                float dir = Mathf.Abs(hinge.angle) > 0.5f ? Mathf.Sign(hinge.angle) : -1f;
+                SetHingeHeld(false);
+                body.angularVelocity = transform.up * dir * OpenSwingSpeed;
+            }
             else if (drops)
             {
                 body.constraints = RigidbodyConstraints.None;

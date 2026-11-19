@@ -37,6 +37,20 @@ namespace SpellSimulator.World.Map
             return passed;
         }
 
+        /// <summary>Piso (0 planta baja, 1 piso 1, 2 piso 2) al que pertenece una altura local; las herramientas apoyadas en un mueble cuentan como el piso de abajo.</summary>
+        public static int FloorOf(float localY) => Mathf.Clamp(Mathf.FloorToInt((localY + 0.5f) / FloorHeight), 0, Levels - 2);
+
+        /// <summary>
+        /// Indice del farol de nivel (0 piso 2, 1 piso 1, 2 planta baja, 3 puerta) que enciende una pluma agarrada en ese punto local,
+        /// o -1 si no enciende ninguno: el farol del piso 2 sigue encendiendose al llegar y una herramienta fuera de la torre no cuenta.
+        /// </summary>
+        public static int ToolLamp(Vector3 local)
+        {
+            if (new Vector2(local.x, local.z).magnitude > InnerRadius) return -1;
+            int floor = FloorOf(local.y);
+            return floor == Levels - 2 ? -1 : Levels - 2 - floor;
+        }
+
         /// <summary>True si el jugador esta en el vano de la puerta (dentro del espesor del muro, en la planta baja).</summary>
         public static bool InDoorway(Vector3 local)
         {
@@ -57,11 +71,34 @@ namespace SpellSimulator.World.Map
         public int Passed { get; private set; }
         public bool Completed => Passed >= TutorialRules.Levels;
 
+        private int toolLamps;   // mascara de faroles de nivel encendidos por agarrar una pluma (piso 1 y planta baja)
+
+        /// <summary>
+        /// ¿Esta encendido el farol de nivel <paramref name="lamp"/> (0 piso 2, 1 piso 1, 2 planta baja, 3 puerta)? El del piso 2 y el de la puerta
+        /// siguen a los niveles pasados; los del piso 1 y la planta baja, a la pluma agarrada en su sala.
+        /// </summary>
+        public bool LampLit(int lamp)
+        {
+            if (lamp == 1 || lamp == 2) return (toolLamps & (1 << lamp)) != 0;
+            return lamp < Passed;
+        }
+
+        /// <summary>Se agarro una pluma en <paramref name="local"/> (relativo al pie de la torre). Devuelve el farol que se enciende, o -1.</summary>
+        public int ToolPickedUp(Vector3 local)
+        {
+            if (!Active) return -1;
+            int lamp = TutorialRules.ToolLamp(local);
+            if (lamp < 0 || (toolLamps & (1 << lamp)) != 0) return -1;
+            toolLamps |= 1 << lamp;
+            return lamp;
+        }
+
         /// <summary>Empieza (o vuelve a empezar) el tutorial desde la terraza.</summary>
         public void Begin()
         {
             Active = true;
             Passed = 0;
+            toolLamps = 0;
         }
 
         /// <summary>Lo corta sin terminarlo (salteo): la barrera se apaga y los faroles quedan como estaban.</summary>

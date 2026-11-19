@@ -64,12 +64,15 @@ namespace SpellSimulator.EditorTools.Map
             else Debug.LogWarning("[Mapa] falta el sitio «Laboratory» en MapStructures: no se genera el laboratorio.");
             MapDetails.PostProcess();
             ToolModels.Apply(lit);
+            PlaceTierTemplates();
             FieldPortableInkwell();
             TowerProps.Build(map, lit, TowerOrigin());
+            FieldExtraToolTable(map);   // lo que se saco de las mesas del piso 1: pincel, trapo, tintero resistente, cinturon
             MapTowerMap.Build(map, lit, TowerOrigin());
             MapTutorial.Build(map, lit, TowerOrigin());   // torre-tutorial: barrera, palanca de salteo, faroles y terraza
-            MapBelt.Build(map, lit, MapBelt.AlchemyTableSpot());   // cinturon sobre la mesa de alquimia (2do piso)
+            MapBelt.Build(map, lit, ExtraToolTableAt() + TrainingLayout.Offset(new Vector3(0.55f, 0.822f, 0f)));   // cinturon en la segunda mesa del campo
             CanvasDesigns.Build(map, lit, TowerOrigin(), stampTable);
+            FieldExtraTableNotebooks(map);   // cuadernos y hojas que estaban en la mesa chica del piso 1
             MapStructures.Build(map, lit);   // torre de vigia, cabanas, cueva, peñascos, circulo, santuario, puesto y portales
             MovablesSetup.Apply(map, lit);
             InteractionSetup.Apply();
@@ -494,6 +497,53 @@ namespace SpellSimulator.EditorTools.Map
         }
 
         private static Vector3 fieldToolTable;
+
+        /// <summary>Lapiz, pincel plano y brocha de plantilla: en una segunda fila de la mesa de herramientas del campo (los clones salen de ahi).</summary>
+        private static void PlaceTierTemplates()
+        {
+            var pen = GameObject.Find("Pen");
+            if (pen == null) return;
+            float x = -0.6f;
+            foreach (var name in new[] { "Pencil", "FlatBrush", "BigBrush" })
+            {
+                var go = GameObject.Find(name);
+                if (go == null) continue;
+                go.transform.SetPositionAndRotation(fieldToolTable + TrainingLayout.Offset(new Vector3(x, 0.95f, 0.22f)), pen.transform.rotation);
+                x += 0.3f;
+            }
+        }
+
+        private static Vector3 ExtraToolTableAt() => TrainingGround(TrainingLayout.ExtraToolTable);
+
+        /// <summary>
+        /// Segunda mesa de herramientas del campo (detras de la primera): recibe lo que se saco de las mesas del piso 1 de la torre
+        /// (que ahora tienen solo lo del tutorial de la tierra): pincel, trapo y tintero resistente; el cinturon y los cuadernos se suman despues.
+        /// </summary>
+        private static void FieldExtraToolTable(Transform map)
+        {
+            Vector3 at = ExtraToolTableAt();
+            TowerBuilder.Table(map, lit, "ToolTable_B", at - map.position, TrainingLayout.YawDegrees, 1.6f, 0.7f);
+            TowerProps.ToolsAt(at, TrainingLayout.YawDegrees, 1.6f, 0.7f,
+                new[] { "FlatBrush", "Brush", "BigBrush", "Rag", TowerProps.PortableTemplate(Core.InkKind.Resistant) }, 0.3f, 0.15f, lit, 20);
+        }
+
+        /// <summary>Los dos cuadernos y las dos hojas de la mesa chica del piso 1, ahora en la segunda mesa del campo.</summary>
+        private static void FieldExtraTableNotebooks(Transform map)
+        {
+            var template = GameObject.Find("PaperCanvas");
+            if (template == null) return;
+            Vector3 at = ExtraToolTableAt() + Vector3.up * 0.82f;
+            float yaw = TrainingLayout.YawDegrees;
+            Quaternion rot = Quaternion.Euler(0f, yaw, 0f);
+            GameObject[] sheets =
+            {
+                CanvasDesigns.NotebookAt(template, lit, "Study_Notebook_A", at + TrainingLayout.Offset(new Vector3(-0.62f, 0.012f, 0.1f)), rot * Quaternion.Euler(90f, 10f, 0f), 0.24f, 0.32f),
+                CanvasDesigns.NotebookAt(template, lit, "Study_Notebook_B", at + TrainingLayout.Offset(new Vector3(-0.34f, 0.012f, -0.1f)), rot * Quaternion.Euler(90f, -20f, 0f), 0.2f, 0.28f),
+                CanvasDesigns.SheetAt(template, "Study_Sheet_A", at + TrainingLayout.Offset(new Vector3(-0.5f, 0.03f, 0.1f)), rot * Quaternion.Euler(90f, 5f, 0f), 0.3f, false),
+                CanvasDesigns.SheetAt(template, "Study_Sheet_B", at + TrainingLayout.Offset(new Vector3(-0.45f, 0.05f, 0.14f)), rot * Quaternion.Euler(90f, 40f, 0f), 0.3f, false),
+            };
+            foreach (var g in sheets) g.transform.SetParent(map, true);
+        }
 
         /// <summary>
         /// Tintero PORTATIL normal suelto en la mesa de herramientas del campo, delante del FIJO (x 0.6). Vive en la raiz

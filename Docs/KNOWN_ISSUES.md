@@ -8,6 +8,18 @@ Al resolver uno, no lo borres: marcalo resuelto y explicá cómo.
 
 ## Abiertos
 
+### KI-141
+🟠 `abierto` — **Costo en Quest de los exhibidores del Archivo.** Los puestos instancian ~20 lienzos reales (con `RenderTexture` propia) más plumas, frascos y sellos que se reponen; no se midió en Quest. Si pesa: exhibir solo lo cercano al jugador (activar/desactivar los `CanvasPile`/`DisplayStock` por distancia) o bajar la resolución de los lienzos de exhibición.
+
+### KI-142
+🟢 `abierto` — **Fuentes:** consola con «Ellipsis not available in font asset [Nunito SDF]» (TMP baja el overflow a Truncate); agregar `…` al conjunto de `FontBuilder.Characters` y regenerar. Además, el HUD y el lector de libros con Nunito/Lora solo se revisaron por código, no a ojo.
+
+### KI-143
+🟠 `abierto` — **Puestos del Archivo sin probar a mano** (mouse/teclado/VR): agarrar plumas del lapicero (`PhysicalTool` quieto/kinemático en el hueco, collider fino de ~2 cm), guardar frascos con E, tomar sellos y las pilas de lienzos; que la reposición no se dispare por error si el jugador empuja un exhibidor. Al regenerar el mapa apareció «Can't remove Rigidbody because CollisionAudio depends on it» (dos veces; no afecta al resultado, origen sin investigar).
+
+### KI-144
+🟢 `abierto` — **Hojas de la libreta circular:** el disco es solo visual; la colisión de dibujo sigue siendo el cuadrado de la plantilla (se puede dibujar en las esquinas, aunque no se vea). Los lienzos de la torre/campo construidos por el editor (`CanvasDesigns`) no usan `CanvasFactory`, así que su libreta S sigue con hoja cuadrada.
+
 ### KI-020
 🟠 `parcial` — **Agrupado de trazos.** Ahora: afinidad portada de la referencia (tocarse, encerrar, compartir centro) +
 lectura guiada por reconocimiento barata (`SealReader`: hipótesis "capa media fusionada al sigilo" en el mismo batch y

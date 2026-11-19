@@ -49,6 +49,35 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
+        public void ToolLamp_LightsOnlyFloor1AndGroundFloor_InsideTheTower()
+        {
+            Assert.AreEqual(-1, TutorialRules.ToolLamp(new Vector3(1f, 10.9f, 0f)), "el piso 2 enciende su farol al llegar, no con la pluma");
+            Assert.AreEqual(1, TutorialRules.ToolLamp(new Vector3(1f, 5.9f, 0f)), "piso 1");
+            Assert.AreEqual(2, TutorialRules.ToolLamp(new Vector3(1f, 0.9f, 0f)), "planta baja");
+            Assert.AreEqual(-1, TutorialRules.ToolLamp(new Vector3(TutorialRules.InnerRadius + 2f, 0.9f, 0f)), "una pluma de afuera no cuenta");
+        }
+
+        [Test]
+        public void ToolPickup_LightsLamp_OncePerRound_AndRearmsOnBegin()
+        {
+            var p = new TutorialProgress();
+            Assert.AreEqual(-1, p.ToolPickedUp(new Vector3(0f, 5.9f, 0f)), "sin empezar no cuenta");
+            p.Begin();
+            Assert.IsFalse(p.LampLit(1));
+            Assert.IsFalse(p.LampLit(2));
+            // Llegar al piso 1 ya no enciende su farol.
+            p.Advance(OnFloor(1));
+            Assert.IsFalse(p.LampLit(1), "llegar no basta");
+            Assert.AreEqual(1, p.ToolPickedUp(new Vector3(0f, 5.9f, 0f)));
+            Assert.AreEqual(-1, p.ToolPickedUp(new Vector3(0f, 5.9f, 0f)), "ya estaba");
+            Assert.IsTrue(p.LampLit(1));
+            Assert.IsFalse(p.LampLit(2));
+            Assert.IsTrue(p.LampLit(0), "el del piso 2 sigue a los niveles pasados");
+            p.Begin();
+            Assert.IsFalse(p.LampLit(1), "el rearme apaga");
+        }
+
+        [Test]
         public void Progress_AdvancesOnlyWhileActive_AndEndsAtTheDoor()
         {
             var p = new TutorialProgress();

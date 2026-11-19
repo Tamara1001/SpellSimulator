@@ -71,15 +71,19 @@ namespace SpellSimulator.EditorTools.Map
             var library = new Desk(LibraryBench, 0f, LibraryBenchWidth, LibraryBenchDepth);
             TowerBuilder.Table(tower.transform, material, "Workbench_Library", library.Center, library.Yaw, library.Width, library.Depth);
             // Los dos tinteros de la biblioteca son FIJOS (clones de la plantilla del campo); al final, dos PORTATILES.
-            Tools(origin, library, new[] { "Pen", "Pen", "Brush", "Brush", "Eraser", "Rag", "Inkwell", "Inkwell",
+            Tools(origin, library, new[] { "Pen", "Pencil", "Brush", "FlatBrush", "Eraser", "Rag", "Inkwell", "Inkwell",
                 PortablePrefix + nameof(InkKind.Powerful), PortablePrefix + nameof(InkKind.Normal) }, 0.25f, 0.4f, material);
 
             // Estudio (primer piso): la mesa del CENTRO (StudyTable) lleva la pluma, los tinteros y el libro del viento; el cinturon y el
             // libro van a los costados (MapBelt, MapDetails.LibraryBooks). Una segunda mesa chica tiene cuadernos y hojas (CanvasDesigns).
             var study = new Desk(StudyTableCenter, StudyTableYaw, StudyTableWidth, StudyTableDepth);
-            Tools(origin, study, new[] { "Pen", "Brush", "Eraser", "Rag", "Inkwell",
-                PortablePrefix + nameof(InkKind.Normal), PortablePrefix + nameof(InkKind.Resistant) }, 0.3f, 0f, material);
-            TowerBuilder.Table(tower.transform, material, NotebookTableName, NotebookTableCenter, NotebookTableYaw, 1.5f, 0.8f);
+            // Piso de tinta (tutorial de la tierra): solo lo justo. Mesa del centro: dos plumas, una goma y un tintero normal (a la izquierda queda
+            // el lienzo, MapTutorial.MagicFloor, y a la derecha el libro de la tierra). Mesa chica: dos plumas y su lienzo. Lo demas (pincel, trapo,
+            // tintero resistente, cinturon, cuadernos y hojas) esta en la segunda mesa del campo de entrenamiento (MapBuilder).
+            Tools(origin, study, new[] { "Pen", "Pencil", "Eraser", PortablePrefix + nameof(InkKind.Normal) }, 0.3f, 0.1f, material);
+            var notebookDesk = new Desk(NotebookTableCenter, NotebookTableYaw, NotebookTableWidth, NotebookTableDepth);
+            TowerBuilder.Table(tower.transform, material, NotebookTableName, notebookDesk.Center, notebookDesk.Yaw, notebookDesk.Width, notebookDesk.Depth);
+            Tools(origin, notebookDesk, new[] { "Pencil", "Pen" }, 0.3f, 0.3f, material, 10);
 
             // Las estaciones de viento y agua (WindStation/WaterStation) y el taller de alquimia (Alchemy) ya no se arman en la torre:
             // la planta baja enseña UNA sola solucion (Docs/Torre/carteles.md) y el cinturon vive en la mesa del estudio. Las funciones
@@ -98,7 +102,7 @@ namespace SpellSimulator.EditorTools.Map
         /// <summary>Mesa chica de cuadernos y hojas del piso 1 (sureste del disco central, lejos de la linea caballete-cortina).</summary>
         public const string NotebookTableName = "NotebookTable";
         public static readonly Vector3 NotebookTableCenter = new Vector3(1.0f, TowerBuilder.FloorHeight, -2.1f);
-        public const float NotebookTableYaw = 20f;
+        public const float NotebookTableYaw = 20f, NotebookTableWidth = 1.5f, NotebookTableDepth = 0.8f;
 
         /// <summary>Caja o baul con su fondo contra el muro en ese angulo; lift = altura sobre el piso del nivel (se apila sobre otra).</summary>
         private static void CrateAtWall(Transform map, Material material, string name, Vector3 origin, float angle, float floorY, Vector3 size)
@@ -117,7 +121,14 @@ namespace SpellSimulator.EditorTools.Map
         /// +-(ancho/2 - 0.1); en Z, +-(fondo/2 - 0.08). Plumas y pinceles van echados; los tinteros, parados. Los clones de "Inkwell" son FIJOS
         /// (como la plantilla); los <see cref="PortablePrefix"/> se reconfiguran como portatiles de su clase.
         /// </summary>
-        private static void Tools(Vector3 origin, Desk desk, string[] templates, float spacing, float shiftX, Material material)
+        /// <summary>Herramientas sobre una mesa suelta del mundo (centro y yaw en coordenadas de mundo): campo de entrenamiento.</summary>
+        public static void ToolsAt(Vector3 deskCenter, float yaw, float width, float depth, string[] templates, float spacing, float shiftX, Material material, int indexBase = 0) =>
+            Tools(Vector3.zero, new Desk(deskCenter, yaw, width, depth), templates, spacing, shiftX, material, indexBase);
+
+        /// <summary>Id de plantilla del tintero portatil de una clase (para <see cref="ToolsAt"/>).</summary>
+        public static string PortableTemplate(InkKind kind) => PortablePrefix + kind;
+
+        private static void Tools(Vector3 origin, Desk desk, string[] templates, float spacing, float shiftX, Material material, int indexBase = 0)
         {
             Vector3 deskAt = origin + desk.Center;
             float halfX = desk.Width / 2f - 0.1f;
@@ -134,7 +145,7 @@ namespace SpellSimulator.EditorTools.Map
                 var source = GameObject.Find(portable ? "Inkwell" : template);
                 if (source == null) continue;
                 string baseName = portable ? "InkwellPortable" + inkKind : template;
-                string name = $"{baseName}_{(int)((deskAt.y + 0.84f) * 100)}_{index}";
+                string name = $"{baseName}_{(int)((deskAt.y + 0.84f) * 100)}_{index + indexBase}";
                 var old = GameObject.Find(name);
                 if (old != null) Object.DestroyImmediate(old);
                 var clone = Object.Instantiate(source);

@@ -873,14 +873,52 @@ namespace SpellSimulator.EditorTools
                 Check(gateUp && halfDone && gateDown && gateBack, $"tutorial terraza: la reja de la bajada se apaga al agacharse y saltar, y se rearma (puesta {gateUp}, con una sola {halfDone}, apagada {gateDown}, rearmada {gateBack})");
                 // Piso 2 (v2): 3 ejercicios opcionales (flotar, de canto, diana) que encienden su farol y el rearme los apaga; y el lienzo de practica existe.
                 var exercises = tutorial != null ? tutorial.GetComponentsInChildren<SpellSimulator.World.TutorialExercise>(true) : new SpellSimulator.World.TutorialExercise[0];
-                bool threeKinds = exercises.Length == 3;
+                bool threeKinds = exercises.Length == 6;   // piso 2: flotar, de canto y diana; piso 1: tres calcos (tierra, columna, circulo)
                 bool noneDone = true, allDone = true, rearmedEx = true;
                 foreach (var ex in exercises) noneDone &= !ex.Done;
                 foreach (var ex in exercises) ex.Complete();
                 foreach (var ex in exercises) allDone &= ex.Done;
                 spawn.Begin(false);
                 foreach (var ex in exercises) rearmedEx &= !ex.Done;
-                Check(threeKinds && noneDone && allDone && rearmedEx, $"tutorial piso 2: ejercicios opcionales (3 ejercicios {threeKinds}, apagados {noneDone}, se cumplen {allDone}, rearme {rearmedEx})");
+                Check(threeKinds && noneDone && allDone && rearmedEx, $"tutorial piso 2: ejercicios opcionales (6 ejercicios {threeKinds}, apagados {noneDone}, se cumplen {allDone}, rearme {rearmedEx})");
+                // Piso 1 (calcos): cada papel de pedestal tiene su plantilla; calcarla la completa (farol) y una diagonal no.
+                int tracesOk = 0, tracesBad = 0, traceCount = 0;
+                foreach (var trace in tutorial != null ? tutorial.GetComponentsInChildren<SpellSimulator.World.TutorialExercise>(true) : new SpellSimulator.World.TutorialExercise[0])
+                    if (trace.Mode == SpellSimulator.World.TutorialExercise.Kind.Trace) traceCount++;
+                foreach (var station in Object.FindObjectsByType<SpellSimulator.Lab.TutorialTraceStation>(FindObjectsSortMode.None))
+                {
+                    var tc = station.GetComponent<SpellSimulator.Canvas.DrawingCanvas>();
+                    var tg = station.GetComponent<SpellSimulator.Lab.TutorialPaperGuide>();
+                    var tpl = SpellSimulator.Lab.TutorialPaperGuide.GlyphStrokes(tg.GlyphId, 0.5f);
+                    if (tpl == null) continue;
+                    Vector2 tiso = tc.UvToIsotropic;
+                    tc.Clear();
+                    tc.Session.AddStroke(new SpellSimulator.Core.Stroke(new System.Collections.Generic.List<Vector2> { new Vector2(0.2f, 0.2f), new Vector2(0.8f, 0.7f) }));
+                    if (!station.Check()) tracesBad++;
+                    tc.Clear();
+                    foreach (var tstroke in tpl)
+                    {
+                        var tpts = new System.Collections.Generic.List<Vector2>();
+                        foreach (var tp in tstroke) tpts.Add(SpellSimulator.Lab.LabSealBenchMath.SquareToCanvasUv(tp, tiso));
+                        tc.Session.AddStroke(new SpellSimulator.Core.Stroke(tpts));
+                    }
+                    if (station.Check()) tracesOk++;
+                    tc.Clear();
+                }
+                Check(traceCount == 3 && tracesOk == 3 && tracesBad == 3, $"tutorial piso 1: tres calcos (estaciones {traceCount}, calcados bien {tracesOk}/3, diagonal rechazada {tracesBad}/3)");
+                // Faroles de nivel: el del piso 1 y el de la planta baja solo se encienden al agarrar una pluma en su sala (no al llegar).
+                {
+                    Vector3 at = tutorial != null ? tutorial.transform.position : Vector3.zero;
+                    float fh = SpellSimulator.EditorTools.Map.TowerBuilder.FloorHeight;
+                    bool offAtStart = tutorial != null && !tutorial.LevelLampLit(1) && !tutorial.LevelLampLit(2);
+                    bool outsideNo = tutorial != null && !tutorial.ToolPickedUpAt(at + new Vector3(9f, 0.9f, 0f));
+                    bool lit1 = tutorial != null && tutorial.ToolPickedUpAt(at + new Vector3(1f, fh + 0.9f, 0f)) && tutorial.LevelLampLit(1) && !tutorial.LevelLampLit(2);
+                    bool lit2 = tutorial != null && tutorial.ToolPickedUpAt(at + new Vector3(1f, 0.9f, 0f)) && tutorial.LevelLampLit(2);
+                    spawn.Begin(false);
+                    bool relit = tutorial != null && !tutorial.LevelLampLit(1) && !tutorial.LevelLampLit(2);
+                    bool glowComp = tutorial != null && tutorial.GetComponentInChildren<SpellSimulator.World.TutorialLampGlow>(true) != null;
+                    Check(offAtStart && outsideNo && lit1 && lit2 && relit && glowComp, $"tutorial faroles: se encienden al agarrar una pluma en su sala y el rearme los apaga (apagados {offAtStart}, afuera no {outsideNo}, piso 1 {lit1}, planta baja {lit2}, rearme {relit}, pulso {glowComp})");
+                }
                 // Piso 1 (T3): la tela pesada tapa la bajada (un rayo tangente la toca), el libro del viento esta, y al soltarla el paso queda libre y se rearma.
                 var cloth = pileRoot != null ? pileRoot.GetComponentInChildren<SpellSimulator.World.TutorialCloth>(true) : null;
                 float floor1 = SpellSimulator.EditorTools.Map.TowerBuilder.FloorHeight;

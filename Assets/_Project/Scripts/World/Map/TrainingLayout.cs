@@ -27,6 +27,8 @@ namespace SpellSimulator.World.Map
         public static readonly Vector2 GiantStand = new Vector2(-6f, 0.5f);
         public static readonly Vector2 GiantPaper = new Vector2(-4f, 2.5f);
         public static readonly Vector2 Easel = new Vector2(-7f, -4.5f);
+        /// <summary>Segunda mesa de herramientas, detras de la primera: lo que sobro de las mesas del piso 1 de la torre (cinturon, pincel, trapo, cuadernos).</summary>
+        public static readonly Vector2 ExtraToolTable = new Vector2(-2.2f, -3.7f);
 
         /// <summary>Rumbo (grados, 0 = +Z, 90 = +X) del frente del entrenamiento.</summary>
         public static float YawDegrees => YawOf(ValleyShape.TrainingForward);

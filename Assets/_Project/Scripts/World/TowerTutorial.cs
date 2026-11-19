@@ -9,7 +9,7 @@ namespace SpellSimulator.World
 {
     /// <summary>
     /// Torre-tutorial (Docs/MAPA_FLUJO_PLAN.md, §17): mientras el tutorial esta activo, una barrera magica encierra la torre;
-    /// cada nivel pasado enciende su farol y al cruzar la puerta la barrera se apaga. Vive en el pie de la torre (su transform
+    /// los faroles de nivel se encienden al pasar el nivel (el del piso 1 y el de la planta baja, al agarrar una pluma en su sala) y al cruzar la puerta la barrera se apaga. Vive en el pie de la torre (su transform
     /// es el origen de las reglas de <see cref="TutorialRules"/>). Lo arranca y lo corta <see cref="PlayerSpawn.Begin"/>.
     /// </summary>
     public class TowerTutorial : MonoBehaviour
@@ -107,6 +107,29 @@ namespace SpellSimulator.World
             Instance = this;
             Apply();
         }
+
+        private void OnEnable() => PhysicalTool.PickedUp += OnToolPickedUp;
+
+        private void OnDisable() => PhysicalTool.PickedUp -= OnToolPickedUp;
+
+        /// <summary>Agarrar una pluma enciende el farol de la sala (piso 1 y planta baja); llegar a la sala ya no basta.</summary>
+        private void OnToolPickedUp(PhysicalTool tool)
+        {
+            if (tool != null) ToolPickedUpAt(tool.transform.position);
+        }
+
+        /// <summary>Se agarro una pluma en ese punto del mundo (lo usa el evento de PhysicalTool y el smoke). True si encendio un farol.</summary>
+        public bool ToolPickedUpAt(Vector3 world)
+        {
+            int lamp = progress.ToolPickedUp(transform.InverseTransformPoint(world));
+            if (lamp < 0) return false;
+            Debug.Log($"[Tutorial] pluma agarrada: se enciende el farol {lamp + 1}", this);
+            Apply();
+            return true;
+        }
+
+        /// <summary>¿Esta encendido el farol de nivel i (0 piso 2, 1 piso 1, 2 planta baja, 3 puerta)?</summary>
+        public bool LevelLampLit(int i) => i >= 0 && i < glows.Length && glows[i] != null && glows[i].activeSelf;
 
         private void OnDestroy()
         {
@@ -241,7 +264,7 @@ namespace SpellSimulator.World
             if (activeOnly != null && activeOnly.activeSelf != progress.Active) activeOnly.SetActive(progress.Active);
             for (int i = 0; i < glows.Length; i++)
             {
-                bool lit = i < progress.Passed;
+                bool lit = progress.LampLit(i);
                 if (glows[i] != null && glows[i].activeSelf != lit) glows[i].SetActive(lit);
             }
         }

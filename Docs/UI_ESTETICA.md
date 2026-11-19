@@ -29,6 +29,13 @@ Juego de caracteres del asset: ASCII, acentos, ñ, ¿ ¡ y los signos `· × −
 - Interacción directa sobre objetos reales (tarros, pilas, libros) antes que botones.
 - Los carteles se arman con `TextMeshPro` en mundo; el tamaño mínimo legible a 1,5 m es ~6 cm de altura de letra.
 
+## Qué usa cada fuente (estado 2026-11-19)
+- **Nunito** (`Resources/Fonts/Nunito SDF`, fuente por defecto de TMP y de `SpellUI.uss`): HUD, menús, plaquetas, pizarras y rótulos.
+- **Lora** (`Resources/Fonts/Lora SDF`; `UiFonts.Book`, `FontBuilder.LoadBookFont`): libros, grimorio, lector y títulos de cartel de los puestos.
+- **Caveat Brush**: generada pero sin uso (se probó en carteles y se descartó por mezclarse con Lora).
+- Se regeneran con el menú `SpellSimulator/Fuentes/Generar tipografias` (`Editor/FontBuilder.cs`); **regenerar cambia los GUID**: después correr `MapBuilder.Build()` o los carteles pierden la fuente. Los atlas son estáticos: si falta un carácter, agregarlo a `FontBuilder.Characters`.
+- Aviso conocido en consola: «The character used for Ellipsis is not available in font asset [Nunito SDF]» (ver KI-142).
+
 ## Pendiente
 - Revisar a mano el HUD y el lector de libros con Nunito/Lora (la migración se verificó por código y consola, no a ojo).
 - Carteles del resto del Archivo (rótulos de nichos) con Caveat Brush.
