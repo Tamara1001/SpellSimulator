@@ -8,7 +8,7 @@ Objetivo: que carteles, pizarras, HUD y libros se sientan parte del mundo (*Witc
 ## Tipografía
 | Uso | Fuente | Dónde se aplica |
 |---|---|---|
-| Carteles y títulos de puestos | **Caveat Brush** | Título de las dos tiendas y carteles de práctica (`FontBuilder.LoadSignFont`, `UiFonts.Sign`). |
+| Títulos de cartel (tiendas, carteles de práctica) | **Lora** | `MapRestocker` y `CanvasDesigns.Practice` (`FontBuilder.LoadBookFont`). Caveat Brush quedó generada, sin uso. |
 | HUD, menú, rótulos, pizarras, plaquetas, laboratorio, mapa de la torre | **Nunito** | Fuente **por defecto de TMP** (todo texto sin fuente explícita) y `:root` de `SpellUI.uss` (HUD y menú, UI Toolkit). |
 | Grimorio y lector de libros | **Lora** | `GrimoireTexts.MakeText` (TMP 3D) y `.reader` en `SpellUI.uss`. |
 

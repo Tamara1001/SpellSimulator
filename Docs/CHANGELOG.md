@@ -31,6 +31,10 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - Piso 1 (viento): la «tela» pasa a ser una hoja de tablones con `HingeJoint` (eje vertical, pegada a la pared) y resorte flojo: viento, agua o una caja la abren con fisicas (no se teletransporta); una vez abierta queda donde la dejan y deja pasar al jugador; el rearme del tutorial la cierra.
 - Docs: `GAME_DESIGN.md`, `LIENZOS_PLAN.md`.
 
+## 2026-11-18 — Almacén con bahías para las hojas L y carteles en Lora
+- Las dos hojas L (1 m) estaban fuera del puesto: ahora el almacén mide 6,5 m con mostrador central de 3,9 m y **dos bahías laterales cubiertas por el mismo toldo**, con postes que las separan, donde van las peanas L.
+- Los títulos de cartel (tiendas y carteles de práctica) pasan de Caveat Brush a **Lora**; plaquetas y pizarras siguen en Nunito. Caveat Brush queda generada pero sin uso.
+
 ## 2026-11-18 — Migración de tipografías (Nunito / Lora / Caveat Brush)
 - **Nunito** pasa a ser la fuente por defecto de TMP (`TMP Settings.asset`) y de la UI Toolkit (`:root` de `SpellUI.uss`: HUD y menú). **Lora** va en el grimorio (`GrimoireTexts.MakeText`) y en el lector de libros (`.reader`). **Caveat Brush** queda para títulos de cartel (tiendas y carteles de práctica); pizarras y plaquetas pasan a Nunito.
 - Assets TMP movidos a `Resources/Fonts` (`UiFonts` los carga en runtime) con Liberation Sans de respaldo. En Play: Lora 44 textos del grimorio, Nunito 237, Caveat 23.

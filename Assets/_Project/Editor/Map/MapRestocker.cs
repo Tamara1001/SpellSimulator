@@ -29,7 +29,7 @@ namespace SpellSimulator.EditorTools.Map
 
         private const float CounterTop = 0.93f;
 
-        private static TMP_FontAsset SignFont => SpellSimulator.EditorTools.FontBuilder.LoadSignFont();
+        private static TMP_FontAsset SignFont => SpellSimulator.EditorTools.FontBuilder.LoadBookFont();
 
         private struct Palette
         {
@@ -103,11 +103,11 @@ namespace SpellSimulator.EditorTools.Map
             Transform brushOut = Anchor(penShop, "BrushOutput", new Vector3(0f, CounterTop + 0.14f, -0.42f), Quaternion.identity);
 
             // ---- Almacen de lienzos ----
-            const float canvasShopWidth = 3.9f;
-            Frame(canvasShop, p, p.blue, p.cloudB, "LIENZOS Y LIBRETAS", canvasShopWidth);
+            const float canvasShopWidth = 6.5f, canvasCounterWidth = 3.9f;
+            Frame(canvasShop, p, p.blue, p.cloudB, "LIENZOS Y LIBRETAS", canvasShopWidth, canvasCounterWidth);
             Text(canvasShop, "Note", new Vector3(0f, 1.72f, 0.42f), "Agarrá el que quieras\nse repone solo", 0.065f, new Color(0.95f, 0.9f, 0.7f), null, new Vector2(1.5f, 0.45f));
             PaperRolls(canvasShop, p);
-            Piles(canvasShop, component, p, canvasShopWidth);
+            Piles(canvasShop, component, p, canvasShopWidth, canvasCounterWidth);
             Transform canvasOut = Anchor(canvasShop, "CanvasOutput", new Vector3(-0.6f, 1.3f, -0.95f), Quaternion.Euler(0f, 180f, 0f));
 
             component.Configure(penClone.GetComponent<PhysicalTool>(), paper, p.leather, brushOut, canvasOut, null, brushReadout);
@@ -128,14 +128,15 @@ namespace SpellSimulator.EditorTools.Map
         }
 
         /// <summary>Mostrador, trastienda, postes, toldo rayado con flecos, farol y cartel colgante.</summary>
-        private static void Frame(Transform shop, Palette p, Material clothA, Material clothB, string title, float width = 2.8f)
+        private static void Frame(Transform shop, Palette p, Material clothA, Material clothB, string title, float width = 2.8f, float counterWidth = -1f)
         {
-            Part(shop, PrimitiveType.Cube, "Counter", p.wood, new Vector3(0f, 0.45f, -0.3f), new Vector3(width - 0.2f, 0.9f, 0.5f), solid: true);
-            Part(shop, PrimitiveType.Cube, "CounterTop", p.darkWood, new Vector3(0f, 0.915f, -0.3f), new Vector3(width - 0.08f, 0.03f, 0.62f), solid: true);
-            int slats = Mathf.RoundToInt((width - 0.2f) / 0.43f);
-            float slatWidth = (width - 0.2f) / slats;
+            if (counterWidth < 0f) counterWidth = width - 0.2f;
+            Part(shop, PrimitiveType.Cube, "Counter", p.wood, new Vector3(0f, 0.45f, -0.3f), new Vector3(counterWidth, 0.9f, 0.5f), solid: true);
+            Part(shop, PrimitiveType.Cube, "CounterTop", p.darkWood, new Vector3(0f, 0.915f, -0.3f), new Vector3(counterWidth + 0.12f, 0.03f, 0.62f), solid: true);
+            int slats = Mathf.RoundToInt(counterWidth / 0.43f);
+            float slatWidth = counterWidth / slats;
             for (int i = 0; i < slats; i++) // tablones verticales del frente
-                Part(shop, PrimitiveType.Cube, "Slat" + i, i % 2 == 0 ? p.plank : p.wood, new Vector3(-(width - 0.2f) * 0.5f + slatWidth * (i + 0.5f), 0.45f, -0.555f), new Vector3(slatWidth - 0.02f, 0.84f, 0.015f));
+                Part(shop, PrimitiveType.Cube, "Slat" + i, i % 2 == 0 ? p.plank : p.wood, new Vector3(-counterWidth * 0.5f + slatWidth * (i + 0.5f), 0.45f, -0.555f), new Vector3(slatWidth - 0.02f, 0.84f, 0.015f));
             Part(shop, PrimitiveType.Cube, "BackWall", p.plank, new Vector3(0f, 1.2f, 0.5f), new Vector3(width, 2.4f, 0.08f), solid: true);
             Part(shop, PrimitiveType.Cube, "Batten0", p.darkWood, new Vector3(0f, 0.7f, 0.455f), new Vector3(width, 0.06f, 0.02f));
             Part(shop, PrimitiveType.Cube, "Batten1", p.darkWood, new Vector3(0f, 2.05f, 0.455f), new Vector3(width, 0.06f, 0.02f));
@@ -148,12 +149,17 @@ namespace SpellSimulator.EditorTools.Map
                 Part(shop, PrimitiveType.Cylinder, "PostBack", p.darkWood, new Vector3(x, 1.35f, 0.5f), new Vector3(0.1f, 1.35f, 0.1f), solid: true);
             }
 
+            // Si el mostrador no ocupa todo el frente (bahias laterales), postes extra que las separan.
+            if (counterWidth < width - 0.5f)
+                foreach (float x in new[] { -(counterWidth * 0.5f + 0.06f), counterWidth * 0.5f + 0.06f })
+                    Part(shop, PrimitiveType.Cylinder, "PostBay", p.darkWood, new Vector3(x, 1.2f, -0.62f), new Vector3(0.1f, 1.2f, 0.1f), solid: true);
+
             // Toldo: placas rayadas inclinadas hacia el frente (el frente queda mas bajo) y flecos triangulares.
             var roof = new GameObject("Awning").transform;
             roof.SetParent(shop, false);
             roof.localPosition = new Vector3(0f, 2.56f, -0.06f);
             roof.localRotation = Quaternion.Euler(-14f, 0f, 0f);
-            const int stripes = 8;
+            int stripes = Mathf.Max(8, Mathf.RoundToInt((width + 0.3f) / 0.4f) / 2 * 2);
             float stripeWidth = (width + 0.3f) / stripes;
             for (int i = 0; i < stripes; i++)
                 Part(roof, PrimitiveType.Cube, "Stripe" + i, i % 2 == 0 ? clothA : clothB, new Vector3(-(width + 0.3f) * 0.5f + stripeWidth * (i + 0.5f), 0f, 0f), new Vector3(stripeWidth, 0.04f, 1.32f));
@@ -251,8 +257,8 @@ namespace SpellSimulator.EditorTools.Map
                 Part(shop, PrimitiveType.Cylinder, "CrateRoll" + i, p.cream, new Vector3(-1.2f + i * 0.25f, 1.1f, 0.3f), new Vector3(0.16f, 0.13f, 0.16f), euler: new Vector3(90f, 0f, 0f));
         }
 
-        /// <summary>Las nueve pilas: tres libretas (8 hojas) y cuatro hojas sueltas sobre el mostrador, y las dos hojas L en peanas del piso a los lados.</summary>
-        private static void Piles(Transform shop, CanvasRestocker owner, Palette p, float width)
+        /// <summary>Las nueve pilas: tres libretas (8 hojas) y cuatro hojas sueltas sobre el mostrador, y las dos hojas L en peanas del piso, en las bahias laterales bajo el toldo.</summary>
+        private static void Piles(Transform shop, CanvasRestocker owner, Palette p, float width, float counterWidth)
         {
             CanvasSpec[] counter =
             {
@@ -270,9 +276,9 @@ namespace SpellSimulator.EditorTools.Map
                 Pile(shop, owner, p, "Pile" + i, counter[i], new Vector3(x + w * 0.5f, CounterTop, -0.3f), 0.1f, true);
                 x += w + gap;
             }
-            float sideX = width * 0.5f + 0.9f;
-            Pile(shop, owner, p, "PileLSquare", CanvasSpec.Sheet(CanvasSize.L, CanvasShape.Square), new Vector3(-sideX, 0f, -0.2f), 0.12f, false);
-            Pile(shop, owner, p, "PileLRect", CanvasSpec.Sheet(CanvasSize.L, CanvasShape.Rect), new Vector3(sideX, 0f, -0.2f), 0.12f, false);
+            float sideX = counterWidth * 0.5f + (width - counterWidth) * 0.25f; // centro de cada bahia, bajo el mismo toldo
+            Pile(shop, owner, p, "PileLSquare", CanvasSpec.Sheet(CanvasSize.L, CanvasShape.Square), new Vector3(-sideX, 0f, -0.1f), 0.12f, false);
+            Pile(shop, owner, p, "PileLRect", CanvasSpec.Sheet(CanvasSize.L, CanvasShape.Rect), new Vector3(sideX, 0f, -0.1f), 0.12f, false);
         }
 
         /// <summary>Una peana con pila de papel (o de libretas) y el lienzo real de exhibicion flotando encima; rotulo al frente.</summary>
@@ -342,7 +348,7 @@ namespace SpellSimulator.EditorTools.Map
             go.transform.localPosition = local;
             go.transform.localRotation = rotation ?? Quaternion.identity;
             var label = go.AddComponent<TextMeshPro>();
-            if (sign && SignFont != null) label.font = SignFont; // titulos de cartel en Caveat Brush; el resto usa la fuente por defecto (Nunito)
+            if (sign && SignFont != null) label.font = SignFont; // titulos de cartel en Lora; el resto usa la fuente por defecto (Nunito)
             label.rectTransform.sizeDelta = size;
             label.enableAutoSizing = false;
             label.fontSize = fontSize * 10f;
