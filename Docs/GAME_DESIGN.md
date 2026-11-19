@@ -229,8 +229,8 @@ con 2 px, probado en `BrushRulesTests`) y gasta algo más de tinta. Solo la goma
 **Dirección de disparo (sin marcos):** todo lienzo dispara por el lado que mira, la cara donde se escribe. Los lienzos y libretas sueltos se dan vuelta con **F**
 al dibujar. Los atriles tienen un botón con dos flechas circulares al pie del frente (apuntar + clic, gatillo en VR) que invierte el **sentido del atril**, o sea de
 cualquier lienzo que tenga puesto; al sacar el lienzo del atril vuelve a disparar normal.
-**Atriles:** son objetos físicos pesados (como las cajas): se agarran, se empujan, caen y los afecta el mundo; el lienzo puesto los sigue. El slot recibe el lienzo
-que se suelta (E) o se deja flotando (G) a menos de 0,85 m; si ya había otro, se cambian. Los caballetes del tutorial siguen fijos.
+**Atriles:** son caballetes en A (sin base, sin lápices ni herramientas: solo el lugar del lienzo y el botón de invertir), objetos físicos pesados (como las cajas): se agarran, se empujan, caen y los afecta el mundo; el lienzo puesto los sigue. El slot recibe el lienzo
+que se suelta (E) o se deja flotando (G) a menos de 0,85 m; si ya había otro, se cambian. Los caballetes del tutorial tienen el mismo cuerpo y también se mueven (su lienzo va fijo y apunta a su blanco).
 
 ## Decisiones (2026-10-07)
 1. **Auto-activación**: el hechizo se lanza solo al **cerrar el anillo**. El secundario de las herramientas es deshacer.

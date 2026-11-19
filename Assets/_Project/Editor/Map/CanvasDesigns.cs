@@ -284,8 +284,10 @@ namespace SpellSimulator.EditorTools.Map
         // ---------------------------------------------------------------- soportes
 
         /// <summary>
-        /// Caballete. Con <paramref name="slotted"/> es un atril con slot (CanvasEasel): el lienzo se agarra, se cambia acercando otro
-        /// y se gira el atril con clic en la base. Sin slot (tutorial) el lienzo queda fijo: sus ejercicios dependen de el.
+        /// Caballete en A (dos montantes inclinados, una pata trasera y travesaños), sin base ni herramientas. Siempre es un objeto
+        /// fisico pesado (Movable). Con <paramref name="slotted"/> trae un slot (CanvasEasel) para poner, sacar y cambiar el lienzo y
+        /// un boton de flechas circulares que invierte el sentido de disparo. Sin slot (tutorial) el lienzo queda fijo al caballete:
+        /// sus ejercicios dependen de el, pero el caballete entero se puede mover.
         /// </summary>
         internal static void Easel(GameObject template, Material material, string name, Vector3 ground, float yaw, bool slotted = true)
         {
@@ -294,45 +296,60 @@ namespace SpellSimulator.EditorTools.Map
             var root = new GameObject(name);
             root.transform.SetPositionAndRotation(ground, Quaternion.Euler(0f, yaw, 0f));
             var b = new LowPolyMesh();
-            // Tres patas (dos adelante, una atras, a espaldas del lienzo) y travesaños. El lienzo mira a +Z.
-            void Leg(Vector3 bottom, Vector3 top, Color color)
-            {
-                Vector3 axis = top - bottom;
-                b.Box(Matrix4x4.TRS((bottom + top) / 2f, Quaternion.FromToRotation(Vector3.up, axis), Vector3.one), new Vector3(0.06f, axis.magnitude, 0.05f), color);
-            }
-            // Patas delanteras inclinadas hacia atras (arriba mas atras que abajo) y una trasera de apoyo.
-            const float frontBottomZ = 0.3f, frontTopZ = -0.05f, legHeight = 1.9f;
-            Leg(new Vector3(-0.5f, 0f, frontBottomZ), new Vector3(-0.4f, legHeight, frontTopZ), Wood);
-            Leg(new Vector3(0.5f, 0f, frontBottomZ), new Vector3(0.4f, legHeight, frontTopZ), Wood);
-            Leg(new Vector3(0f, 0f, -0.95f), new Vector3(0f, legHeight, -0.12f), DarkWood);
-            b.Box(Matrix4x4.TRS(new Vector3(0f, 0.55f, frontBottomZ + (frontTopZ - frontBottomZ) * 0.55f / legHeight + 0.06f), Quaternion.identity, Vector3.one), new Vector3(1.0f, 0.05f, 0.14f), DarkWood); // reposa-lienzo
-            b.Box(Matrix4x4.TRS(new Vector3(0f, 1.95f, frontTopZ), Quaternion.identity, Vector3.one), new Vector3(0.95f, 0.05f, 0.07f), DarkWood);
-            // Atril con slot: base maciza (patines) para que sea un objeto pesado estable que se puede empujar y llevar.
-            if (slotted)
-            {
-                b.Box(Matrix4x4.TRS(new Vector3(0f, 0.06f, -0.3f), Quaternion.identity, Vector3.one), new Vector3(1.1f, 0.12f, 1.5f), DarkWood);
-                b.Box(Matrix4x4.TRS(new Vector3(0f, 0.15f, -0.3f), Quaternion.identity, Vector3.one), new Vector3(0.9f, 0.06f, 1.3f), Wood);
-            }
-            var mesh = MapBuilder.SaveMesh(b.Build($"Easel_{name}"));
-            root.AddComponent<MeshFilter>().sharedMesh = mesh;
-            root.AddComponent<MeshRenderer>().sharedMaterial = material;
-            // El lienzo se apoya sobre el plano de las patas delanteras, inclinado lo mismo que ellas.
+            // El lienzo mira a +Z. Montantes delanteros inclinados hacia atras y una pata trasera de apoyo.
+            const float frontBottomZ = 0.3f, frontTopZ = -0.05f, legHeight = 1.9f, rearBottomZ = -0.95f, rearTopZ = -0.12f;
             float lean = Mathf.Atan2(frontBottomZ - frontTopZ, legHeight);
             Vector3 faceLocal = new Vector3(0f, Mathf.Sin(lean), Mathf.Cos(lean));
             Vector3 topLocal = new Vector3(0f, Mathf.Cos(lean), -Mathf.Sin(lean));
+            Quaternion planeRotation = Quaternion.LookRotation(faceLocal, topLocal);
+            Vector3 OnPlane(float x, float y) => new Vector3(x, y, frontBottomZ + (frontTopZ - frontBottomZ) * y / legHeight);
+
+            void Leg(Vector3 bottom, Vector3 top, float width, float depth, Color color)
+            {
+                Vector3 axis = top - bottom;
+                Quaternion rot = Quaternion.FromToRotation(Vector3.up, axis);
+                b.Box(Matrix4x4.TRS((bottom + top) / 2f, rot, Vector3.one), new Vector3(width, axis.magnitude, depth), color);
+                var part = new GameObject("Col_Leg");
+                part.transform.SetParent(root.transform, false);
+                part.transform.localPosition = (bottom + top) / 2f;
+                part.transform.localRotation = rot;
+                part.AddComponent<BoxCollider>().size = new Vector3(width, axis.magnitude, depth);
+            }
+            void Board(float x, float y, Vector3 size, Color color, bool collider)
+            {
+                Vector3 pos = OnPlane(x, y);
+                b.Box(Matrix4x4.TRS(pos, planeRotation, Vector3.one), size, color);
+                if (!collider) return;
+                var part = new GameObject("Col_Board");
+                part.transform.SetParent(root.transform, false);
+                part.transform.localPosition = pos;
+                part.transform.localRotation = planeRotation;
+                part.AddComponent<BoxCollider>().size = size;
+            }
+            Leg(new Vector3(-0.5f, 0f, frontBottomZ), new Vector3(-0.42f, legHeight, frontTopZ), 0.07f, 0.06f, Wood);
+            Leg(new Vector3(0.5f, 0f, frontBottomZ), new Vector3(0.42f, legHeight, frontTopZ), 0.07f, 0.06f, Wood);
+            Leg(new Vector3(0f, 0f, rearBottomZ), new Vector3(0f, legHeight - 0.1f, rearTopZ), 0.07f, 0.06f, DarkWood);
+            // Travesaños: arriba, uno ancho abajo donde apoya el lienzo (lleva el boton) y un arriostre hacia la pata trasera.
+            Board(0f, 1.97f, new Vector3(1.0f, 0.07f, 0.07f), DarkWood, false);
+            Board(0f, 0.45f, new Vector3(1.0f, 0.22f, 0.05f), DarkWood, true);
+            b.Box(Matrix4x4.TRS(new Vector3(0f, 1.0f, -0.3f), Quaternion.identity, Vector3.one), new Vector3(0.05f, 0.05f, 0.5f), DarkWood);
+            var mesh = MapBuilder.SaveMesh(b.Build($"Easel_{name}"));
+            root.AddComponent<MeshFilter>().sharedMesh = mesh;
+            root.AddComponent<MeshRenderer>().sharedMaterial = material;
+
             const float canvasY = 1.25f;
-            Vector3 onPlane = new Vector3(0f, canvasY, frontBottomZ + (frontTopZ - frontBottomZ) * canvasY / legHeight);
-            Vector3 center = onPlane + faceLocal * 0.035f;
+            Vector3 center = OnPlane(0f, canvasY) + faceLocal * 0.035f;
             Quaternion canvasRotation = Quaternion.LookRotation(-(root.transform.rotation * faceLocal), root.transform.rotation * topLocal);
             if (!slotted)
             {
                 var fixedCanvas = Fixed(template, material, name + "_Canvas", root.transform.TransformPoint(center), canvasRotation, 0.9f, 1.2f, Dressing.None);
                 fixedCanvas.transform.SetParent(root.transform, true);
+                MovablesSetup.MakeMovable(root, EaselMass, "caballete", MovablesSetup.WoodProfile());
                 Undo.RegisterCreatedObjectUndo(root, name);
                 return;
             }
 
-            // Atril con slot: lienzo L rectangular agarrable (acoplado al arrancar), slot con la pose y base solida para girarlo.
+            // Atril con slot: lienzo L rectangular agarrable (acoplado al arrancar) y el boton de invertir el sentido.
             var canvas = Grabbable(template, material, name + "_Canvas", root.transform.TransformPoint(center), canvasRotation, 1.0f, 1.4f, Dressing.None);
             canvas.GetComponent<Rigidbody>().isKinematic = true;
             canvas.transform.SetParent(root.transform, true);
@@ -342,70 +359,105 @@ namespace SpellSimulator.EditorTools.Map
             slot.SetParent(root.transform, false);
             slot.localPosition = center;
             slot.localRotation = Quaternion.LookRotation(faceLocal, topLocal);
-            var foot = root.AddComponent<BoxCollider>();
-            foot.center = new Vector3(0f, 0.09f, -0.3f);
-            foot.size = new Vector3(1.1f, 0.18f, 1.5f);
-            var upright = root.AddComponent<BoxCollider>(); // el bastidor, detras del plano del lienzo
-            upright.center = new Vector3(0f, 1.05f, -0.3f);
-            upright.size = new Vector3(0.95f, 1.9f, 0.4f);
             var easel = root.AddComponent<CanvasEasel>();
             easel.Configure(slot, canvas.GetComponent<PhysicalCanvas>());
-            ReverseButton(root.transform, easel);
+            ReverseButton(root.transform, easel, OnPlane(0f, 0.45f) + faceLocal * 0.03f, planeRotation);
             // Mismas fisicas que las cajas y demas objetos pesados: rigidbody + Movable (agarrable), reaccion de la madera y reinicio.
             MovablesSetup.MakeMovable(root, EaselMass, "atril", MovablesSetup.WoodProfile());
             EditorUtility.SetDirty(easel);
             Undo.RegisterCreatedObjectUndo(root, name);
         }
 
-        /// <summary>Masa (kg) de un atril con slot: pesado como una mesa.</summary>
+        /// <summary>Masa (kg) de un caballete: pesado como una mesa.</summary>
         private const float EaselMass = 25f;
 
         /// <summary>
-        /// Boton al frente de la base del atril con dos flechas circulares (como el simbolo de reciclar): invierte el sentido de disparo del atril.
-        /// Armado con cubos chicos (sin colliders propios) y un collider generoso para apuntarlo.
+        /// Boton sobre el travesaño de abajo, mirando al frente: disco oscuro con dos flechas circulares doradas (textura generada, como el
+        /// simbolo de reciclar). Invierte el sentido de disparo del atril. Collider generoso para apuntarlo.
         /// </summary>
-        private static void ReverseButton(Transform easelRoot, CanvasEasel easel)
+        private static void ReverseButton(Transform easelRoot, CanvasEasel easel, Vector3 localPosition, Quaternion localRotation)
         {
-            Material baseMat = CanvasFrameMaterials.Solid("EaselButton", new Color(0.18f, 0.14f, 0.22f));
-            Material iconMat = CanvasFrameMaterials.Solid("EaselButtonIcon", new Color(0.95f, 0.85f, 0.5f));
-            var button = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            button.name = "ReverseButton";
+            var button = new GameObject("ReverseButton");
             button.transform.SetParent(easelRoot, false);
-            button.transform.localPosition = new Vector3(0f, 0.2f, 0.25f);
-            button.transform.localScale = new Vector3(0.16f, 0.03f, 0.16f);
-            button.GetComponent<MeshRenderer>().sharedMaterial = baseMat;
-            var box = button.GetComponent<BoxCollider>();
-            box.size = new Vector3(1.3f, 3f, 1.3f);
+            button.transform.localPosition = localPosition;
+            button.transform.localRotation = localRotation;
+            var box = button.AddComponent<BoxCollider>();
+            box.size = new Vector3(0.26f, 0.26f, 0.1f);
             button.AddComponent<EaselReverseButton>().Configure(easel);
-            // Dos arcos de ~120 grados con punta de flecha, uno frente al otro.
-            const float radius = 0.045f;
-            for (int arc = 0; arc < 2; arc++)
-            {
-                float start = arc * 180f + 20f;
-                for (int k = 0; k <= 4; k++)
-                {
-                    float a = (start + k * 25f) * Mathf.Deg2Rad;
-                    IconBit(button.transform, iconMat, new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * radius, -(start + k * 25f) + 90f, new Vector3(0.012f, 0.4f, 0.03f));
-                }
-                float tip = (start + 4 * 25f) * Mathf.Deg2Rad;
-                Vector3 at = new Vector3(Mathf.Cos(tip), 0f, Mathf.Sin(tip)) * radius;
-                IconBit(button.transform, iconMat, at, -(start + 100f) + 45f, new Vector3(0.012f, 0.4f, 0.035f));
-                IconBit(button.transform, iconMat, at, -(start + 100f) + 135f, new Vector3(0.012f, 0.4f, 0.035f));
-            }
+            var icon = GameObject.CreatePrimitive(PrimitiveType.Quad);
+            Object.DestroyImmediate(icon.GetComponent<Collider>());
+            icon.name = "Icon";
+            icon.transform.SetParent(button.transform, false);
+            icon.transform.localPosition = new Vector3(0f, 0f, 0.012f);
+            icon.transform.localRotation = Quaternion.Euler(0f, 180f, 0f); // la cara visible del quad mira a -Z: se gira hacia el frente
+            icon.transform.localScale = new Vector3(0.2f, 0.2f, 1f);
+            icon.GetComponent<MeshRenderer>().sharedMaterial = ReverseIconMaterial();
         }
 
-        private static void IconBit(Transform parent, Material material, Vector3 positionOnButton, float yaw, Vector3 size)
+        /// <summary>Textura y material del icono de dos flechas circulares (se genera una vez y se guarda en Art/Generated).</summary>
+        private static Material ReverseIconMaterial()
         {
-            var bit = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            Object.DestroyImmediate(bit.GetComponent<Collider>());
-            bit.name = "Icon";
-            bit.transform.SetParent(parent, false);
-            // El padre mide 0,16 x 0,03 x 0,16: se compensa para que las piezas queden con el tamaño pedido (m).
-            Vector3 s = parent.localScale;
-            bit.transform.localPosition = new Vector3(positionOnButton.x / s.x, 0.65f, positionOnButton.z / s.z);
-            bit.transform.localRotation = Quaternion.Euler(0f, yaw, 0f);
-            bit.transform.localScale = new Vector3(size.x / s.x, size.y, size.z / s.z);
-            bit.GetComponent<MeshRenderer>().sharedMaterial = material;
+            const string texPath = "Assets/_Project/Art/Generated/EaselReverseIcon.png";
+            const string matPath = "Assets/_Project/Materials/EaselReverseIcon.mat";
+            var existing = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+            if (existing != null && AssetDatabase.LoadAssetAtPath<Texture2D>(texPath) != null) return existing;
+            const int n = 256;
+            var tex = new Texture2D(n, n, TextureFormat.RGBA32, false);
+            var pixels = new Color[n * n];
+            Color bg = new Color(0.16f, 0.12f, 0.2f, 1f), fg = new Color(0.98f, 0.86f, 0.45f, 1f);
+            const float r = 0.3f, half = 0.045f, head = 0.12f;
+            // Dos arcos de 120 grados (sentido antihorario) con punta de flecha, uno frente al otro.
+            float[] starts = { 25f, 205f };
+            const float span = 120f;
+            for (int py = 0; py < n; py++)
+            for (int px = 0; px < n; px++)
+            {
+                float x = (px + 0.5f) / n - 0.5f, y = (py + 0.5f) / n - 0.5f;
+                float dist = Mathf.Sqrt(x * x + y * y);
+                Color c = dist < 0.5f ? bg : new Color(0f, 0f, 0f, 0f);
+                if (dist < 0.5f)
+                {
+                    float ang = Mathf.Atan2(y, x) * Mathf.Rad2Deg; if (ang < 0f) ang += 360f;
+                    bool on = false;
+                    foreach (float s in starts)
+                    {
+                        float rel = ang - s; if (rel < 0f) rel += 360f;
+                        if (rel <= span && Mathf.Abs(dist - r) <= half) on = true;
+                        // Punta: triangulo en el extremo, apuntando en sentido antihorario (tangente).
+                        float ea = (s + span) * Mathf.Deg2Rad;
+                        Vector2 radial = new Vector2(Mathf.Cos(ea), Mathf.Sin(ea));
+                        Vector2 tangent = new Vector2(-radial.y, radial.x);
+                        Vector2 baseCenter = radial * r;
+                        Vector2 a = baseCenter + radial * (half * 2.6f), bpt = baseCenter - radial * (half * 2.6f), tip = baseCenter + tangent * head;
+                        if (InTriangle(new Vector2(x, y), a, bpt, tip)) on = true;
+                    }
+                    if (on) c = fg;
+                }
+                pixels[py * n + px] = c;
+            }
+            tex.SetPixels(pixels);
+            System.IO.File.WriteAllBytes(System.IO.Path.GetFullPath(texPath), tex.EncodeToPNG());
+            Object.DestroyImmediate(tex);
+            AssetDatabase.ImportAsset(texPath, ImportAssetOptions.ForceUpdate);
+            var m = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = "EaselReverseIcon" };
+            m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(texPath));
+            m.SetFloat("_Surface", 1f);
+            m.SetFloat("_Blend", 0f);
+            m.SetOverrideTag("RenderType", "Transparent");
+            m.renderQueue = 3000;
+            m.SetFloat("_SrcBlend", 5f); m.SetFloat("_DstBlend", 10f); m.SetFloat("_ZWrite", 0f);
+            m.EnableKeyword("_SURFACE_TYPE_TRANSPARENT");
+            AssetDatabase.CreateAsset(m, matPath);
+            return m;
+        }
+
+        private static bool InTriangle(Vector2 p, Vector2 a, Vector2 b, Vector2 c)
+        {
+            float d1 = (p.x - b.x) * (a.y - b.y) - (a.x - b.x) * (p.y - b.y);
+            float d2 = (p.x - c.x) * (b.y - c.y) - (b.x - c.x) * (p.y - c.y);
+            float d3 = (p.x - a.x) * (c.y - a.y) - (c.x - a.x) * (p.y - a.y);
+            bool neg = d1 < 0f || d2 < 0f || d3 < 0f, pos = d1 > 0f || d2 > 0f || d3 > 0f;
+            return !(neg && pos);
         }
 
         private static void DraftingTable(GameObject template, Material material, string name, Vector3 ground, float yaw)

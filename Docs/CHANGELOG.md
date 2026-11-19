@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-19 — Atril rehecho: caballete en A, botón con flechas circulares y caballetes del tutorial movibles
+
+- Se quitó la base/plinto del atril: ahora es un caballete en A (dos montantes inclinados, pata trasera, travesaños y un tablero abajo), sin herramientas ni bandeja. Colliders por pieza (hijos), objeto físico de 25 kg (`MovablesSetup.MakeMovable`).
+- Botón de invertir el sentido: disco oscuro sobre el tablero de abajo con dos flechas circulares doradas (textura `EaselReverseIcon.png`, generada por código en `CanvasDesigns.ReverseIconMaterial`).
+- Los caballetes del tutorial (`Easel_Earth`, `Easel_Door`) usan el mismo cuerpo y también son físicos y movibles; su lienzo sigue fijo al caballete y apunta a su blanco.
+- Docs: `GAME_DESIGN.md`. Tests 684 y smoke PASS; no se probó a mano en PC ni VR.
+
 ## 2026-11-19 — Tutorial: piso 1 de tierra, piso 2 con pedestales y arreglo de las rampas
 
 - **Piso 1 ahora es de tierra.** El caballete (`Easel_Earth`) trae la plantilla fantasma de `thrown_rock` en marrón (`TutorialPaperGuide.ghostColor`), la roca lanzada empuja la puerta (misma `TutorialCloth` con bisagra) y el cartel dice «Calcá la tierra marrón». Libro nuevo `earth-primer` («Tomo II: la tierra») sobre la mesa del piso 1; el `wind-primer` pasó al atril de la planta baja y el de «los cuatro elementos» ya no se coloca (queda en el JSON).
