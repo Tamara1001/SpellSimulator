@@ -27,7 +27,7 @@ tags: [doc, estado]
 
 **Ruido del Editor que NO se commitea** (Unity lo regenera; si aparece en `git status`, ignorarlo o `git checkout --`): `Assets/XR/Settings/OpenXRPackageSettings.asset`, `SpellSimulator.slnx`, `ProjectSettings/{ProjectSettings,QualitySettings,EditorBuildSettings}.asset`, `Assets/TextMesh Pro/.../LiberationSans SDF - Fallback.asset`, `Assets/Settings/*_RPAsset.asset`.
 
-**Publicación (itch.io):** el build web se hace con `SpellSimulator/Build/WebGL (itch.io)` y se sube a mano (zip con `index.html` en la raíz, tipo HTML); no hay `butler` instalado. Ver [ONBOARDING §6](ONBOARDING.md#6-builds).
+**Publicación (itch.io):** el build web se hace con `SpellSimulator/Build/WebGL (itch.io)` y se sube con `butler push Builds/WebGL tamara1001/spellsimulator:html5 --userversion <ver>` (butler en `D:\Programas\butler\`, ya logueado). Ver [ONBOARDING §6](ONBOARDING.md#6-builds).
 
 ---
 
