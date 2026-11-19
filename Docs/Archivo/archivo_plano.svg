@@ -1,0 +1,298 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 820" font-family="Segoe UI, Arial, sans-serif">
+<defs>
+  <marker id="ar" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+    <path d="M0 1L8 5L0 9z" fill="context-stroke"/>
+  </marker>
+  <marker id="ar-sm" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+    <path d="M0 2L7 5L0 8z" fill="context-stroke"/>
+  </marker>
+  <!-- Patrón de toldo tienda 1: rayas verde salvia y crema -->
+  <pattern id="toldo-plumas" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="5" height="10" fill="#529471"/>
+    <rect x="5" width="5" height="10" fill="#f4ebd9"/>
+  </pattern>
+  <!-- Patrón de toldo tienda 2: rayas teja y mostaza -->
+  <pattern id="toldo-lienzos" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="5" height="10" fill="#c85a32"/>
+    <rect x="5" width="5" height="10" fill="#f5c26b"/>
+  </pattern>
+</defs>
+
+<!-- Fondo general estilo plano oscuro -->
+<rect width="1000" height="820" fill="#1e2530"/>
+
+<!-- Título y subtítulo -->
+<text x="36" y="44" font-size="24" font-weight="800" fill="#eef1f5" letter-spacing="0.5">Archivo · Rotonda de la Sabiduría</text>
+<text x="36" y="68" font-size="13" fill="#aab3c0">Centro del anillo de aprendizaje en (0, -46) · Rotonda abierta r = 9 m · Estética Witch Hat Atelier</text>
+
+<!-- ================= CLARO DE ÁRBOLES Y TERRENO ================= -->
+<!-- Límite del claro despejado (radio ~14m = 252px desde cx=430, cy=460) -->
+<circle cx="430" cy="460" r="255" fill="#252d3a" stroke="#2f3949" stroke-width="2" stroke-dasharray="6 6"/>
+
+<!-- Árboles perimetrales (pinos y arces low-poly fuera del claro) -->
+<g fill="#2d4a3e" stroke="#1b3027" stroke-width="1.5">
+  <circle cx="180" cy="220" r="18"/><circle cx="150" cy="280" r="15"/><circle cx="140" cy="350" r="20"/>
+  <circle cx="130" cy="570" r="18"/><circle cx="160" cy="650" r="22"/><circle cx="210" cy="710" r="16"/>
+  <circle cx="340" cy="745" r="19"/><circle cx="520" cy="745" r="18"/><circle cx="650" cy="710" r="20"/>
+  <circle cx="700" cy="640" r="17"/><circle cx="715" cy="270" r="19"/><circle cx="680" cy="200" r="16"/>
+</g>
+<g fill="#3b5e48" stroke="#253e2f" stroke-width="1">
+  <circle cx="178" cy="218" r="11"/><circle cx="138" cy="348" r="13"/><circle cx="158" cy="648" r="14"/>
+  <circle cx="652" cy="708" r="13"/><circle cx="713" cy="268" r="12"/>
+</g>
+
+<!-- ================= CAMINOS ================= -->
+<!-- Camino principal Norte (desde Nexo/Torre en +Z, eje x=0, ancho 3m = 54px) -->
+<path d="M403,90 L403,270 L430,298 L457,270 L457,90 Z" fill="#3a4454" stroke="#4e5b70" stroke-width="1.5"/>
+<line x1="430" y1="90" x2="430" y2="285" stroke="#58d68d" stroke-width="3" stroke-dasharray="8 6" marker-end="url(#ar)"/>
+<text x="430" y="112" font-size="12" font-weight="700" fill="#58d68d" text-anchor="middle">DESDE NEXO / TORRE (+z)</text>
+
+<!-- Salida Oeste: hacia Campo de Agua (x = -22 mundo) -->
+<path d="M268,442 L110,420 L110,466 L268,478 Z" fill="#3a4454" stroke="#4e5b70" stroke-width="1.5"/>
+<line x1="280" y1="460" x2="120" y2="443" stroke="#4fa3e3" stroke-width="3" stroke-dasharray="6 5" marker-end="url(#ar)"/>
+<text x="125" y="420" font-size="11" font-weight="700" fill="#7fc3f3">HACIA AGUA</text>
+
+<!-- Salida Suroeste: hacia Campo de Fuego (x = -18, z = -50 mundo) -->
+<path d="M308,574 L170,720 L204,748 L338,602 Z" fill="#3a4454" stroke="#4e5b70" stroke-width="1.5"/>
+<line x1="324" y1="588" x2="195" y2="725" stroke="#f0705a" stroke-width="3" stroke-dasharray="6 5" marker-end="url(#ar)"/>
+<text x="180" y="700" font-size="11" font-weight="700" fill="#f8907e">HACIA FUEGO</text>
+
+<!-- Salida Sureste: hacia Campo de Tierra (x = +20, z = -50 mundo) -->
+<path d="M522,602 L656,748 L690,720 L552,574 Z" fill="#3a4454" stroke="#4e5b70" stroke-width="1.5"/>
+<line x1="536" y1="588" x2="665" y2="725" stroke="#7ec97e" stroke-width="3" stroke-dasharray="6 5" marker-end="url(#ar)"/>
+<text x="670" y="700" font-size="11" font-weight="700" fill="#9de09d">HACIA TIERRA</text>
+
+<!-- Salida Este: hacia Campo de Viento (x = +26, z = -34 mundo) -->
+<path d="M592,442 L720,400 L730,442 L592,478 Z" fill="#3a4454" stroke="#4e5b70" stroke-width="1.5"/>
+<line x1="580" y1="460" x2="715" y2="420" stroke="#f5c26b" stroke-width="3" stroke-dasharray="6 5" marker-end="url(#ar)"/>
+<text x="715" y="392" font-size="11" font-weight="700" fill="#ffd98e">HACIA VIENTO</text>
+
+<!-- ================= ROTONDA ABIERTA (r = 9 m = 162 px) ================= -->
+<!-- Suelo de adoquines de piedra clara -->
+<circle cx="430" cy="460" r="162" fill="#2d3746" stroke="#4a576b" stroke-width="3"/>
+<!-- Friso concéntrico de mosaico en piedra cálida -->
+<circle cx="430" cy="460" r="148" fill="none" stroke="#685443" stroke-width="2" stroke-dasharray="8 6"/>
+<!-- Anillo de pérgola superior en madera abierta (vigas radiales) -->
+<circle cx="430" cy="460" r="160" fill="none" stroke="#8d6e53" stroke-width="8" stroke-dasharray="16 12"/>
+
+<!-- Arcos perimetrales rotulados con banderas elementales -->
+<!-- Arco Norte: Entrada principal -->
+<path d="M398,302 A162,162 0 0,1 462,302" fill="none" stroke="#f4ebd9" stroke-width="6"/>
+<text x="430" y="318" font-size="10" font-weight="700" fill="#f4ebd9" text-anchor="middle">ARCO DE ENTRADA</text>
+
+<!-- Arco Oeste: Agua (azul) -->
+<path d="M272,434 A162,162 0 0,0 272,486" fill="none" stroke="#4fa3e3" stroke-width="6"/>
+<rect x="264" y="452" width="12" height="16" fill="#389fff" rx="2"/>
+
+<!-- Arco Suroeste: Fuego (rojo) -->
+<path d="M304,570 A162,162 0 0,0 342,604" fill="none" stroke="#f0705a" stroke-width="6"/>
+<rect x="314" y="586" width="16" height="12" fill="#ff5722" rx="2" transform="rotate(-45 322 592)"/>
+
+<!-- Arco Sureste: Tierra (verde) -->
+<path d="M518,604 A162,162 0 0,0 556,570" fill="none" stroke="#7ec97e" stroke-width="6"/>
+<rect x="528" y="586" width="16" height="12" fill="#4caf50" rx="2" transform="rotate(45 536 592)"/>
+
+<!-- Arco Este: Viento (ámbar/dorado) -->
+<path d="M588,434 A162,162 0 0,1 588,486" fill="none" stroke="#f5c26b" stroke-width="6"/>
+<rect x="584" y="452" width="12" height="16" fill="#ffca28" rx="2"/>
+
+<!-- Columnas cilíndricas perimetrales (12 columnas sobre r=8.8m = 158px) -->
+<g fill="#d4c2aa" stroke="#3b2b1f" stroke-width="2">
+  <circle cx="430" cy="302" r="5"/><circle cx="510" cy="324" r="5"/><circle cx="568" cy="382" r="5"/>
+  <circle cx="588" cy="460" r="5"/><circle cx="568" cy="538" r="5"/><circle cx="510" cy="596" r="5"/>
+  <circle cx="430" cy="618" r="5"/><circle cx="350" cy="596" r="5"/><circle cx="292" cy="538" r="5"/>
+  <circle cx="272" cy="460" r="5"/><circle cx="292" cy="382" r="5"/><circle cx="350" cy="324" r="5"/>
+</g>
+<!-- Faroles de bronce en columnas clave -->
+<g fill="#ffe082" stroke="#d48817" stroke-width="1.5">
+  <circle cx="423" cy="308" r="3"/><circle cx="437" cy="308" r="3"/>
+  <circle cx="280" cy="460" r="3"/><circle cx="580" cy="460" r="3"/>
+  <circle cx="330" cy="580" r="3"/><circle cx="530" cy="580" r="3"/>
+</g>
+
+<!-- ================= ELEMENTOS INTERIORES DE LA ROTONDA ================= -->
+<!-- Mesa central redonda de nogal (r = 1.5 m = 27 px) con atril de 'Primeros hechizos' -->
+<circle cx="430" cy="460" r="28" fill="#5a3d28" stroke="#3d2717" stroke-width="2.5"/>
+<circle cx="430" cy="460" r="22" fill="#785338" stroke="#4a301d" stroke-width="1"/>
+<!-- Libro central abierto y tintero -->
+<rect x="420" y="452" width="20" height="14" rx="2" fill="#f4ebd9" stroke="#9c7a42" stroke-width="1.5"/>
+<line x1="430" y1="452" x2="430" y2="466" stroke="#9c7a42" stroke-width="1"/>
+<circle cx="415" cy="464" r="2.5" fill="#305070"/>
+<text x="430" y="444" font-size="9" font-weight="700" fill="#fedc97" text-anchor="middle">MESA CENTRAL</text>
+<text x="430" y="480" font-size="8" fill="#e0ceb5" text-anchor="middle">«Primeros Hechizos» + Tinta</text>
+
+<!-- Estantes curvados de la memoria (lomos de color) pegados al borde -->
+<path d="M312,356 A150,150 0 0,1 384,314" fill="none" stroke="#8d6748" stroke-width="6"/>
+<text x="340" y="334" font-size="8" font-weight="700" fill="#deb887" transform="rotate(-30 340 334)">Estante lomos</text>
+
+<path d="M476,314 A150,150 0 0,1 548,356" fill="none" stroke="#8d6748" stroke-width="6"/>
+<text x="510" y="334" font-size="8" font-weight="700" fill="#deb887" transform="rotate(30 510 334)">Estante lomos</text>
+
+<!-- Portal rúnico hacia el Nexo (sector sur interior, local x=0, z=-6.8m = cy 582) -->
+<circle cx="430" cy="576" r="16" fill="#201a35" stroke="#9c70ff" stroke-width="2.5"/>
+<circle cx="430" cy="576" r="11" fill="#38295c" stroke="#cbb2ff" stroke-width="1" stroke-dasharray="4 3"/>
+<text x="430" y="566" font-size="8" font-weight="700" fill="#d2bcff" text-anchor="middle">PORTAL AL NEXO</text>
+
+<!-- 1. NICHO DE VARIANTES (Noroeste: libro 'variants' + zona de prueba en sombra) -->
+<!-- Zona de prueba 2x2m (36x36px) -->
+<rect x="306" y="392" width="36" height="36" rx="4" fill="#20242e" stroke="#5c6e88" stroke-width="1.5" stroke-dasharray="4 3"/>
+<!-- Lámpara apagada y pedestal de prisma -->
+<circle cx="316" cy="402" r="3.5" fill="#758296" stroke="#485366"/>
+<polygon points="328,416 334,424 322,424" fill="#d8b4f8" stroke="#8e5ec2" stroke-width="1"/>
+<text x="324" y="388" font-size="8" font-weight="700" fill="#c9b8db" text-anchor="middle">Prueba (2×2m)</text>
+<!-- Atril con libro -->
+<rect x="352" y="388" width="14" height="12" rx="1.5" fill="#f4ebd9" stroke="#5a4230" stroke-width="1.5"/>
+<text x="364" y="382" font-size="8.5" font-weight="700" fill="#a6d4ff">Nicho «variants»</text>
+<text x="364" y="412" font-size="7.5" fill="#8898aa">Luz / prisma</text>
+
+<!-- 2. NICHO DE MOVIMIENTO (Suroeste: libro 'motion' + zona de prueba) -->
+<!-- Zona de prueba 2x2m (36x36px) -->
+<rect x="346" y="504" width="36" height="36" rx="4" fill="#20242e" stroke="#5c6e88" stroke-width="1.5" stroke-dasharray="4 3"/>
+<!-- Caja liviana, frasco de plumas, canasta -->
+<rect x="352" y="510" width="10" height="10" fill="#a48466" stroke="#4e3b28"/>
+<circle cx="372" cy="516" r="3" fill="#80deea" stroke="#26a69a"/>
+<circle cx="364" cy="530" r="5" fill="none" stroke="#d79a5b" stroke-width="1.5"/>
+<text x="364" y="500" font-size="8" font-weight="700" fill="#c9b8db" text-anchor="middle">Prueba (2×2m)</text>
+<!-- Atril con libro -->
+<rect x="320" y="492" width="14" height="12" rx="1.5" fill="#f4ebd9" stroke="#5a4230" stroke-width="1.5"/>
+<text x="312" y="484" font-size="8.5" font-weight="700" fill="#a6d4ff">Nicho «motion»</text>
+<text x="312" y="516" font-size="7.5" fill="#8898aa">Caja / plumas / cesta</text>
+
+<!-- 3. NICHO DE FORMA (Sureste: libro 'shape' + zona de prueba en arena) -->
+<!-- Zona de prueba 2x2m con bandeja de arena -->
+<rect x="478" y="504" width="36" height="36" rx="4" fill="#3b372e" stroke="#8d7d56" stroke-width="1.5"/>
+<!-- Estacas a distintas alturas -->
+<line x1="488" y1="514" x2="488" y2="520" stroke="#c7ab6e" stroke-width="3" stroke-linecap="round"/>
+<line x1="498" y1="524" x2="498" y2="532" stroke="#c7ab6e" stroke-width="4" stroke-linecap="round"/>
+<line x1="504" y1="512" x2="504" y2="517" stroke="#c7ab6e" stroke-width="2.5" stroke-linecap="round"/>
+<text x="496" y="500" font-size="8" font-weight="700" fill="#edd9a6" text-anchor="middle">Bandeja arena (2×2m)</text>
+<!-- Atril con libro -->
+<rect x="526" y="492" width="14" height="12" rx="1.5" fill="#f4ebd9" stroke="#5a4230" stroke-width="1.5"/>
+<text x="546" y="484" font-size="8.5" font-weight="700" fill="#a6d4ff">Nicho «shape»</text>
+<text x="546" y="516" font-size="7.5" fill="#8898aa">Columna / estacas</text>
+
+<!-- 4. ALTILLO / NICHO APARTADO (Noreste: 'rare' + alquimia trasladada) -->
+<rect x="496" y="386" width="38" height="22" rx="3" fill="#3a3028" stroke="#685443" stroke-width="1.5"/>
+<circle cx="504" cy="397" r="3.5" fill="#80cbc4" stroke="#00796b"/>
+<rect x="518" y="390" width="12" height="10" rx="1.5" fill="#f4ebd9" stroke="#8d6e53"/>
+<text x="515" y="380" font-size="8.5" font-weight="700" fill="#ffd54f" text-anchor="middle">Nicho «rare» + Alquimia</text>
+
+<!-- ================= DOS TIENDAS AL AIRE LIBRE (3x2 m = 54x36 px) ================= -->
+
+<!-- TIENDA 1: Tienda de Plumas (Oeste del camino norte) -->
+<!-- Coordenadas locales: x = -5.5 m, z = +11.5 m -> cx = 331, cy = 253 -->
+<g id="tienda-plumas">
+  <!-- Sombra proyectada -->
+  <rect x="306" y="237" width="56" height="38" rx="4" fill="#141921" opacity="0.6"/>
+  <!-- Armazón y mostrador de madera -->
+  <rect x="304" y="235" width="54" height="36" rx="3" fill="#4d3525" stroke="#2c1e15" stroke-width="1.5"/>
+  <!-- Toldo rayado verde salvia y crema -->
+  <rect x="304" y="235" width="54" height="26" rx="2" fill="url(#toldo-plumas)" stroke="#3f5a48" stroke-width="1"/>
+  <!-- Frascos de pinceles en mostrador -->
+  <circle cx="312" cy="265" r="2.5" fill="#80deea"/><circle cx="318" cy="265" r="2" fill="#ffe082"/>
+  <circle cx="346" cy="265" r="2.5" fill="#a5d6a7"/><circle cx="351" cy="265" r="2" fill="#80cbc4"/>
+  <!-- Farol colgante -->
+  <circle cx="305" cy="267" r="3" fill="#ffe082" stroke="#b26a00"/>
+  <!-- Rótulo de la tienda -->
+  <text x="331" y="228" font-size="11" font-weight="800" fill="#a3e9c0" text-anchor="middle">Tienda de plumas</text>
+  <text x="331" y="248" font-size="8.5" font-weight="700" fill="#1b382b" text-anchor="middle">PINCELES Y FRASCOS</text>
+
+  <!-- Zona de interacción donde el jugador se para al frente (x = -3.5m, z = +11.0m -> cx = 367, cy = 262) -->
+  <circle cx="367" cy="262" r="10" fill="none" stroke="#58d68d" stroke-width="2" stroke-dasharray="3 3"/>
+  <circle cx="367" cy="262" r="4" fill="#58d68d"/>
+  <text x="367" y="282" font-size="8.5" font-weight="700" fill="#58d68d" text-anchor="middle">Jugador (-3.5, 11)</text>
+  <!-- Flecha indicando libre paso al camino -->
+  <line x1="379" y1="262" x2="399" y2="262" stroke="#7fd4ff" stroke-width="1.5" stroke-dasharray="2 2"/>
+  <text x="389" y="256" font-size="7" fill="#7fd4ff" text-anchor="middle">libre</text>
+</g>
+
+<!-- TIENDA 2: Almacén de lienzos y libretas (Este del camino norte) -->
+<!-- Coordenadas locales: x = +5.5 m, z = +11.5 m -> cx = 529, cy = 253 -->
+<g id="tienda-lienzos">
+  <!-- Sombra proyectada -->
+  <rect x="504" y="237" width="56" height="38" rx="4" fill="#141921" opacity="0.6"/>
+  <!-- Armazón y mostrador de madera -->
+  <rect x="502" y="235" width="54" height="36" rx="3" fill="#4d3525" stroke="#2c1e15" stroke-width="1.5"/>
+  <!-- Toldo rayado teja y mostaza -->
+  <rect x="502" y="235" width="54" height="26" rx="2" fill="url(#toldo-lienzos)" stroke="#8d4020" stroke-width="1"/>
+  <!-- Pilas de lienzos S/M/L y libretas circulares -->
+  <rect x="508" y="263" width="7" height="6" fill="#f5f0e6" stroke="#a08060" stroke-width="0.8"/>
+  <rect x="517" y="262" width="10" height="7" fill="#f5f0e6" stroke="#a08060" stroke-width="0.8"/>
+  <circle cx="534" cy="265" r="3" fill="#eed9b3" stroke="#8d6e43" stroke-width="0.8"/>
+  <!-- Mueble restocker (cajones) -->
+  <rect x="542" y="263" width="11" height="6" fill="#3a271c"/>
+  <!-- Farol colgante -->
+  <circle cx="555" cy="267" r="3" fill="#ffe082" stroke="#b26a00"/>
+  <!-- Rótulo de la tienda -->
+  <text x="529" y="228" font-size="11" font-weight="800" fill="#f7b76d" text-anchor="middle">Almacén de lienzos y libretas</text>
+  <text x="529" y="248" font-size="8" font-weight="700" fill="#401e08" text-anchor="middle">LIENZOS S/M/L · RESTOCK</text>
+
+  <!-- Zona de interacción donde el jugador se para al frente (x = +3.5m, z = +11.0m -> cx = 493, cy = 262) -->
+  <circle cx="493" cy="262" r="10" fill="none" stroke="#f5a623" stroke-width="2" stroke-dasharray="3 3"/>
+  <circle cx="493" cy="262" r="4" fill="#f5a623"/>
+  <text x="493" y="282" font-size="8.5" font-weight="700" fill="#f5a623" text-anchor="middle">Jugador (+3.5, 11)</text>
+  <!-- Flecha indicando libre paso al camino -->
+  <line x1="481" y1="262" x2="461" y2="262" stroke="#7fd4ff" stroke-width="1.5" stroke-dasharray="2 2"/>
+  <text x="471" y="256" font-size="7" fill="#7fd4ff" text-anchor="middle">libre</text>
+</g>
+
+<!-- ================= PANEL DE LEYENDA Y ESPECIFICACIONES ================= -->
+<rect x="750" y="86" width="224" height="420" rx="8" fill="#161c26" stroke="#374151" stroke-width="1.5"/>
+<text x="764" y="112" font-size="14" font-weight="800" fill="#eef1f5">DATOS Y COORDENADAS</text>
+
+<text x="764" y="134" font-size="11" font-weight="700" fill="#9ca3af">Centro del Archivo (mundo):</text>
+<text x="764" y="150" font-size="12" font-weight="700" fill="#60a5fa">(x = 0 m, z = -46 m)</text>
+
+<text x="764" y="174" font-size="11" font-weight="700" fill="#9ca3af">Rotonda abierta:</text>
+<text x="764" y="190" font-size="11" fill="#e5e7eb">Radio 9 m · 12 columnas</text>
+<text x="764" y="206" font-size="11" fill="#e5e7eb">Techo pérgola circular</text>
+
+<line x1="764" y1="218" x2="958" y2="218" stroke="#2d3748" stroke-width="1"/>
+
+<text x="764" y="236" font-size="12" font-weight="800" fill="#a3e9c0">1. Tienda de plumas</text>
+<text x="764" y="252" font-size="11" fill="#d1d5db">Local: <tspan font-weight="700" fill="#fff">x = -5.5 m, z = +11.5 m</tspan></text>
+<text x="764" y="268" font-size="10.5" fill="#9ca3af">Medidas: 3 × 2 m · Toldo verde</text>
+<text x="764" y="284" font-size="10.5" fill="#58d68d">Jugador en x = -3.5, z = +11.0 m</text>
+
+<text x="764" y="310" font-size="12" font-weight="800" fill="#f7b76d">2. Almacén lienzos/libretas</text>
+<text x="764" y="326" font-size="11" fill="#d1d5db">Local: <tspan font-weight="700" fill="#fff">x = +5.5 m, z = +11.5 m</tspan></text>
+<text x="764" y="342" font-size="10.5" fill="#9ca3af">Medidas: 3 × 2 m · Toldo teja</text>
+<text x="764" y="358" font-size="10.5" fill="#f5a623">Jugador en x = +3.5, z = +11.0 m</text>
+
+<line x1="764" y1="370" x2="958" y2="370" stroke="#2d3748" stroke-width="1"/>
+
+<text x="764" y="388" font-size="11" font-weight="700" fill="#9ca3af">Camino Norte despejado:</text>
+<text x="764" y="404" font-size="10.5" fill="#7fd4ff">Ancho 3.0 m (x ∈ [-1.5, +1.5])</text>
+<text x="764" y="420" font-size="10.5" fill="#aab3c0">Margen lateral libre: 2.0 m</text>
+
+<text x="764" y="444" font-size="11" font-weight="700" fill="#9ca3af">Portal rúnico:</text>
+<text x="764" y="460" font-size="10.5" fill="#d2bcff">Retorno al Nexo (x = 0, z = -6.8)</text>
+
+<!-- ================= ROSA DE LOS VIENTOS (NORTE = +Z) ================= -->
+<g transform="translate(920, 720)">
+  <circle cx="0" cy="0" r="26" fill="#161c26" stroke="#374151" stroke-width="1.5"/>
+  <polygon points="0,-22 5,-4 0,0 -5,-4" fill="#e5534b"/>
+  <polygon points="0,22 5,4 0,0 -5,4" fill="#718096"/>
+  <polygon points="22,0 4,5 0,0 4,-5" fill="#718096"/>
+  <polygon points="-22,0 -4,5 0,0 -4,-5" fill="#718096"/>
+  <text x="0" y="-26" font-size="13" font-weight="900" fill="#eef1f5" text-anchor="middle">N (+z)</text>
+  <text x="0" y="36" font-size="9" font-weight="700" fill="#a0aec0" text-anchor="middle">S (-z)</text>
+  <text x="34" y="3" font-size="9" font-weight="700" fill="#a0aec0" text-anchor="middle">E (+x)</text>
+  <text x="-34" y="3" font-size="9" font-weight="700" fill="#a0aec0" text-anchor="middle">O (-x)</text>
+</g>
+
+<!-- ================= ESCALA GRÁFICA EN METROS ================= -->
+<g transform="translate(36, 760)">
+  <rect x="0" y="-22" width="230" height="34" rx="4" fill="#161c26" stroke="#374151" opacity="0.9"/>
+  <!-- 1 metro = 18 px -> 5m = 90px, 10m = 180px -->
+  <line x1="15" y1="0" x2="195" y2="0" stroke="#eef1f5" stroke-width="3"/>
+  <line x1="15" y1="-6" x2="15" y2="6" stroke="#eef1f5" stroke-width="2"/>
+  <line x1="105" y1="-6" x2="105" y2="6" stroke="#eef1f5" stroke-width="2"/>
+  <line x1="195" y1="-6" x2="195" y2="6" stroke="#eef1f5" stroke-width="2"/>
+  <text x="15" y="-9" font-size="10" fill="#aab3c0" text-anchor="middle">0</text>
+  <text x="105" y="-9" font-size="10" fill="#aab3c0" text-anchor="middle">5 m</text>
+  <text x="195" y="-9" font-size="10" fill="#aab3c0" text-anchor="middle">10 m</text>
+  <text x="105" y="16" font-size="10" font-weight="700" fill="#eef1f5" text-anchor="middle">Escala 1 m = 18 px</text>
+</g>
+
+</svg>

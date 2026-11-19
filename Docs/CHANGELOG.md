@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-18 — Restocker rehecho como dos puestos en el Archivo
+- `MapRestocker` arma ahora la **Tienda de plumas** (cinco tarros con un pincel cada uno; tocar el tarro saca ese pincel) y el **Almacén de lienzos** (rollos, pilas y un tablero de pedido inclinado con botones redondos y SACAR), con toldo rayado, farol y cartel. Mismo `CanvasRestocker` y mismas acciones: la lógica no cambia.
+- Ya no están en la torre: van a la entrada del Archivo, en (±7,5, +5,5) respecto de (0,−46), girados 25° hacia el camino. El plano del Archivo (Antigravity) los ponía en z = +11,5, pero ahí quedaban dentro del entrenamiento y de su línea de tiro; se corrieron.
+- Plano y plan del Archivo: `Docs/Archivo/archivo_plano.svg` y `ARCHIVO_PLAN.md` (generados por agente externo; sin revisar por Tamara, las coordenadas de las tiendas están desactualizadas).
+- Falta probar a mano (PC/VR) el clic sobre los tarros y botones.
+
 ## 2026-11-18 — Restocker: pinceles y selector de lienzo/libreta (Bloque C de LIENZOS_PLAN)
 
 - Mueble `Restocker` (armado por `MapRestocker` con primitivas): 5 pinceles del catalogo (`BrushRules`) y selector de tipo (lienzo/libreta), tamaño S/M/L, forma y hojas (1-8) con boton SACAR. Logica pura en `RestockRules` + `RestockRulesTests`.
