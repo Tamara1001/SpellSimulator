@@ -13,6 +13,10 @@ Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qu
 - Piso 1 (viento): la «tela» pasa a ser una hoja de tablones con `HingeJoint` (eje vertical, pegada a la pared) y resorte flojo: viento, agua o una caja la abren con fisicas (no se teletransporta); una vez abierta queda donde la dejan y deja pasar al jugador; el rearme del tutorial la cierra.
 - Docs: `GAME_DESIGN.md`, `LIENZOS_PLAN.md`.
 
+## 2026-11-18 — Tipografía de carteles (Caveat Brush) y borrador de estética de UI
+- Fuente Caveat Brush (OFL) en `Assets/_Project/Art/Fonts/` y generador de assets TMP `Editor/FontBuilder.cs` (menú `SpellSimulator/Fuentes/Generar tipografias`). Los carteles, pizarras y rótulos de los dos puestos del Archivo ya la usan.
+- `Docs/UI_ESTETICA.md`: tipografías propuestas (cuerpo pendiente: Nunito o Lora), paleta y reglas. Migrar HUD/grimorio/libros es otra tanda.
+
 ## 2026-11-18 — Almacén de lienzos: pilas con lienzos reales (sin botones)
 - El selector (Tipo/Tamaño/Forma/Hojas/SACAR) se reemplazó por **9 pilas** con un lienzo real flotando sobre cada una: 3 libretas (S redonda, M, L; **siempre 8 hojas**) y 6 hojas sueltas (S/M/L × cuadrada/rectangular). Las dos L van en peanas de piso a los lados del puesto.
 - Nuevo `CanvasPile` (Scripts/World): cuando el jugador agarra el lienzo de exhibición (deja de flotar) la pila repone otro igual; lo llevado cuenta para el tope de 8 sacados de `CanvasRestocker` (`SpawnDisplay`/`Release`). `PhysicalCanvas.PinUntimed()` lo deja flotando sin el límite de 60 s. En red no hay exhibición.

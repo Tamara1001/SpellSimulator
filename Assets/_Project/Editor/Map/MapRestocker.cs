@@ -29,6 +29,8 @@ namespace SpellSimulator.EditorTools.Map
 
         private const float CounterTop = 0.93f;
 
+        private static TMP_FontAsset SignFont => SpellSimulator.EditorTools.FontBuilder.LoadSignFont();
+
         private struct Palette
         {
             public Material wood, darkWood, plank, metal, brass, cream, board, cloudA, cloudB, lantern, leather, teal, green, blue;
@@ -308,7 +310,7 @@ namespace SpellSimulator.EditorTools.Map
             bool twoLines = text.Contains("\n");
             float h = twoLines ? 0.2f : 0.14f;
             Part(shop, PrimitiveType.Cube, name, p.darkWood, local, new Vector3(width, h, 0.012f));
-            Text(shop, name + "_Text", local + new Vector3(0f, 0f, -0.012f), text, twoLines ? 0.05f : 0.07f, p.cream.color, null, new Vector2(width, h));
+            Text(shop, name + "_Text", local + new Vector3(0f, 0f, -0.012f), text, twoLines ? 0.065f : 0.1f, p.cream.color, null, new Vector2(width, h));
         }
 
         private static GameObject Part(Transform parent, PrimitiveType type, string name, Material material, Vector3 local, Vector3 size, Vector3? euler = null, bool solid = false)
@@ -340,6 +342,7 @@ namespace SpellSimulator.EditorTools.Map
             go.transform.localPosition = local;
             go.transform.localRotation = rotation ?? Quaternion.identity;
             var label = go.AddComponent<TextMeshPro>();
+            if (SignFont != null) label.font = SignFont; // tipografia de carteles (Docs/UI_ESTETICA.md)
             label.rectTransform.sizeDelta = size;
             label.enableAutoSizing = false;
             label.fontSize = fontSize * 10f;
