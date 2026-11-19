@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-19 — Puestos del Archivo: lapiceros con plumas reales, tintas, sellos y libreta circular
+
+- **Cinco modelos de pluma/pincel** (`ToolModels`): pluma fina (la de siempre), lápiz hexagonal, pincel redondo, pincel plano y brocha; crecen de tamaño con el grosor. Plantillas `Pen`, `Pencil`, `Brush`, `FlatBrush`, `BigBrush` (las tres nuevas con `BrushTier`, que aplica ancho y nombre del catálogo). Se repartieron por las mesas de la biblioteca, el piso 1, el escritorio de cuadernos y el campo (sobre todo lápiz, pincel y pincel plano).
+- **Tienda de plumas:** cinco lapiceros con 5/5/5/4/3 plumas reales cada uno; se agarran como cualquier pluma (van a la mano y la barra) y el hueco repone otra (`DisplayStock`). Se quitaron los tarros-botón y los tinteros del estante. `CanvasRestocker.DispenseBrush(i, toHand)` usa el modelo de cada tamaño y puede poner la pluma en la mano.
+- **Puesto de tintas** y **puesto de sellos** (nuevos, junto a los otros dos): frascos portátiles reales por clase (E los guarda como cartucho) y estampas S/M/L vacías; ambos se reponen con `DisplayStock`.
+- **Libreta circular:** sus hojas ahora son un disco (antes un cuadrado sobre la tapa redonda) — `CanvasFactory`.
+- Verificado por captura en Play y agarrando una brocha por código (reposición ok); no se probó a mano con mouse/VR ni se corrió el smoke.
+
 ## 2026-11-19 — Atril rehecho: caballete en A, botón con flechas circulares y caballetes del tutorial movibles
 
 - Se quitó la base/plinto del atril: ahora es un caballete en A (dos montantes inclinados, pata trasera, travesaños y un tablero abajo), sin herramientas ni bandeja. Colliders por pieza (hijos), objeto físico de 25 kg (`MovablesSetup.MakeMovable`).

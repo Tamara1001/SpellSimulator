@@ -43,12 +43,42 @@ namespace SpellSimulator.World
 
             if (spec.kind == CanvasKind.Notebook)
             {
+                if (spec.shape == CanvasShape.Round && go.TryGetComponent(out MeshFilter pageMesh)) pageMesh.sharedMesh = DiscMesh();
                 var pages = go.GetComponent<NotebookPages>();
                 if (pages == null) pages = go.AddComponent<NotebookPages>();
                 pages.SetPageCount(spec.pages);
                 AddCover(go.transform, spec, d, cover);
             }
             return go;
+        }
+
+        private static Mesh discMesh;
+
+        /// <summary>Disco unitario (diametro 1, en el plano XY, cara visible hacia -Z, UV de 0 a 1 como el quad): las hojas de la libreta circular.</summary>
+        private static Mesh DiscMesh()
+        {
+            if (discMesh != null) return discMesh;
+            const int sides = 40;
+            var vertices = new Vector3[sides + 1];
+            var normals = new Vector3[sides + 1];
+            var uv = new Vector2[sides + 1];
+            var triangles = new int[sides * 3];
+            vertices[0] = Vector3.zero;
+            uv[0] = new Vector2(0.5f, 0.5f);
+            for (int i = 0; i < sides; i++)
+            {
+                float a = i / (float)sides * Mathf.PI * 2f;
+                var v = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * 0.5f;
+                vertices[i + 1] = new Vector3(v.x, v.y, 0f);
+                uv[i + 1] = v + new Vector2(0.5f, 0.5f);
+                triangles[i * 3] = 0;
+                triangles[i * 3 + 1] = (i + 1) % sides + 1;
+                triangles[i * 3 + 2] = i + 1;
+            }
+            for (int i = 0; i < normals.Length; i++) normals[i] = Vector3.back;
+            discMesh = new Mesh { name = "NotebookDisc", vertices = vertices, normals = normals, uv = uv, triangles = triangles };
+            discMesh.RecalculateBounds();
+            return discMesh;
         }
 
         /// <summary>Tapa de cuero detras de las hojas y espiral a la izquierda (circular: disco).</summary>

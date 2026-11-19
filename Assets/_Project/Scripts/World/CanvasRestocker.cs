@@ -16,8 +16,8 @@ namespace SpellSimulator.World
     /// </summary>
     public class CanvasRestocker : MonoBehaviour
     {
-        [SerializeField, Tooltip("Pluma de plantilla (desactivada, sin Respawnable): se clona para cada pincel.")]
-        private PhysicalTool penTemplate;
+        [SerializeField, Tooltip("Una plantilla desactivada (sin Respawnable) por pincel del catalogo, con su modelo propio: se clona al sacar ese pincel.")]
+        private PhysicalTool[] penTemplates;
         [SerializeField, Tooltip("Plantilla de papel (PaperCanvas del mundo).")]
         private GameObject paperTemplate;
         [SerializeField] private Material coverMaterial;
@@ -37,10 +37,10 @@ namespace SpellSimulator.World
         public IReadOnlyList<GameObject> SpawnedCanvases => spawnedCanvases;
 
         /// <summary>Lo llama el generador de escena (Editor) despues de AddComponent.</summary>
-        public void Configure(PhysicalTool pen, GameObject paper, Material cover,
+        public void Configure(PhysicalTool[] pens, GameObject paper, Material cover,
             Transform brushOutput, Transform canvasOutput, TMP_Text canvasReadout, TMP_Text brushReadout)
         {
-            penTemplate = pen;
+            penTemplates = pens;
             paperTemplate = paper;
             coverMaterial = cover;
             this.brushOutput = brushOutput;
@@ -55,7 +55,7 @@ namespace SpellSimulator.World
         {
             switch (action)
             {
-                case RestockerAction.Brush: DispenseBrush(argument); return;
+                case RestockerAction.Brush: DispenseBrush(argument, true); return;
                 case RestockerAction.Kind: selection = RestockRules.ToggleKind(selection); break;
                 case RestockerAction.Size: selection = RestockRules.CycleSize(selection); break;
                 case RestockerAction.Shape: selection = RestockRules.CycleShape(selection); break;
@@ -73,16 +73,25 @@ namespace SpellSimulator.World
             return true;
         }
 
-        public GameObject DispenseBrush(int index)
+        /// <summary>Saca un pincel del catalogo con el modelo de su tamaño. toHand: se lo pone en la mano al jugador (si no, queda donde sale).</summary>
+        public GameObject DispenseBrush(int index, bool toHand = false)
         {
-            if (Blocked() || penTemplate == null || brushOutput == null || BrushRules.Catalog.Length == 0) return null;
-            BrushSpec spec = BrushRules.Catalog[Mathf.Clamp(index, 0, BrushRules.Catalog.Length - 1)];
-            GameObject go = Instantiate(penTemplate.gameObject, brushOutput.position, brushOutput.rotation);
+            if (Blocked() || penTemplates == null || penTemplates.Length == 0 || brushOutput == null || BrushRules.Catalog.Length == 0) return null;
+            int i = Mathf.Clamp(index, 0, BrushRules.Catalog.Length - 1);
+            PhysicalTool template = penTemplates[Mathf.Min(i, penTemplates.Length - 1)];
+            if (template == null) return null;
+            BrushSpec spec = BrushRules.Catalog[i];
+            GameObject go = Instantiate(template.gameObject, brushOutput.position, brushOutput.rotation);
             go.SetActive(true);
             go.name = "Brush_" + spec.name;
             go.GetComponent<PhysicalTool>().ApplyBrush(spec);
             Track(spawnedBrushes, go);
             if (brushReadout != null) brushReadout.text = RestockRules.Describe(spec);
+            if (toHand)
+            {
+                var interactor = FindFirstObjectByType<PlayerInteractor>();
+                if (interactor != null) interactor.GrabItem(go);
+            }
             Hud.Notify("restock", "Restocker: " + spec.name, 1.5f);
             return go;
         }

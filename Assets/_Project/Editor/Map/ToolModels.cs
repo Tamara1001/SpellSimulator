@@ -18,19 +18,143 @@ namespace SpellSimulator.EditorTools.Map
 
         public static void Apply(Material body)
         {
+            EnsureTierTemplates();
             foreach (var tool in Object.FindObjectsByType<PhysicalTool>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                string n = tool.name;
-                if (n.StartsWith("Pen")) Pen(tool.gameObject, body);
-                else if (n.StartsWith("Brush")) Brush(tool.gameObject, body);
-                else if (n.StartsWith("Eraser")) Eraser(tool.gameObject, body);
-                else if (n.StartsWith("Rag")) Rag(tool.gameObject, body);
+                switch (BaseName(tool.name))
+                {
+                    case "Pen": Pen(tool.gameObject, body); break;
+                    case "Pencil": Pencil(tool.gameObject, body); break;
+                    case "Brush": Brush(tool.gameObject, body); break;
+                    case "FlatBrush": FlatBrush(tool.gameObject, body); break;
+                    case "BigBrush": BigBrush(tool.gameObject, body); break;
+                    case "Eraser": Eraser(tool.gameObject, body); break;
+                    case "Rag": Rag(tool.gameObject, body); break;
+                }
             }
             // El tintero plantilla del campo (del que se clonan los de la torre) es FIJO; el resto conserva su configuracion.
             var template = GameObject.Find("Inkwell");
             if (template != null && template.GetComponent<World.Inkwell>() != null) MakeInkwell(template, body, InkKind.Normal, false);
             foreach (var well in Object.FindObjectsByType<World.Inkwell>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 if (well.gameObject != template) Inkwell(well.gameObject, body, well.Kind, well.Portable);
+        }
+
+        // ---------------------------------------------------------------- cinco modelos de pluma/pincel
+
+        /// <summary>Nombre sin el sufijo «_alto_indice» de los clones de las mesas (Pen_85_3 = Pen).</summary>
+        private static string BaseName(string n) => System.Text.RegularExpressions.Regex.Replace(n, @"_\d+_\d+$", "");
+
+        /// <summary>Nombre de la herramienta de plantilla de cada indice de BrushRules.Catalog (0 pluma fina ... 4 brocha).</summary>
+        public static readonly string[] TierNames = { "Pen", "Pencil", "Brush", "FlatBrush", "BigBrush" };
+
+        /// <summary>
+        /// Lapiz, pincel plano y brocha son clones de la pluma / el pincel del campo (mismo PhysicalTool) con BrushTier: asi existen como
+        /// plantillas para las mesas y el restocker. Si ya estan, no se recrean.
+        /// </summary>
+        private static void EnsureTierTemplates()
+        {
+            var pen = GameObject.Find("Pen");
+            var brush = GameObject.Find("Brush");
+            Ensure("Pencil", pen, 1);
+            Ensure("FlatBrush", brush != null ? brush : pen, 3);
+            Ensure("BigBrush", brush != null ? brush : pen, 4);
+            if (brush != null) Ensure("Brush", brush, 2);
+        }
+
+        private static void Ensure(string name, GameObject source, int tier)
+        {
+            if (source == null) return;
+            var go = GameObject.Find(name);
+            if (go == null)
+            {
+                go = Object.Instantiate(source, source.transform.position + new Vector3(0.05f * tier, 0f, 0.15f), source.transform.rotation);
+                go.name = name;
+                var respawn = go.GetComponent<Respawnable>();
+                if (respawn != null) Object.DestroyImmediate(respawn);
+                go.AddComponent<Respawnable>();
+                Undo.RegisterCreatedObjectUndo(go, name);
+            }
+            var component = go.GetComponent<BrushTier>();
+            if (component == null) component = go.AddComponent<BrushTier>();
+            component.Configure(tier);
+            EditorUtility.SetDirty(component);
+        }
+
+        /// <summary>Lapiz de madera hexagonal (8 mm): cuerpo naranja con bandas, punta de grafito, virola de plata y goma rosa.</summary>
+        private static void Pencil(GameObject go, Material body)
+        {
+            var b = new LowPolyMesh();
+            var paint = new Color(0.93f, 0.6f, 0.18f);
+            b.Frustum(Matrix4x4.identity, 0.0007f, 0.0028f, -0.118f, -0.106f, 6, new Color(0.2f, 0.2f, 0.24f), false);         // grafito
+            b.Frustum(Matrix4x4.identity, 0.0028f, 0.0074f, -0.106f, -0.082f, 6, new Color(0.88f, 0.7f, 0.46f), false);        // madera afilada
+            b.Frustum(Matrix4x4.identity, 0.0074f, 0.0074f, -0.082f, 0.07f, 6, paint, false);                                  // cuerpo hexagonal
+            foreach (float y in new[] { -0.082f, 0.05f })
+                b.Frustum(Matrix4x4.identity, 0.0079f, 0.0079f, y, y + 0.006f, 6, new Color(0.62f, 0.2f, 0.16f), false);       // bandas
+            b.Frustum(Matrix4x4.identity, 0.0078f, 0.0078f, 0.07f, 0.09f, 8, Silver, false);                                    // virola
+            b.Frustum(Matrix4x4.identity, 0.008f, 0.008f, 0.076f, 0.0795f, 8, new Color(0.55f, 0.57f, 0.62f), false);           // surco
+            b.Frustum(Matrix4x4.identity, 0.0068f, 0.0064f, 0.09f, 0.106f, 8, new Color(0.93f, 0.62f, 0.66f), true);            // goma
+            Setup(go, body, b, "ToolPencil", 0.011f, 0.226f, -0.006f, new Vector3(0f, -0.118f, 0f));
+            var window = new LowPolyMesh();
+            window.Frustum(Matrix4x4.identity, 0.0081f, 0.0081f, -0.03f, 0.02f, 6, Color.white, false);
+            AddIndicator(go, window, "ToolPencilInk");
+        }
+
+        /// <summary>Pincel redondo (20 mm): cerdas con panza, virola de plata y mango laqueado verde azulado con un anillo dorado.</summary>
+        private static void Brush(GameObject go, Material body)
+        {
+            var b = new LowPolyMesh();
+            var lacquer = new Color(0.16f, 0.45f, 0.5f);
+            var hair = new Color(0.22f, 0.09f, 0.08f);
+            b.Frustum(Matrix4x4.identity, 0.0004f, 0.0092f, -0.14f, -0.09f, 8, hair, false);          // cerdas hasta la panza
+            b.Frustum(Matrix4x4.identity, 0.0092f, 0.0078f, -0.09f, -0.068f, 8, hair, false);         // panza
+            b.Frustum(Matrix4x4.identity, 0.0078f, 0.0074f, -0.068f, -0.03f, 8, Silver, false);       // virola
+            b.Frustum(Matrix4x4.identity, 0.0066f, 0.0056f, -0.03f, 0.12f, 8, lacquer, false);        // mango
+            b.Frustum(Matrix4x4.identity, 0.0068f, 0.0068f, 0.0f, 0.007f, 8, Gold, false);            // anillo
+            b.Frustum(Matrix4x4.identity, 0.0058f, 0.0036f, 0.12f, 0.132f, 8, Gold, true);
+            Setup(go, body, b, "ToolBrush", 0.011f, 0.272f, -0.004f, new Vector3(0f, -0.14f, 0f));
+            var window = new LowPolyMesh();
+            window.Frustum(Matrix4x4.identity, 0.0094f, 0.0094f, -0.125f, -0.075f, 8, Color.white, false);
+            AddIndicator(go, window, "ToolBrushInk");
+        }
+
+        /// <summary>Pincel plano (40 mm): cerdas planas claras, virola rectangular y mango azul laqueado.</summary>
+        private static void FlatBrush(GameObject go, Material body)
+        {
+            var b = new LowPolyMesh();
+            var lacquer = new Color(0.22f, 0.36f, 0.68f);
+            var bristle = new Color(0.9f, 0.82f, 0.62f);
+            b.Box(Matrix4x4.TRS(new Vector3(0f, -0.112f, 0f), Quaternion.identity, Vector3.one), new Vector3(0.036f, 0.044f, 0.009f), bristle);
+            b.Box(Matrix4x4.TRS(new Vector3(0f, -0.139f, 0f), Quaternion.identity, Vector3.one), new Vector3(0.032f, 0.01f, 0.006f), new Color(0.3f, 0.2f, 0.16f));
+            b.Box(Matrix4x4.TRS(new Vector3(0f, -0.072f, 0f), Quaternion.identity, Vector3.one), new Vector3(0.04f, 0.034f, 0.014f), Silver);
+            b.Frustum(Matrix4x4.identity, 0.0105f, 0.0085f, -0.056f, -0.04f, 8, Silver, false);       // cuello
+            b.Frustum(Matrix4x4.identity, 0.0085f, 0.0068f, -0.04f, 0.15f, 8, lacquer, false);        // mango
+            b.Frustum(Matrix4x4.identity, 0.0088f, 0.0088f, 0.04f, 0.048f, 8, Gold, false);
+            b.Frustum(Matrix4x4.identity, 0.007f, 0.004f, 0.15f, 0.162f, 8, Gold, true);
+            Setup(go, body, b, "ToolFlatBrush", 0.019f, 0.31f, 0.006f, new Vector3(0f, -0.144f, 0f));
+            var window = new LowPolyMesh();
+            window.Box(Matrix4x4.TRS(new Vector3(0f, -0.112f, 0f), Quaternion.identity, Vector3.one), new Vector3(0.038f, 0.034f, 0.011f), Color.white);
+            AddIndicator(go, window, "ToolFlatBrushInk");
+        }
+
+        /// <summary>Brocha (80 mm): cabeza ancha de cerdas, virola de metal con remaches y mango grueso laqueado rojo.</summary>
+        private static void BigBrush(GameObject go, Material body)
+        {
+            var b = new LowPolyMesh();
+            var lacquer = new Color(0.74f, 0.24f, 0.26f);
+            var bristle = new Color(0.92f, 0.84f, 0.62f);
+            b.Box(Matrix4x4.TRS(new Vector3(0f, -0.108f, 0f), Quaternion.identity, Vector3.one), new Vector3(0.078f, 0.058f, 0.018f), bristle);
+            b.Box(Matrix4x4.TRS(new Vector3(0f, -0.14f, 0f), Quaternion.identity, Vector3.one), new Vector3(0.07f, 0.01f, 0.014f), new Color(0.35f, 0.26f, 0.18f));
+            b.Box(Matrix4x4.TRS(new Vector3(0f, -0.05f, 0f), Quaternion.identity, Vector3.one), new Vector3(0.084f, 0.046f, 0.024f), Silver);
+            foreach (float x in new[] { -0.03f, 0.03f })
+                b.Frustum(Matrix4x4.TRS(new Vector3(x, -0.05f, -0.0125f), Quaternion.Euler(-90f, 0f, 0f), Vector3.one), 0.0045f, 0.0045f, 0f, 0.003f, 6, Gold, true); // remaches
+            b.Frustum(Matrix4x4.identity, 0.016f, 0.0125f, -0.03f, -0.005f, 8, Silver, false);        // cuello
+            b.Frustum(Matrix4x4.identity, 0.0125f, 0.0095f, -0.005f, 0.18f, 8, lacquer, false);       // mango grueso
+            b.Frustum(Matrix4x4.identity, 0.0132f, 0.0132f, 0.06f, 0.07f, 8, Gold, false);
+            b.Frustum(Matrix4x4.identity, 0.0098f, 0.0098f, 0.18f, 0.196f, 8, new Color(0.45f, 0.14f, 0.16f), true);
+            Setup(go, body, b, "ToolBigBrush", 0.038f, 0.34f, 0.028f, new Vector3(0f, -0.145f, 0f));
+            var window = new LowPolyMesh();
+            window.Box(Matrix4x4.TRS(new Vector3(0f, -0.108f, 0f), Quaternion.identity, Vector3.one), new Vector3(0.08f, 0.046f, 0.02f), Color.white);
+            AddIndicator(go, window, "ToolBigBrushInk");
         }
 
         // ---------------------------------------------------------------- piezas
@@ -51,21 +175,6 @@ namespace SpellSimulator.EditorTools.Map
             var window = new LowPolyMesh();
             window.Frustum(Matrix4x4.identity, 0.0098f, 0.0098f, -0.03f, 0.02f, 8, Color.white, false);
             AddIndicator(go, window, "ToolPenInk");
-        }
-
-        private static void Brush(GameObject go, Material body)
-        {
-            var b = new LowPolyMesh();
-            var wood = new Color(0.62f, 0.4f, 0.22f);
-            b.Frustum(Matrix4x4.identity, 0.0004f, 0.0078f, -0.12f, -0.065f, 8, new Color(0.22f, 0.09f, 0.08f), false); // cerdas
-            b.Frustum(Matrix4x4.identity, 0.0078f, 0.0072f, -0.065f, -0.03f, 8, Silver, false);                          // virola
-            b.Frustum(Matrix4x4.identity, 0.0066f, 0.0055f, -0.03f, 0.11f, 8, wood, false);                              // mango
-            b.Frustum(Matrix4x4.identity, 0.0058f, 0.0035f, 0.11f, 0.122f, 8, Gold, true);
-            Setup(go, body, b, "ToolBrush", 0.011f, 0.245f, 0.001f, new Vector3(0f, -0.12f, 0f));
-
-            var window = new LowPolyMesh();
-            window.Frustum(Matrix4x4.identity, 0.0078f, 0.0078f, 0.035f, 0.075f, 8, Color.white, false);
-            AddIndicator(go, window, "ToolBrushInk");
         }
 
         private static void Eraser(GameObject go, Material body)

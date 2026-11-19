@@ -8,10 +8,10 @@ using SpellSimulator.World;
 namespace SpellSimulator.EditorTools.Map
 {
     /// <summary>
-    /// Dos puestos al aire libre en la entrada del Archivo (Docs/Archivo/ARCHIVO_PLAN.md): la «Tienda de plumas» (cinco tarros con un pincel
-    /// cada uno: apuntar y clic saca ese pincel) y el «Almacen de lienzos» (rollos, pilas de lienzos y un tablero de pedido inclinado con el
-    /// selector tipo / tamaño / forma / hojas y el boton SACAR). Los dos comparten un solo <see cref="CanvasRestocker"/> (en la raiz
-    /// «Restocker»), asi que la logica y las pruebas no cambian. Armado con primitivas; el jugador se para del lado -Z de cada puesto
+    /// Cuatro puestos al aire libre en la entrada del Archivo (Docs/Archivo/ARCHIVO_PLAN.md): la «Tienda de plumas» (cinco lapiceros con plumas
+    /// reales de cada tamaño), el «Almacen de lienzos» (nueve pilas de lienzos reales), el puesto de tintas (frascos portatiles) y el de sellos
+    /// (estampas S, M y L). Todo lo que se exhibe es un objeto real que se agarra y se repone (<see cref="DisplayStock"/>, <see cref="CanvasPile"/>).
+    /// La logica de sacar pinceles y lienzos a medida sigue en un solo <see cref="CanvasRestocker"/> (raiz «Restocker»). Armado con primitivas; el jugador se para del lado -Z de cada puesto
     /// (marco local: frente -Z, fondo +Z) y los puestos se giran para mirar hacia la torre.
     /// </summary>
     public static class MapRestocker
@@ -24,6 +24,10 @@ namespace SpellSimulator.EditorTools.Map
         /// <summary>Posicion de cada puesto respecto del centro del Archivo (x, z mundo): al lado de la torre (+Z), a la entrada.</summary>
         private static readonly Vector2 PenShopLocal = new Vector2(-7.5f, 5.5f);
         private static readonly Vector2 CanvasShopLocal = new Vector2(7.5f, 5.5f);
+        /// <summary>Los dos puestos de adentro (tintas y sellos): mas cerca de la torre y menos girados, en arco con los de afuera.</summary>
+        private static readonly Vector2 InkShopLocal = new Vector2(-2.6f, 6.6f);
+        private static readonly Vector2 StampShopLocal = new Vector2(2.6f, 6.6f);
+        private const float InnerShopYaw = 12f;
         /// <summary>Guinada extra (grados) sobre el giro base de 180: con 0 el frente del puesto mira a +Z mundo (hacia la torre, de donde llega el jugador).</summary>
         private const float ShopYaw = 25f;
 
@@ -75,30 +79,48 @@ namespace SpellSimulator.EditorTools.Map
 
             Transform penShop = Shop(root.transform, "Tienda de plumas", PenShopLocal, ShopYaw);
             Transform canvasShop = Shop(root.transform, "Almacen de lienzos", CanvasShopLocal, -ShopYaw);
-            ClearVegetation(map, penShop.position, canvasShop.position);
+            Transform inkShop = Shop(root.transform, "Puesto de tintas", InkShopLocal, InnerShopYaw);
+            Transform stampShop = Shop(root.transform, "Puesto de sellos", StampShopLocal, -InnerShopYaw);
+            ClearVegetation(map, penShop.position, canvasShop.position, inkShop.position, stampShop.position);
 
-            // Plantilla de pluma: clon desactivado, sin Respawnable (cada pincel sacado es nuevo).
-            var penClone = Object.Instantiate(pen.gameObject, root.transform);
-            penClone.name = "PenTemplate";
-            foreach (var r in penClone.GetComponentsInChildren<Respawnable>(true)) Object.DestroyImmediate(r);
-            penClone.transform.localPosition = Vector3.zero;
-            penClone.SetActive(false);
+            // Una plantilla desactivada por pincel del catalogo, clonada de la herramienta del campo con su modelo propio (sin Respawnable).
+            var penTemplates = new PhysicalTool[BrushRules.Catalog.Length];
+            var tipDepths = new float[penTemplates.Length];
+            for (int i = 0; i < penTemplates.Length; i++)
+            {
+                var source = GameObject.Find(ToolModels.TierNames[Mathf.Min(i, ToolModels.TierNames.Length - 1)]);
+                if (source == null || !source.TryGetComponent(out PhysicalTool _))
+                {
+                    Debug.LogWarning("[MapRestocker] falta la herramienta de plantilla " + ToolModels.TierNames[i] + ": no se arman los puestos.");
+                    Object.DestroyImmediate(root);
+                    return;
+                }
+                var clone = Object.Instantiate(source, root.transform);
+                clone.name = ToolModels.TierNames[i] + "Template";
+                foreach (var r in clone.GetComponentsInChildren<Respawnable>(true)) Object.DestroyImmediate(r);
+                if (!clone.TryGetComponent(out BrushTier tier)) tier = clone.AddComponent<BrushTier>();
+                tier.Configure(i);
+                clone.transform.localPosition = Vector3.zero;
+                clone.SetActive(false);
+                penTemplates[i] = clone.GetComponent<PhysicalTool>();
+                var tip = clone.transform.Find("RaycastTool");
+                tipDepths[i] = tip != null ? Mathf.Max(0.05f, -tip.localPosition.y) : 0.1f;
+            }
 
-            // ---- Tienda de plumas ----
+            // ---- Tienda de plumas: cinco lapiceros, cada uno con sus plumas reales (se agarran y se reponen) ----
             Frame(penShop, p, p.cloudA, p.cloudB, "PLUMAS Y PINCELES");
-            TMP_Text brushReadout = Text(penShop, "BrushReadout", new Vector3(0f, 1.72f, 0.42f), "Tocá un tarro para sacar un pincel", 0.065f, new Color(0.95f, 0.9f, 0.7f), null, new Vector2(1.5f, 0.45f));
-            ShelfWithInk(penShop, p);
+            TMP_Text brushReadout = Text(penShop, "BrushReadout", new Vector3(0f, 1.72f, 0.42f), "Agarrá la que quieras\nse repone sola", 0.065f, new Color(0.95f, 0.9f, 0.7f), null, new Vector2(1.5f, 0.45f));
             Color[] cupColors =
             {
                 new Color(0.78f, 0.3f, 0.3f), new Color(0.3f, 0.5f, 0.78f), new Color(0.35f, 0.65f, 0.4f), new Color(0.85f, 0.65f, 0.25f), new Color(0.6f, 0.38f, 0.7f),
             };
+            int[] cupCounts = { 5, 5, 5, 4, 3 };
             for (int i = 0; i < BrushRules.Catalog.Length; i++)
             {
                 BrushSpec b = BrushRules.Catalog[i];
-                float t = BrushRules.Catalog.Length > 1 ? i / (float)(BrushRules.Catalog.Length - 1) : 0f;
-                float x = -0.96f + i * 0.48f;
-                PenJar(penShop, component, p, i, b, new Vector3(x, CounterTop, -0.2f), t, cupColors[i % cupColors.Length]);
-                Plaque(penShop, p, $"Plaque{i}", new Vector3(x, 0.62f, -0.556f), $"{Mathf.RoundToInt(b.widthMeters * 1000f)} mm", 0.28f);
+                float x = -1.0f + i * 0.5f;
+                PenCup(penShop, i, penTemplates[i], tipDepths[i], cupCounts[Mathf.Min(i, cupCounts.Length - 1)], new Vector3(x, CounterTop, -0.2f), cupColors[i % cupColors.Length]);
+                Plaque(penShop, p, $"Plaque{i}", new Vector3(x, 0.62f, -0.556f), $"{b.name}\n{Mathf.RoundToInt(b.widthMeters * 1000f)} mm", 0.44f);
             }
             Transform brushOut = Anchor(penShop, "BrushOutput", new Vector3(0f, CounterTop + 0.14f, -0.42f), Quaternion.identity);
 
@@ -110,7 +132,15 @@ namespace SpellSimulator.EditorTools.Map
             Piles(canvasShop, component, p, canvasShopWidth, canvasCounterWidth);
             Transform canvasOut = Anchor(canvasShop, "CanvasOutput", new Vector3(-0.6f, 1.3f, -0.95f), Quaternion.Euler(0f, 180f, 0f));
 
-            component.Configure(penClone.GetComponent<PhysicalTool>(), paper, p.leather, brushOut, canvasOut, null, brushReadout);
+            // ---- Puesto de tintas: frascos portatiles reales (E los guarda como cartucho de 5 usos) ----
+            var wellSource = GameObject.Find("Inkwell");
+            if (wellSource != null && wellSource.TryGetComponent(out MeshRenderer wellRenderer))
+                InkStall(inkShop, p, root.transform, wellSource, wellRenderer.sharedMaterial);
+
+            // ---- Puesto de sellos: las tres estampas vacias S, M y L ----
+            StampStall(stampShop, p, root.transform);
+
+            component.Configure(penTemplates, paper, p.leather, brushOut, canvasOut, null, brushReadout);
             EditorUtility.SetDirty(component);
             Undo.RegisterCreatedObjectUndo(root, RootName);
         }
@@ -181,61 +211,123 @@ namespace SpellSimulator.EditorTools.Map
 
         // ---------------------------------------------------------------- tienda de plumas
 
-        /// <summary>Un tarro de ceramica con un pincel: el tarro entero es el boton (apuntar y clic saca ese pincel).</summary>
-        private static void PenJar(Transform shop, CanvasRestocker owner, Palette p, int index, BrushSpec spec, Vector3 baseLocal, float t, Color cupColor)
+        /// <summary>
+        /// Un lapicero de ceramica con <paramref name="count"/> plumas REALES paradas (punta abajo, inclinadas hacia afuera): se agarran como cualquier pluma y el
+        /// hueco repone otra (<see cref="DisplayStock"/>). Cuanto mas grueso el pincel, mas grande el lapicero.
+        /// </summary>
+        private static void PenCup(Transform shop, int index, PhysicalTool template, float tipDepth, int count, Vector3 baseLocal, Color cupColor)
         {
-            var jar = new GameObject("Jar" + index);
-            jar.transform.SetParent(shop, false);
-            jar.transform.localPosition = baseLocal;
-            Material cup = CanvasFrameMaterials.Solid("ShopCup" + index, cupColor);
-            Material shaft = CanvasFrameMaterials.Solid("ShopShaft" + index, Color.Lerp(new Color(0.85f, 0.6f, 0.3f), new Color(0.35f, 0.45f, 0.7f), t));
-            Material bristle = CanvasFrameMaterials.Solid("ShopBristle" + index, Color.Lerp(new Color(0.12f, 0.1f, 0.12f), new Color(0.82f, 0.74f, 0.55f), t));
+            var cup = new GameObject("Cup" + index);
+            cup.transform.SetParent(shop, false);
+            cup.transform.localPosition = baseLocal;
+            Material cupMat = CanvasFrameMaterials.Solid("ShopCup" + index, cupColor);
+            Material cream = CanvasFrameMaterials.Solid("ShopCream", new Color(0.95f, 0.9f, 0.76f));
+            Material dark = CanvasFrameMaterials.Solid("ShopCupInside", new Color(0.12f, 0.08f, 0.07f));
+            float rc = 0.09f + 0.018f * index;
+            Part(cup.transform, PrimitiveType.Cylinder, "Body", cupMat, new Vector3(0f, 0.085f, 0f), new Vector3(rc * 2f, 0.085f, rc * 2f));
+            Part(cup.transform, PrimitiveType.Cylinder, "Band", cream, new Vector3(0f, 0.065f, 0f), new Vector3(rc * 2f + 0.006f, 0.012f, rc * 2f + 0.006f));
+            Part(cup.transform, PrimitiveType.Cylinder, "Rim", cream, new Vector3(0f, 0.172f, 0f), new Vector3(rc * 2f + 0.014f, 0.003f, rc * 2f + 0.014f));
+            Part(cup.transform, PrimitiveType.Cylinder, "Mouth", dark, new Vector3(0f, 0.1745f, 0f), new Vector3(rc * 2f - 0.02f, 0.002f, rc * 2f - 0.02f));
 
-            Part(jar.transform, PrimitiveType.Cylinder, "Cup", cup, new Vector3(0f, 0.07f, 0f), new Vector3(0.2f, 0.07f, 0.2f));
-            Part(jar.transform, PrimitiveType.Cylinder, "CupRim", p.cream, new Vector3(0f, 0.14f, 0f), new Vector3(0.215f, 0.008f, 0.215f));
-            float d = Mathf.Lerp(0.014f, 0.042f, t);
-            Part(jar.transform, PrimitiveType.Cylinder, "Shaft", shaft, new Vector3(0f, 0.3f, 0f), new Vector3(d, 0.17f, d));
-            Part(jar.transform, PrimitiveType.Cylinder, "Ferrule", p.metal, new Vector3(0f, 0.475f, 0f), new Vector3(d * 1.25f, 0.035f, d * 1.25f));
-            switch (spec.tip)
+            const float tilt = 7f;
+            float ring = rc * 0.55f;
+            var slots = new Transform[count];
+            for (int k = 0; k < count; k++)
             {
-                case BrushTip.Flat:
-                    Part(jar.transform, PrimitiveType.Cube, "Tip", bristle, new Vector3(0f, 0.53f, 0f), new Vector3(d * 1.7f, 0.07f, d * 0.45f));
-                    break;
-                case BrushTip.Fine:
-                    Part(jar.transform, PrimitiveType.Sphere, "Tip", bristle, new Vector3(0f, 0.525f, 0f), new Vector3(d * 0.9f, 0.07f, d * 0.9f));
-                    break;
-                default:
-                    Part(jar.transform, PrimitiveType.Sphere, "Tip", bristle, new Vector3(0f, 0.53f, 0f), new Vector3(d * 1.2f, 0.09f, d * 1.2f));
-                    break;
+                float a = (k / (float)count + index * 0.07f) * Mathf.PI * 2f;
+                var dir = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                slots[k] = Anchor(cup.transform, "Slot" + k, dir * ring + new Vector3(0f, 0.04f + tipDepth * Mathf.Cos(tilt * Mathf.Deg2Rad), 0f),
+                    Quaternion.AngleAxis(tilt, Vector3.Cross(Vector3.up, dir)));
             }
-
-            var box = jar.AddComponent<BoxCollider>();
-            box.center = new Vector3(0f, 0.3f, 0f);
-            box.size = new Vector3(0.3f, 0.6f, 0.3f);
-            var button = jar.AddComponent<RestockerButton>();
-            button.Configure(owner, RestockerAction.Brush, index, "Sacar " + spec.name);
-            EditorUtility.SetDirty(button);
+            var stock = cup.AddComponent<DisplayStock>();
+            stock.Configure(template.gameObject, slots);
+            EditorUtility.SetDirty(stock);
         }
 
-        private static void ShelfWithInk(Transform shop, Palette p)
+        // ---------------------------------------------------------------- puesto de tintas
+
+        /// <summary>Tres bandejas de frascos (normal, poderosa, resistente): cada frasco es un tintero portatil real; con E se guarda como cartucho y se repone.</summary>
+        private static void InkStall(Transform shop, Palette p, Transform templateParent, GameObject wellSource, Material body)
         {
-            Part(shop, PrimitiveType.Cube, "InkShelf", p.darkWood, new Vector3(0f, 1.3f, 0.38f), new Vector3(2.3f, 0.04f, 0.2f));
-            Part(shop, PrimitiveType.Cube, "InkBracketL", p.darkWood, new Vector3(-1.05f, 1.22f, 0.4f), new Vector3(0.04f, 0.14f, 0.16f));
-            Part(shop, PrimitiveType.Cube, "InkBracketR", p.darkWood, new Vector3(1.05f, 1.22f, 0.4f), new Vector3(0.04f, 0.14f, 0.16f));
-            Color[] inks = { new Color(0.2f, 0.2f, 0.45f), new Color(0.6f, 0.15f, 0.2f), new Color(0.15f, 0.45f, 0.3f), new Color(0.15f, 0.12f, 0.12f) };
-            for (int i = 0; i < inks.Length; i++)
+            Frame(shop, p, p.teal, p.cloudB, "TINTAS");
+            Text(shop, "Note", new Vector3(0f, 1.72f, 0.42f), "Agarrá un frasco\nse guarda como cartucho", 0.065f, new Color(0.95f, 0.9f, 0.7f), null, new Vector2(1.5f, 0.45f));
+            // Estante del fondo con frascos grandes de adorno.
+            Part(shop, PrimitiveType.Cube, "JarShelf", p.darkWood, new Vector3(0f, 1.3f, 0.38f), new Vector3(2.3f, 0.04f, 0.2f));
+            Part(shop, PrimitiveType.Cube, "JarBracketL", p.darkWood, new Vector3(-1.05f, 1.22f, 0.4f), new Vector3(0.04f, 0.14f, 0.16f));
+            Part(shop, PrimitiveType.Cube, "JarBracketR", p.darkWood, new Vector3(1.05f, 1.22f, 0.4f), new Vector3(0.04f, 0.14f, 0.16f));
+            for (int i = 0; i < 9; i++)
             {
-                float x = -0.95f + i * 0.28f;
-                Part(shop, PrimitiveType.Cylinder, "Ink" + i, CanvasFrameMaterials.Solid("ShopInk" + i, inks[i]), new Vector3(x, 1.38f, 0.38f), new Vector3(0.09f, 0.06f, 0.09f));
-                Part(shop, PrimitiveType.Cylinder, "InkNeck" + i, p.cream, new Vector3(x, 1.45f, 0.38f), new Vector3(0.035f, 0.02f, 0.035f));
+                Color c = InkKindInfo.Color((InkKind)(i % 3));
+                float x = -1.0f + i * 0.25f;
+                Part(shop, PrimitiveType.Cylinder, "Jar" + i, CanvasFrameMaterials.Solid("ShopJarInk" + (i % 3), c), new Vector3(x, 1.38f, 0.38f), new Vector3(0.1f, 0.06f, 0.1f));
+                Part(shop, PrimitiveType.Cylinder, "JarNeck" + i, p.cream, new Vector3(x, 1.45f, 0.38f), new Vector3(0.04f, 0.02f, 0.04f));
             }
-            // Pinceles de adorno colgando de clavos, a la derecha del estante.
-            for (int i = 0; i < 3; i++)
+
+            string[] labels = { "Tinta\nla de siempre", "Poderosa\n×2,5 de potencia", "Resistente\nsirve bajo el agua" };
+            for (int kind = 0; kind < 3; kind++)
             {
-                float x = 0.35f + i * 0.28f;
-                Part(shop, PrimitiveType.Cylinder, "HangBrush" + i, p.wood, new Vector3(x, 1.42f, 0.42f), new Vector3(0.025f, 0.12f, 0.025f), euler: new Vector3(0f, 0f, 8f));
-                Part(shop, PrimitiveType.Sphere, "HangTip" + i, p.darkWood, new Vector3(x - 0.035f, 1.29f, 0.42f), new Vector3(0.04f, 0.07f, 0.04f));
+                var template = Object.Instantiate(wellSource, templateParent);
+                template.name = "Ink" + (InkKind)kind + "Template";
+                foreach (var r in template.GetComponentsInChildren<Respawnable>(true)) Object.DestroyImmediate(r);
+                ToolModels.MakeInkwell(template, body, (InkKind)kind, true);
+                template.transform.localPosition = Vector3.zero;
+                template.SetActive(false);
+
+                float x = -0.85f + kind * 0.85f;
+                Transform[] slots = Tray(shop, p, "InkTray" + kind, x, 0.62f, 3, 0.19f);
+                var stockOwner = new GameObject("InkStock" + kind);
+                stockOwner.transform.SetParent(shop, false);
+                var stock = stockOwner.AddComponent<DisplayStock>();
+                stock.Configure(template, slots);
+                EditorUtility.SetDirty(stock);
+                Plaque(shop, p, "InkPlaque" + kind, new Vector3(x, 0.62f, -0.556f), labels[kind], 0.7f);
             }
+        }
+
+        // ---------------------------------------------------------------- puesto de sellos
+
+        /// <summary>Las tres estampas vacias del campo (S, M, L) en bandejas: 3 chicas, 2 medianas y 1 grande; se cargan con un glifo desde el grimorio.</summary>
+        private static void StampStall(Transform shop, Palette p, Transform templateParent)
+        {
+            Material violet = CanvasFrameMaterials.Solid("ShopClothViolet", new Color(0.5f, 0.32f, 0.62f));
+            Frame(shop, p, violet, p.cloudB, "SELLOS");
+            Text(shop, "Note", new Vector3(0f, 1.72f, 0.42f), "Se cargan con un glifo\ndesde el grimorio (T)", 0.065f, new Color(0.95f, 0.9f, 0.7f), null, new Vector2(1.5f, 0.45f));
+            (string id, string label, float x, int count, float spacing, float width)[] rows =
+            {
+                ("Stamp_S_0", "Sello S\n8 cm", -0.92f, 3, 0.14f, 0.52f),
+                ("Stamp_M_1", "Sello M\n20 cm", -0.12f, 2, 0.3f, 0.76f),
+                ("Stamp_L_2", "Sello L\n34 cm", 0.78f, 1, 0.3f, 0.5f),
+            };
+            for (int i = 0; i < rows.Length; i++)
+            {
+                var source = GameObject.Find(rows[i].id);
+                if (source == null) { Debug.LogWarning("[MapRestocker] falta la estampa " + rows[i].id + ": el puesto de sellos queda incompleto."); continue; }
+                var template = Object.Instantiate(source, templateParent);
+                template.name = "Stamp" + i + "Template";
+                foreach (var r in template.GetComponentsInChildren<Respawnable>(true)) Object.DestroyImmediate(r);
+                template.transform.localPosition = Vector3.zero;
+                template.SetActive(false);
+
+                Transform[] slots = Tray(shop, p, "StampTray" + i, rows[i].x, rows[i].width, rows[i].count, rows[i].spacing);
+                var stockOwner = new GameObject("StampStock" + i);
+                stockOwner.transform.SetParent(shop, false);
+                var stock = stockOwner.AddComponent<DisplayStock>();
+                stock.Configure(template, slots);
+                EditorUtility.SetDirty(stock);
+                Plaque(shop, p, "StampPlaque" + i, new Vector3(rows[i].x, 0.62f, -0.556f), rows[i].label, 0.5f);
+            }
+        }
+
+        /// <summary>Bandeja baja de madera sobre el mostrador con <paramref name="count"/> huecos en fila; devuelve los huecos.</summary>
+        private static Transform[] Tray(Transform shop, Palette p, string name, float x, float width, int count, float spacing)
+        {
+            const float height = 0.05f;
+            Part(shop, PrimitiveType.Cube, name, p.darkWood, new Vector3(x, CounterTop + height * 0.5f, -0.3f), new Vector3(width, height, 0.36f));
+            Part(shop, PrimitiveType.Cube, name + "_Inlay", p.cream, new Vector3(x, CounterTop + height + 0.001f, -0.3f), new Vector3(width - 0.06f, 0.002f, 0.3f));
+            var slots = new Transform[count];
+            for (int k = 0; k < count; k++)
+                slots[k] = Anchor(shop, name + "_Slot" + k, new Vector3(x + (k - (count - 1) * 0.5f) * spacing, CounterTop + height + 0.002f, -0.3f), Quaternion.identity);
+            return slots;
         }
 
         // ---------------------------------------------------------------- almacen de lienzos
@@ -361,7 +453,7 @@ namespace SpellSimulator.EditorTools.Map
         }
 
         /// <summary>Saca arboles y peñascos que caigan dentro de los puestos (radio 2,6 m alrededor de cada uno).</summary>
-        private static void ClearVegetation(Transform map, Vector3 a, Vector3 b)
+        private static void ClearVegetation(Transform map, params Vector3[] shops)
         {
             foreach (string groupName in new[] { "Trees", "Rocks" })
             {
@@ -370,8 +462,12 @@ namespace SpellSimulator.EditorTools.Map
                 for (int i = group.childCount - 1; i >= 0; i--)
                 {
                     Vector3 pos = group.GetChild(i).position;
-                    if (new Vector2(pos.x - a.x, pos.z - a.z).magnitude < 2.6f || new Vector2(pos.x - b.x, pos.z - b.z).magnitude < 2.6f)
+                    foreach (Vector3 at in shops)
+                    {
+                        if (new Vector2(pos.x - at.x, pos.z - at.z).magnitude >= 2.6f) continue;
                         Object.DestroyImmediate(group.GetChild(i).gameObject);
+                        break;
+                    }
                 }
             }
         }
