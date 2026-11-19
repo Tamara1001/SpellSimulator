@@ -19,14 +19,14 @@ namespace SpellSimulator.World
             { "Note_Tutorial_Move", "<b>Stick izq.</b> · Caminar\n<b>Stick der.</b> · Girar" },
             { "Note_Tutorial_Crouch", "<b>Clic stick izq.</b> · Agacharse\nO pasá por el hueco del medio" },
             { "Note_Tutorial_Jump", "<b>A</b> / <b>X</b> · Saltar\n(el botón de la mano libre)" },
-            { "Note_Tutorial_Practice", "<b>Grip</b> · Agarrar y soltar\nPracticá en el centro" },
+            { "Note_Tutorial_Practice", "<b>Grip</b> · Agarrar y soltar\nProbá con lo que haya" },
             { "Note_Tutorial_Pile", "<b>Grip</b> · Mover las cajas\nDespejá la bajada" },
             { "Note_Tutorial_Float", "<b>1</b> · Lienzo en el aire\nSoltá el <b>grip</b> sin mover la mano" },
             { "Note_Tutorial_Upright", "<b>2</b> · Lienzo vertical\nGirá la muñeca y soltá" },
             { "Note_Tutorial_Target", "<b>3</b> · Tirá una caja\nSoltá con un envión a la diana" },
             { "Note_Tutorial_Ink", "<b>Grip</b> · Tomá la pluma\n<b>Y</b> · Cambiar tinta" },
-            { "Note_Tutorial_Book", "<b>Grip</b> · Leé el Tomo I\nEn la mesa: es el viento" },
-            { "Note_Tutorial_Cloth", "Calcá el viento azul\n<b>Gatillo</b> y apuntá a la cortina" },
+            { "Note_Tutorial_Book", "<b>Grip</b> · Leé el Tomo II\nEn la mesa: es la tierra" },
+            { "Note_Tutorial_Cloth", "Calcá la tierra marrón\n<b>Gatillo</b> y apuntá a la puerta" },
         };
 
         private static bool applied;

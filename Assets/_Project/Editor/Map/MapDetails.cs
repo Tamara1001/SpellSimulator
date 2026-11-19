@@ -216,7 +216,7 @@ namespace SpellSimulator.EditorTools.Map
 
         // ---------------------------------------------------------------- torre: ambiente
 
-        /// <summary>Angulo (muro) del atril de la planta baja con el libro de los cuatro elementos.</summary>
+        /// <summary>Angulo (muro) del atril de la planta baja con el libro del viento.</summary>
         public const float LecternAngle = 324f;
 
         public static void TowerAmbience(Transform tower, Material material, SpellOutputController output)
@@ -226,7 +226,7 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 o = tower.position;
 
             // Sin velas sueltas (flotaban sobre mesas que ya no existen). Un atril PEGADO al muro (cara de 324 grados), con el libro de los
-            // cuatro elementos mirando al centro. El libro del viento va sobre la mesa del centro del piso 1 (no hay atril ahi).
+            // viento mirando al centro. El libro de la tierra va sobre la mesa del centro del piso 1 (no hay atril ahi).
             var b = new LowPolyMesh();
             Color lecternWood = new Color(0.36f, 0.22f, 0.15f);
             foreach (var (angle, y) in new[] { (LecternAngle, 0f) })
@@ -273,13 +273,14 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 o = tower.position;
             float floor = TowerBuilder.FloorHeight;
             Vector3 lecternAt = TowerBuilder.Polar(TowerBuilder.WallRadius(LecternAngle, 0.5f), LecternAngle, 1.168f);
-            // Libro del viento: echado sobre la mesa del centro del piso 1, a la derecha de las herramientas.
-            Vector3 windAt = TowerProps.StudyTableCenter + Quaternion.Euler(0f, TowerProps.StudyTableYaw, 0f) * new Vector3(0.68f, 0.825f, 0f);
-            // Solo los dos libros del tutorial (elementos y viento): los demas (variantes, movimiento, forma, raro) y su pedestal se quitaron.
+            // Libro de la tierra: echado sobre la mesa del centro del piso 1, a la derecha de las herramientas.
+            Vector3 earthAt = TowerProps.StudyTableCenter + Quaternion.Euler(0f, TowerProps.StudyTableYaw, 0f) * new Vector3(0.68f, 0.825f, 0f);
+            // Solo los dos libros del tutorial (viento en el atril de la planta baja, tierra en la mesa del piso 1): los demas
+            // (elementos, variantes, movimiento, forma, raro) y su pedestal se quitaron.
             var spots = new (string id, Vector3 at, float yaw, float tilt)[]
             {
-                ("elements", lecternAt, 90f - LecternAngle, -25f),
-                ("wind-primer", windAt, TowerProps.StudyTableYaw + 100f, 0f),
+                ("wind-primer", lecternAt, 90f - LecternAngle, -25f),
+                ("earth-primer", earthAt, TowerProps.StudyTableYaw + 100f, 0f),
             };
 
             foreach (var (id, at, yaw, tilt) in spots)

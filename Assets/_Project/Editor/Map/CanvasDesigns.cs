@@ -37,7 +37,7 @@ namespace SpellSimulator.EditorTools.Map
             foreach (var c in Object.FindObjectsByType<DrawingCanvas>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
                 // Los caballetes del tutorial disparan hacia el objetivo (AwayFromViewer, ver MapTutorial.MakeEasel).
-                if (c.name.StartsWith("Easel_Wind") || c.name.StartsWith("Easel_Door")) continue;
+                if (c.name.StartsWith("Easel_Earth") || c.name.StartsWith("Easel_Door")) continue;
                 SetInkSide(c.gameObject);
             }
 

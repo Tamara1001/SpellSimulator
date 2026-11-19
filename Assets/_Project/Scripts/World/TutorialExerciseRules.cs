@@ -19,5 +19,17 @@ namespace SpellSimulator.World
 
         /// <summary>El golpe fue lo bastante fuerte para ser un tiro y no un roce.</summary>
         public static bool HardEnough(float speed) => speed >= ThrowSpeed;
+        /// <summary>Distancia maxima (m) del centro del lienzo al lugar marcado por el papel fantasma.</summary>
+        public const float SpotRadius = 0.45f;
+
+        /// <summary>El lienzo esta acostado (normal casi vertical) dentro de la misma tolerancia que «parado».</summary>
+        public static bool Flat(Vector3 normal) => Mathf.Abs(normal.y) >= 1f - UprightTolerance;
+
+        /// <summary>
+        /// El lienzo quedo donde marca el papel fantasma: su centro dentro de <see cref="SpotRadius"/> y en la postura pedida
+        /// (parado si <paramref name="upright"/>, acostado si no). Solo cuenta el lienzo del pedestal, no cualquiera que flote cerca.
+        /// </summary>
+        public static bool PaperAtSpot(Vector3 paperCenter, Vector3 paperNormal, Vector3 spot, bool upright) =>
+            (paperCenter - spot).sqrMagnitude <= SpotRadius * SpotRadius && (upright ? Upright(paperNormal) : Flat(paperNormal));
     }
 }

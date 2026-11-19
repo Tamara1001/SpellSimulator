@@ -16,7 +16,8 @@ namespace SpellSimulator.Lab
         [SerializeField] private string recipeId = "gust";
         [SerializeField] private float aimLength = 3f;
 
-        private static readonly Color GhostColor = new Color(0.25f, 0.5f, 0.95f, 0.75f);
+        [SerializeField, Tooltip("Color de la plantilla fantasma (azul para el viento, marron para la tierra).")]
+        private Color ghostColor = new Color(0.25f, 0.5f, 0.95f, 0.75f);
         private static readonly Color AimColor = new Color(0.45f, 0.8f, 1f, 0.7f);
 
         private DrawingCanvas canvas;
@@ -90,7 +91,7 @@ namespace SpellSimulator.Lab
                 line.numCapVertices = 2;
                 line.numCornerVertices = 2;
                 line.sharedMaterial = lineMaterial;
-                line.startColor = line.endColor = GhostColor;
+                line.startColor = line.endColor = ghostColor;
                 line.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
                 for (int i = 0; i < pts.Count; i++)
                 {

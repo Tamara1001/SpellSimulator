@@ -5,6 +5,15 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-19 — Tutorial: piso 1 de tierra, piso 2 con pedestales y arreglo de las rampas
+
+- **Piso 1 ahora es de tierra.** El caballete (`Easel_Earth`) trae la plantilla fantasma de `thrown_rock` en marrón (`TutorialPaperGuide.ghostColor`), la roca lanzada empuja la puerta (misma `TutorialCloth` con bisagra) y el cartel dice «Calcá la tierra marrón». Libro nuevo `earth-primer` («Tomo II: la tierra») sobre la mesa del piso 1; el `wind-primer` pasó al atril de la planta baja y el de «los cuatro elementos» ya no se coloca (queda en el JSON).
+- **Piso 2:** se quitó la mesa de práctica. Tres estaciones juntas en el lado norte del disco (junto a la baranda del hueco, fuera del camino este-oeste): 1) pedestal con una hoja acostada y un papel fantasma semitransparente flotando encima; 2) igual, con el fantasma parado; 3) la diana (colgada de la baranda). `TutorialExercise` ya no usa un trigger: solo cuenta la hoja de SU pedestal, soltada y flotando en el fantasma y con la postura pedida (`TutorialExerciseRules.PaperAtSpot`, +2 tests). Antes la luz de «agarrar» se encendía con cualquier lienzo flotando en la zona. Los dos lienzos flotantes de práctica quedan donde estaban.
+- **Escaleras (traba):** el cierre del hueco (`Tutorial_Rail*_End`, collider de 2,2 m a 61°) cortaba la rampa que pasa por encima (a 1,7 m del piso) en los pisos 1 y 2; ahora su collider es de 1 m. Además los colliders de las barandas del hueco se corrieron 10 cm del pasillo de la rampa y miden 4 cm de grosor. Medido con barridos de cápsula (radio 0,3) por 6 carriles de las 3 rampas: 81 choques antes, 0 después.
+- Se quitó el cartel «Reja cerrada» de la terraza (`Note_Tutorial_Gate`).
+- Pendiente (rediseño de la terraza, a aprobar): carteles en el camino, espacio útil, pared rara y punto de aparición.
+- Docs: `HarnessSpellTest` suma el caso roca→puerta del piso 1.
+
 ## 2026-11-19 — VFX de fuego y viento: llamas, humo, brasas y rizos de aire
 
 - Shader `SpellParticle`: tres formas procedurales nuevas (sin texturas): `_Shape 5` llama (lengua con ruido que sube y se erosiona al envejecer, núcleo caliente), `6` humo (bocanada irregular) y `7` rizo de aire (arco en C que gira).

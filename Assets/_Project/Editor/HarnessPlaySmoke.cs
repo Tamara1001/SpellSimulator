@@ -196,7 +196,7 @@ namespace SpellSimulator.EditorTools
             }
 
             // --- Piso 1 del tutorial: lienzo con plantilla fantasma (lineas aparte, no son trazos) y rayo de apunte
-            var windPaper = Find("Easel_Wind_Canvas");
+            var windPaper = Find("Easel_Earth_Canvas");
             if (windPaper != null)
             {
                 Transform ghost = windPaper.transform.Find("GhostTemplate");
@@ -228,7 +228,7 @@ namespace SpellSimulator.EditorTools
                 }
                 Check(ghostStrokes >= 2 && hasAim && noInk, $"tutorial piso 1: el lienzo trae plantilla fantasma y rayo de apunte, sin trazos propios (trazos fantasma {ghostStrokes}, rayo {hasAim}, sin tinta {noInk})");
             }
-            else failures.Add("falta Easel_Wind_Canvas");
+            else failures.Add("falta Easel_Earth_Canvas");
 
             // --- Dibujo y reinicio del mundo
             var paper = Find("Paper_S");
@@ -385,7 +385,7 @@ namespace SpellSimulator.EditorTools
                 }
                 // Carteles de pared pegados al muro, y la runa de oro fuera de la torre.
                 string farCards = "";
-                foreach (string n in new[] { "Note_Tutorial_Practice", "Note_Tutorial_Pile", "Note_Tutorial_Target", "Note_Tutorial_Ink", "Note_Tutorial_Book", "Note_Tutorial_Cloth", "Note_Tutorial_Door" })
+                foreach (string n in new[] { "Note_Tutorial_Practice", "Note_Tutorial_Pile", "Note_Tutorial_Ink", "Note_Tutorial_Book", "Note_Tutorial_Cloth", "Note_Tutorial_Door" })
                 {
                     var card = GameObject.Find(n);
                     if (card == null) { farCards += n + "(falta) "; continue; }
@@ -889,14 +889,14 @@ namespace SpellSimulator.EditorTools
                 bool ClothBlocks() => Physics.Raycast(clothFrom, clothDir, out RaycastHit ch, 1.5f, ~0, QueryTriggerInteraction.Ignore) && ch.collider.GetComponentInParent<SpellSimulator.World.TutorialCloth>() != null;
                 bool hung = cloth != null && !cloth.IsOpen && ClothBlocks();
                 bool windBook = false;
-                foreach (var lb in Object.FindObjectsByType<SpellSimulator.Learning.LibraryBook>(FindObjectsSortMode.None)) if (lb.BookId == "wind-primer") windBook = true;
+                foreach (var lb in Object.FindObjectsByType<SpellSimulator.Learning.LibraryBook>(FindObjectsSortMode.None)) if (lb.BookId == "earth-primer") windBook = true;
                 if (cloth != null) cloth.ForceOpen();
                 Physics.SyncTransforms();
                 bool freed = cloth != null && cloth.IsOpen;   // sigue siendo un cuerpo fisico (flota), pero ya no choca con el jugador
                 spawn.Begin(false);
                 Physics.SyncTransforms();
                 bool rehung = cloth != null && !cloth.IsOpen && ClothBlocks();
-                Check(hung && windBook && freed && rehung, $"tutorial piso 1: la tela tapa la bajada, esta el tomo I y al soltarla se libera y se rearma (colgada {hung}, libro {windBook}, libre {freed}, rearmada {rehung})");
+                Check(hung && windBook && freed && rehung, $"tutorial piso 1: la tela tapa la bajada, esta el tomo II y al soltarla se libera y se rearma (colgada {hung}, libro {windBook}, libre {freed}, rearmada {rehung})");
                 // Planta baja (T4): la puerta arranca trabada (E no la abre); cada traba (pestillo, contrapeso, piedra) la destraba; saltear la abre.
                 var towerDoor = Find("TowerDoor") != null ? Find("TowerDoor").GetComponent<TowerDoor>() : null;
                 bool locked = towerDoor != null && towerDoor.Locked && !towerDoor.IsOpen;

@@ -109,6 +109,10 @@ namespace SpellSimulator.EditorTools
                     foreach (var step in Shoot("tela", recipe, clothC - clothDir * dist, clothDir, dist, () => cloth.IsOpen, () => tutorial.Begin(), bench, caster, rebuild)) yield return step;
                     foreach (var step in Shoot("pestillo", recipe, barC - barIn * dist, barIn, dist, () => bar.IsOpen, () => tutorial.Begin(), bench, caster, rebuild)) yield return step;
                 }
+            // Piso 1 (tierra): una roca lanzada empuja la puerta de pared a baranda.
+            foreach (string recipe in new[] { "thrown_rock", "earth_spike", "stone_wall" })
+                foreach (float dist in new[] { 1.0f, 1.8f, 2.6f })
+                    foreach (var step in Shoot("puerta+tierra", recipe, clothC - clothDir * dist, clothDir, dist, () => cloth.IsOpen, () => tutorial.Begin(), bench, caster, rebuild)) yield return step;
             foreach (string recipe in new[] { "updraft", "water_jet", "wind_breath", "gust" })
                 foreach (float dist in new[] { 0.5f, 1.0f })
                     foreach (var step in Shoot("contrapeso", recipe, weightC - Vector3.up * dist, Vector3.up, dist, () => weight.IsOpen, () => tutorial.Begin(), bench, caster, rebuild)) yield return step;
