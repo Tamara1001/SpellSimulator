@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-19 — Sin marcos de cara, atriles físicos, puerta de la torre hacia afuera y puerta con bisagra en el piso de viento
+
+- Se quitan los marcos dorado/azul, la flecha y el botón del marco (`CanvasFrame`, `CanvasFaceButton`, `CanvasFrameBuilder`) y `FiringFace`: todo lienzo dispara por la cara donde se escribe (como antes de Bloque A); F da vuelta los sueltos.
+- Atril con slot: ahora es un objeto físico pesado (`MovablesSetup.MakeMovable`: Rigidbody 25 kg + `Movable`), con base maciza; el lienzo lo sigue (`CanvasEasel.LateUpdate` + `PhysicalCanvas.FollowEasel`). Botón con flechas circulares (`EaselReverseButton`) invierte el sentido de disparo del atril (`DrawingCanvas.SetReversedByEasel`, regla pura `CanvasRules.EffectiveInkSign`); se apaga al sacar el lienzo. Se elimina el giro de 45° por clic.
+- Puerta principal de la torre: cierra en la cara exterior del muro y se abre hacia afuera (90°, contra la mejilla del zaguán).
+- Piso 1 (viento): la «tela» pasa a ser una hoja de tablones con `HingeJoint` (eje vertical, pegada a la pared) y resorte flojo: viento, agua o una caja la abren con fisicas (no se teletransporta); una vez abierta queda donde la dejan y deja pasar al jugador; el rearme del tutorial la cierra.
+- Docs: `GAME_DESIGN.md`, `LIENZOS_PLAN.md`.
+
 ## 2026-11-18 — Restocker rehecho como dos puestos en el Archivo
 - `MapRestocker` arma ahora la **Tienda de plumas** (cinco tarros con un pincel cada uno; tocar el tarro saca ese pincel) y el **Almacén de lienzos** (rollos, pilas y un tablero de pedido inclinado con botones redondos y SACAR), con toldo rayado, farol y cartel. Mismo `CanvasRestocker` y mismas acciones: la lógica no cambia.
 - Ya no están en la torre: van a la entrada del Archivo, en (±7,5, +5,5) respecto de (0,−46), girados 25° hacia el camino. El plano del Archivo (Antigravity) los ponía en z = +11,5, pero ahí quedaban dentro del entrenamiento y de su línea de tiro; se corrieron.

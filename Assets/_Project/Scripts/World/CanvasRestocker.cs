@@ -20,8 +20,6 @@ namespace SpellSimulator.World
         private PhysicalTool penTemplate;
         [SerializeField, Tooltip("Plantilla de papel (PaperCanvas del mundo).")]
         private GameObject paperTemplate;
-        [SerializeField] private Material frameGold;
-        [SerializeField] private Material frameBlue;
         [SerializeField] private Material coverMaterial;
         [SerializeField, Tooltip("Donde sale un pincel (centro, sobre la repisa).")]
         private Transform brushOutput;
@@ -39,13 +37,11 @@ namespace SpellSimulator.World
         public IReadOnlyList<GameObject> SpawnedCanvases => spawnedCanvases;
 
         /// <summary>Lo llama el generador de escena (Editor) despues de AddComponent.</summary>
-        public void Configure(PhysicalTool pen, GameObject paper, Material gold, Material blue, Material cover,
+        public void Configure(PhysicalTool pen, GameObject paper, Material cover,
             Transform brushOutput, Transform canvasOutput, TMP_Text canvasReadout, TMP_Text brushReadout)
         {
             penTemplate = pen;
             paperTemplate = paper;
-            frameGold = gold;
-            frameBlue = blue;
             coverMaterial = cover;
             this.brushOutput = brushOutput;
             this.canvasOutput = canvasOutput;
@@ -97,7 +93,7 @@ namespace SpellSimulator.World
             CanvasSpec spec = selection.ToSpec();
             // Sale parado y mirando a quien lo pidio (la cara visible hacia el frente del mueble), flotando un poco.
             Quaternion rotation = Quaternion.LookRotation(-canvasOutput.forward, Vector3.up);
-            GameObject go = CanvasFactory.Spawn(paperTemplate, spec, canvasOutput.position, rotation, frameGold, frameBlue, coverMaterial);
+            GameObject go = CanvasFactory.Spawn(paperTemplate, spec, canvasOutput.position, rotation, coverMaterial);
             var physical = go.GetComponent<PhysicalCanvas>();
             if (physical != null) physical.Pin(); // queda flotando donde salio (y cae solo al minuto)
             Track(spawnedCanvases, go);

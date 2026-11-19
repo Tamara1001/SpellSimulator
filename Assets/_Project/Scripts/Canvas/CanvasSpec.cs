@@ -9,9 +9,6 @@ namespace SpellSimulator.Canvas
 
     public enum CanvasShape { Square = 0, Rect = 1, Round = 2 }
 
-    /// <summary>Cara por la que sale el hechizo: Front = la cara donde se dibuja (marco dorado), Back = la de atras (marco azul).</summary>
-    public enum FiringFace { Front = 0, Back = 1 }
-
     /// <summary>Especificacion de un lienzo: lo unico que hace falta para colocarlo (el editor) o pedirlo en el restocker.</summary>
     public struct CanvasSpec
     {
@@ -20,15 +17,13 @@ namespace SpellSimulator.Canvas
         public CanvasShape shape;
         /// <summary>Hojas de una libreta (1..<see cref="CanvasRules.MaxPages"/>); una hoja suelta siempre tiene 1.</summary>
         public int pages;
-        public FiringFace face;
 
-        public CanvasSpec(CanvasKind kind, CanvasSize size, CanvasShape shape, int pages = 1, FiringFace face = FiringFace.Front)
+        public CanvasSpec(CanvasKind kind, CanvasSize size, CanvasShape shape, int pages = 1)
         {
             this.kind = kind;
             this.size = size;
             this.shape = shape;
             this.pages = pages;
-            this.face = face;
         }
 
         public static CanvasSpec Sheet(CanvasSize size, CanvasShape shape = CanvasShape.Square) => CanvasRules.Sanitize(new CanvasSpec(CanvasKind.Sheet, size, shape));
@@ -36,7 +31,7 @@ namespace SpellSimulator.Canvas
     }
 
     /// <summary>
-    /// Reglas puras de los lienzos (tamaños, formas permitidas, hojas, cara de disparo y atriles). Sin MonoBehaviour: se prueba en EditMode.
+    /// Reglas puras de los lienzos (tamaños, formas permitidas, hojas, atriles). Sin MonoBehaviour: se prueba en EditMode.
     /// La libreta M es la de siempre (0,24 × 0,32 m).
     /// </summary>
     public static class CanvasRules
@@ -50,13 +45,8 @@ namespace SpellSimulator.Canvas
         public const float NotebookRoundDiameter = 0.18f;
         public static readonly Vector2[] NotebookRect = { new Vector2(0.18f, 0.24f), new Vector2(0.24f, 0.32f), new Vector2(0.36f, 0.48f) };
 
-        /// <summary>Colores del marco por cara de disparo: dorado = frente, azul = espalda.</summary>
-        public static readonly Color FrontFrame = new Color(0.95f, 0.75f, 0.25f), BackFrame = new Color(0.3f, 0.55f, 0.95f);
-
         /// <summary>Distancia (m) a la que un lienzo suelto se acopla al slot de un atril, y separacion al sacar el anterior.</summary>
         public const float SlotSnapDistance = 0.85f, SlotEjectOffset = 0.35f;
-        /// <summary>Giro (°) de un atril por pulsacion.</summary>
-        public const float EaselTurnStep = 45f;
 
         /// <summary>Normaliza un spec: formas validas por tipo y tamaño, hojas dentro del rango, la hoja suelta con 1 pagina.</summary>
         public static CanvasSpec Sanitize(CanvasSpec s)
@@ -103,14 +93,11 @@ namespace SpellSimulator.Canvas
             return best;
         }
 
-        public static FiringFace Flip(FiringFace face) => face == FiringFace.Front ? FiringFace.Back : FiringFace.Front;
-
-        /// <summary>+1 / -1 para <see cref="DrawingCanvas.SetInkSign"/>.</summary>
-        public static float InkSign(FiringFace face) => face == FiringFace.Front ? 1f : -1f;
-
-        public static FiringFace FaceOf(float inkSign) => inkSign >= 0f ? FiringFace.Front : FiringFace.Back;
-
-        public static Color FrameColor(FiringFace face) => face == FiringFace.Front ? FrontFrame : BackFrame;
+        /// <summary>
+        /// Signo de tinta efectivo: todo lienzo dispara por la cara donde se escribe (<paramref name="inkSign"/>); un atril con el sentido
+        /// invertido (<paramref name="reversed"/>) lo da vuelta mientras tenga el lienzo puesto.
+        /// </summary>
+        public static float EffectiveInkSign(float inkSign, bool reversed) => reversed ? -inkSign : inkSign;
 
         /// <summary>El lienzo suelto se acopla a un slot si su centro esta a menos de <see cref="SlotSnapDistance"/> de el.</summary>
         public static bool InSnapRange(Vector3 canvasCenter, Vector3 slot) => (canvasCenter - slot).sqrMagnitude <= SlotSnapDistance * SlotSnapDistance;
@@ -128,9 +115,6 @@ namespace SpellSimulator.Canvas
             }
             return best;
         }
-
-        /// <summary>Giro siguiente de un atril (°, 0..360).</summary>
-        public static float NextEaselYaw(float yaw) => Mathf.Repeat(yaw + EaselTurnStep, 360f);
 
         /// <summary>Hoja dentro de 0..pages-1, sin dar la vuelta.</summary>
         public static int ClampPage(int page, int pages) => Mathf.Clamp(page, 0, Mathf.Max(1, pages) - 1);

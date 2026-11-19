@@ -48,9 +48,15 @@ namespace SpellSimulator.Canvas
         public DrawingSession Session { get; } = new DrawingSession();
 
         private float inkSign = 1f;
+        private bool reversedByEasel;
 
         /// <summary>+1 si la cara con tinta es la visible, -1 si es la de atras (ver NoteInkViewer).</summary>
-        public float InkSign => inkSign;
+        /// <summary>Signo de tinta efectivo (+1 = sale por la cara visible): el de la cara donde se escribe, dado vuelta si un atril invertido la tiene puesta.</summary>
+        public float InkSign => CanvasRules.EffectiveInkSign(inkSign, reversedByEasel);
+
+        /// <summary>El atril donde esta puesto invierte el sentido de disparo (se apaga al sacarlo).</summary>
+        public void SetReversedByEasel(bool reversed) => reversedByEasel = reversed;
+        public bool ReversedByEasel => reversedByEasel;
         public void SetInkSign(float sign) => inkSign = sign >= 0f ? 1f : -1f;
         /// <summary>Por que cara sale el hechizo (lienzos creados en juego: restocker).</summary>
         public void SetEmissionSide(EmissionSide side) => emissionSide = side;
@@ -110,7 +116,7 @@ namespace SpellSimulator.Canvas
         public Vector3 EmissionNormal(Vector3 viewerPosition)
         {
             Vector3 ink = transform.TransformDirection(surfaceNormalLocal).normalized;
-            if (emissionSide == EmissionSide.InkSide) return ink * inkSign;
+            if (emissionSide == EmissionSide.InkSide) return ink * InkSign;
             return Vector3.Dot(ink, viewerPosition - transform.position) > 0f ? -ink : ink;
         }
 

@@ -41,3 +41,6 @@ Mueble `Restocker` (`MapRestocker`, `CanvasRestocker`, `CanvasFactory`, `Restock
 ## Puntos abiertos
 - ¿Aceptás la propuesta de dirección de disparo (1–3, con 4 opcional)?
 - Presets exactos de S/M/L (en metros) y diámetro de la libreta circular.
+
+## Revisión 2026-11-19 (pedido de Tamara)
+Se quitaron los marcos de cara de disparo y su botón. Todo lienzo dispara por donde se escribe; F da vuelta los sueltos; los atriles son objetos físicos pesados y un botón con flechas circulares invierte el sentido del atril (solo mientras tiene el lienzo puesto). Pendiente: los caballetes del tutorial (Easel_Wind, Easel_Door) siguen fijos porque sus ejercicios apuntan a un blanco concreto.

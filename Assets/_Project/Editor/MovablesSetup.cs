@@ -161,10 +161,10 @@ namespace SpellSimulator.EditorTools
 
         private static float ValleyHeight(Vector3 p) => MapBuilder.Ground(p.x, p.z).y;
 
-        private static MaterialProfile WoodProfile() => AssetDatabase.LoadAssetAtPath<MaterialProfile>(WoodPath);
+        internal static MaterialProfile WoodProfile() => AssetDatabase.LoadAssetAtPath<MaterialProfile>(WoodPath);
 
         /// <summary>Rigidbody con la masa dada + Movable con nombre + reaccion de material (si hay perfil). Sin duplicar componentes.</summary>
-        private static void MakeMovable(GameObject go, float mass, string label, MaterialProfile profile)
+        internal static void MakeMovable(GameObject go, float mass, string label, MaterialProfile profile)
         {
             go.isStatic = false;
             var rb = go.GetComponent<Rigidbody>();

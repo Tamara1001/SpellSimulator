@@ -519,22 +519,33 @@ namespace SpellSimulator.EditorTools
             var easelComp = easelGo != null ? easelGo.GetComponent<SpellSimulator.World.CanvasEasel>() : null;
             var slotted = easelComp != null ? easelComp.Occupant : null;
             Check(easelComp != null && slotted != null && slotted.Docked, "lienzos A: el atril del campo arranca con su lienzo acoplado al slot");
-            var frame = slotted != null ? slotted.GetComponentInChildren<SpellSimulator.World.CanvasFrame>(true) : null;
-            if (frame != null)
+            var easelBody = easelGo != null ? easelGo.GetComponent<Rigidbody>() : null;
+            Check(easelBody != null && !easelBody.isKinematic && easelGo.GetComponent<SpellSimulator.World.Movable>() != null,
+                "lienzos A: el atril es un objeto fisico pesado y agarrable (Rigidbody dinamico + Movable)");
+            var reverseButton = easelGo != null ? easelGo.GetComponentInChildren<SpellSimulator.World.EaselReverseButton>(true) : null;
+            if (reverseButton != null && slotted != null && slotted.TryGetComponent(out DrawingCanvas slottedDrawing))
             {
-                var face0 = frame.Face;
-                frame.Toggle();
-                bool flipped = frame.Face != face0 && frame.Canvas.InkSign == SpellSimulator.Canvas.CanvasRules.InkSign(frame.Face);
-                frame.Toggle();
-                Check(flipped && frame.Face == face0, "lienzos A: el boton del marco invierte la cara de disparo (InkSign) y vuelve");
+                float sign0 = slottedDrawing.InkSign;
+                reverseButton.Press();
+                bool reversed = Mathf.Approximately(slottedDrawing.InkSign, -sign0) && easelComp.Reversed;
+                reverseButton.Press();
+                bool restored = Mathf.Approximately(slottedDrawing.InkSign, sign0) && !easelComp.Reversed;
+                Check(reversed && restored, "lienzos A: el boton del atril invierte el sentido de disparo del lienzo puesto y vuelve");
             }
-            else failures.Add("lienzos A: el lienzo del atril no tiene CanvasFrame");
+            else failures.Add("lienzos A: falta el boton de sentido del atril");
             if (easelComp != null && slotted != null)
             {
-                float yaw0 = easelGo.transform.eulerAngles.y;
-                easelComp.Press();
-                float dyaw = Mathf.DeltaAngle(yaw0, easelGo.transform.eulerAngles.y);
-                Check(Mathf.Abs(dyaw - SpellSimulator.Canvas.CanvasRules.EaselTurnStep) < 0.5f && slotted.Docked, "lienzos A: girar el atril gira el lienzo acoplado con el");
+                // El lienzo sigue al atril cuando se lo lleva a otro lugar (sin fisicas: se teletransporta y se espera un frame).
+                Vector3 centerBefore = slotted.WorldCenter;
+                Vector3 shift = new Vector3(1.5f, 0f, 0.5f);
+                easelGo.transform.position += shift;
+                if (easelBody != null) easelBody.position = easelGo.transform.position;
+                yield return null;
+                yield return null;
+                Check(slotted.Docked && (slotted.WorldCenter - easelComp.Slot.position).magnitude < 0.1f && (slotted.WorldCenter - centerBefore).magnitude > 0.5f,
+                    $"lienzos A: el lienzo acoplado sigue al atril cuando lo mueven (a {(slotted.WorldCenter - easelComp.Slot.position).magnitude:0.00} m del slot, se movio {(slotted.WorldCenter - centerBefore).magnitude:0.00} m)");
+                easelGo.transform.position -= shift;
+                if (easelBody != null) easelBody.position = easelGo.transform.position;
                 // Cambio: un lienzo suelto cerca del slot entra y el anterior sale.
                 var other = Find("Notebook_A");
                 var otherCanvas = other != null ? other.GetComponent<SpellSimulator.World.PhysicalCanvas>() : null;
@@ -579,8 +590,8 @@ namespace SpellSimulator.EditorTools
                 GameObject bookGo = restocker.DispenseCanvas();
                 var bookPages = bookGo != null ? bookGo.GetComponent<SpellSimulator.World.NotebookPages>() : null;
                 bool bookOk = bookPages != null && bookPages.PageCount == restocker.Selection.pages && bookPages.PageCount <= SpellSimulator.Canvas.CanvasRules.MaxPages
-                    && bookGo.GetComponent<SpellSimulator.World.PhysicalCanvas>() != null && bookGo.GetComponentInChildren<SpellSimulator.World.CanvasFrame>(true) != null;
-                Check(bookOk, "lienzos C: el restocker saca una libreta con las hojas elegidas, grabable y con marco");
+                    && bookGo.GetComponent<SpellSimulator.World.PhysicalCanvas>() != null;
+                Check(bookOk, "lienzos C: el restocker saca una libreta con las hojas elegidas, grabable");
                 for (int i = 0; i < SpellSimulator.Canvas.RestockRules.MaxSpawnedPerKind + 3; i++) restocker.DispenseBrush(0);
                 Check(restocker.SpawnedBrushes.Count <= SpellSimulator.Canvas.RestockRules.MaxSpawnedPerKind, "lienzos C: el tope de pinceles sacados se respeta");
                 foreach (var g in new List<GameObject>(restocker.SpawnedBrushes)) if (g != null) Object.Destroy(g);

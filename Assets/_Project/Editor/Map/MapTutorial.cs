@@ -477,11 +477,11 @@ namespace SpellSimulator.EditorTools.Map
             var rails = new LowPolyMesh();
             HoleRail(rails, parent, material, "Tutorial_Rail_1", y, o);
 
-            // La tela: un panel de pared a baranda (hueco de 4 cm a cada lado), colgado de una viga fija. Cuerpo fisico con resorte.
+            // La puerta: una hoja de pared a baranda (hueco de 4 cm a cada lado) que gira sobre una bisagra fisica del lado de la pared. Cuerpo fisico con HingeJoint.
             float inner = TowerBuilder.RampInner + 0.07f, outer = TowerBuilder.InnerRadius - 0.06f, width = outer - inner;
             float mid = (inner + outer) * 0.5f;
             var cloth = new LowPolyMesh();
-            Color sack = new Color(0.82f, 0.68f, 0.4f), sackDark = new Color(0.64f, 0.5f, 0.3f);
+            Color sack = new Color(0.58f, 0.37f, 0.22f), sackDark = new Color(0.47f, 0.29f, 0.17f); // tablones de una puerta pesada
             const int folds = 6;
             for (int i = 0; i < folds; i++)
             {
@@ -503,7 +503,8 @@ namespace SpellSimulator.EditorTools.Map
             rb.mass = 18f;
             rb.useGravity = false;
             rb.interpolation = RigidbodyInterpolation.Interpolate;
-            go.AddComponent<TutorialCloth>();
+            // Bisagra de verdad (HingeJoint de eje vertical) en el borde pegado a la pared: el viento, el agua o un golpe la abren, y el jugador no.
+            go.AddComponent<TutorialCloth>().SetHinge(new Vector3(width * 0.5f, 0f, 0f));
 
             // Viga de la que cuelga (fija, sin collider: la tela la cubre).
             var beam = new LowPolyMesh();
@@ -540,7 +541,7 @@ namespace SpellSimulator.EditorTools.Map
             // Carteles 11-13 (carteles.md): pegados al muro, en caras sin ventana y en el orden del recorrido (llegada al este, luego el sur).
             WallCard(parent, material, "Note_Tutorial_Ink", 342f, y, "<b>E</b> · Tomá la pluma", "<b>R</b> · Recargar tinta");
             WallCard(parent, material, "Note_Tutorial_Book", 306f, y, "<b>E</b> · Leé el Tomo I", "En la mesa: es el viento");
-            WallCard(parent, material, "Note_Tutorial_Cloth", 234f, y, "Calcá el viento azul", "<b>E</b> y apuntá a la cortina");
+            WallCard(parent, material, "Note_Tutorial_Cloth", 234f, y, "Calcá el viento azul", "<b>E</b> y apuntá a la puerta");
         }
 
         /// <summary>

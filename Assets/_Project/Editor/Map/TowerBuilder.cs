@@ -49,7 +49,7 @@ namespace SpellSimulator.EditorTools.Map
         public const float FloorThickness = 0.3f;
 
         /// <summary>Puerta: ancho, alto, giro cerrada y abierta (grados, contra el muro oeste de la entrada) y duracion del giro.</summary>
-        public const float DoorWidth = 1.8f, DoorHeight = 3.1f, DoorClosedYaw = 0f, DoorOpenYaw = -150f, DoorSwing = 0.5f;
+        public const float DoorWidth = 1.8f, DoorHeight = 3.1f, DoorClosedYaw = 0f, DoorOpenYaw = 90f, DoorSwing = 0.5f;
 
         // Piedra calida (afuera arenisca, adentro revoque ocre), madera con veta y teja roja.
         private static readonly Color StoneA = new Color(0.76f, 0.7f, 0.58f);
@@ -534,7 +534,8 @@ namespace SpellSimulator.EditorTools.Map
             b.Frustum(Matrix4x4.TRS(new Vector3(width * 0.5f, 1.45f, -0.08f), Quaternion.Euler(90f, 0f, 0f), Vector3.one), 0.09f, 0.09f, -0.01f, 0.01f, 8, Gold, true, true);
             var mesh = MapBuilder.SaveMesh(b.Build("TowerDoor"));
             // Bisagra en el borde oeste del hueco (segmento 15, centrado en 270 grados).
-            Vector3 hinge = root.position + Polar(InnerRadius - 0.05f, 270f - 360f / Sides * 0.5f, 0.05f);
+            // La puerta cierra en la cara EXTERIOR del muro y se abre hacia afuera (+90 grados: queda perpendicular al muro, contra la mejilla del zaguan).
+            Vector3 hinge = root.position + Polar(OuterRadius, 270f - 360f / Sides * 0.5f, 0.05f) + new Vector3(0.05f, 0f, 0.06f);
             var go = MapBuilder.Place("TowerDoor", root, mesh, material, hinge, Quaternion.Euler(0f, DoorOpenYaw, 0f));
             var col = go.AddComponent<BoxCollider>();
             col.center = new Vector3(width / 2f, height / 2f, 0f);

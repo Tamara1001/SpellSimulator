@@ -1,17 +1,17 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Canvas;
-using SpellSimulator.Interfaces;
 
 namespace SpellSimulator.World
 {
     /// <summary>
     /// Atril con un slot para un lienzo o una libreta (Docs/LIENZOS_PLAN.md): al soltar (E) o dejar flotando (G) un lienzo cerca,
     /// se acopla al slot en la pose del atril; si ya habia otro, se cambian (el anterior sale al costado). Agarrar el lienzo
-    /// lo libera. Apuntando a la base y con clic el atril gira <see cref="CanvasRules.EaselTurnStep"/>° sobre su eje y el lienzo
-    /// lo sigue: asi se elige hacia donde mira (y por lo tanto hacia donde dispara).
+    /// lo libera. El atril es un objeto fisico pesado (Movable): se empuja, se agarra y se cambia de lugar; el lienzo lo sigue.
+    /// Un boton con flechas circulares en la base (<see cref="EaselReverseButton"/>) invierte el SENTIDO de disparo del atril: afecta a
+    /// cualquier lienzo que tenga puesto y se apaga al sacarlo (el lienzo vuelve a disparar por la cara donde se escribe).
     /// </summary>
-    public class CanvasEasel : MonoBehaviour, IPressable
+    public class CanvasEasel : MonoBehaviour
     {
         private const int MaxEasels = 32;
 
@@ -30,13 +30,43 @@ namespace SpellSimulator.World
         public PhysicalCanvas Occupant => occupant != null && occupant.Easel == this ? occupant : null;
         public Transform Slot => slot;
 
-        public bool PressWithClick => true;
+        private bool reversed;
+        private Vector3 lastSlotPosition;
+        private Quaternion lastSlotRotation = Quaternion.identity;
+
+        /// <summary>El atril dispara hacia el lado contrario al de escritura.</summary>
+        public bool Reversed => reversed;
 
         /// <summary>Lo llama el generador de escena (Editor) despues de AddComponent.</summary>
         public void Configure(Transform slot, PhysicalCanvas startCanvas)
         {
             this.slot = slot;
             this.startCanvas = startCanvas;
+        }
+
+        /// <summary>Invierte (o no) el sentido de disparo y lo aplica al lienzo puesto.</summary>
+        public void SetReversed(bool value)
+        {
+            reversed = value;
+            ApplyReverse();
+        }
+
+        public void ToggleReversed() => SetReversed(!reversed);
+
+        private void ApplyReverse()
+        {
+            PhysicalCanvas c = Occupant;
+            if (c != null && c.TryGetComponent(out DrawingCanvas drawing)) drawing.SetReversedByEasel(reversed);
+        }
+
+        /// <summary>Si el atril se movio (empujado, agarrado, caido) el lienzo lo sigue en el mismo frame.</summary>
+        private void LateUpdate()
+        {
+            if (slot == null || occupant == null || occupant.Easel != this) return;
+            if ((slot.position - lastSlotPosition).sqrMagnitude < 1e-8f && Quaternion.Angle(slot.rotation, lastSlotRotation) < 0.01f) return;
+            lastSlotPosition = slot.position;
+            lastSlotRotation = slot.rotation;
+            occupant.FollowEasel(slot.position, Quaternion.LookRotation(-slot.forward, slot.up));
         }
 
         private void Start()
@@ -82,21 +112,18 @@ namespace SpellSimulator.World
         private void Redock()
         {
             if (occupant == null || slot == null) return;
+            lastSlotPosition = slot.position;
+            lastSlotRotation = slot.rotation;
             occupant.Dock(slot.position, Quaternion.LookRotation(-slot.forward, slot.up), this);
+            ApplyReverse();
         }
 
         /// <summary>El lienzo salio del slot (lo agarraron o lo soltaron aparte).</summary>
         public void Release(PhysicalCanvas canvas)
         {
-            if (occupant == canvas) occupant = null;
-        }
-
-        public string GetPressPrompt() => "Girar el atril";
-
-        public void Press()
-        {
-            transform.Rotate(0f, CanvasRules.EaselTurnStep, 0f, Space.World);
-            Redock();
+            if (occupant != canvas) return;
+            if (canvas != null && canvas.TryGetComponent(out DrawingCanvas drawing)) drawing.SetReversedByEasel(false); // fuera del atril vuelve a lo normal
+            occupant = null;
         }
     }
 }

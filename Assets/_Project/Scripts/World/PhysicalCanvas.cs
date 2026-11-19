@@ -166,6 +166,17 @@ namespace SpellSimulator.World
             StartPose(floatAnchor, rotation, false);
         }
 
+        /// <summary>El atril se movio: el lienzo acoplado lo sigue de golpe (sin la animacion de acoplar, que no alcanzaria a llegar).</summary>
+        public void FollowEasel(Vector3 slotPosition, Quaternion rotation)
+        {
+            if (Easel == null) return;
+            Vector3 offset = canvas != null ? rotation * canvas.CenterOffsetLocalScaled : Vector3.zero;
+            floatAnchor = slotPosition - offset;
+            floatRotation = rotation;
+            animating = false;
+            transform.SetPositionAndRotation(floatAnchor, floatRotation);
+        }
+
         /// <summary>Sale del slot hacia <paramref name="position"/> y queda flotando (el cambio de lienzo en un atril).</summary>
         public void Eject(Vector3 position)
         {

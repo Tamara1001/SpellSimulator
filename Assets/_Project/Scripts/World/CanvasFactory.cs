@@ -6,12 +6,12 @@ namespace SpellSimulator.World
 {
     /// <summary>
     /// Crea en juego un lienzo o una libreta a partir de un <see cref="CanvasSpec"/> (restocker): clona la plantilla de papel, le da el tamaño
-    /// del preset, la emision por la cara con tinta, el marco de cara de disparo y, si es libreta, hojas y tapa. Misma receta que el
+    /// del preset, la emision por la cara con tinta, y, si es libreta, hojas y tapa. Misma receta que el
     /// generador del mapa (CanvasDesigns), pero con cubos primitivos para que corra fuera del editor.
     /// </summary>
     public static class CanvasFactory
     {
-        public static GameObject Spawn(GameObject paperTemplate, CanvasSpec spec, Vector3 position, Quaternion rotation, Material frameGold, Material frameBlue, Material cover)
+        public static GameObject Spawn(GameObject paperTemplate, CanvasSpec spec, Vector3 position, Quaternion rotation, Material cover)
         {
             spec = CanvasRules.Sanitize(spec);
             Vector2 d = CanvasRules.Dimensions(spec);
@@ -22,14 +22,13 @@ namespace SpellSimulator.World
 
             // La plantilla es un objeto del mapa: lo que no corresponde a un lienzo nuevo se le quita.
             foreach (var r in go.GetComponentsInChildren<Respawnable>(true)) Object.Destroy(r);
-            foreach (var old in go.GetComponentsInChildren<CanvasFrame>(true)) Object.Destroy(old.gameObject);
 
             var drawing = go.GetComponent<DrawingCanvas>();
             if (drawing != null)
             {
                 drawing.SetEmissionSide(EmissionSide.InkSide);
-                drawing.SetInkSign(CanvasRules.InkSign(spec.face));
-                CanvasFrameBuilder.Attach(drawing, frameGold, frameBlue, spec.shape);
+                drawing.SetInkSign(1f);
+                drawing.SetReversedByEasel(false);
             }
 
             var physical = go.GetComponent<PhysicalCanvas>();

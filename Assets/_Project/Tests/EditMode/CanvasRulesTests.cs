@@ -62,13 +62,11 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
-        public void Face_Flip_And_Ink_Sign_Round_Trip()
+        public void Easel_Reverse_Flips_The_Ink_Sign()
         {
-            Assert.AreEqual(FiringFace.Back, CanvasRules.Flip(FiringFace.Front));
-            Assert.AreEqual(FiringFace.Front, CanvasRules.Flip(CanvasRules.Flip(FiringFace.Front)));
-            Assert.AreEqual(1f, CanvasRules.InkSign(FiringFace.Front));
-            Assert.AreEqual(FiringFace.Back, CanvasRules.FaceOf(-1f));
-            Assert.AreNotEqual(CanvasRules.FrameColor(FiringFace.Front), CanvasRules.FrameColor(FiringFace.Back));
+            Assert.AreEqual(1f, CanvasRules.EffectiveInkSign(1f, false));
+            Assert.AreEqual(-1f, CanvasRules.EffectiveInkSign(1f, true));
+            Assert.AreEqual(1f, CanvasRules.EffectiveInkSign(-1f, true));
         }
 
         [Test]
@@ -83,10 +81,8 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
-        public void Easel_Turns_In_Steps_And_Wraps()
+        public void Pages_Are_Clamped()
         {
-            Assert.AreEqual(45f, CanvasRules.NextEaselYaw(0f), 1e-4f);
-            Assert.AreEqual(0f, CanvasRules.NextEaselYaw(315f), 1e-4f);
             Assert.AreEqual(0, CanvasRules.ClampPage(-3, 8));
             Assert.AreEqual(7, CanvasRules.ClampPage(30, 8));
         }

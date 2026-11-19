@@ -226,10 +226,11 @@ rectangulares 0,3×0,4 / 0,5×0,7 / 1×1,4 m; libretas S de bolsillo circular (�
 **Pinceles (Bloque B):** lápiz, pluma y pincel son el mismo objeto con otro grosor, punta y forma (`BrushSpec`, catálogo en `BrushRules`: pluma fina 4 mm,
 lápiz 8 mm, pincel 2 cm, pincel plano 4 cm, brocha 8 cm). No hay deslizador de grosor; el trazo grueso **no cambia el hechizo** (el reconocimiento rasteriza siempre
 con 2 px, probado en `BrushRulesTests`) y gasta algo más de tinta. Solo la goma conserva su rueda de tamaño.
-**Cara de disparo:** cada lienzo muestra con su marco por cuál cara sale el hechizo (dorado = la de dibujo, azul = la de atrás, con una flecha). El botón
-de la esquina del marco (apuntar + clic, gatillo en VR) la invierte sin mover el lienzo; F sigue dando vuelta el objeto.
-**Atriles:** el slot recibe el lienzo que se suelta (E) o se deja flotando (G) a menos de 0,85 m; si ya había otro, se cambian. Apuntando a la base y con
-clic el atril gira 45° y el lienzo con él (así se elige hacia dónde dispara). Los caballetes del tutorial siguen fijos.
+**Dirección de disparo (sin marcos):** todo lienzo dispara por el lado que mira, la cara donde se escribe. Los lienzos y libretas sueltos se dan vuelta con **F**
+al dibujar. Los atriles tienen un botón con dos flechas circulares al pie del frente (apuntar + clic, gatillo en VR) que invierte el **sentido del atril**, o sea de
+cualquier lienzo que tenga puesto; al sacar el lienzo del atril vuelve a disparar normal.
+**Atriles:** son objetos físicos pesados (como las cajas): se agarran, se empujan, caen y los afecta el mundo; el lienzo puesto los sigue. El slot recibe el lienzo
+que se suelta (E) o se deja flotando (G) a menos de 0,85 m; si ya había otro, se cambian. Los caballetes del tutorial siguen fijos.
 
 ## Decisiones (2026-10-07)
 1. **Auto-activación**: el hechizo se lanza solo al **cerrar el anillo**. El secundario de las herramientas es deshacer.
