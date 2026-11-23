@@ -42,6 +42,8 @@ namespace SpellSimulator.Net
         public NetDuel(NetworkManager manager) { nm = manager; }
 
         public bool InDuel => match != null && !finished;
+        public bool IsServer => nm != null && nm.IsServer;
+        public bool IsDuelHealth(Health target) => target != null && (health[0] == target || health[1] == target);
         public DuelMatch Match => match;
         public float Life(int player) => life[Mathf.Clamp(player, 0, 1)];
         public float InkFraction(int player) => inkShown[Mathf.Clamp(player, 0, 1)];
@@ -157,6 +159,7 @@ namespace SpellSimulator.Net
         {
             Health h = root.GetComponent<Health>();
             if (h == null) h = root.gameObject.AddComponent<Health>();
+            if (root.GetComponent<ImpactDamage>() == null) root.gameObject.AddComponent<ImpactDamage>();
             h.ResetHealth();
             return h;
         }

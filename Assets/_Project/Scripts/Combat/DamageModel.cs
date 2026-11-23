@@ -11,6 +11,21 @@ namespace SpellSimulator.Combat
     /// </summary>
     public static class DamageModel
     {
+        // Referencia: DamageTable.Values.Default en DamageTable.cs (fuego 10/s, impacto maximo 25).
+        public const float DuelImpactFactor = 0.2f;
+        public const float DuelMinimumImpactSpeed = 4f;
+        public const float DuelMaximumImpactDamage = 5f;
+        public const float DuelBurnDamagePerSecond = 1f;
+
+        /// <summary>Danio fisico reducido para duelo: energia sobre el umbral y tope por golpe.</summary>
+        public static float DuelImpactDamage(float relativeSpeed, float otherMass)
+        {
+            float excess = relativeSpeed - DuelMinimumImpactSpeed;
+            if (excess <= 0f) return 0f;
+            float energy = 0.5f * Mathf.Clamp(otherMass, 0.05f, 50f) * excess * excess;
+            return Mathf.Min(energy * DuelImpactFactor, DuelMaximumImpactDamage);
+        }
+
         public static float SpellDamage(DamageTable.Values table, ElementType element, float intensity, float dt)
         {
             if (intensity <= 0f || dt <= 0f) return 0f;

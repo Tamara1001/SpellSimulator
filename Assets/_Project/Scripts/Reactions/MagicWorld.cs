@@ -101,7 +101,11 @@ namespace SpellSimulator.Reactions
                     total += DamageModel.SpellDamage(damage.values, field.Element, field.ExposureAt(center), dt) * field.DamageMultiplier;
                 }
                 var reactive = health.GetComponent<ElementReactive>();
-                total += DamageModel.BurnDamage(damage.values, reactive != null && reactive.State.Burning, dt);
+                bool burning = reactive != null && reactive.State.Burning;
+                bool duelPlayer = Net.NetDuel.Active != null && Net.NetDuel.Active.IsDuelHealth(health);
+                total += duelPlayer
+                    ? (burning ? DamageModel.DuelBurnDamagePerSecond * dt : 0f)
+                    : DamageModel.BurnDamage(damage.values, burning, dt);
                 health.Damage(total);
             }
         }

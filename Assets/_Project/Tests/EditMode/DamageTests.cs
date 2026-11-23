@@ -46,5 +46,13 @@ namespace SpellSimulator.Tests
             Assert.Greater(DamageModel.ImpactDamage(Table, 6f, 2f), 0f);
             Assert.AreEqual(25f, DamageModel.ImpactDamage(Table, 30f, 50f), 1e-5f, "Aplastamiento: hasta 25.");
         }
+
+        [Test]
+        public void DuelImpactDamage_ThresholdScalesAndCaps()
+        {
+            Assert.AreEqual(0f, DamageModel.DuelImpactDamage(DamageModel.DuelMinimumImpactSpeed, 10f));
+            Assert.Greater(DamageModel.DuelImpactDamage(6f, 2f), DamageModel.DuelImpactDamage(5f, 2f));
+            Assert.AreEqual(DamageModel.DuelMaximumImpactDamage, DamageModel.DuelImpactDamage(100f, 50f));
+        }
     }
 }
