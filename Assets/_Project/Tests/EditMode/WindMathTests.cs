@@ -105,5 +105,27 @@ namespace SpellSimulator.Tests
         {
             Assert.AreEqual(1f, WindMath.SpreadBias(1, 1, 1f, 0f, 0f), 1e-5f);
         }
+
+        [Test]
+        public void ClampAcceleration_ShortPreserved_LongClamped_ZeroReturnsZero()
+        {
+            // Vector corto no cambia
+            Vector3 shortVec = new Vector3(12f, -5f, 0f);
+            Assert.AreEqual(shortVec, WindMath.ClampAcceleration(shortVec, 45f));
+
+            // Vector largo queda con magnitud = tope
+            Vector3 longVec = new Vector3(80f, 0f, 0f);
+            Vector3 clampedLong = WindMath.ClampAcceleration(longVec, 45f);
+            Assert.AreEqual(45f, clampedLong.magnitude, 1e-5f);
+            Assert.AreEqual(new Vector3(45f, 0f, 0f), clampedLong);
+
+            Vector3 diagonalLong = new Vector3(50f, 50f, 50f);
+            Vector3 clampedDiag = WindMath.ClampAcceleration(diagonalLong, 45f);
+            Assert.AreEqual(45f, clampedDiag.magnitude, 1e-5f);
+            Assert.AreEqual(diagonalLong.normalized * 45f, clampedDiag);
+
+            // Vector cero devuelve cero
+            Assert.AreEqual(Vector3.zero, WindMath.ClampAcceleration(Vector3.zero, 45f));
+        }
     }
 }

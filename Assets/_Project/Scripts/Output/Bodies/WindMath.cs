@@ -18,6 +18,8 @@ namespace SpellSimulator.Output
         public const float MaxUpdraftSpeed = 6f;
         /// <summary>Aceleracion maxima que una columna le imprime a un cuerpo (m/s2).</summary>
         public const float MaxUpdraftAcceleration = 40f;
+        /// <summary>Aceleracion maxima final que el arrastre del viento puede imponer sobre un cuerpo (m/s2, FIS-01).</summary>
+        public const float MaxWindAcceleration = 45f;
         /// <summary>Acople de la columna (1/s) para un cuerpo de 1 kg.</summary>
         public const float UpdraftGain = 8f;
         /// <summary>Cuanto favorece (o frena) el viento la propagacion del fuego a favor (o en contra) de su direccion.</summary>
@@ -78,6 +80,18 @@ namespace SpellSimulator.Output
             if (len < 1e-4f) return 1f;
             float alignment = (stepX * windX + stepZ * windZ) / len;
             return Mathf.Max(MinSpreadFactor, 1f + SpreadGain * Mathf.Clamp01(strength) * alignment);
+        }
+
+        /// <summary>
+        /// Acota la magnitud de una aceleracion al maximo indicado sin alocar memoria (puro).
+        /// </summary>
+        public static Vector3 ClampAcceleration(Vector3 a, float max)
+        {
+            if (max <= 0f) return Vector3.zero;
+            float sqr = a.sqrMagnitude;
+            if (sqr <= max * max) return a;
+            float mag = Mathf.Sqrt(sqr);
+            return mag > 1e-6f ? a * (max / mag) : Vector3.zero;
         }
     }
 }

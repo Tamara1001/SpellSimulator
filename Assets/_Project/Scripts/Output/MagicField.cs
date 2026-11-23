@@ -25,6 +25,8 @@ namespace SpellSimulator.Output
         public const float BaseCoupling = 2.5f;
         /// <summary>Aceleracion maxima que puede imponer el campo (m/s2).</summary>
         public const float MaxAcceleration = 45f;
+        /// <summary>Aceleracion maxima final que el viento puede imponer sobre un cuerpo (m/s2), evitando desbordes por windGain (FIS-01).</summary>
+        public const float MaxWindAcceleration = WindMath.MaxWindAcceleration;
         /// <summary>Cambio de velocidad maximo de la rafaga (m/s).</summary>
         public const float MaxBurstDeltaV = 7f;
         /// <summary>Area de referencia: anillo de 0.3 m de radio.</summary>
@@ -346,7 +348,8 @@ namespace SpellSimulator.Output
             {
                 var r = all[i];
                 if (r == null || (r.WorldBounds.center - center).sqrMagnitude > radius * radius) continue;
-                r.AddExposure(chill, Time.fixedDeltaTime * envelope);
+                // FIS-02: el segundo parametro de AddExposure es peso/intensidad (no dt); ReactionModel.Step ya multiplica por dt.
+                r.AddExposure(chill, envelope);
             }
         }
 
@@ -473,7 +476,9 @@ namespace SpellSimulator.Output
             if (rb.TryGetComponent(out Collider col)) area = WindMath.ProjectedArea(col.bounds.size);
             if (area < 0.01f) area = 0.5f; // collider apagado/sin bounds (p. ej. el jugador): area tipica
             Vector3 a = WindMath.Drag(windVelocity, rb.linearVelocity, rb.mass, area, WindMath.DefaultCd, MaxAcceleration);
-            rb.AddForce(a * (Mathf.Min(strength, 2f) * windGain), ForceMode.Acceleration);
+            // FIS-01: windGain puede multiplicar hasta ~5.2x y romper el tope de aceleracion; acotamos con MaxWindAcceleration.
+            Vector3 effectiveA = WindMath.ClampAcceleration(a * (Mathf.Min(strength, 2f) * windGain), MaxWindAcceleration);
+            rb.AddForce(effectiveA, ForceMode.Acceleration);
         }
 
         private void ApplyBurst()
