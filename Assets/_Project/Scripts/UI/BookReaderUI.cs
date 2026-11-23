@@ -13,8 +13,7 @@ namespace SpellSimulator.UI
     /// (trazos de plantilla del diccionario, <see cref="GlyphSketch"/>) o la portada; la derecha lleva el texto. Las paginas
     /// se pasan con las flechas, los botones laterales o haciendo clic en la hoja; en la ultima aparece "Aprender este
     /// conocimiento", que llama a la accion del libro y lo cierra. Mientras esta abierto el cursor queda libre y la vista
-    /// quieta (<see cref="FocusMode"/>); Esc o "Cerrar" lo cierran. En VR no existe: <see cref="Open"/> devuelve false y el
-    /// que llama resuelve sin lector.
+    /// quieta (<see cref="FocusMode"/>); Esc o "Cerrar" lo cierran. En VR se muestra en el panel de <see cref="VrUiPanel"/>.
     /// </summary>
     [RequireComponent(typeof(UIDocument))]
     public class BookReaderUI : MonoBehaviour
@@ -52,6 +51,7 @@ namespace SpellSimulator.UI
         private bool open;
         private bool enteredFocus;
         private bool turning;
+        private bool gamepadStickLeft, gamepadStickRight;
         // Temporizadores en tiempo real (no del scheduler del panel): pasar la hoja y ocultar al cerrar.
         private float turnAt = -1f, hideAt = -1f, revealAt = -1f;
 
@@ -78,11 +78,11 @@ namespace SpellSimulator.UI
 
         /// <summary>
         /// Abre un libro. Con el mismo libro ya abierto lo cierra (E abre y cierra). Devuelve false si no hay lector
-        /// (VR o escena sin UI): el que llama aplica <paramref name="onLearn"/> directamente.
+        /// (escena sin UI): el que llama decide como resolver la lectura.
         /// </summary>
         public static bool Open(string title, IReadOnlyList<ReaderPage> pages, Action onLearn)
         {
-            if (Instance == null || PlatformDetector.IsVR || pages == null || pages.Count == 0) return false;
+            if (Instance == null || pages == null || pages.Count == 0) return false;
             return Instance.Show(title, pages, onLearn);
         }
 
@@ -206,7 +206,18 @@ namespace SpellSimulator.UI
             if (turning && now >= turnAt) FinishTurn();
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null && keyboard.escapeKey.wasPressedThisFrame) { Close(); return; }
+            Gamepad gamepad = Gamepad.current;
+            if (gamepad != null && gamepad.buttonEast.wasPressedThisFrame) { Close(); return; }
             int delta = input != null ? input.PageDelta : 0;
+            if (delta == 0 && gamepad != null)
+            {
+                Vector2 stick = gamepad.leftStick.ReadValue();
+                bool right = stick.x > 0.65f, left = stick.x < -0.65f;
+                if (gamepad.dpad.right.wasPressedThisFrame || right && !gamepadStickRight) delta = 1;
+                else if (gamepad.dpad.left.wasPressedThisFrame || left && !gamepadStickLeft) delta = -1;
+                gamepadStickRight = right;
+                gamepadStickLeft = left;
+            }
             if (delta == 0 && keyboard != null)
             {
                 if (keyboard.rightArrowKey.wasPressedThisFrame || keyboard.pageDownKey.wasPressedThisFrame) delta = 1;

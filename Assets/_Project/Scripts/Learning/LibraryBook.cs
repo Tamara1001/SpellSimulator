@@ -138,7 +138,9 @@ namespace SpellSimulator.Learning
         {
             var info = Info;
             if (info == null) return;
-            if (!UI.BookReaderUI.Open(info.Title, BuildPages(info), Learn)) Learn();
+            if (UI.BookReaderUI.Open(info.Title, BuildPages(info), Learn)) return;
+            if (PlatformDetector.IsVR || Discovery.Instance.State.HasRead(bookId)) return;
+            Learn();
         }
 
         private List<UI.ReaderPage> BuildPages(BookInfo info)
@@ -252,6 +254,7 @@ namespace SpellSimulator.Learning
             var info = Info;
             if (info == null || Discovery.Instance == null) return;
             bool wasRead = Discovery.Instance.State.HasRead(bookId);
+            if (wasRead) return;
             int learned = Discovery.Instance.Read(info);
             // Libro de hechizos: aprender = leerlo (el grimorio desbloquea sus hechizos por libro leido).
             if (info.Spells.Count > 0) learned = wasRead ? 0 : info.Spells.Count;

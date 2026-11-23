@@ -92,7 +92,7 @@ namespace SpellSimulator.Player
             {
                 if (MainMenu.IsActive) MainMenu.Instance.EnterSandbox(); else MainMenu.Instance.ShowMenu();
             }
-            if (MainMenu.IsActive) HandlePointers();
+            if (MainMenu.IsActive || BookReaderUI.IsOpen) HandlePointers();
             else { ClearHover(); wasClickL = wasClickR = true; }
         }
 
@@ -101,7 +101,7 @@ namespace SpellSimulator.Player
             if (settings == null || quad == null) return;
             if (head == null) head = Camera.main;
             if (head == null) return;
-            bool menu = MainMenu.IsActive;
+            bool menu = MainMenu.IsActive || BookReaderUI.IsOpen;
             Transform h = head.transform;
             Vector3 flat = h.forward; flat.y = 0f;
             if (flat.sqrMagnitude < 0.01f) flat = Vector3.forward;
@@ -137,26 +137,26 @@ namespace SpellSimulator.Player
             VisualElement root = document.rootVisualElement;
             if (root == null || root.panel == null) return;
             bool clickL = input.VrTrigger(false) > 0.6f, clickR = input.VrTrigger(true) > 0.6f;
-            Button hitL = PickButton(false, root), hitR = PickButton(true, root);
-            Button preferred = interactor.VrRayRight ? (hitR ?? hitL) : (hitL ?? hitR);
+            VisualElement hitL = PickElement(false, root), hitR = PickElement(true, root);
+            VisualElement preferred = interactor.VrRayRight ? (hitR ?? hitL) : (hitL ?? hitR);
             SetHover(preferred);
 
-            Button pick = null;
+            VisualElement pick = null;
             if (clickL && !wasClickL) pick = hitL;
             if (pick == null && clickR && !wasClickR) pick = hitR;
             wasClickL = clickL;
             wasClickR = clickR;
             if (pick == null) return;
-            using (var submit = NavigationSubmitEvent.GetPooled())
+            using (var click = ClickEvent.GetPooled())
             {
-                submit.target = pick;
-                pick.SendEvent(submit);
+                click.target = pick;
+                pick.SendEvent(click);
             }
             Haptics.Pulse(HandType.Right, 0.3f, 0.05f);
         }
 
-        /// <summary>Boton del menu bajo el rayo de esa mano (null si el rayo no toca el cuadro o no hay boton ahi).</summary>
-        private Button PickButton(bool right, VisualElement root)
+        /// <summary>Elemento interactivo bajo el rayo de esa mano (boton o pagina del lector).</summary>
+        private VisualElement PickElement(bool right, VisualElement root)
         {
             Ray ray = interactor.VrPointerRay(right);
             Vector3 normal = quad.forward;
@@ -169,7 +169,8 @@ namespace SpellSimulator.Player
             var panelPos = new Vector2((local.x + 0.5f) * Width, (0.5f - local.y) * Height);
             // Con ScaleWithScreenSize y la RT a la resolucion de referencia, 1 pixel de textura = 1 unidad del panel.
             VisualElement element = root.panel.Pick(panelPos);
-            for (; element != null; element = element.parent) if (element is Button b) return b;
+            for (; element != null; element = element.parent)
+                if (element is Button || element.name == "page-left" || element.name == "page-right" || element.name == "reader-backdrop") return element;
             return null;
         }
 
