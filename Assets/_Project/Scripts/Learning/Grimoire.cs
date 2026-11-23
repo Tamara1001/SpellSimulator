@@ -1140,7 +1140,8 @@ namespace SpellSimulator.Learning
             t.rectTransform.localPosition = new Vector3(0f, (top + bottom) / 2f, -0.0012f);
             t.rectTransform.sizeDelta = new Vector2(ContentWidth, top - bottom);
             t.fontSizeMax = size;
-            t.fontSizeMin = size * 0.7f;
+            t.fontSizeMin = size * 0.5f;
+            t.lineSpacing = 4f;
             t.text = text;
         }
 

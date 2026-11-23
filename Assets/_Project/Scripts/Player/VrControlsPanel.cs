@@ -127,6 +127,7 @@ namespace SpellSimulator.Player
             go.transform.localPosition = new Vector3(center.x, center.y, -0.005f);
             go.transform.localRotation = Quaternion.identity;
             var tmp = go.AddComponent<TextMeshPro>();
+            if (UiFonts.Body != null) tmp.font = UiFonts.Body;
             tmp.text = text;
             tmp.fontSize = size * FontScale; // TMP 3D: el tamaño se mide en "puntos"; FontScale lo pasa a metros del mundo
             tmp.alignment = align;

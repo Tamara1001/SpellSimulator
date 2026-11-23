@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-23 — Texto y contraste de libros (LIB-07, LIB-13, UI2-06, UI2-07, UI2-08)
+
+- Grimorio: autosize mínimo 50 % e interlineado 4 en páginas densas (menos recortes).
+- Lector: notas y folios con más contraste, fondo oscuro del lector al 25 % (no suma a `FocusMode`), foco visible (borde dorado) en `.nav`, cierre y «Aprender».
+- `VrControlsPanel` usa `UiFonts.Body`. Pospuestos: LIB-04 (fuente por URL en USS), LIB-05 (aviso de páginas sin leer).
+
 ## 2026-11-23 — Libros en VR: lector del mundo y grimorio flotante (LIB-01, 03, 06, 08, 09, 10, 11, 12, 14, UI2-05)
 
 - **Auditoría** `Docs/AUDIT/05_libros_ui.md` (24 hallazgos: libros, grimorio y otras UI) y briefs 14-16.

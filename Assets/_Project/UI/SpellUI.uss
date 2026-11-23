@@ -860,7 +860,7 @@
 .reader-backdrop {
     position: absolute;
     left: 0; top: 0; right: 0; bottom: 0;
-    background-color: rgba(12, 6, 18, 0.72);
+    background-color: rgba(12, 6, 18, 0.25);
 }
 
 .book {
@@ -1037,9 +1037,9 @@
     margin-top: 14px;
     padding: 8px 12px 8px 8px;
     border-radius: 6px;
-    background-color: rgba(92, 58, 124, 0.1);
+    background-color: rgba(246, 234, 206, 0.96);
     border-width: 1px;
-    border-color: rgba(92, 58, 124, 0.35);
+    border-color: rgba(50, 26, 68, 0.75);
 }
 
 .note-seal {
@@ -1050,7 +1050,7 @@
 }
 
 .note-text {
-    color: var(--violet);
+    color: rgb(50, 26, 68);
     font-size: 17px;
     -unity-font-style: italic;
     white-space: normal;
@@ -1102,7 +1102,7 @@
     position: absolute;
     bottom: 24px;
     left: 0; right: 0;
-    color: var(--ink-soft);
+    color: var(--ink);
     font-size: 14px;
     -unity-font-style: italic;
     -unity-text-align: middle-center;
@@ -1142,6 +1142,12 @@
     translate: 4px 0;
 }
 
+.nav:focus {
+    -unity-background-image-tint-color: rgb(255, 236, 200);
+    border-width: 2px;
+    border-color: var(--gold-light);
+}
+
 .nav--disabled {
     opacity: 0.25;
 }
@@ -1164,6 +1170,19 @@
 
 .close-button:hover {
     -unity-background-image-tint-color: rgb(255, 236, 200);
+}
+
+.close-button:focus {
+    -unity-background-image-tint-color: rgb(255, 236, 200);
+    border-width: 2px;
+    border-color: var(--gold-light);
+}
+
+.learn-button:focus {
+    scale: 1.04 1.04;
+    -unity-background-image-tint-color: rgb(255, 236, 200);
+    border-width: 2px;
+    border-color: var(--gold-light);
 }
 
 .reader-footer {
