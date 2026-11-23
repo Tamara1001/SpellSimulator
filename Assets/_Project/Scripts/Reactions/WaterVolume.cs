@@ -53,6 +53,7 @@ namespace SpellSimulator.Reactions
         private BoxCollider volume;
         private readonly Rigidbody[] bodies = new Rigidbody[MaxBodies];
         private readonly Collider[] bodyColliders = new Collider[MaxBodies];
+        private readonly int[] bodyColliderCounts = new int[MaxBodies];
         private int bodyCount;
         private readonly Vector4[] ripples = new Vector4[MaxRipples];
         private int nextRipple;
@@ -137,10 +138,18 @@ namespace SpellSimulator.Reactions
         private void OnTriggerEnter(Collider other)
         {
             var rb = other.attachedRigidbody;
-            if (rb == null || rb.isKinematic || bodyCount >= MaxBodies) return;
-            for (int i = 0; i < bodyCount; i++) if (bodies[i] == rb) return;
+            if (rb == null || rb.isKinematic) return;
+            for (int i = 0; i < bodyCount; i++)
+            {
+                if (bodies[i] != rb) continue;
+                bodyColliderCounts[i] = WaterMath.AddBodyCollider(bodyColliderCounts[i]);
+                bodyColliders[i] = other;
+                return;
+            }
+            if (bodyCount >= MaxBodies) return;
             bodies[bodyCount] = rb;
             bodyColliders[bodyCount] = other;
+            bodyColliderCounts[bodyCount] = 1;
             bodyCount++;
             float speed = -rb.linearVelocity.y;
             if (speed > splashSpeed) Splash(rb.worldCenterOfMass, Mathf.Clamp01(speed / 8f) * Mathf.Clamp(rb.mass, 0.3f, 2f));
@@ -148,14 +157,19 @@ namespace SpellSimulator.Reactions
 
         private void OnTriggerExit(Collider other)
         {
-            for (int i = 0; i < bodyCount; i++)
+            var rb = other.attachedRigidbody;
+            for (int i = 0; rb != null && i < bodyCount; i++)
             {
-                if (bodyColliders[i] != other) continue;
+                if (bodies[i] != rb) continue;
+                bodyColliderCounts[i] = WaterMath.RemoveBodyCollider(bodyColliderCounts[i]);
+                if (bodyColliderCounts[i] > 0) return;
                 bodyCount--;
                 bodies[i] = bodies[bodyCount];
                 bodyColliders[i] = bodyColliders[bodyCount];
+                bodyColliderCounts[i] = bodyColliderCounts[bodyCount];
                 bodies[bodyCount] = null;
                 bodyColliders[bodyCount] = null;
+                bodyColliderCounts[bodyCount] = 0;
                 return;
             }
         }
@@ -166,13 +180,18 @@ namespace SpellSimulator.Reactions
             {
                 var rb = bodies[i];
                 var col = bodyColliders[i];
-                if (rb == null || col == null || !col.enabled || !rb.gameObject.activeInHierarchy || rb.isKinematic)
+                if (rb == null || !rb.gameObject.activeInHierarchy || rb.isKinematic)
                 {
                     bodyCount--;
                     bodies[i] = bodies[bodyCount];
                     bodyColliders[i] = bodyColliders[bodyCount];
+                    bodyColliderCounts[i] = bodyColliderCounts[bodyCount];
+                    bodies[bodyCount] = null;
+                    bodyColliders[bodyCount] = null;
+                    bodyColliderCounts[bodyCount] = 0;
                     continue;
                 }
+                if (col == null || !col.enabled) continue;
                 float submerged = Submerged(col.bounds);
                 if (submerged <= 0f) continue;
                 float buoyancy = BuoyancyOf(rb);

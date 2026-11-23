@@ -9,6 +9,16 @@ namespace SpellSimulator.Tests
     {
         private const float Eps = 1e-4f;
 
+        [Test]
+        public void BodyColliderCount_RemovesBodyOnlyAfterLastColliderExits()
+        {
+            int count = WaterMath.AddBodyCollider(0);
+            count = WaterMath.AddBodyCollider(count);
+            Assert.AreEqual(1, WaterMath.RemoveBodyCollider(count));
+            Assert.AreEqual(0, WaterMath.RemoveBodyCollider(1));
+            Assert.AreEqual(0, WaterMath.RemoveBodyCollider(0));
+        }
+
         // ---------------------------------------------------------------- charcos
 
         [Test]

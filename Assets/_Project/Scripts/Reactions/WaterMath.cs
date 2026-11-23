@@ -9,6 +9,12 @@ namespace SpellSimulator.Reactions
     /// </summary>
     public static class WaterMath
     {
+        /// <summary>Actualiza el número de colliders de un cuerpo que siguen dentro del volumen.</summary>
+        public static int AddBodyCollider(int count) => count + 1;
+
+        /// <summary>Descuenta un collider sin permitir que una salida duplicada lleve el conteo a negativo.</summary>
+        public static int RemoveBodyCollider(int count) => count > 0 ? count - 1 : 0;
+
         // ---------------------------------------------------------------- charcos
 
         /// <summary>Espesor de la lamina de agua de un charco (m): fija cuanto se extiende un volumen dado.</summary>
