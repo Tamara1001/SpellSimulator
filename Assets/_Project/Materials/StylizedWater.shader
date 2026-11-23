@@ -33,6 +33,21 @@ Shader "SpellSimulator/StylizedWater"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
             #define MAX_RIPPLES 16
+            #define RIPPLES_MID 8
+            #define RIPPLES_FAR 4
+
+            // Tramos de distancia para culling de ondas analiticas (VFX-05).
+            // - Cerca (<= kDistMid): hasta 16 ondas; ondas 8..15 se atenuan suavemente entre kDistMidFade y kDistMid.
+            // - Medio (kDistMid..kDistFar): 8 ondas; ondas 4..7 se atenuan entre kDistFarFade y kDistFar.
+            // - Lejos (kDistFar..kDistCull): 4 ondas; ondas 0..3 se atenuan entre kDistCullFade y kDistCull.
+            // - Fuera (> kDistCull): 0 ondas (corte completo de bucle, costo cero).
+            static const float kDistNear     = 12.0; // Distancia con 16 ondas a 100% de amplitud (identico al original)
+            static const float kDistMidFade  = 15.0; // Inicio atenuacion ondas 8..15
+            static const float kDistMid      = 20.0; // Corte a tramo medio (8 ondas)
+            static const float kDistFarFade  = 26.0; // Inicio atenuacion ondas 4..7
+            static const float kDistFar      = 32.0; // Corte a tramo lejano (4 ondas)
+            static const float kDistCullFade = 38.0; // Inicio atenuacion ondas 0..3
+            static const float kDistCull     = 45.0; // Culling total (0 ondas)
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _ShallowColor;
@@ -87,27 +102,68 @@ Shader "SpellSimulator/StylizedWater"
                 return output;
             }
 
+            // Evalua una onda de impacto individual con peso de atenuacion por distancia.
+            void AccumulateRipple(int i, int count, float3 positionWS, float weight, inout float foam, inout float2 slope)
+            {
+                if (i >= count || weight <= 0.0001) return;
+                float4 r = _Ripples[i];
+                float age = _Time.y - r.z;
+                if (age < 0 || age > _RippleLife) return;
+                float2 delta = positionWS.xz - r.xy;
+                float d = length(delta);
+                float front = age * _RippleSpeed;
+                float ring = exp(-pow((d - front) / _RippleWidth, 2));
+                float fade = (1 - age / _RippleLife) * r.w * weight;
+                foam += ring * fade;
+                slope += (d > 1e-3 ? delta / d : 0) * ring * fade * 0.6 * cos((d - front) * 25);
+            }
+
             half4 frag(Varyings input) : SV_Target
             {
                 float h;
                 float2 slope = Waves(input.positionWS.xz, h);
 
-                // Ondas de impacto: anillos que se expanden y se apagan.
+                // Ondas de impacto: anillos con culling por distancia y atenuacion suave (VFX-05).
                 float foam = 0;
                 int count = (int)_RippleCount;
-                for (int i = 0; i < MAX_RIPPLES; i++)
+                float camDist = distance(_WorldSpaceCameraPos, input.positionWS);
+
+                [branch]
+                if (count > 0 && camDist < kDistCull)
                 {
-                    if (i >= count) break;
-                    float4 r = _Ripples[i];
-                    float age = _Time.y - r.z;
-                    if (age < 0 || age > _RippleLife) continue;
-                    float2 delta = input.positionWS.xz - r.xy;
-                    float d = length(delta);
-                    float front = age * _RippleSpeed;
-                    float ring = exp(-pow((d - front) / _RippleWidth, 2));
-                    float fade = (1 - age / _RippleLife) * r.w;
-                    foam += ring * fade;
-                    slope += (d > 1e-3 ? delta / d : 0) * ring * fade * 0.6 * cos((d - front) * 25);
+                    [branch]
+                    if (camDist > kDistFar)
+                    {
+                        // Tramo Lejano: 4 ondas con cota constante para unroll movil
+                        float wFade = saturate((kDistCull - camDist) / (kDistCull - kDistCullFade));
+                        [unroll]
+                        for (int i = 0; i < RIPPLES_FAR; i++)
+                        {
+                            AccumulateRipple(i, count, input.positionWS, wFade, foam, slope);
+                        }
+                    }
+                    else if (camDist > kDistMid)
+                    {
+                        // Tramo Medio: 8 ondas con cota constante para unroll movil
+                        float wFade = saturate((kDistFar - camDist) / (kDistFar - kDistFarFade));
+                        [unroll]
+                        for (int i = 0; i < RIPPLES_MID; i++)
+                        {
+                            float w = (i >= RIPPLES_FAR) ? wFade : 1.0;
+                            AccumulateRipple(i, count, input.positionWS, w, foam, slope);
+                        }
+                    }
+                    else
+                    {
+                        // Tramo Cercano: 16 ondas con cota constante; identico al original cerca
+                        float wFade = saturate((kDistMid - camDist) / (kDistMid - kDistMidFade));
+                        [unroll]
+                        for (int i = 0; i < MAX_RIPPLES; i++)
+                        {
+                            float w = (i >= RIPPLES_MID) ? wFade : 1.0;
+                            AccumulateRipple(i, count, input.positionWS, w, foam, slope);
+                        }
+                    }
                 }
 
                 float3 normal = normalize(float3(-slope.x, 1, -slope.y));

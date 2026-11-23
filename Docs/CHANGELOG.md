@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-23 — Shaders: quemado en muros y culling de ondas de agua (VFX-03, VFX-05)
+
+- **VFX-03** `BurntGround.hlsl`: `ApplyBurntGround` recibe la normal y funde el quemado a 0 en superficies verticales (`smoothstep` 0,3-0,6 sobre `abs(normalWS.y)`); sin texturas nuevas. Suelos horizontales idénticos.
+- **VFX-05** `StylizedWater.shader`: ondas de impacto por tramos de distancia a la cámara (16 hasta 20 m, 8 hasta 32 m, 4 hasta 45 m, 0 más lejos) con atenuación suave y bucles de cota constante.
+- Compilan sin mensajes; sin probar visualmente ni en Quest.
+
 ## 2026-11-23 — Presupuesto de partículas, viñeta VR y limpieza de físicas (VFX-02, VFX-07, FIS-05/08/10/11/12/13/14)
 
 - **VFX-02**: `ParticleBudget` en `GraphicsQuality` (escala de emisión y tope de partículas vivas por perfil: VR 0,5x/2000, Baja 0,5x/2500, Media 0,75x/4500, Alta 1x/8000). Los efectos lo leen al instanciarse.

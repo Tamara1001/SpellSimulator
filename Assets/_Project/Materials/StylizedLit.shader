@@ -140,7 +140,7 @@ Shader "SpellSimulator/StylizedLit"
                 half3 albedo = input.color.rgb;
                 half3 emission = 0;
                 #if defined(_GRASS_BURN)
-                emission = ApplyBurntGround(input.positionWS, albedo);
+                emission = ApplyBurntGround(input.positionWS, n, albedo);
                 #endif
                 half3 shade = albedo * ambient * _ShadowTint.rgb;
                 half3 col = lerp(shade, albedo * light.color, saturate(lit));

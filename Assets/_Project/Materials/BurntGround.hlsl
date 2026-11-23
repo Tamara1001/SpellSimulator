@@ -13,6 +13,11 @@ TEXTURE2D(_GrassBurnTex);
 SAMPLER(sampler_GrassBurnTex);
 float4 _GrassBurnParams;
 
+// Umbrales de inclinacion para atenuar la proyeccion planar en paredes verticales (VFX-03).
+// abs(normalWS.y): 1 en suelos horizontales, 0 en paredes verticales puras.
+static const float kBurntSlopeMinY = 0.3; // Por debajo: pared vertical (quemado nulo)
+static const float kBurntSlopeMaxY = 0.6; // Por encima: suelo / rampa (quemado pleno)
+
 float BurntHash(float2 p)
 {
     p = frac(p * float2(123.34, 456.21));
@@ -33,8 +38,11 @@ float BurntNoise(float2 p)
 }
 
 /// Oscurece albedo con la quemadura y devuelve la emision de las brasas (sumar despues de la luz).
-half3 ApplyBurntGround(float3 positionWS, inout half3 albedo)
+half3 ApplyBurntGround(float3 positionWS, float3 normalWS, inout half3 albedo)
 {
+    // Paredes: la proyeccion planar en XZ se estira, asi que se funde a 0 segun la normal (VFX-03).
+    float slopeFade = smoothstep(kBurntSlopeMinY, kBurntSlopeMaxY, abs(normalWS.y));
+    if (slopeFade <= 0.0) return 0;
     float2 xz = positionWS.xz;
     float2 guv = (xz - _GrassBurnParams.xy) * _GrassBurnParams.z;
     if (any(guv < 0.0) || any(guv > 1.0)) return 0;
@@ -47,7 +55,7 @@ half3 ApplyBurntGround(float3 positionWS, inout half3 albedo)
 
     // Solo cerca del suelo: pasto y base de troncos si, muebles altos no.
     float h = positionWS.y - burn.b;
-    float near = 1.0 - smoothstep(0.3, 1.0, h);
+    float near = (1.0 - smoothstep(0.3, 1.0, h)) * slopeFade;
     float v = burn.r + (n - 0.5) * 0.55;
     float scorch = smoothstep(0.42, 0.6, v) * near;
     float toast = smoothstep(0.24, 0.44, v) * near;
