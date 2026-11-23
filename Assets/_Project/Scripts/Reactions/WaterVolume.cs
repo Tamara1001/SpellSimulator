@@ -205,7 +205,9 @@ namespace SpellSimulator.Reactions
         private float BuoyancyOf(Rigidbody rb)
         {
             var reactive = rb.GetComponent<ElementReactive>();
-            return reactive != null && reactive.Profile != null ? reactive.Profile.buoyancy : defaultBuoyancy;
+            bool hasProfile = reactive != null && reactive.Profile != null;
+            float profileBuoyancy = hasProfile ? reactive.Profile.buoyancy : 0f;
+            return WaterMath.EffectiveBuoyancy(hasProfile, profileBuoyancy, rb.mass, defaultBuoyancy);
         }
 
         // ---------------------------------------------------------------- hechizos
@@ -237,9 +239,18 @@ namespace SpellSimulator.Reactions
                     continue;
                 }
 
-                // Un hechizo que toca el agua: buscar el punto de la superficie con mas exposicion (muestreo 3x3).
+                // Un hechizo que toca el agua: buscar el punto de la superficie con mas exposicion.
                 Vector3 best = closest;
-                float bestExposure = 0f;
+                float bestExposure = field.ExposureAt(closest);
+
+                // Proyeccion de la direccion principal del hechizo sobre el plano del agua (FIS-07).
+                if (WaterMath.RaycastHorizontalPlane(origin, field.MainDirection, SurfaceY, field.ReachRadius, out Vector3 hit)
+                    && hit.x >= water.min.x && hit.x <= water.max.x && hit.z >= water.min.z && hit.z <= water.max.z)
+                {
+                    float hitExp = field.ExposureAt(hit);
+                    if (hitExp > bestExposure) { bestExposure = hitExp; best = hit; }
+                }
+
                 Vector3 step = water.size / 4f;
                 for (int x = 1; x <= 3; x++)
                 for (int z = 1; z <= 3; z++)
@@ -248,8 +259,6 @@ namespace SpellSimulator.Reactions
                     float e = field.ExposureAt(p);
                     if (e > bestExposure) { bestExposure = e; best = p; }
                 }
-                float near = field.ExposureAt(closest);
-                if (near > bestExposure) { bestExposure = near; best = closest; }
                 if (bestExposure <= 0.05f) continue;
 
                 AddRipple(best, bestExposure);

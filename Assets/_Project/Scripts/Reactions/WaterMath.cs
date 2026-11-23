@@ -120,6 +120,30 @@ namespace SpellSimulator.Reactions
             return Mathf.Abs(gravity) * Mathf.Max(buoyancy, 0f) * Mathf.Clamp01(submerged);
         }
 
+        /// <summary>
+        /// Flotabilidad efectiva en agua profunda (lago, FIS-06): si el cuerpo tiene perfil de material declarado se respeta;
+        /// si no tiene perfil, los cuerpos con masa mayor a <see cref="MaxFloatMass"/> no reciben empuje (se hunden).
+        /// </summary>
+        public static float EffectiveBuoyancy(bool hasProfile, float profileBuoyancy, float mass, float defaultBuoyancy = 1.2f)
+        {
+            if (hasProfile) return profileBuoyancy;
+            return mass > MaxFloatMass ? 0f : defaultBuoyancy;
+        }
+
+        /// <summary>
+        /// Punto de impacto de un rayo sobre un plano horizontal a altura <paramref name="surfaceY"/> (FIS-07).
+        /// Retorna true si intersecta en direccion positiva y a distancia menor o igual a <paramref name="maxDistance"/>.
+        /// </summary>
+        public static bool RaycastHorizontalPlane(Vector3 origin, Vector3 direction, float surfaceY, float maxDistance, out Vector3 hitPoint)
+        {
+            hitPoint = Vector3.zero;
+            if (Mathf.Abs(direction.y) <= 1e-4f) return false;
+            float t = (surfaceY - origin.y) / direction.y;
+            if (t < 0f || t > maxDistance) return false;
+            hitPoint = origin + direction * t;
+            return true;
+        }
+
         /// <summary>True si el hechizo de agua es lo bastante grande, fuerte y apuntado al suelo como para inundar.</summary>
         public static bool IsFloodSpell(float ringRadius, float force, float downDot)
         {

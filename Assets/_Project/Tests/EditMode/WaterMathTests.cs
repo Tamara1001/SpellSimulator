@@ -166,6 +166,34 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
+        public void EffectiveBuoyancy_ProfileWins_UnprofiledHeavySinks()
+        {
+            Assert.AreEqual(1.6f, WaterMath.EffectiveBuoyancy(true, 1.6f, 50f, 1.2f), Eps);
+            Assert.AreEqual(0.2f, WaterMath.EffectiveBuoyancy(true, 0.2f, 2f, 1.2f), Eps);
+            Assert.AreEqual(1.2f, WaterMath.EffectiveBuoyancy(false, 0f, 4f, 1.2f), Eps);
+            Assert.AreEqual(0f, WaterMath.EffectiveBuoyancy(false, 0f, WaterMath.MaxFloatMass + 1f, 1.2f), Eps);
+        }
+
+        [Test]
+        public void RaycastHorizontalPlane_HitsPlane_RejectsParallelOrPastMax()
+        {
+            Vector3 origin = new Vector3(0f, 5f, 0f);
+            Vector3 down = new Vector3(0f, -1f, 0f);
+
+            Assert.IsTrue(WaterMath.RaycastHorizontalPlane(origin, down, 0f, 10f, out Vector3 hit));
+            Assert.AreEqual(Vector3.zero, hit);
+
+            Vector3 dir = new Vector3(1f, -1f, 0f).normalized;
+            Assert.IsTrue(WaterMath.RaycastHorizontalPlane(origin, dir, 0f, 10f, out Vector3 hitDiag));
+            Assert.AreEqual(5f, hitDiag.x, 1e-3f);
+            Assert.AreEqual(0f, hitDiag.y, 1e-3f);
+
+            Assert.IsFalse(WaterMath.RaycastHorizontalPlane(origin, down, 0f, 3f, out _));
+            Assert.IsFalse(WaterMath.RaycastHorizontalPlane(origin, Vector3.forward, 0f, 10f, out _));
+            Assert.IsFalse(WaterMath.RaycastHorizontalPlane(origin, Vector3.up, 0f, 10f, out _));
+        }
+
+        [Test]
         public void FloodSpell_NeedsBigStrongAndDown()
         {
             Assert.IsTrue(WaterMath.IsFloodSpell(0.4f, 0.8f, 0.9f));
