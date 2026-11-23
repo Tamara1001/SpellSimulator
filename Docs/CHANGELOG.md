@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-23 — Libros en VR: lector del mundo y grimorio flotante (LIB-01, 03, 06, 08, 09, 10, 11, 12, 14, UI2-05)
+
+- **Auditoría** `Docs/AUDIT/05_libros_ui.md` (24 hallazgos: libros, grimorio y otras UI) y briefs 14-16.
+- **Lector de libros** (`BookReaderUI`, `VrUiPanel`, `LibraryBook`): ahora abre también en VR como panel con puntero por rayo; gamepad con cruceta/stick y botón este; un libro ya leído no vuelve a «aprender».
+- **Grimorio**: el stick der. en VR pasa páginas y no hace snap-turn con el libro abierto; `ReturnDistance` 12 → 3,5 m y T con el libro lejos (> 2 m) lo trae de nuevo a la vista; rotación X/Z congelada mientras flota (libre al agarrarlo); sujeción desde 0,6 m; modo fijo con **B** en PC (y Select en gamepad) y B Touch en VR con el grimorio abierto; textos de ayuda actualizados (si cambian controles: `GAME_DESIGN.md`, `GrimoireTexts`, `PlayerInputReader`).
+- `VrControlsPanel`: sin apertura automática larga (15 s, se cierra al moverse).
+- Pendiente de probar en visor: que el lector comparta el `PanelSettings` del menú en VR. Tests 691/692 al correr; el que falló (`Cerca_NoVuelve`, distancia vieja) se ajustó, sin re-ejecutar.
+
 ## 2026-11-23 — Grimorio sólido y empujable
 
 - `Grimoire`: el cuerpo pasa de cinemático a dinámico sin gravedad (masa 0,6, amortiguación lineal 2,5 y angular 4) y el collider de agarre deja de ser trigger: el jugador y los hechizos lo empujan y no se atraviesa. `DriveKinematic` ahora es false (el movedor lo sigue por velocidad).

@@ -209,16 +209,18 @@ namespace SpellSimulator.Player
             held = rb;
             holding = true;
             pinRequested = false;
+            grabbable = rb.GetComponentInParent<IRemoteGrabbable>();
             // Objetos grandes (rocas): por defecto quedan lejos y no se atraviesan al caminar; el tope tambien crece un poco con el tamano.
             float radius = BoundsRadius(rb);
-            minHoldDistance = Mathf.Max(MinDistance, radius * HoldRadiusFactor + HoldMargin);
+            float margin = grabbable != null ? 0f : HoldMargin;
+            float minBase = grabbable != null ? 0.6f : MinDistance;
+            minHoldDistance = Mathf.Max(minBase, radius * (grabbable != null ? 1.0f : HoldRadiusFactor) + margin);
             maxHoldDistance = Mathf.Max(MaxDistance, minHoldDistance + 1.5f);
             holdDistance = Mathf.Clamp(Mathf.Max(distance, minHoldDistance), minHoldDistance, maxHoldDistance);
             if (PlatformDetector.IsVR && interactor != null) aimRight = interactor.VrRayRight;
             GetAim(out _, out _, out Quaternion aimRotationAtGrab);
             relativeRotation = Quaternion.Inverse(aimRotationAtGrab) * rb.rotation;
 
-            grabbable = rb.GetComponentInParent<IRemoteGrabbable>();
             if (grabbable != null)
             {
                 grabbable.OnRemoteGrab();

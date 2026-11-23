@@ -11,7 +11,7 @@ namespace SpellSimulator.Tests
 
         [Test]
         public void Cerca_NoVuelve()
-            => Assert.IsFalse(GrimoireMath.ShouldReturn(5f, false, false, 10f));
+            => Assert.IsFalse(GrimoireMath.ShouldReturn(Grimoire.ReturnDistance - 1f, false, false, 10f));
 
         [Test]
         public void SostenidoOAbiertoEnMano_NoVuelve()

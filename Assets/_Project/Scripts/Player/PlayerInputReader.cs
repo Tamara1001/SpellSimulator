@@ -250,7 +250,8 @@ namespace SpellSimulator.Player
             debugAction = new InputAction("Debug", InputActionType.Button);
             debugAction.AddBinding("<Keyboard>/f3");
             bookFocusAction = new InputAction("BookFocus", InputActionType.Button);
-            // B eliminada: el grimorio a pantalla completa ahora es Esc (lo maneja Grimoire).
+            bookFocusAction.AddBinding("<Keyboard>/b");
+            bookFocusAction.AddBinding("<Gamepad>/select");
             hotbarActions = new InputAction[3];
             for (int i = 0; i < hotbarActions.Length; i++)
             {
@@ -501,7 +502,7 @@ namespace SpellSimulator.Player
             }
             if (vrCrouchLatched) IsCrouching = true;
 
-            // B: toque = slot siguiente, mantener = arrojar la herramienta.
+            // B: toque = slot siguiente (o alternar modo fijo si el grimorio está abierto, LIB-10), mantener = arrojar la herramienta.
             VrSlotDelta = 0;
             if (bButtonAction.WasPressedThisFrame()) { bDownAt = Time.unscaledTime; bHoldDone = false; }
             else if (bDownAt >= 0f && !bHoldDone && bButtonAction.IsPressed() && Time.unscaledTime - bDownAt >= VrThrowToolHoldSeconds)
@@ -511,7 +512,13 @@ namespace SpellSimulator.Player
             }
             if (bButtonAction.WasReleasedThisFrame())
             {
-                if (!bHoldDone && bDownAt >= 0f && Time.unscaledTime - bDownAt < VrTapSeconds) VrSlotDelta = 1;
+                if (!bHoldDone && bDownAt >= 0f && Time.unscaledTime - bDownAt < VrTapSeconds)
+                {
+                    if (SpellSimulator.Learning.Grimoire.Instance != null && SpellSimulator.Learning.Grimoire.Instance.IsOpen)
+                        IsTogglingBookFocus = true;
+                    else
+                        VrSlotDelta = 1;
+                }
                 bDownAt = -1f;
             }
 
@@ -556,7 +563,8 @@ namespace SpellSimulator.Player
             ClearVrFrame();
             IsJumping = IsInteracting = IsSecondaryUsingTool = IsReloading = IsCyclingInk = IsResettingWorld = false;
             IsRunning = IsTogglingProne = IsZooming = IsRemoteGrabbing = IsRotateHeld = IsTogglingDebug = false;
-            IsTogglingBookFocus = IsPinning = IsCrouching = IsThrowing = IsFlipping = IsTogglingFocus = false;
+            IsTogglingBookFocus = book && bookFocusAction.triggered;
+            IsPinning = IsCrouching = IsThrowing = IsFlipping = IsTogglingFocus = false;
             WidthPreset = -1;
             HotbarKey = -1;
             Scroll = 0f;

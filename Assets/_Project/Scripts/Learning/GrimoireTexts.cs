@@ -70,16 +70,16 @@ namespace SpellSimulator.Learning
                 "\nPapeles, cuadernos, pizarras y caballetes son superficies para dibujar. Cajas, pesas y piedras se mueven y se arrojan.",
                 "Cómo se usan",
                 "Con <b>E</b> tomás una herramienta y queda en tu barra (<b>1-2-3</b>): <b>clic izquierdo</b> la usa y <b>clic derecho</b> deshace.\n\n" +
-                "Con <b>E</b> sobre una hoja, una caja o este libro, lo arrastrás con la otra mano: la <b>rueda</b> lo acerca, <b>F</b> da vuelta la hoja y <b>V</b> la fija a la pantalla para dibujar cómodo."),
+                "Con <b>E</b> sobre una hoja, una caja o este libro, lo arrastrás con la otra mano: la <b>rueda</b> lo acerca, <b>F</b> da vuelta la hoja y <b>Tab</b> la fija a la pantalla para dibujar cómodo."),
             new GrimoireSpread(
                 "El dibujo",
                 "Dibujá el sigilo grande y centrado. Agregá los signos alrededor, sin tocarlo. Cerrá el anillo de un solo trazo: ahí se lanza.\n\n" +
                 "El hechizo sale por la <b>cara con tinta</b> de la hoja: dala vuelta (<b>F</b>) para apuntarlo.\n\n" +
                 "Cuanto más grande el anillo, más fuerte el hechizo.",
                 "Este libro",
-                "<b>T</b> lo abre y lo cierra (<b>Esc</b> lo abre a pantalla completa y lo cierra). Apuntá a un botón y hacé <b>clic</b>; <b>Z</b> y <b>X</b> pasan las páginas.\n\n" +
-                "<b>E</b> sobre el libro lo agarra para moverlo y otra <b>E</b> lo deja flotando. <b>Esc</b> lo trae a pantalla completa.\n\n" +
-                "Cada glifo que descubrís queda escrito en <b>Glifos</b>."),
+                "<b>T</b> (o <b>Menú</b> en VR) lo abre y lo cierra. Apuntá y hacé <b>clic</b>; <b>Z / X</b>, <b>flechas</b> o <b>stick der.</b> pasan páginas.\n\n" +
+                "<b>E</b> (o agarre en VR) lo mueve y otra vez lo suelta. Con <b>B</b> se fija a la vista.\n\n" +
+                "Cada glifo descubierto queda escrito en <b>Glifos</b>."),
         };
 
         // ---------------------------------------------------------------- Sellos
@@ -116,8 +116,9 @@ namespace SpellSimulator.Learning
                 Row("Alt izq.", "zoom (mantenido)") +
                 "\n" + Heading("Menú") + "\n" +
                 Row("T", "abre o cierra el grimorio") +
+                Row("B", "fija el grimorio a la vista (pantalla completa)") +
                 Row("Z / X", "página anterior / siguiente") +
-                Row("Esc", "grimorio a pantalla / menú") +
+                Row("Esc", "menú / grimorio a pantalla") +
                 Row("F3", "depuración") +
                 Row("Tab", "vista completa (lienzo, pared, mapa)") +
                 Row("Retroceso", "reiniciar el mundo"),
@@ -145,7 +146,7 @@ namespace SpellSimulator.Learning
                 Row("Agarre", "mantener, o un toque lo deja pegado", 44) +
                 Row("Soltar", "rápido: arroja; quieto: flota", 44) +
                 Row("A / X", "deshace (la otra: salta)", 44) +
-                Row("B", "toque: slot; mantener: arroja la herramienta", 44) +
+                Row("B", "toque: slot (fija el grimorio si abre); arroja", 44) +
                 Row("Stick der.", "lados: gira/página; arriba-abajo: tamaño de la goma", 44) +
                 Row("Clic stick", "izq.: agacharse (mantener: controles); der.: menú", 44) +
                 Row("Y", "cambia la tinta; mantener: reinicia", 44)),

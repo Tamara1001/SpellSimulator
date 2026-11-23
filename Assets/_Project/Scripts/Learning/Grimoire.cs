@@ -87,7 +87,7 @@ namespace SpellSimulator.Learning
         private const int Left = 0, Right = 1;
 
         /// <summary>Distancia (m) a la que un grimorio suelto vuelve al inventario (tras GrimoireMath.ReturnSeconds).</summary>
-        public const float ReturnDistance = 12f;
+        public const float ReturnDistance = 3.5f;
         private const float ReturnCheckInterval = 0.5f;
         private float nextReturnCheck, awaySeconds;
 
@@ -207,8 +207,20 @@ namespace SpellSimulator.Learning
                 && Time.frameCount != SpellSimulator.UI.BookReaderUI.ClosedFrame;
             if (input.IsTogglingBook)
             {
-                if (IsOpen) Close();
+                if (IsOpen)
+                {
+                    if (viewer == null) viewer = Camera.main;
+                    float dist = (viewer != null && root != null) ? Vector3.Distance(viewer.transform.position, root.position) : 0f;
+                    if (dist > 2f && !focused) Open();
+                    else Close();
+                }
                 else Open();
+            }
+            else if (input.IsTogglingBookFocus)
+            {
+                if (!IsOpen) OpenFullscreen();
+                else if (!focused) EnterFocus();
+                else ExitFocus();
             }
             else if (escape)
             {
@@ -226,8 +238,9 @@ namespace SpellSimulator.Learning
             wasUsingTool = usingTool;
             if (focused && pressed) PressUnderPointer();
 
-            // Teclado: Z / X, flechas o cruceta (la rueda ya no pasa paginas).
+            // Teclado: Z / X, flechas o cruceta (la rueda ya no pasa paginas). En VR: stick derecho a los lados (VrFlickX).
             int delta = input.PageDelta;
+            if (PlatformDetector.IsVR && delta == 0) delta = input.VrFlickX;
             if (delta != 0) Step(delta);
 
             // La confirmacion del reinicio vence sola: el boton vuelve a su rotulo normal.
@@ -280,7 +293,12 @@ namespace SpellSimulator.Learning
             if (viewer == null) return;
             Transform cam = viewer.transform;
             root.SetParent(transform, true); // por si se cerro mientras estaba en la mano
-            if (body != null) { body.linearVelocity = Vector3.zero; body.angularVelocity = Vector3.zero; }
+            if (body != null)
+            {
+                body.linearVelocity = Vector3.zero;
+                body.angularVelocity = Vector3.zero;
+                body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            }
             Vector3 flat = Vector3.ProjectOnPlane(cam.forward, Vector3.up).normalized;
             if (flat.sqrMagnitude < 0.01f) flat = Vector3.forward;
             // A la altura de la vista y un poco abajo: la barra de objetos (abajo al centro) no lo tapa.
@@ -328,14 +346,22 @@ namespace SpellSimulator.Learning
         {
             if (focused) ExitFocus();
             remoteHeld = true;
-            if (body != null) body.interpolation = RigidbodyInterpolation.Interpolate;
+            if (body != null)
+            {
+                body.interpolation = RigidbodyInterpolation.Interpolate;
+                body.constraints = RigidbodyConstraints.None;
+            }
         }
 
         /// <summary>Con pin o sin pin queda flotando donde esta: es un libro, no cae.</summary>
         public void OnRemoteRelease(bool pin)
         {
             remoteHeld = false;
-            if (body != null) body.interpolation = RigidbodyInterpolation.None;
+            if (body != null)
+            {
+                body.interpolation = RigidbodyInterpolation.None;
+                body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+            }
         }
 
         // ---------------------------------------------------------------- modo fijo (B)
@@ -376,6 +402,7 @@ namespace SpellSimulator.Learning
             body.isKinematic = false;
             body.linearVelocity = Vector3.zero;
             body.angularVelocity = Vector3.zero;
+            body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
             FocusMode.Exit();
         }
 
@@ -1234,6 +1261,7 @@ namespace SpellSimulator.Learning
             body.linearDamping = BookLinearDamping;
             body.angularDamping = BookAngularDamping;
             body.interpolation = RigidbodyInterpolation.None;
+            body.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
 
             for (int side = 0; side < 2; side++) BuildHalf(side);
             BuildSpine();

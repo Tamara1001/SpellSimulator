@@ -10,7 +10,7 @@ namespace SpellSimulator.Player
     /// </summary>
     public class VrControlsPanel : MonoBehaviour
     {
-        private const float Distance = 1.25f, PanelWidth = 1.7f, PanelHeight = 1.0f, AutoCloseSeconds = 40f, AutoOpenDelay = 3f;
+        private const float Distance = 1.25f, PanelWidth = 1.7f, PanelHeight = 1.0f, AutoCloseSeconds = 15f, AutoOpenDelay = 3f;
 
         private const string Title = "<b>CONTROLES VR</b>";
         private const string Left =
@@ -49,6 +49,7 @@ namespace SpellSimulator.Player
         {
             input = reader;
             openAt = Time.unscaledTime + AutoOpenDelay;
+            autoShown = true; // Apertura manual: no tapa la visión al inicio (UI2-05)
             Hud.Notify("vrcontrols", "Mantené el clic del stick izq.: controles", 8f);
         }
 
@@ -65,7 +66,7 @@ namespace SpellSimulator.Player
                 autoShown = true;
                 if (open) Hide(); else Show();
             }
-            if (open && Time.unscaledTime >= closeAt) Hide();
+            if (open && (Time.unscaledTime >= closeAt || input.MoveValue.sqrMagnitude > 0.2f)) Hide();
         }
 
         private void OnDestroy() { if (root != null) Destroy(root); }
