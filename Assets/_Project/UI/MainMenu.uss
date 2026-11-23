@@ -195,6 +195,11 @@
     translate: -40px 0;
 }
 
+/* Tras la entrada: transiciones cortas para que el hover y el foco respondan rapido. */
+.mm--ready .mm-button {
+    transition-duration: 0.14s, 0.14s, 0.08s, 0.1s;
+}
+
 .mm-button:hover,
 .mm-button:focus {
     translate: 12px 0;

@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-23 — Menú: resaltado pegado, botones del tutorial y respuesta al hover
+
+- Al sacar el mouse de un botón se quita el foco (`PointerLeaveEvent` → `Blur`); antes quedaba resaltada la última opción.
+- Botones «Hacer el tutorial»/«Saltear» (creados en runtime): color crema, negrita y contorno; salían con el texto negro del `Button` por defecto.
+- Respuesta: el retardo escalonado de la entrada (hasta 0,6 s) también aplicaba al hover. Ahora se quita al terminar la entrada y `.mm--ready` acorta las transiciones a ~0,14 s.
+- Sin probar a mano en el Editor.
+
 ## 2026-11-23 — Agua, pilas de lienzos, DisplayStock y UI menores (FIS-06, FIS-07, MAP-06, MAP-07, UI-02, UI-04)
 
 - **FIS-06**: `WaterMath.EffectiveBuoyancy`: sin perfil de material, los cuerpos pesados (> `MaxFloatMass`) se hunden en el lago. **FIS-07**: el hechizo sobre el agua también prueba el punto donde su dirección corta la superficie (`RaycastHorizontalPlane`). Dos tests nuevos.

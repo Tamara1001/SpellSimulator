@@ -126,6 +126,21 @@ namespace SpellSimulator.UI
 
         // ---------------------------------------------------------------- armado
 
+        private float readyAt = -1f;
+        private readonly Button[] stagger = new Button[6];
+
+        /// <summary>Retardo escalonado solo durante la entrada; despues se quita para que el hover responda al instante.</summary>
+        private void SetStagger(bool on)
+        {
+            for (int i = 0; i < stagger.Length; i++)
+            {
+                Button b = stagger[i];
+                if (b == null) continue;
+                float d = on ? 0.18f + i * 0.07f : 0f;
+                b.style.transitionDelay = new List<TimeValue> { new TimeValue(d), new TimeValue(d), new TimeValue(0f), new TimeValue(0f) };
+            }
+        }
+
         private bool Bind()
         {
             VisualElement root = document != null ? document.rootVisualElement : null;
@@ -162,10 +177,13 @@ namespace SpellSimulator.UI
             {
                 Button b = all[i];
                 b.RegisterCallback<PointerEnterEvent>(_ => { if (b.enabledSelf && state == State.Menu) b.Focus(); });
-                float d = 0.18f + i * 0.07f;
-                b.style.transitionDelay = new List<TimeValue> { new TimeValue(d), new TimeValue(d), new TimeValue(0f), new TimeValue(0f) };
+                // Al sacar el mouse se quita el resaltado (si no, quedaba la ultima opcion marcada).
+                b.RegisterCallback<PointerLeaveEvent>(_ => { if (menu.focusController?.focusedElement == b) b.Blur(); });
+                stagger[i] = b;
             }
+            SetStagger(true);
             creditsBack.RegisterCallback<PointerEnterEvent>(_ => creditsBack.Focus());
+            creditsBack.RegisterCallback<PointerLeaveEvent>(_ => creditsBack.Blur());
 
             // La navegacion la maneja este script (teclado y cruceta): se ignoran los eventos de navegacion del panel
             // para que Enter no apriete dos veces.
@@ -219,6 +237,9 @@ namespace SpellSimulator.UI
             menu.RemoveFromClassList("mm--hidden");
             menu.RemoveFromClassList("mm--fading");
             menu.AddToClassList("mm--enter");
+            menu.RemoveFromClassList("mm--ready");
+            readyAt = -1f;
+            SetStagger(true);
             revealAt = Time.unscaledTime + 0.05f;
             HideCreditsNow();
             RefreshNetView();
@@ -380,7 +401,14 @@ namespace SpellSimulator.UI
             {
                 revealAt = -1f;
                 menu.RemoveFromClassList("mm--enter");
+                readyAt = now + 1.2f; // al terminar la entrada escalonada, los botones pasan a respuesta rapida
                 if (state == State.Menu) sandbox.Focus();
+            }
+            if (readyAt > 0f && now >= readyAt)
+            {
+                readyAt = -1f;
+                SetStagger(false);
+                menu.AddToClassList("mm--ready");
             }
             if (hideAt > 0f && now >= hideAt)
             {

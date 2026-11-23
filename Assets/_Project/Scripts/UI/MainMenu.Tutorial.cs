@@ -101,8 +101,22 @@ namespace SpellSimulator.UI
             tutorialPlay.AddToClassList("mm-button--primary");
             tutorialSkip = new Button(() => ChooseTutorial(true)) { name = "tutorial-skip", text = "Saltear (ir al nexo)" };
             tutorialSkip.AddToClassList("mm-button");
+            // Los botones nacen en runtime fuera del arbol con estilo de .mm-label: el texto salia negro (Button por defecto).
+            foreach (Button tb in new[] { tutorialPlay, tutorialSkip })
+            {
+                tb.style.color = new Color(0.98f, 0.93f, 0.78f);
+                tb.style.fontSize = 22f;
+                tb.style.unityFontStyleAndWeight = FontStyle.Bold;
+                tb.style.unityTextAlign = TextAnchor.MiddleCenter;
+                tb.style.unityTextOutlineColor = new Color(0f, 0f, 0f, 0.7f);
+                tb.style.unityTextOutlineWidth = 0.2f;
+                tb.style.justifyContent = Justify.Center;
+                tb.style.paddingLeft = 22f;
+            }
             tutorialPlay.RegisterCallback<PointerEnterEvent>(_ => tutorialPlay.Focus());
             tutorialSkip.RegisterCallback<PointerEnterEvent>(_ => tutorialSkip.Focus());
+            tutorialPlay.RegisterCallback<PointerLeaveEvent>(_ => tutorialPlay.Blur());
+            tutorialSkip.RegisterCallback<PointerLeaveEvent>(_ => tutorialSkip.Blur());
 
             box.Add(title);
             box.Add(hint);
