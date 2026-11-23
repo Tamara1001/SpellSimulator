@@ -77,13 +77,25 @@ namespace SpellSimulator.World
 
         private void TrackLoose(GameObject go)
         {
-            loose.RemoveAll(x => x == null);
+            for (int i = loose.Count - 1; i >= 0; i--)
+            {
+                if (loose[i] == null) loose.RemoveAt(i);
+            }
             loose.Add(go);
             while (loose.Count > maxLoose)
             {
-                int victim = loose.FindIndex(x => !(x.TryGetComponent(out Holdable h) && h.IsHeld));
+                int victim = -1;
+                for (int i = 0; i < loose.Count; i++)
+                {
+                    GameObject item = loose[i];
+                    if (item == null || !(item.TryGetComponent(out Holdable h) && h.IsHeld))
+                    {
+                        victim = i;
+                        break;
+                    }
+                }
                 if (victim < 0) break;
-                Destroy(loose[victim]);
+                if (loose[victim] != null) Destroy(loose[victim]);
                 loose.RemoveAt(victim);
             }
         }

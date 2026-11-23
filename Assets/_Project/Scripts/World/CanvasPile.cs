@@ -14,8 +14,13 @@ namespace SpellSimulator.World
         [SerializeField] private CanvasKind kind;
         [SerializeField] private CanvasSize size;
         [SerializeField] private CanvasShape shape;
+        [SerializeField, Tooltip("Segundos de enfriamiento antes de reponer el lienzo tomado.")]
+        private float refillDelay = 1.0f;
 
         private PhysicalCanvas top;
+        private float refillAt;
+
+        public float RefillDelay { get => refillDelay; set => refillDelay = value; }
 
         public void Configure(CanvasRestocker restocker, Transform anchor, CanvasSpec spec)
         {
@@ -32,19 +37,30 @@ namespace SpellSimulator.World
 
         private void Update()
         {
-            if (top == null) { Refill(); return; }
-            if (top.IsFloating) return;
-            // Se lo llevaron (agarrado, arrojado o caido): ahora cuenta como sacado y se repone.
-            restocker.Release(top.gameObject);
-            top = null;
-            Refill();
+            if (top != null)
+            {
+                if (top.IsFloating) return;
+                // Se lo llevaron (agarrado, arrojado o caido): ahora cuenta como sacado y se repone tras el enfriamiento.
+                if (restocker != null) restocker.Release(top.gameObject);
+                top = null;
+                refillAt = Time.time + refillDelay;
+            }
+
+            if (Time.time >= refillAt) Refill();
         }
 
         private void Refill()
         {
             if (restocker == null || anchor == null) return;
             GameObject go = restocker.SpawnDisplay(Spec, anchor.position, anchor.rotation);
-            if (go != null) top = go.GetComponent<PhysicalCanvas>();
+            if (go != null)
+            {
+                top = go.GetComponent<PhysicalCanvas>();
+            }
+            if (top == null)
+            {
+                refillAt = Time.time + refillDelay;
+            }
         }
     }
 }
