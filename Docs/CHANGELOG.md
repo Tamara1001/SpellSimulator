@@ -5,6 +5,16 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-23 — Auditoría de Antigravity y primeros arreglos urgentes (físicas, daño en duelo, shader)
+
+- **Auditoría** (`Docs/AUDIT/`): 4 informes de solo lectura (mapa+UI, modelado+VFX, físicas, PVP; 60 hallazgos), plan (`PLAN_URGENTE.md`) y briefs cerrados (`briefs/`). Tareas cargadas en el Trello de SpellSimulator.
+- **FIS-01 viento (`MagicField.WindDrag`)**: tras multiplicar por `windGain` la aceleración superaba el tope (~10x); ahora `WindMath.ClampAcceleration` la acota a `MaxWindAcceleration` (45 m/s²). Test en `WindMathTests`.
+- **FIS-02 enfriamiento (`MagicField.ApplyCool`)**: pasaba `fixedDeltaTime * envelope` como peso a `AddExposure`, y `ReactionModel.Step` ya integra por dt: el frío quedaba ~50x más débil. Ahora pasa `envelope` como el resto de los campos.
+- **FIS-03 agua (`WaterVolume`, `FloodZone`)**: cuerpos con varios colliders se daban por salidos cuando salía el primero; ahora se cuentan colliders por cuerpo (`WaterMath`) y se retira al llegar a 0. Test en `WaterMathTests`.
+- **PVP-03 daño en duelo**: los duelistas eran inmunes a impactos y fuego (`ImpactDamage` solo dañaba a quien ya lo tenía). `NetDuel` lo agrega en runtime y el daño pasa por `Health.Damage` en el servidor; constantes `DuelImpactFactor`, `DuelMinimumImpactSpeed`, `DuelMaximumImpactDamage`, `DuelBurnDamagePerSecond` en `DamageModel`. Pendiente probar en juego que los colliders del prefab generen colisiones en la raíz.
+- **VFX-01 `Binarize.shader`**: reescrito en HLSL/URP con instancing estéreo (mismo nombre y propiedades). Pendiente probar en Quest.
+- Verificación: compilación 0 errores, EditMode 687/687. Herramienta: `agy-jaula` ahora admite corridas simultáneas (contador de corridas + candado).
+
 ## 2026-11-22 — VR: altura calibrada, pluma que apunta donde apunta el rayo y cartel de controles
 
 - **Altura (`PlayerMovement`)**: al empezar (y al pedirlo) se calibra la altura del visor: con origen en Suelo se confía en la altura real; si el visor queda en Dispositivo (Quest Link) se suma la altura de ojos de PC (1,6 m). Antes la cabeza empezaba a 0 m y agacharse (-0,95 m) enterraba al jugador. Además la caída de la cámara se acota siempre para que la cabeza no baje de 0,5 m del suelo, y al levantarse ya no se aplica un hundido momentáneo.
