@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-23 — Presupuesto de partículas, viñeta VR y limpieza de físicas (VFX-02, VFX-07, FIS-05/08/10/11/12/13/14)
+
+- **VFX-02**: `ParticleBudget` en `GraphicsQuality` (escala de emisión y tope de partículas vivas por perfil: VR 0,5x/2000, Baja 0,5x/2500, Media 0,75x/4500, Alta 1x/8000). Los efectos lo leen al instanciarse.
+- **VFX-07**: política pura `PostProcessPolicy`: en VR se desactivan viñeta, motion blur, DoF, grain, lens distortion y aberración cromática (Bloom y color quedan); se aplica al iniciar y al cambiar calidad.
+- **FIS-05** el daño de `MagicWorld` omite entidades cristalizadas. **FIS-12** `EarthShapes` limpia estado estático al reiniciar. **FIS-13** buffers de 64 a 256. **FIS-08/10/11/14** limpiezas menores (GrassFire, Flutter, LevitationMath, GroundReactions). **FIS-15** pospuesto (`TODO(FIS-15)`).
+- Tests EditMode: 690/690. Sin probar en Quest real.
+
 ## 2026-11-23 — Auditoría de Antigravity y primeros arreglos urgentes (físicas, daño en duelo, shader)
 
 - **Auditoría** (`Docs/AUDIT/`): 4 informes de solo lectura (mapa+UI, modelado+VFX, físicas, PVP; 60 hallazgos), plan (`PLAN_URGENTE.md`) y briefs cerrados (`briefs/`). Tareas cargadas en el Trello de SpellSimulator.

@@ -17,7 +17,7 @@ namespace SpellSimulator.Output
     [RequireComponent(typeof(SpellManifestation))]
     public class MagicField : MonoBehaviour
     {
-        private const int MaxHits = 64;
+        private const int MaxHits = 256;
         private static readonly Collider[] hits = new Collider[MaxHits];
         private static readonly Rigidbody[] bodies = new Rigidbody[MaxHits];
 

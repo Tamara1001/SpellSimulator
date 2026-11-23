@@ -11,6 +11,7 @@ namespace SpellSimulator.Output
         /// <summary>Densidad del aire "de juego" (kg/m3): ajusta cuanto empuja el viento a los cuerpos.</summary>
         public const float AirDensity = 1.2f;
         /// <summary>Coeficiente de arrastre por defecto (cuerpo romo).</summary>
+        // TODO(FIS-15): Permitir Cd aerodinamico configurable por material (MaterialParams.dragCoefficient) en vez de usar DefaultCd = 1f constante para todo cuerpo; pospuesto porque requiere extender MaterialProfile y modificar MagicField.WindDrag.
         public const float DefaultCd = 1f;
         /// <summary>Masa minima para dividir (kg): evita aceleraciones infinitas.</summary>
         public const float MinMass = 0.01f;

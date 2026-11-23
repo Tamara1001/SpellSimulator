@@ -34,15 +34,24 @@ namespace SpellSimulator.Output
         }
 
         /// <summary>
-        /// Aceleracion vertical (m/s2, sobre el eje del sello): cancela la gravedad y empuja un resorte amortiguado hacia la altura de reposo.
-        /// <paramref name="bob"/> es un vaiven (-1..1) que solo usa float.
+        /// Aceleracion vertical (m/s2, sobre el eje del sello): resorte amortiguado hacia la altura de reposo sin termino de gravedad (FIS-11).
         /// </summary>
-        public static float VerticalAcceleration(bool isFloat, float height, float verticalSpeed, float target, float gravity, float cancel, float bob)
+        public static float VerticalAcceleration(bool isFloat, float height, float verticalSpeed, float target, float bob = 0f)
         {
             float k = isFloat ? FloatStiffness : LevitationStiffness;
             float c = isFloat ? FloatDamping : LevitationDamping;
             float sway = isFloat ? bob * 0.6f : 0f;
-            return gravity * cancel + (target - height) * k - verticalSpeed * c + sway;
+            return (target - height) * k - verticalSpeed * c + sway;
+        }
+
+        /// <summary>
+        /// Aceleracion vertical (m/s2, sobre el eje del sello): cancela la gravedad y empuja un resorte amortiguado hacia la altura de reposo.
+        /// <paramref name="bob"/> es un vaiven (-1..1) que solo usa float.
+        /// Sobrecarga conservada por compatibilidad con tests y MagicField (FIS-11).
+        /// </summary>
+        public static float VerticalAcceleration(bool isFloat, float height, float verticalSpeed, float target, float gravity, float cancel, float bob)
+        {
+            return gravity * cancel + VerticalAcceleration(isFloat, height, verticalSpeed, target, bob);
         }
 
         /// <summary>Atraccion lateral al eje del sello (resorte amortiguado): float la deja libre, levitation la ancla.</summary>

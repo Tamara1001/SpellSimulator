@@ -12,7 +12,7 @@ namespace SpellSimulator.Reactions
     public class MagicWorld : MonoBehaviour
     {
         public const float TickRate = 15f;
-        private const int MaxHits = 64;
+        private const int MaxHits = 256;
 
         [SerializeField] private ReactionTable reactions;
         [SerializeField, Tooltip("De aca salen los looks (llamas de lo que arde).")]
@@ -92,6 +92,7 @@ namespace SpellSimulator.Reactions
             {
                 var health = healths[h];
                 if (health == null || !health.isActiveAndEnabled || health.IsDead) continue;
+                if (health.GetComponent<World.Crystallized>() != null || health.GetComponentInParent<World.Crystallized>() != null) continue;
                 Vector3 center = health.Center;
                 float total = 0f;
                 for (int f = 0; f < fields.Count; f++)

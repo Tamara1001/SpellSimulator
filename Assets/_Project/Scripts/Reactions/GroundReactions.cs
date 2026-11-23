@@ -59,9 +59,13 @@ namespace SpellSimulator.Reactions
             var frame = field.Frame;
             directions[0] = field.MainDirection;
             directions[1] = frame.Normal;
-            directions[2] = Vector3.down;
+            int dirCount = 2;
+            if (Vector3.Dot(frame.Normal, Vector3.down) < 0.9f)
+            {
+                directions[dirCount++] = Vector3.down;
+            }
 
-            for (int i = 0; i < directions.Length; i++)
+            for (int i = 0; i < dirCount; i++)
             {
                 if (!Physics.Raycast(frame.Origin, directions[i], out RaycastHit hit, field.ReachRadius, ~0, QueryTriggerInteraction.Ignore)) continue;
                 if (hit.collider.GetComponentInParent<GroundSurface>() == null) continue;

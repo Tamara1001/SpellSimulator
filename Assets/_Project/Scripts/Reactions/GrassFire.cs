@@ -538,7 +538,7 @@ namespace SpellSimulator.Reactions
                 int c = burning[r];
                 if (state[c] != Burning) continue;
                 int g = generation[c];
-                if (g > maxGenerations) continue;
+                if (g >= maxGenerations) continue;
                 float chance = spreadChance * decayPowers[Mathf.Min(g, DecayTableSize - 1)];
                 int cx = c % GridSize;
                 int cz = c / GridSize;

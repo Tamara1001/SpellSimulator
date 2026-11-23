@@ -30,7 +30,10 @@ namespace SpellSimulator.World
             if (speed < minSpeed) return;
             float k = Mathf.Clamp01(speed / 6f);
             float t = Time.time * 3.2f + phase;
-            Vector3 side = Vector3.Cross(v / speed, Vector3.up);
+            Vector3 dir = v / speed;
+            Vector3 side = Vector3.Cross(dir, Vector3.up);
+            if (side.sqrMagnitude < 0.01f)
+                side = Vector3.Cross(dir, Vector3.forward).normalized;
             rb.AddForce((side * Mathf.Sin(t) + Vector3.up * Mathf.Sin(t * 1.7f) * 0.5f) * (swirl * k), ForceMode.Acceleration);
             rb.AddTorque(new Vector3(Mathf.Sin(t * 1.3f), Mathf.Cos(t * 0.9f), Mathf.Sin(t * 1.1f)) * (swirl * 0.8f * k), ForceMode.Acceleration);
             if (rb.useGravity && v.y < 0f) rb.AddForce(-Physics.gravity * glide, ForceMode.Acceleration);

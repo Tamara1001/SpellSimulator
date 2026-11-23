@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Compiler;
+using SpellSimulator.Reactions;
 using SpellSimulator.World;
 
 namespace SpellSimulator.Output
@@ -40,6 +41,24 @@ namespace SpellSimulator.Output
 
         private static readonly List<LivePiece> live = new List<LivePiece>();
         private static readonly List<PieceData> batch = new List<PieceData>(16);
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStaticState()
+        {
+            live.Clear();
+            temporary.Clear();
+            permanent.Clear();
+            SolidPiece.ResetCount();
+            MagicWorld.WorldReset -= ClearTrackedPieces;
+            MagicWorld.WorldReset += ClearTrackedPieces;
+        }
+
+        private static void ClearTrackedPieces()
+        {
+            live.Clear();
+            temporary.Clear();
+            permanent.Clear();
+        }
 
         /// <summary>Formas vivas con su edad (s): para quien entra tarde a una sala.</summary>
         public static void CollectLive(List<PieceData> pieces, List<float> ages)
@@ -224,6 +243,8 @@ namespace SpellSimulator.Output
     public sealed class SolidPiece : MonoBehaviour
     {
         public static int Count { get; private set; }
+
+        internal static void ResetCount() => Count = 0;
 
         private void OnEnable() => Count++;
 
