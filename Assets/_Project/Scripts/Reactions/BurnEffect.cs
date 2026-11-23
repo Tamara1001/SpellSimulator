@@ -1,5 +1,6 @@
 using UnityEngine;
 using SpellSimulator.Output;
+using SpellSimulator.Rendering;
 
 namespace SpellSimulator.Reactions
 {
@@ -22,10 +23,11 @@ namespace SpellSimulator.Reactions
             float minExtent = Mathf.Max(Mathf.Min(e.x, Mathf.Min(e.y, e.z)), 0.03f);
             float flame = Mathf.Clamp(minExtent * 1.1f, FlameMinSize, FlameMaxSize);
             float area = 4f * (e.x * e.y + e.y * e.z + e.x * e.z);
+            float scale = ParticleBudget.Scale;
             var main = ps.main;
             main.playOnAwake = false;
             main.loop = true;
-            main.maxParticles = MaxParticles;
+            main.maxParticles = Mathf.Max(4, Mathf.RoundToInt(MaxParticles * scale));
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.45f, 0.8f);
             main.startSpeed = new ParticleSystem.MinMaxCurve(0.05f, 0.2f);
@@ -33,7 +35,7 @@ namespace SpellSimulator.Reactions
             main.gravityModifier = look.gravity * 0.8f;
 
             var emission = ps.emission;
-            emission.rateOverTime = Mathf.Clamp(area * FlamesPerSquareMeter, 20f, 110f);
+            emission.rateOverTime = Mathf.Clamp(area * FlamesPerSquareMeter, 20f, 110f) * scale;
 
             // Emitir desde la malla misma si se puede leer; si no, desde la caja del objeto.
             var shape = ps.shape;
@@ -117,10 +119,11 @@ namespace SpellSimulator.Reactions
             var ps = go.AddComponent<ParticleSystem>();
             ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
+            float scale = ParticleBudget.Scale;
             var main = ps.main;
             main.playOnAwake = false;
             main.loop = true;
-            main.maxParticles = GroundMaxParticles;
+            main.maxParticles = Mathf.Max(4, Mathf.RoundToInt(GroundMaxParticles * scale));
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.startLifetime = new ParticleSystem.MinMaxCurve(0.45f, 0.8f);
             main.startSpeed = new ParticleSystem.MinMaxCurve(0.25f, 0.6f);
@@ -128,7 +131,7 @@ namespace SpellSimulator.Reactions
             main.gravityModifier = look.gravity * 0.35f;
 
             var emission = ps.emission;
-            emission.rateOverTime = 38f;
+            emission.rateOverTime = 38f * scale;
 
             var shape = ps.shape;
             shape.shapeType = ParticleSystemShapeType.Circle;

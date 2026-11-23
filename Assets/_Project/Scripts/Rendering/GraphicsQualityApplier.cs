@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
+using SpellSimulator.Player;
 
 namespace SpellSimulator.Rendering
 {
@@ -55,6 +56,24 @@ namespace SpellSimulator.Rendering
                 urp.shadowCascadeCount = p.ShadowCascades;
             }
             OutlineRendererFeature.SetGlobalStrength(p.Outline ? 1f : 0f);
+            ApplyVrPostProcess();
+        }
+
+        private static void ApplyVrPostProcess()
+        {
+            if (!PlatformDetector.IsVR) return;
+            var volumes = Object.FindObjectsByType<Volume>(FindObjectsSortMode.None);
+            for (int i = 0; i < volumes.Length; i++)
+            {
+                VolumeProfile profile = volumes[i] != null ? volumes[i].sharedProfile : null;
+                if (profile == null) continue;
+                if (profile.TryGet(out Vignette vignette) && !PostProcessPolicy.IsActive(PostProcessEffect.Vignette, true)) vignette.active = false;
+                if (profile.TryGet(out MotionBlur motionBlur) && !PostProcessPolicy.IsActive(PostProcessEffect.MotionBlur, true)) motionBlur.active = false;
+                if (profile.TryGet(out DepthOfField depthOfField) && !PostProcessPolicy.IsActive(PostProcessEffect.DepthOfField, true)) depthOfField.active = false;
+                if (profile.TryGet(out FilmGrain filmGrain) && !PostProcessPolicy.IsActive(PostProcessEffect.FilmGrain, true)) filmGrain.active = false;
+                if (profile.TryGet(out LensDistortion lensDistortion) && !PostProcessPolicy.IsActive(PostProcessEffect.LensDistortion, true)) lensDistortion.active = false;
+                if (profile.TryGet(out ChromaticAberration chromaticAberration) && !PostProcessPolicy.IsActive(PostProcessEffect.ChromaticAberration, true)) chromaticAberration.active = false;
+            }
         }
 
 #if UNITY_EDITOR

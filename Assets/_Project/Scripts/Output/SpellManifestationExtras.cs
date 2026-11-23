@@ -1,5 +1,6 @@
 using UnityEngine;
 using SpellSimulator.Compiler;
+using SpellSimulator.Rendering;
 
 namespace SpellSimulator.Output
 {
@@ -209,13 +210,7 @@ namespace SpellSimulator.Output
             ApplyColor(spark, Color.white, new Color(1f, 0.85f, 0.4f, 0f));
             ApplySize(spark, look.size * s * 0.45f);
             Stretch(spark, 0.08f, 2.4f);
-            var emission = spark.emission;
-            emission.rateOverTime = 0f;
-            var burst = new ParticleSystem.Burst(0f, (short)SpellVisualExtrasMath.CrackleCount(jitter));
-            burst.cycleCount = 40;
-            burst.repeatInterval = 0.14f;
-            emission.SetBursts(new[] { burst });
-            bodyTracks.Add((spark, 0f));
+            RepeatingBurst(spark, SpellVisualExtrasMath.CrackleCount(jitter), 0.14f, 40);
         }
     }
 }

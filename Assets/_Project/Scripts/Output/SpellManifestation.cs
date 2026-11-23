@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using SpellSimulator.Compiler;
+using SpellSimulator.Rendering;
 
 namespace SpellSimulator.Output
 {
@@ -417,15 +418,7 @@ namespace SpellSimulator.Output
                 ApplySize(empower, look.size * s * 1.6f);
 
                 // Destellos rapidos y brillantes
-                var emission = empower.emission;
-                emission.rateOverTime = 0f;
-                int glintCount = Mathf.RoundToInt(p.burstCount * density * 0.8f);
-                var burstObj = new ParticleSystem.Burst(0f, (short)glintCount);
-                burstObj.cycleCount = 15;
-                burstObj.repeatInterval = 0.2f;
-                emission.SetBursts(new[] { burstObj });
-                bodyTracks.Add((empower, 0f));
-
+                RepeatingBurst(empower, Mathf.RoundToInt(p.burstCount * density * 0.8f), 0.2f, 15);
                 AddBurst(empower, Mathf.RoundToInt(p.burstCount * density * 1.5f));
             }
 
@@ -540,14 +533,7 @@ namespace SpellSimulator.Output
                 vel.radial = new ParticleSystem.MinMaxCurve(-inSpeed);
                 Stretch(col, 0.07f, 1.2f);
 
-                var emission = col.emission;
-                emission.rateOverTime = 0f;
-                int pulseCount = Mathf.RoundToInt(70f * density);
-                var pulseBurst = new ParticleSystem.Burst(0.0f, (short)pulseCount);
-                pulseBurst.cycleCount = 15;
-                pulseBurst.repeatInterval = 0.45f;
-                emission.SetBursts(new[] { pulseBurst });
-                bodyTracks.Add((col, 0f));
+                RepeatingBurst(col, Mathf.RoundToInt(70f * density), 0.45f, 15);
             }
 
             if (plan.Repetition > 0f)
@@ -593,13 +579,7 @@ namespace SpellSimulator.Output
                 Speed(flash, 0.3f, 0.2f);
                 ApplyColor(flash, Color.white, p.startColor);
                 ApplySize(flash, s * 1.8f);
-                var flashEmission = flash.emission;
-                flashEmission.rateOverTime = 0f;
-                var repBurstObj = new ParticleSystem.Burst(0.0f, (short)Mathf.RoundToInt(p.burstCount * density * 0.4f));
-                repBurstObj.cycleCount = 10;
-                repBurstObj.repeatInterval = 0.45f;
-                flashEmission.SetBursts(new[] { repBurstObj });
-                bodyTracks.Add((flash, 0f));
+                RepeatingBurst(flash, Mathf.RoundToInt(p.burstCount * density * 0.4f), 0.45f, 10);
             }
 
             if (plan.Weave > 0f)
@@ -663,12 +643,13 @@ namespace SpellSimulator.Output
         }
 
         /// <summary>Rafaga que se repite durante el cuerpo (golpes sucesivos); se prende con el golpe como el resto del cuerpo.</summary>
-        private void RepeatingBurst(ParticleSystem ps, int count, float interval)
+        private void RepeatingBurst(ParticleSystem ps, int count, float interval, int cycleCount = 12)
         {
             var emission = ps.emission;
             emission.rateOverTime = 0f;
-            var burst = new ParticleSystem.Burst(0f, (short)Mathf.Clamp(count, 1, 600));
-            burst.cycleCount = 12;
+            int scaled = Mathf.Max(1, Mathf.RoundToInt(count * ParticleBudget.Scale));
+            var burst = new ParticleSystem.Burst(0f, (short)Mathf.Clamp(scaled, 1, 600));
+            burst.cycleCount = cycleCount;
             burst.repeatInterval = interval;
             emission.SetBursts(new[] { burst });
             bodyTracks.Add((ps, 0f));
@@ -691,6 +672,7 @@ namespace SpellSimulator.Output
         /// <summary>Pista del cuerpo: se prende en el golpe con su tasa; suma las capas del look y, si choca, sus impactos.</summary>
         private void AddBody(ParticleSystem track, float rate, bool impacts)
         {
+            rate *= ParticleBudget.Scale;
             bodyTracks.Add((track, rate));
             if (look.layers != null)
                 for (int i = 0; i < look.layers.Length; i++)
@@ -706,6 +688,7 @@ namespace SpellSimulator.Output
         /// <summary>Rafaga del golpe: se emite una vez; las capas emiten su fraccion.</summary>
         private void AddBurst(ParticleSystem track, int count)
         {
+            count = Mathf.Max(1, Mathf.RoundToInt(count * ParticleBudget.Scale));
             bursts.Add((track, count));
             if (look.layers != null)
                 for (int i = 0; i < look.layers.Length; i++)
@@ -752,7 +735,7 @@ namespace SpellSimulator.Output
         private static void Emit(ParticleSystem ps, float rate)
         {
             var emission = ps.emission;
-            emission.rateOverTime = rate;
+            emission.rateOverTime = rate * ParticleBudget.Scale;
         }
     }
 }

@@ -1,5 +1,6 @@
 using UnityEngine;
 using SpellSimulator.Output;
+using SpellSimulator.Rendering;
 
 namespace SpellSimulator.Reactions
 {
@@ -18,10 +19,11 @@ namespace SpellSimulator.Reactions
             var ps = go.AddComponent<ParticleSystem>();
             ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
+            float scale = ParticleBudget.Scale;
             var main = ps.main;
             main.playOnAwake = false;
             main.loop = true;
-            main.maxParticles = MaxParticles;
+            main.maxParticles = Mathf.Max(8, Mathf.RoundToInt(MaxParticles * scale));
             main.simulationSpace = ParticleSystemSimulationSpace.World;
             main.startLifetime = lifetime;
             main.startSize = new ParticleSystem.MinMaxCurve(0.06f, 0.14f);
@@ -51,6 +53,7 @@ namespace SpellSimulator.Reactions
         public static void Burst(ParticleSystem ps, Vector3 at, int count, float speed)
         {
             if (ps == null) return;
+            count = Mathf.Max(1, Mathf.RoundToInt(count * ParticleBudget.Scale));
             var p = new ParticleSystem.EmitParams { applyShapeToPosition = false };
             for (int i = 0; i < count; i++)
             {
@@ -65,6 +68,7 @@ namespace SpellSimulator.Reactions
         public static void Stream(ParticleSystem ps, Vector3 from, Vector3 velocity, float lifetime, int count)
         {
             if (ps == null) return;
+            count = Mathf.Max(1, Mathf.RoundToInt(count * ParticleBudget.Scale));
             var p = new ParticleSystem.EmitParams { applyShapeToPosition = false, startLifetime = lifetime };
             for (int i = 0; i < count; i++)
             {

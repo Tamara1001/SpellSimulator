@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using SpellSimulator.Rendering;
 
 namespace SpellSimulator.Output
 {
@@ -210,7 +211,8 @@ namespace SpellSimulator.Output
             main.startSpeed = new ParticleSystem.MinMaxCurve(impact.speed * 0.6f, impact.speed * 1.2f);
             main.startLifetime = new ParticleSystem.MinMaxCurve(impact.lifetime * 0.7f, impact.lifetime * 1.2f);
             var emission = ps.emission;
-            emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)Mathf.Max(1, impact.impactCount)) });
+            int burstCount = Mathf.Max(1, Mathf.RoundToInt(impact.impactCount * ParticleBudget.Scale));
+            emission.SetBursts(new[] { new ParticleSystem.Burst(0f, (short)burstCount) });
             var shape = ps.shape;
             shape.enabled = true;
             shape.shapeType = ParticleSystemShapeType.Cone;
@@ -237,7 +239,7 @@ namespace SpellSimulator.Output
             shape.radius = Mathf.Max(0.02f, radius);
             shape.radiusThickness = 0.2f;
             ps.Play();
-            ps.Emit(count);
+            ps.Emit(Mathf.Max(1, Mathf.RoundToInt(count * ParticleBudget.Scale)));
             return ps;
         }
     }
