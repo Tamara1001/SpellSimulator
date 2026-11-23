@@ -231,8 +231,16 @@ namespace SpellSimulator.World
             col.enabled = false;
             transform.SetParent(holdPoint);
             transform.localPosition = Vector3.zero;
-            // VR tambien: con la punta hacia adelante (como un lapiz en la mano) el rayo y el apoyo salen por donde se apunta.
-            transform.localRotation = Quaternion.Euler(PcHoldPitch, 0f, 0f);
+            if (PlatformDetector.IsVR && raycastOrigin != null && raycastOrigin != transform)
+            {
+                // VR: la punta va EXACTO por donde apunta el rayo del controlador (el mismo con el que se agarra y se aprietan botones,
+                // que sale a vrRayPitch grados del eje del controlador). Antes iba 'hacia adelante' del controlador y quedaba ~70° torcida
+                // respecto de donde el jugador apunta: el rayo y la punta no llegaban al lienzo.
+                Vector3 tipLocal = transform.InverseTransformDirection(raycastOrigin.forward);
+                Vector3 aimInHand = Quaternion.AngleAxis(Player.PlayerInteractor.VrRayPitch, Vector3.right) * Vector3.forward;
+                transform.localRotation = Quaternion.FromToRotation(tipLocal, aimInHand);
+            }
+            else transform.localRotation = Quaternion.Euler(PcHoldPitch, 0f, 0f);
         }
 
         public void OnDrop()
@@ -250,7 +258,17 @@ namespace SpellSimulator.World
 
         public void OnUseStart()
         {
-            if (!TryShootLaser(out Vector2 uv, out DrawingCanvas canvas, allowInscribe: kind == ToolKind.Pen)) return;
+            if (!TryShootLaser(out Vector2 uv, out DrawingCanvas canvas, allowInscribe: kind == ToolKind.Pen))
+            {
+                // VR: avisa por que no pasa nada (antes el gatillo fallaba en silencio y no se sabia si era la punta o el lienzo).
+                if (PlatformDetector.IsVR && Time.unscaledTime - lastMissHint > 3f)
+                {
+                    lastMissHint = Time.unscaledTime;
+                    Hud.Notify("vrmiss", "Sin lienzo: apoya la punta en el papel o apunta con la pluma", 2.5f);
+                    Debug.Log($"[PhysicalTool] VR: el gatillo no alcanzo ningun lienzo (punta {raycastOrigin.position:F2}, dir {raycastOrigin.forward:F2}, mascara {canvasLayer.value}).", this);
+                }
+                return;
+            }
             if (UsesInk && ink.IsEmpty)
             {
                 ReportNoInk();
@@ -417,6 +435,7 @@ namespace SpellSimulator.World
         }
 
         private const float PressStart = 0.0062f, PressKeep = 0.0045f;
+        private float lastMissHint = -10f;
 
         /// <summary>[VR] True mientras la punta de la herramienta en mano esta apoyada contra un lienzo (lo lee PlayerInputReader como gatillo).</summary>
         public static bool TipPressing { get; private set; }

@@ -106,6 +106,13 @@ namespace SpellSimulator.Player
         private float bDownAt = -1f;
         private bool bHoldDone;
         private bool vrCrouchLatched;
+        private float crouchDownAt = -1f;
+        private int crouchHoldStage;
+        private const float VrHoldControlsSeconds = 0.8f, VrHoldCalibrateSeconds = 2.5f;
+        /// <summary>[VR] Un cuadro: se mantuvo el clic del stick izquierdo 0,8 s (abrir / cerrar el cartel de controles).</summary>
+        public bool VrControlsToggle { get; private set; }
+        /// <summary>[VR] Un cuadro: se siguio manteniendo hasta 2,5 s (recalibrar la altura del visor).</summary>
+        public bool VrRecalibrate { get; private set; }
         private const float VrThrowToolHoldSeconds = 0.6f;
         private const float VrTapSeconds = 0.4f;
 
@@ -473,10 +480,24 @@ namespace SpellSimulator.Player
 
             // Salto: A o X de la mano que NO lleva la herramienta (la otra deshace). Agacharse: click del stick izquierdo (alterna).
             if (VrMainRight ? primaryLeftAction.WasPressedThisFrame() : primaryRightAction.WasPressedThisFrame()) IsJumping = true;
-            if (crouchToggleAction.WasPressedThisFrame())
+            // Clic del stick izquierdo: toque corto = agacharse (al soltar); mantener 0,8 s = cartel de controles; seguir hasta 2,5 s = recalibrar altura.
+            VrControlsToggle = false;
+            VrRecalibrate = false;
+            if (crouchToggleAction.WasPressedThisFrame()) { crouchDownAt = Time.unscaledTime; crouchHoldStage = 0; }
+            else if (crouchDownAt >= 0f && crouchToggleAction.IsPressed())
             {
-                vrCrouchLatched = !vrCrouchLatched;
-                Hud.Notify("vrcrouch", vrCrouchLatched ? "Agachado (clic del stick izq. para levantarte)" : "De pie", 2f);
+                float heldFor = Time.unscaledTime - crouchDownAt;
+                if (crouchHoldStage == 0 && heldFor >= VrHoldControlsSeconds) { crouchHoldStage = 1; VrControlsToggle = true; }
+                else if (crouchHoldStage == 1 && heldFor >= VrHoldCalibrateSeconds) { crouchHoldStage = 2; VrRecalibrate = true; }
+            }
+            if (crouchToggleAction.WasReleasedThisFrame())
+            {
+                if (crouchHoldStage == 0 && crouchDownAt >= 0f)
+                {
+                    vrCrouchLatched = !vrCrouchLatched;
+                    Hud.Notify("vrcrouch", vrCrouchLatched ? "Agachado (toca el stick izq. para levantarte)" : "De pie", 2f);
+                }
+                crouchDownAt = -1f;
             }
             if (vrCrouchLatched) IsCrouching = true;
 
@@ -517,6 +538,7 @@ namespace SpellSimulator.Player
             VrSlotDelta = 0;
             VrWidthDelta = 0;
             VrStickRight = Vector2.zero;
+            VrRecalibrate = false; // el cartel de controles si se puede abrir con el menu abierto
         }
 
         /// <summary>

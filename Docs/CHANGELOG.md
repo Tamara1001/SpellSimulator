@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-22 — VR: altura calibrada, pluma que apunta donde apunta el rayo y cartel de controles
+
+- **Altura (`PlayerMovement`)**: al empezar (y al pedirlo) se calibra la altura del visor: con origen en Suelo se confía en la altura real; si el visor queda en Dispositivo (Quest Link) se suma la altura de ojos de PC (1,6 m). Antes la cabeza empezaba a 0 m y agacharse (-0,95 m) enterraba al jugador. Además la caída de la cámara se acota siempre para que la cabeza no baje de 0,5 m del suelo, y al levantarse ya no se aplica un hundido momentáneo.
+- **Pluma/goma en VR (`PhysicalTool.OnInteract`)**: la punta quedaba ~70° torcida respecto del rayo del controlador (`vrRayPitchOffset`), así que ni el contacto ni el rayo alcanzaban el lienzo. Ahora la punta se alinea con ese mismo rayo (`PlayerInteractor.VrRayPitch`). Si el gatillo no alcanza ningún lienzo, avisa en la HUD y registra punta/dirección/máscara en el log. **Sin probar en el Quest.**
+- **Cartel de controles (`VrControlsPanel`)**: texto 3D flotante con todos los controles; sale solo a los 3 s de empezar (40 s) y se abre/cierra manteniendo 0,8 s el clic del stick izquierdo; seguir hasta 2,5 s recalibra la altura (iguala a la de PC). El clic del stick izquierdo ahora agacha al **soltar** (toque corto).
+- Docs: `GAME_DESIGN` (controles VR), `GrimoireTexts` (fila del stick). Captura del cartel: `Docs/Capturas/vr_controles_panel.png`.
+
 ## 2026-11-19 — Un solo caballete para todo el mundo: 4 patas, botón con E y los del tutorial ya no se caen
 
 - `CanvasDesigns.Easel` es el único caballete (campo, zonas de práctica, tutorial y el lienzo gigante): A de madera con 2 montantes adelante y **2 patas atrás** (el hechizo sale entre ellas sin tocar la madera), maderas que se tocan en el perfil, travesaños y tablero inferior. Las variantes solo cambian el tamaño (`width` x `height`, masa según el área). Se reemplazaron los soportes `Stand` viejos (gigante y zona «enmarcada»).

@@ -106,14 +106,63 @@ namespace SpellSimulator.Player
                         cameraRoot = offset;
                         standCameraY = 0f;
                     }
+                    vrOrigin = xrOrigin;
+                    vrCalibrateAt = Time.time + 1f; // el visor tarda un momento en dar la pose real
                 }
                 // Sin friccion contra paredes y esquinas: se desliza en vez de quedar pegado (el frenado ya es propio).
                 if (body != null)
                     body.sharedMaterial = new PhysicsMaterial("VrBody") { dynamicFriction = 0f, staticFriction = 0f, frictionCombine = PhysicsMaterialCombine.Minimum };
             }
+            if (vrTuned) UpdateVrCalibration();
             CheckGrounded();
             HandleStance();
             HandleJump();
+        }
+
+        // ---- VR: altura del visor
+        private const float VrEyeHeight = 1.6f;       // altura de ojos de pie (igual que la camara de PC)
+        private const float VrMinHeadHeight = 0.5f;   // la cabeza nunca baja de esto sobre el suelo, agachado o no
+        private Unity.XR.CoreUtils.XROrigin vrOrigin;
+        private float vrCalibrateAt = -1f;
+
+        /// <summary>
+        /// Calibra la altura al empezar y cuando el jugador lo pide (clic del stick izq. mantenido). Con el origen en Suelo se confia
+        /// en la altura real; si el visor no esta en Suelo (Quest Link suele quedar en Dispositivo: la cabeza empieza a 0 m y
+        /// agacharse enterraba al jugador) se suma la altura de ojos de PC. El pedido manual iguala siempre a la altura de PC.
+        /// </summary>
+        private void UpdateVrCalibration()
+        {
+            if (cameraRoot == null || vrOrigin == null) return;
+            if (vrHead == null) { var cam = Camera.main; if (cam == null) return; vrHead = cam.transform; }
+            bool manual = inputReader.VrRecalibrate;
+            if (!manual && (vrCalibrateAt < 0f || Time.time < vrCalibrateAt)) return;
+            vrCalibrateAt = -1f;
+            if (manual && (IsLow || crouching))
+            {
+                Hud.Notify("vrcal", "Ponete de pie para recalibrar la altura", 3f);
+                return;
+            }
+            float headLocalY = vrHead.localPosition.y; // relativo al pivote de la camara
+            bool floor = (vrOrigin.CurrentTrackingOriginMode & UnityEngine.XR.TrackingOriginModeFlags.Floor) != 0;
+            float y;
+            if (manual) y = VrEyeHeight - headLocalY;
+            else if (floor && headLocalY > 0.8f) y = 0f;
+            else y = VrEyeHeight - headLocalY;
+            var p = cameraRoot.localPosition;
+            p.y = y;
+            cameraRoot.localPosition = p;
+            standCameraY = y;
+            vrHeadBaseline = -1f; // la referencia del agacharse fisico se vuelve a tomar
+            Debug.Log($"[PlayerMovement] VR altura calibrada: modo={(floor ? "Suelo" : "Dispositivo")} cabeza={headLocalY:F2} m, ajuste={y:F2} m" + (manual ? " (manual)" : ""));
+            if (manual) Hud.Notify("vrcal", "Altura recalibrada", 2.5f);
+        }
+
+        /// <summary>Cuanto puede bajar el pivote en VR sin que la cabeza quede a menos de VrMinHeadHeight del suelo.</summary>
+        private float VrSafeDrop(float drop)
+        {
+            if (vrHead == null || cameraRoot == null) return drop;
+            float headHeight = standCameraY + vrHead.localPosition.y; // sobre los pies (el origen del visor esta en el suelo)
+            return Mathf.Clamp(drop, 0f, Mathf.Max(0f, headHeight - VrMinHeadHeight));
         }
 
         /// <summary>
@@ -147,7 +196,8 @@ namespace SpellSimulator.Player
             {
                 bool physical = PhysicalCrouch();
                 // VR: si te agachaste de verdad la camara ya bajo sola; con el boton se baja bastante mas que en PC.
-                crouchByBody = physical && !inputReader.IsCrouching;
+                // Si el cuerpo ya se agacho de verdad (o no hay boton apretado, p. ej. al levantarse) la camara no baja de mas.
+                crouchByBody = physical || !inputReader.IsCrouching;
                 if (inputReader.IsCrouching || physical) crouching = true;
                 else if (crouching && HasHeadroom(standHeight)) crouching = false;
                 target = crouching ? 1f : 0f;
@@ -155,7 +205,8 @@ namespace SpellSimulator.Player
 
             float previousT = stanceT;
             stanceT = Mathf.MoveTowards(stanceT, target, crouchBlend * Time.deltaTime);
-            if (stanceT == previousT) return; // quieto: no se toca el collider ni la camara
+            // VR: la caida de la camara se vuelve a acotar cada cuadro (la cabeza puede cambiar de altura sola al calibrar o agacharse).
+            if (stanceT == previousT && !(PlatformDetector.IsVR && cameraRoot != null && stanceT > 0f)) return; // quieto: no se toca el collider ni la camara
             float height = StanceHeight(stanceT);
             body.height = height;
             // Los pies quedan en el mismo lugar: el centro se desplaza la mitad de lo que cambia la altura.
@@ -199,7 +250,7 @@ namespace SpellSimulator.Player
         private float StanceCameraDrop(float t)
         {
             float drop = t <= 1f ? crouchCameraDrop * t : Mathf.Lerp(crouchCameraDrop, proneCameraDrop, t - 1f);
-            if (PlatformDetector.IsVR) drop *= crouchByBody ? 0f : VrCrouchDropFactor;
+            if (PlatformDetector.IsVR) drop = VrSafeDrop(drop * (crouchByBody ? 0f : VrCrouchDropFactor));
             return drop;
         }
 

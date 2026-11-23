@@ -194,7 +194,7 @@ Esquema (ADR-032/033). Se repasa en el grimorio (Tab → Controles).
 | Grupo | Acción | PC | VR |
 |---|---|---|---|
 | Moverse | Caminar / mirar | WASD + mouse | Stick izquierdo + cabeza |
-| | Correr / agacharse (mantener) / tumbarse (alterna) | Shift / C o Ctrl / Z | — (no se corre en VR) / click del stick izquierdo (alterna) / — |
+| | Correr / agacharse (mantener) / tumbarse (alterna) | Shift / C o Ctrl / Z | — (no se corre en VR) / click del stick izquierdo (toque = alterna; mantener 0,8 s = cartel de controles; 2,5 s = recalibrar altura) / — |
 | | Saltar / zoom (mantener) | Espacio / X | A o X de la mano que NO lleva la herramienta / — |
 | **Mano principal** (barra de 3 slots) | Elegir slot | 1, 2, 3 | — |
 | | Equipar una herramienta o estampa del mundo | E (va al primer slot libre) | Grip de **cualquier mano** (esa pasa a ser la principal) |

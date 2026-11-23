@@ -56,14 +56,20 @@ namespace SpellSimulator.Player
             }
         }
 
+        /// <summary>[VR] Grados que el rayo de apuntado se desvia del eje del controlador (las herramientas apuntan igual).</summary>
+        public static float VrRayPitch { get; private set; } = 90f;
+
         private void InitVr()
         {
+            VrRayPitch = vrRayPitchOffset;
             SetVrMainHand(PlayerSettings.MainHandRight);
             rayRight = vrMainRight;
             if (vrLeftController != null) vrPointerLineL = CreatePointer(vrLeftController.gameObject);
             if (vrPointerLineL != null) vrPointerLineL.enabled = false;
             // La interfaz de PC (HUD y menu) no se ve en el visor: se dibuja en un panel flotante (clic del stick derecho = menu).
             gameObject.AddComponent<VrUiPanel>().Init(this, inputReader);
+            // Cartel con todos los controles de VR (al empezar y manteniendo el clic del stick izquierdo).
+            gameObject.AddComponent<VrControlsPanel>().Init(inputReader);
         }
 
         /// <summary>[VR] Orientacion del controlador de esa mano.</summary>
