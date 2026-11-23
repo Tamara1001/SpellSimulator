@@ -12,7 +12,7 @@ tags: [doc, estado]
 - **Daño en duelo** (PVP-03), **VFX:** `Binarize` HLSL, presupuesto de partículas por calidad/VR, viñeta y post-proceso off en VR, quemado atenuado en muros, culling de ondas de agua.
 - **UI/libros:** menú sin resaltado pegado y hover inmediato; **grimorio sólido y empujable** (cuerpo dinámico), sus páginas con stick en VR, modo fijo con B; **lector de libros en VR** (panel + rayo) y gamepad; CanvasPile con cooldown.
 - **Trello:** las tarjetas hechas están en «Por Revisar». Pendientes y pospuestos: KI-145 y KI-146 en [KNOWN_ISSUES](KNOWN_ISSUES.md).
-- **Lo primero:** probar a mano y en Quest (KI-145). Los tests EditMode estaban en 692 (el último ajuste, `Cerca_NoVuelve`, sin re-ejecutar). Flujo de agentes: [HARNESS](HARNESS.md) y `D:\Archivos\Claudegy-jaula` (ahora admite corridas concurrentes).
+- **Lo primero:** probar a mano y en Quest (KI-145). Los tests EditMode estaban en 692 (el último ajuste, `Cerca_NoVuelve`, sin re-ejecutar). Flujo de agentes: [HARNESS](HARNESS.md) y `D:/Archivos/Claude/agy-jaula` (ahora admite corridas concurrentes).
 
 ## Traspaso 2026-11-19 (histórico) (rama `rework-mapa`) — leer esto primero
 
