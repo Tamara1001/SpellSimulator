@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 
 namespace SpellSimulator.World
 {
@@ -26,6 +27,14 @@ namespace SpellSimulator.World
             body.useGravity = false;
             home = transform.position;
             homeRotation = transform.rotation;
+            TextMeshPro front = GetComponentInChildren<TextMeshPro>();
+            if (front != null && transform.Find("LabelBack") == null)
+            {
+                TextMeshPro back = Instantiate(front, front.transform.parent);
+                back.name = "LabelBack";
+                back.transform.localPosition = new Vector3(0f, 0f, 0.014f);
+                back.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+            }
             // Cada nota arranca en otro punto del vaiven.
             phase = (home.x * 1.7f + home.z * 2.3f) % 6.2831853f;
         }

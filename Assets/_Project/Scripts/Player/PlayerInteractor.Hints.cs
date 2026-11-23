@@ -69,6 +69,8 @@ namespace SpellSimulator.Player
             if (manipulable != null) return manipulable.HelpText ?? "";
             if (hoveredPressable != null)
             {
+                if (hoveredPressable is World.Map.MapZoneMarker)
+                    return viewPanel != null ? "Clic: Resaltar | Tab: Vista completa" : "Clic: Resaltar";
                 if (hoveredPressable.PressWithClick) return viewPanel != null ? HoverHintTable[2] : "";
                 // Se rearma si cambia lo mirado o su texto (puerta: Abrir/Cerrar). Los textos son constantes cacheadas:
                 // comparar referencias no aloca.

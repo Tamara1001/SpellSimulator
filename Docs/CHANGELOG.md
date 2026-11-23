@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-23 — Agua, pilas de lienzos, DisplayStock y UI menores (FIS-06, FIS-07, MAP-06, MAP-07, UI-02, UI-04)
+
+- **FIS-06**: `WaterMath.EffectiveBuoyancy`: sin perfil de material, los cuerpos pesados (> `MaxFloatMass`) se hunden en el lago. **FIS-07**: el hechizo sobre el agua también prueba el punto donde su dirección corta la superficie (`RaycastHorizontalPlane`). Dos tests nuevos.
+- **MAP-06** `CanvasPile`: enfriamiento (`refillDelay` 1 s) antes de reponer el lienzo. **MAP-07** `DisplayStock`: sin lambdas ni allocations al limpiar sueltos.
+- **UI-02** pista "Clic: Resaltar" en marcadores de zona; **UI-04** `FloatingNote` duplica el texto en el reverso.
+- Pospuestos: FIS-04, MAP-08, UI-05/06/07 (requieren escena/asset o rediseño). Tests 692/692; sin probar a mano.
+
 ## 2026-11-23 — Shaders: quemado en muros y culling de ondas de agua (VFX-03, VFX-05)
 
 - **VFX-03** `BurntGround.hlsl`: `ApplyBurntGround` recibe la normal y funde el quemado a 0 en superficies verticales (`smoothstep` 0,3-0,6 sobre `abs(normalWS.y)`); sin texturas nuevas. Suelos horizontales idénticos.

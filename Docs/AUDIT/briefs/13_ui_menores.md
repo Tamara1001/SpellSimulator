@@ -1,0 +1,5 @@
+# Brief 13: UI, tareas menores (UI-01, UI-02, UI-04, UI-05, UI-06, UI-07)
+Proyecto: SpellSimulator (Unity 6 URP, PC y Quest). Lee `CLAUDE.md` y `Docs/CODESTYLE.md`. Solo editás scripts C# (y tests) dentro de `Assets/_Project/`. Nunca `.meta`, `.unity`, `.prefab`, `.asset`, `.mat`. No podés compilar: código conservador. Cero allocations en Update/FixedUpdate/LateUpdate. No hagas commits. Lógica pura nueva: función estática + test EditMode en `Assets/_Project/Tests/EditMode/`.
+Leé esas secciones de `Docs/AUDIT/01_mapa_ui.md` y verificá en el código real. Aplicá lo más simple y seguro: UI-01/02 hints y marcadores en VR (quitar "Tab: Vista completa" en VR, acciones tapadas), UI-04 FloatingNote legible por ambas caras, UI-05/06 solo si es código (elipsis de fuente, modal del tutorial en VR: si exige tocar prefab/asset o fuente, no lo hagas y explicá), UI-07 polling de tinta en HUD. Textos en español. Los controles se repiten en `Learning/GrimoireTexts.cs`, `PlayerInputReader` y `Docs/GAME_DESIGN.md`: si cambiás un texto de control, avisá.
+## Devolvé (≤5 líneas)
+Por hallazgo: hecho / no aplica / pospuesto, y archivos tocados.
