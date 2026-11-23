@@ -1,0 +1,6 @@
+# Brief 18: texto y contraste de libros (LIB-13, LIB-07, LIB-04, LIB-05, UI2-06, UI2-07, UI2-08)
+Proyecto: SpellSimulator (Unity 6 URP, PC y Quest). Lee `CLAUDE.md`, `Docs/CODESTYLE.md` y `Docs/AUDIT/05_libros_ui.md` (leé la sección de cada hallazgo y verificá en el código real). Solo editás dentro de `Assets/_Project/` (scripts C#, `.uss`/`.uxml` de `Assets/_Project/UI`). Nunca `.meta`, `.unity`, `.prefab`, `.asset`, `.mat`. No podés compilar: código conservador. Cero allocations en Update. Lógica de plataforma solo vía `PlatformDetector.IsVR`. No hagas commits.
+Archivos permitidos: `Learning/Grimoire.cs` (solo la parte de textos/autosize, LIB-13), `UI/BookReaderUI.cs`, `UI/ReaderPage.cs`, `UI/SpellUI.uss` (solo secciones del lector), `Player/VrControlsPanel.cs`. No toques HUD ni MainMenu ni VrUiPanel.
+Hacé: LIB-13 (que el texto denso del grimorio no se trunque en silencio: autosize con mínimo legible y/o paginar), LIB-07 (contraste de notas y folios del lector), UI2-08 (no sumar dos oscurecimientos), UI2-07 (estado :focus en botones del lector), UI2-06 (VrControlsPanel usa `UiFonts.Body`), LIB-04 y LIB-05 solo si son cambios chicos y seguros; si no, pospuesto.
+## Devolvé (≤6 líneas)
+Por hallazgo: hecho / no aplica / pospuesto, y archivos tocados.

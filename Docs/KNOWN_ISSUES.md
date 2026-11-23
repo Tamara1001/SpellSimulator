@@ -12,7 +12,7 @@ Al resolver uno, no lo borres: marcalo resuelto y explicá cómo.
 🟠 `abierto` — **Lote del 2026-11-23 sin probar a mano ni en Quest:** presupuesto de partículas (`ParticleBudget`), viñeta/post-proceso en VR, `Binarize.shader` en HLSL, atenuación del quemado en muros, culling de ondas de agua, menú (hover/foco), grimorio empujable y su control en VR, lector de libros en VR. Además, `VrUiPanel` toma el primer `UIDocument`: confirmar que el lector comparta el `PanelSettings` del menú; si no, no se ve en VR.
 
 ### KI-146
-🟡 `abierto` — **Pospuestos de la auditoría** (`Docs/AUDIT/`): FIS-04, FIS-09, FIS-15 (viento por material), MAP-08, UI-05/06/07, LIB-02 (libros agarrables), LIB-13/07/08-UI2 (texto y contraste), VFX-04 (luces), VFX-06 (salpicadura), `MagicWorld` → `NetDuel` (acoplamiento directo Reactions→Net) y el resto de PVP. Ver `TAREAS_TRELLO.md` y los informes 01-05.
+🟡 `abierto` — **Pospuestos de la auditoría** (`Docs/AUDIT/`): FIS-04, FIS-09, FIS-15 (viento por material), MAP-08, UI-05/06/07, LIB-02 (libros agarrables), LIB-04/05 (fuente por URL, páginas sin leer), VFX-04 (luces), VFX-06 (salpicadura), `MagicWorld` → `NetDuel` (acoplamiento directo Reactions→Net) y el resto de PVP. Ver `TAREAS_TRELLO.md` y los informes 01-05.
 
 ### KI-141
 🟠 `abierto` — **Costo en Quest de los exhibidores del Archivo.** Los puestos instancian ~20 lienzos reales (con `RenderTexture` propia) más plumas, frascos y sellos que se reponen; no se midió en Quest. Si pesa: exhibir solo lo cercano al jugador (activar/desactivar los `CanvasPile`/`DisplayStock` por distancia) o bajar la resolución de los lienzos de exhibición.

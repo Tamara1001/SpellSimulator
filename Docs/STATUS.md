@@ -10,7 +10,7 @@ tags: [doc, estado]
 `rework-mapa` ya está **mergeada en `main`**; se trabaja en `main`. Ese día: auditoría con Antigravity (`Docs/AUDIT/`: informes 01-05, plan urgente, briefs 01-16; tareas cargadas en el Trello «SpellSimulator») y arreglos:
 - **Físicas:** viento acotado y enfriamiento (FIS-01/02), agua con varios colliders, flotabilidad y apuntado (FIS-03/06/07), cristalizados, estado estático de `EarthShapes`, buffers 256, limpiezas.
 - **Daño en duelo** (PVP-03), **VFX:** `Binarize` HLSL, presupuesto de partículas por calidad/VR, viñeta y post-proceso off en VR, quemado atenuado en muros, culling de ondas de agua.
-- **UI/libros:** menú sin resaltado pegado y hover inmediato; **grimorio sólido y empujable** (cuerpo dinámico), sus páginas con stick en VR, modo fijo con B; **lector de libros en VR** (panel + rayo) y gamepad; CanvasPile con cooldown.
+- **UI/libros:** menú sin resaltado pegado y hover inmediato; **grimorio sólido y empujable** (cuerpo dinámico), sus páginas con stick en VR, modo fijo con B; **lector de libros en VR** (panel + rayo) y gamepad; texto y contraste de libros y grimorio; CanvasPile con cooldown. En curso al cerrar: HUD y menú (UI2-01/02/03/04/10, brief 17).
 - **Trello:** las tarjetas hechas están en «Por Revisar». Pendientes y pospuestos: KI-145 y KI-146 en [KNOWN_ISSUES](KNOWN_ISSUES.md).
 - **Lo primero:** probar a mano y en Quest (KI-145). Los tests EditMode estaban en 692 (el último ajuste, `Cerca_NoVuelve`, sin re-ejecutar). Flujo de agentes: [HARNESS](HARNESS.md) y `D:/Archivos/Claude/agy-jaula` (ahora admite corridas concurrentes).
 

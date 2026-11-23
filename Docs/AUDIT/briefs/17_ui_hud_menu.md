@@ -1,0 +1,6 @@
+# Brief 17: HUD y menú (UI2-01, UI2-02, UI2-03, UI2-04, UI2-10)
+Proyecto: SpellSimulator (Unity 6 URP, PC y Quest). Lee `CLAUDE.md`, `Docs/CODESTYLE.md` y `Docs/AUDIT/05_libros_ui.md` (leé la sección de cada hallazgo y verificá en el código real). Solo editás dentro de `Assets/_Project/` (scripts C#, `.uss`/`.uxml` de `Assets/_Project/UI`). Nunca `.meta`, `.unity`, `.prefab`, `.asset`, `.mat`. No podés compilar: código conservador. Cero allocations en Update. Lógica de plataforma solo vía `PlatformDetector.IsVR`. No hagas commits.
+Archivos permitidos: `UI/HudController.cs`, `UI/MainMenu*.cs`, `UI/SpellUI.uss`, `UI/MainMenu.uss`, `Player/VrUiPanel.cs`. No toques `BookReaderUI`, `Grimoire*`, `VrControlsPanel`.
+Hacé: UI2-01 (tamaños mínimos de fuente de HUD/avisos: subir a >= 16 px donde sea texto legible; no rompas layouts), UI2-02 (quitar allocations de `HudController.SetHints`: reusar strings/StringBuilder, solo reconstruir si cambió), UI2-03 (el menú acepta stick izquierdo analógico/cruceta con umbral y repetición contenida, como ya hace con teclas), UI2-04 (animar las motas solo con el menú visible y a menor frecuencia si es simple; si no, no aplica), UI2-10 (en `VrUiPanel` reemplazar `style.scale` inline por clases USS de hover). Cualquier cambio de control: avisá.
+## Devolvé (≤6 líneas)
+Por hallazgo: hecho / no aplica / pospuesto, y archivos tocados.
