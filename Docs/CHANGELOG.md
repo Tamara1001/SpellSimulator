@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-23 — Grimorio sólido y empujable
+
+- `Grimoire`: el cuerpo pasa de cinemático a dinámico sin gravedad (masa 0,6, amortiguación lineal 2,5 y angular 4) y el collider de agarre deja de ser trigger: el jugador y los hechizos lo empujan y no se atraviesa. `DriveKinematic` ahora es false (el movedor lo sigue por velocidad).
+- En modo fijo (B) vuelve a cinemático y sin colliders; al salir restaura la pose y frena. Al abrir (T) se resetean las velocidades.
+- Sin probar a mano (jugador empujándolo, VR, atascos contra paredes).
+
 ## 2026-11-23 — Menú: resaltado pegado, botones del tutorial y respuesta al hover
 
 - Al sacar el mouse de un botón se quita el foco (`PointerLeaveEvent` → `Blur`); antes quedaba resaltada la última opción.

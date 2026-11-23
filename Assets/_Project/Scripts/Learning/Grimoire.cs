@@ -70,6 +70,7 @@ namespace SpellSimulator.Learning
         private const float HalfW = PageWidth / 2f, HalfH = PageHeight / 2f;
         /// <summary>Angulo de cada mitad respecto del plano (el libro abierto hace una V suave).</summary>
         private const float SpreadAngle = 7f;
+        private const float BookMass = 0.6f, BookLinearDamping = 2.5f, BookAngularDamping = 4f;
         private const float CoverMargin = 0.016f, CoverThickness = 0.008f, StackDepth = 0.018f;
         /// <summary>Fraccion de la pantalla que ocupa el libro en modo fijo.</summary>
         private const float FocusFill = 0.9f;
@@ -279,6 +280,7 @@ namespace SpellSimulator.Learning
             if (viewer == null) return;
             Transform cam = viewer.transform;
             root.SetParent(transform, true); // por si se cerro mientras estaba en la mano
+            if (body != null) { body.linearVelocity = Vector3.zero; body.angularVelocity = Vector3.zero; }
             Vector3 flat = Vector3.ProjectOnPlane(cam.forward, Vector3.up).normalized;
             if (flat.sqrMagnitude < 0.01f) flat = Vector3.forward;
             // A la altura de la vista y un poco abajo: la barra de objetos (abajo al centro) no lo tapa.
@@ -319,7 +321,8 @@ namespace SpellSimulator.Learning
 
         // ---------------------------------------------------------------- agarre (movedor)
 
-        public bool DriveKinematic => true;
+        // Cuerpo dinamico sin gravedad: lo empujan el jugador y los hechizos y se frena solo; el movedor lo sigue por velocidad.
+        public bool DriveKinematic => false;
 
         public void OnRemoteGrab()
         {
@@ -349,6 +352,9 @@ namespace SpellSimulator.Learning
             savedParent = root.parent;
             savedPosition = root.position;
             savedRotation = root.rotation;
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
+            body.isKinematic = true; // fijo a la camara: la fisica no lo toca
             root.SetParent(viewer.transform, false);
             // Con identity el libro queda de cara a la camara (su cara visible es -Z local, igual que los quads).
             root.localPosition = new Vector3(0f, 0f, FocusDistance(viewer));
@@ -367,6 +373,9 @@ namespace SpellSimulator.Learning
             Transform parent = savedParent != null ? savedParent : transform;
             root.SetParent(parent, true);
             root.SetPositionAndRotation(savedPosition, savedRotation);
+            body.isKinematic = false;
+            body.linearVelocity = Vector3.zero;
+            body.angularVelocity = Vector3.zero;
             FocusMode.Exit();
         }
 
@@ -1219,8 +1228,11 @@ namespace SpellSimulator.Learning
             root.SetParent(transform, false);
             // Cuerpo cinematico: el movedor lo lleva con MovePosition/MoveRotation (DriveKinematic) y nunca cae.
             body = root.gameObject.AddComponent<Rigidbody>();
-            body.isKinematic = true;
+            body.isKinematic = false;
             body.useGravity = false;
+            body.mass = BookMass;
+            body.linearDamping = BookLinearDamping;
+            body.angularDamping = BookAngularDamping;
             body.interpolation = RigidbodyInterpolation.None;
 
             for (int side = 0; side < 2; side++) BuildHalf(side);
@@ -1335,7 +1347,7 @@ namespace SpellSimulator.Learning
             grab.transform.localPosition = new Vector3(sign * (coverW + 0.01f) / 2f, 0f, (StackDepth + CoverThickness) / 2f + 0.0005f);
             var box = grab.AddComponent<BoxCollider>();
             box.size = new Vector3(coverW + 0.03f, coverH + 0.02f, StackDepth + CoverThickness);
-            box.isTrigger = true;
+            box.isTrigger = false; // solido: el libro se empuja y no se atraviesa. Sigue siendo el blanco del rayo de agarre.
             grabColliders.Add(box);
             grab.AddComponent<GrimoireGrab>().Configure(this, root, transform);
         }
