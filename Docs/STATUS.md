@@ -5,7 +5,16 @@ tags: [doc, estado]
 
 > Una pagina para retomar rapido. Actualizar al cerrar cada hito; el detalle va en CHANGELOG y KNOWN_ISSUES.
 
-## ▶ Traspaso 2026-11-19 (rama `rework-mapa`) — leer esto primero
+## ▶ Estado 2026-11-23 (rama `main`) — leer esto primero
+
+`rework-mapa` ya está **mergeada en `main`**; se trabaja en `main`. Ese día: auditoría con Antigravity (`Docs/AUDIT/`: informes 01-05, plan urgente, briefs 01-16; tareas cargadas en el Trello «SpellSimulator») y arreglos:
+- **Físicas:** viento acotado y enfriamiento (FIS-01/02), agua con varios colliders, flotabilidad y apuntado (FIS-03/06/07), cristalizados, estado estático de `EarthShapes`, buffers 256, limpiezas.
+- **Daño en duelo** (PVP-03), **VFX:** `Binarize` HLSL, presupuesto de partículas por calidad/VR, viñeta y post-proceso off en VR, quemado atenuado en muros, culling de ondas de agua.
+- **UI/libros:** menú sin resaltado pegado y hover inmediato; **grimorio sólido y empujable** (cuerpo dinámico), sus páginas con stick en VR, modo fijo con B; **lector de libros en VR** (panel + rayo) y gamepad; CanvasPile con cooldown.
+- **Trello:** las tarjetas hechas están en «Por Revisar». Pendientes y pospuestos: KI-145 y KI-146 en [KNOWN_ISSUES](KNOWN_ISSUES.md).
+- **Lo primero:** probar a mano y en Quest (KI-145). Los tests EditMode estaban en 692 (el último ajuste, `Cerca_NoVuelve`, sin re-ejecutar). Flujo de agentes: [HARNESS](HARNESS.md) y `D:\Archivos\Claudegy-jaula` (ahora admite corridas concurrentes).
+
+## Traspaso 2026-11-19 (histórico) (rama `rework-mapa`) — leer esto primero
 
 **Dónde estamos.** El trabajo vigente vive en la rama **`rework-mapa`** (no en `main`; ver el protocolo y el tracker de [MAPA_FLUJO_PLAN](MAPA_FLUJO_PLAN.md)). Desde el 2026-11-16 se reorganizó el modo Libre por flujo de aprendizaje: torre-tutorial de tres pisos y terraza, Nexo, campo de entrenamiento, laboratorio en la pradera y **el Archivo** (rotonda al sur de la torre, centro en el mundo `(0, −46)`).
 

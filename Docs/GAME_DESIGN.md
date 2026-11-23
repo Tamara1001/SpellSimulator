@@ -209,7 +209,9 @@ Esquema (ADR-032/033). Se repasa en el grimorio (Tab → Controles).
 | | Menú principal (interfaz de PC en un panel flotante; rayo + gatillo) | Esc / grimorio | Click del stick derecho |
 | | Arrojar (ya no hay «soltar») | Q | Soltar el grip con la mano en movimiento (≥ 2 m/s) |
 | Moverse (VR) | Girar la vista | Mouse | Stick derecho a los costados: giro a saltos de 45° |
-| Menú | Grimorio en la mano / a pantalla y menú | T / Esc | Botón de menú izquierdo |
+| Menú | Grimorio en la mano (T: si quedó lejos, vuelve a tu vista) y menú | T / Esc | Botón de menú izquierdo |
+| | Fijar el grimorio a la vista (pantalla completa) | B (o Esc) | B (toque, con el grimorio abierto) |
+| | Pasar páginas del grimorio y de los libros | Z / X, flechas, cruceta | Stick derecho a los lados |
 | | Botones del grimorio | Apuntar + clic izquierdo | Apuntar + gatillo |
 | | Panel de depuración / reiniciar el mundo | F3 / Retroceso | — / Y mantenido 1,5 s |
 
