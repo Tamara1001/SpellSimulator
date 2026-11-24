@@ -66,7 +66,7 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
 - [ ] **3** Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
 - [ ] **4** Campo de agua (orilla real vía `FindLakeside`, ≈ −22,−30)
 - [ ] **5** Campo de tierra (20,−50) + santuario (44,−38) + peñascos 1 y 3 al este/norte
-- [ ] **6** Campos de fuego (−18,−50) y viento (26,−34): aplanado, sin pinos en r=10, props
+- [x] **6** Campos de fuego (−18,−50) y viento (26,−34): aplanado, sin pinos en r=10, props — hecho 2026-11-24 (`MapStructures.FireField.cs`/`.WindField.cs`; atriles vacíos hasta el paso 7; santuario → (44,−38), peñasco 1 → (28,17); KI-147)
 - [ ] **7** Reparto de libros de hechizos en `glifos.json` (releer el JSON actual: hay 7 hechizos nuevos de `b83b280`) + libro `seals`
 - [ ] **8b** Portal Archivo ↔ torre (D17)
 - [ ] **9** Carteles + mapa de la torre (grupo «Campos de elemento») + `LearningFlowTests`

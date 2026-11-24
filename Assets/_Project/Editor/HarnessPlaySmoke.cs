@@ -366,6 +366,27 @@ namespace SpellSimulator.EditorTools
             // --- Tutoriales nuevos, hojas livianas, barquito estable, muros de tierra y Wall Breaker.
             Check(GameObject.Find("Struct_EarthWorkshop") != null && GameObject.Find("Struct_WaterLab") != null && GameObject.Find("Slate_WaterLab") != null,
                 "tutoriales nuevos: taller de piedra y laboratorio del lago con su pizarra");
+            // Campos de fuego y viento (paso 6): estructuras, blancos que arden y veletas con bisagra; sin pinos a menos de 8 m del centro.
+            {
+                var fireSite = SpellSimulator.World.Map.ValleyShape.FireFieldCenter;
+                var windSite = SpellSimulator.World.Map.ValleyShape.WindFieldCenter;
+                bool fireOk = GameObject.Find("Struct_FireField") != null
+                    && GameObject.Find("FireTarget_Dummy_FireField") != null && GameObject.Find("FireTarget_Dummy_FireField").GetComponent<SpellSimulator.Reactions.ElementReactive>() != null
+                    && GameObject.Find("Sign_FireField_1") != null && GameObject.Find("PaperTray_FireField") != null;
+                bool windOk = GameObject.Find("Struct_WindField") != null
+                    && GameObject.Find("WindField_Vane_1") != null && GameObject.Find("WindField_Vane_1").GetComponentInChildren<HingeJoint>(true) != null
+                    && GameObject.Find("Sign_WindField_1") != null && GameObject.Find("PaperTray_WindField") != null;
+                int treesNear = 0;
+                var trees = GameObject.Find("Trees");
+                if (trees != null)
+                    foreach (Transform tree in trees.transform)
+                    {
+                        Vector2 tp = new Vector2(tree.position.x, tree.position.z);
+                        if (Vector2.Distance(tp, fireSite) < 8f || Vector2.Distance(tp, windSite) < 8f) treesNear++;
+                    }
+                Check(fireOk && windOk && treesNear == 0, $"campos de fuego y viento: fuego {fireOk}, viento {windOk}, pinos adentro {treesNear}");
+            }
+
             // Interior de la torre v2: sin estaciones/alquimia/portal dentro, y los muebles de pared pegados al muro (a menos de 0,7 m).
             {
                 Vector3 towerC = SpellSimulator.EditorTools.Map.MapBuilder.TowerOrigin();

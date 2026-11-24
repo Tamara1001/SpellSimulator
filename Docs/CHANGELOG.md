@@ -5,6 +5,16 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-24 — Campos de fuego y viento (paso 6 del rework del mapa)
+
+- **Sitios fijos** `FireField` (−18, −50) y `WindField` (26, −34), r 8, en `MapStructures.Sites()` (antes del santuario y los peñascos). `ValleyShape.Height` aplana ambos discos (plano hasta 5,6 m, suave hasta 8) y `ClearVegetation` los despeja a 10 m sin tocar `CanPlantTree` (el bosque no se reordena). Constantes `ValleyShape.FireFieldCenter/WindFieldCenter/ElementFieldRadius`.
+- **Campo de fuego** (`MapStructures.FireField.cs`, subagente Opus): claro de ceniza con anillo de 13 piedras abierto hacia el camino, fogata apagada, 3 blancos inflamables (estacas, muñeco de paja, leñera) con perfil `Arbol` (arden 30 s y quedan carbonizados, no se destruyen: se puede practicar varias veces), abrevadero, mesa con papeles y tintero, atril VACÍO para `spells-fire` y 3 carteles. 546 triángulos estáticos.
+- **Campo de viento** (`MapStructures.WindField.cs`, subagente Opus): 3 veletas y 2 mangas con bisagra, soga con 5 telas, aro-diana a 9 m, 10 hojas + 3 plumas livianas (`Flutter`), cajas livianas, mesa con papeles y tintero, atril VACÍO para `spells-wind` y 3 carteles. Frente al norte (el sitio mira a la pradera).
+- **Reubicados por el campo de viento**: santuario (34, −36) → (44, −38); peñasco 1 (20, −28) → (28, 17) (a 8,5 m del campo no cabía; revierte la decisión de MAP-08 de esta tanda); por arrastre, peñasco 3 → (47,75, −25,70) y peñasco 4 → (22,75, 31,30). `StructureSitesPinTests` actualizado y con test nuevo (terreno llano y sin pisar otros sitios).
+- `WorldZones.json`: zonas `fire-field` y `wind-field` (17 zonas; la fila agrupada «Campos de elemento» sigue en el paso 9).
+- Play Smoke: chequeo de ambos campos (estructuras, blanco con `ElementReactive`, veleta con `HingeJoint`, carteles, mesas y 0 pinos a < 8 m). EditMode 695/695.
+- **Pendiente:** los atriles están vacíos hasta el paso 7 (`StandBook` con `spells-fire`/`spells-wind`; al usarlo hay que borrar el atril decorativo de cada campo). Ver KI-147.
+
 ## 2026-11-24 — Peñasco 1 se queda en (20, −28) (MAP-08)
 
 - Decisión: `Crag_1` no se muda a (40, 30) (sitio del taller de tierra desde la tanda anterior; el camino al viento queda a 9,5 m). Se anotó en `MAPA_FLUJO_PLAN.md` (§ bitácora y tabla v2) y en `MapStructures`; `StructureSitesPinTests` ya fija (20, −28). MAP-07 ya estaba resuelto en `d3b6b9d`.

@@ -23,15 +23,17 @@ namespace SpellSimulator.Tests
             ("Cabin_1", -8f, 46f),        // mudada al norte (era la cabaña del sur, en (12, -40))
             ("Cabin_2", -28f, 34f),
             ("StoneCircle", 50f, -10f),
-            ("Shrine", 34f, -36f),
+            ("Shrine", 44f, -38f),      // mudado al este para dejarle lugar al campo de viento (paso 6)
             ("SupplyStall", 10f, 48f),    // mudado al norte (estaba en (8, -22))
-            ("Crag_1", 20f, -28f),
+            ("Crag_1", 28f, 17f),       // mudado al noreste de la torre: a 8,5 m del campo de viento no cabia
             ("Crag_2", 44f, 10f),
-            ("Crag_3", 47f, -27f),      // mudado al sitio viejo del laboratorio (antes (-6, -40), sobre el Archivo)
-            ("Crag_4", 23.5f, 30f),
+            ("Crag_3", 47.750f, -25.701f), // corrido ~1 m por el santuario; mudado al sitio viejo del laboratorio (antes (-6, -40), sobre el Archivo)
+            ("Crag_4", 22.750f, 31.299f), // corrido ~1,5 m por el penasco 1
             ("EarthWorkshop", 40f, 30f),
             ("WaterLab", -44.189f, 1.338f),
             ("Laboratory", 20f, -8f),
+            ("FireField", -18f, -50f),    // campos de elemento (paso 6): fijos, el terreno se aplana en ValleyShape.Height
+            ("WindField", 26f, -34f),
         };
 
         [Test]
@@ -57,6 +59,29 @@ namespace SpellSimulator.Tests
                 {
                     MapStructures.TryGetSite(other, out Vector2 o, out _);
                     Assert.Greater(Vector2.Distance(pos, o), 9f, $"{name} esta pegado a {other}");
+                }
+            }
+        }
+
+        [Test]
+        public void ElementFields_AreFlatAndDoNotOverlapOtherSites()
+        {
+            foreach (string field in new[] { "FireField", "WindField" })
+            {
+                Assert.IsTrue(MapStructures.TryGetSite(field, out Vector2 center, out _), $"falta el sitio {field}");
+                // Plano hasta el 70 % del radio (como el entrenamiento): sin escalones para los blancos ni la mesa.
+                for (float a = 0f; a < 360f; a += 45f)
+                    foreach (float r in new[] { 0f, 3f, ValleyShape.ElementFieldRadius * 0.7f - 0.1f })
+                    {
+                        Vector2 p = center + new Vector2(Mathf.Cos(a * Mathf.Deg2Rad), Mathf.Sin(a * Mathf.Deg2Rad)) * r;
+                        Assert.AreEqual(0f, ValleyShape.Height(p.x, p.y), 0.02f, $"{field}: el terreno no es llano en {p}");
+                    }
+                Assert.Less(center.magnitude + ValleyShape.ElementFieldRadius, 63f, $"{field} se sale del area jugable");
+                foreach (var (name, x, z) in Pinned)
+                {
+                    if (name == field) continue;
+                    float min = ValleyShape.ElementFieldRadius + (name.StartsWith("Crag") ? 6f : 3.8f);
+                    Assert.Greater(Vector2.Distance(center, new Vector2(x, z)), min, $"{field} pisa {name}");
                 }
             }
         }

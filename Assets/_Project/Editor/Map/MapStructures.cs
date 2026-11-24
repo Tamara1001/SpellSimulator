@@ -21,7 +21,7 @@ namespace SpellSimulator.EditorTools.Map
     /// Presupuesto Quest/WebGL: una malla por estructura con el material compartido, una luz tenue en la cueva y una por
     /// portal (apagada hasta que se abre). Los portales son anillos de piedra con disco animado (PortalVisuals).
     /// </summary>
-    public static class MapStructures
+    public static partial class MapStructures
     {
         public const string RootName = "Structs";
         private const string Prefix = "Struct_";
@@ -135,11 +135,15 @@ namespace SpellSimulator.EditorTools.Map
             Add("Cabin_1", Find(CabinNorthPreferred, 7f, 3.6f, 0.7f, false, taken), ValleyShape.Spawn, 3.6f, true);
             Add("Cabin_2", Find(new Vector2(-28f, 34f), 7f, 3.6f, 0.7f, false, taken), ValleyShape.TowerCenter, 3.6f, true);
             Add("StoneCircle", Find(new Vector2(50f, -10f), 6f, 5.8f, 0.8f, false, taken), ValleyShape.FieldCenter, 5.8f, false);
-            Add("Shrine", Find(new Vector2(34f, -36f), 6f, 3.8f, 0.6f, false, taken), ValleyShape.FieldCenter, 3.8f, false);
+            // Campos de fuego y viento: sitios FIJOS (terreno aplanado en ValleyShape.Height). Se registran antes del santuario y los
+            // penascos para que se corran ellos: el santuario pasa a (44, -38) y el penasco 1 a la zona este (Docs/MAPA_FLUJO_PLAN.md, paso 6).
+            Add("FireField", ValleyShape.FireFieldCenter, ValleyShape.ArchiveCenter, ValleyShape.ElementFieldRadius, true, ValleyShape.ElementFieldRadius * 0.7f);
+            Add("WindField", ValleyShape.WindFieldCenter, ValleyShape.FieldCenter, ValleyShape.ElementFieldRadius, false);
+            Add("Shrine", Find(new Vector2(44f, -38f), 6f, 3.8f, 0.6f, false, taken), ValleyShape.FieldCenter, 3.8f, false);
             Add("SupplyStall", Find(SupplyStallPreferred, 5f, 2.8f, 0.4f, false, taken), ValleyShape.Spawn, 2.8f, false);
             // El peñasco 3 estaba en (-6, -40), encima del Archivo y sus caminos: se mudo al sitio viejo del laboratorio (Docs/MAPA_FLUJO_PLAN.md, D15).
-            // El peñasco 1 se queda en (20, -28) (decision 2026-11-24, MAP-08): el sitio (40, 30) del plan v2 lo ocupa el taller de tierra.
-            Vector2[] crags = { new Vector2(20f, -28f), new Vector2(44f, 10f), new Vector2(47f, -27f), new Vector2(22f, 30f) };
+            // El peñasco 1 sale de (20, -28) (decision 2026-11-24): quedaba a 8,5 m del campo de viento. Se busca al noreste de la torre (28, 17): el este ya esta ocupado por el laboratorio, el circulo y el peñasco 3.
+            Vector2[] crags = { new Vector2(28f, 17f), new Vector2(44f, 10f), new Vector2(47f, -27f), new Vector2(22f, 30f) };
             for (int i = 0; i < crags.Length; i++)
                 Add("Crag_" + (i + 1), Find(crags[i], 7f, 6f, 1.8f, false, taken), ValleyShape.FieldCenter, 6f, false);
 
@@ -294,6 +298,11 @@ namespace SpellSimulator.EditorTools.Map
             SupplyStall(root, s["SupplyStall"]);
             EarthWorkshop(root, s["EarthWorkshop"]);
             WaterLab(root, s["WaterLab"]);
+            // Vegetacion: los campos de elemento se despejan a 10 m (CanPlantTree no cambia: el azar del bosque queda igual).
+            ClearVegetation(MapBuilder.Ground(ValleyShape.FireFieldCenter.x, ValleyShape.FireFieldCenter.y), 10f);
+            ClearVegetation(MapBuilder.Ground(ValleyShape.WindFieldCenter.x, ValleyShape.WindFieldCenter.y), 10f);
+            FireField(root, s["FireField"]);
+            WindField(root, s["WindField"]);
             StudyPortal(root);
             Debug.Log("[Estructuras] posiciones:\n" + report);
         }

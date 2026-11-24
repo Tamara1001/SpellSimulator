@@ -3,6 +3,8 @@
     { "id": "tower", "name": "Torre", "use": "Torre-tutorial de cuatro niveles: de la terraza a la planta baja, aprendé a moverte, agarrar objetos, tu primer hechizo y abrir la puerta.", "color": "#8E6B4A", "origin": "Tower", "x": 0, "z": 16 },
     { "id": "training", "name": "Entrenamiento", "use": "Blancos, muñecos y atril de papel para practicar sellos.", "color": "#D0563B", "origin": "Training", "x": -6, "z": -25 },
     { "id": "archive", "name": "Archivo", "use": "Biblioteca al aire libre: volvé a leer tus libros y probá lo aprendido; en la entrada hay papel, plumas y tinta.", "color": "#C9B27A", "origin": "Archive", "x": 0, "z": -46 },
+    { "id": "fire-field", "name": "Campo de fuego", "use": "Claro de ceniza con blancos que arden: fuego con columna y dispersión; cuidado con el pasto.", "color": "#C8432B", "origin": "FireField", "x": -18, "z": -50 },
+    { "id": "wind-field", "name": "Campo de viento", "use": "Pradera abierta con veletas, mangas y ropa tendida: ráfagas, abanicos y flotar objetos.", "color": "#6FB7D1", "origin": "WindField", "x": 26, "z": -34 },
     { "id": "laboratory", "name": "Laboratorio", "use": "Mesa de variables: cambiá el sello, lanzalo y registrá lo que pasa.", "color": "#4F7FC4", "origin": "Laboratory", "x": 20, "z": -8 },
     { "id": "cabin-north", "name": "Cabaña del norte", "use": "Refugio con mesa y un libro de hechizos de viento y agua.", "color": "#B5793E", "origin": "Cabin_1", "x": -8, "z": 46 },
     { "id": "cabin-forest", "name": "Cabaña del bosque", "use": "Refugio con mesa y un libro de hechizos de fuego y tierra.", "color": "#6E8F35", "origin": "Cabin_2", "x": -28, "z": 34 },

@@ -45,6 +45,13 @@ namespace SpellSimulator.World.Map
         public static readonly Vector2 StudyPortal = TowerCenter + new Vector2(0f, -14f);
 
         /// <summary>
+        /// Campos de fuego y viento (Docs/MAPA_FLUJO_PLAN.md, paso 6; coordenadas v2): terreno llano en un disco de <see cref="ElementFieldRadius"/>
+        /// (plano hasta 70 % y suave hasta el borde, como el entrenamiento). Los caminos de <see cref="Paths"/> terminan en su borde.
+        /// </summary>
+        public static readonly Vector2 FireFieldCenter = new Vector2(-18f, -50f), WindFieldCenter = new Vector2(26f, -34f);
+        public const float ElementFieldRadius = 8f;
+
+        /// <summary>
         /// Entrenamiento base (blancos, munecos, atril de papel y mesas): etapa 2 del recorrido (Docs/MAPA_FLUJO_PLAN.md, paso 2),
         /// a 20 m al sur-suroeste del nexo. Es el punto del atril; el frente mira al suroeste, hacia el hueco entre el lago y el
         /// bosque del sur (nada que apuntar: ni torre ni estructuras ni los campos de agua y fuego). Las mesas y el caballete quedan
@@ -106,6 +113,12 @@ namespace SpellSimulator.World.Map
             // Entrenamiento base: plano (5,6 m) y suave hasta 8 m.
             float training = 1f - Smooth(TrainingFlatRadius * 0.7f, TrainingFlatRadius, Vector2.Distance(p, TrainingOrigin));
             h = Mathf.Lerp(h, 0f, training);
+
+            // Campos de fuego y viento: llanos.
+            float fireField = 1f - Smooth(ElementFieldRadius * 0.7f, ElementFieldRadius, Vector2.Distance(p, FireFieldCenter));
+            h = Mathf.Lerp(h, 0f, fireField);
+            float windField = 1f - Smooth(ElementFieldRadius * 0.7f, ElementFieldRadius, Vector2.Distance(p, WindFieldCenter));
+            h = Mathf.Lerp(h, 0f, windField);
 
             // Lago: cuenca eliptica.
             float lake = LakeFactor(x, z);
