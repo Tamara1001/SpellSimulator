@@ -104,7 +104,7 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
   - **El anillo es más compacto de lo que parecía en el dibujo:** con Archivo r = 9 y fuego r = 8 a 18 m entre centros, los bordes casi se tocan; lo mismo tierra y viento. Por eso las «ramas» a fuego y tierra miden 2-4 m, y el arco agua→fuego es el mismo cruce del oeste.
   - La rama al agua **entra por el sur** (−21.5, −38.5), no en línea recta desde el Archivo: la recta pasaba a 5 m por detrás del muñeco A, en plena línea de tiro del entrenamiento.
   - Margen obligatorio de `MapStructures.Clear`: un camino tiene que quedar a más de 3,2 m + radio del centro de cada estructura que usa `Find`. Por eso los caminos terminan a ~7 m de las cabañas y a ~9,4 m del futuro campo de tierra (20, −50). Sitios fijos a mano (laboratorio; después Archivo, fuego, viento) no tienen ese límite.
-  - **Peñasco 3** mudado de (−6, −40) a (47, −27) (sitio viejo del laboratorio): estaba sobre el Archivo. El peñasco 1 (20, −28) queda a 9,5 m del camino al viento: se muda en el paso 5/6.
+  - **Peñasco 3** mudado de (−6, −40) a (47, −27) (sitio viejo del laboratorio): estaba sobre el Archivo. El peñasco 1 (20, −28) queda a 9,5 m del camino al viento. **Decisión (2026-11-24, MAP-08): se queda en (20, −28)**; el sitio (40, 30) que proponía v2 es hoy el del taller de tierra.
   - Tests nuevos en `ValleyShapeTests` (caminos en seco, dentro del área, sin pisar el entrenamiento; llegan al borde de cada zona sin atravesarla).
 - 2026-11-16 — **D28 (Tamara):** el jugador recibe daño en Libre, con un interruptor desbloqueable para apagarlo. Paso V nuevo en el tracker; falta decidir dónde se desbloquea.
 - 2026-11-17 — **Torre nueva (TS) y T1 hechos.**
@@ -521,7 +521,7 @@ Todo lo marcado «a medir» hay que confirmarlo en el paso 0 con Unity.
 | Campo de tierra | 22, −54 | **20, −50** | Mismo motivo (pasaba el cuadro por 2 mm). |
 | Santuario | 46, −40 | **44, −38** | Con r = 61 + 3,8 falla el tope de `Clear`. |
 | Campo de agua | −26, −38 | **orilla sur real vía `FindLakeside` con ángulo 300° (≈ −22, −30)** | (−26,−38) queda a 12,5 m del agua: la caja ya no se empuja al lago. Sigue a ~27 m del Archivo. |
-| Peñasco 1 | ~12, −40 | **al sitio viejo del taller (40, 30)** | Caía sobre el camino Archivo–Viento. |
+| Peñasco 1 | ~12, −40 | ~~al sitio viejo del taller (40, 30)~~ → **se queda en (20, −28)** (decisión 2026-11-24) | Caía sobre el camino Archivo–Viento; a 9,5 m del camino al viento alcanza. (40, 30) lo ocupa hoy el taller de tierra. |
 | Peñasco 3 | ~−10, −30 | **al sitio viejo del laboratorio (47, −27)** | Pisaba el aplanado del entrenamiento; de paso llenan el norte/este. |
 | Entrenamiento: frente | sur | **oeste/suroeste**, camino pasando por detrás del atril | Con frente al sur, el muñeco A queda a 4-5 m de la pared del Archivo. |
 
