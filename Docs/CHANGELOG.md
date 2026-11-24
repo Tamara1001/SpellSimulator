@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-24 — Zonas de práctica fuera de la pista del Laboratorio (MAP-05)
+
+- `CanvasDesigns.PracticeZones`: las zonas junto a los senderos no se arman sobre la plataforma ni la pista del Laboratorio (`InLabKeepOut`, con margen de 3,4 m) y, si el punto cae ahí, se corren hacia la torre (`PathBacktrack`). Test en `TrainingLayoutTests`.
+- Mapa regenerado: «Entrada del campo» (`Path9`) pasó de (~28, −2), pegada a la pista, a (~17, 2), a 8 m del centro. «Camino al campo» (`Path8`) ya no se genera: quedaba a 9 m de la anterior y la reemplaza. Hay 2 zonas de sendero en vez de 3.
+- `MapOverrides.json`: se quitaron las 10 entradas huérfanas `Practice/*_Path8` y `*_Path9` (posiciones absolutas que ya no corresponden).
+- Aviso para quien regenere el mapa: `MapLayout.CaptureManualEdits` compara contra `Logs/MapBaseline.json` (local, no versionado). Tras un `pull` con cambios de mapa ese baseline queda viejo y `Build` guarda como «ajustes manuales» todo lo distinto (+1500 líneas en `MapOverrides.json`). Antes de regenerar: recargar la escena y llamar `MapLayout.SeedBaselineFrom(escena)`.
+- El texto del cartel de `Path9` («Aquí empieza el campo de práctica») quedó viejo: el campo de práctica ya no existe (ver tarjeta de `WorldZones.json`).
+
 ## 2026-11-24 — Tutorial: radio exterior de la puerta (MAP-04) y arreglo de compilación
 
 - `TutorialRules.InDoorway` ahora tiene cota exterior (`BarrierRadius - 0,3`): caminar por la pradera al sur de la torre ya no cuenta como cruzar el vano. Test sumado en `TutorialRulesTests`.

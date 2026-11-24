@@ -35,6 +35,28 @@ namespace SpellSimulator.EditorTools.Map
 
         private const float ZoneClearRadius = 3.4f;
 
+        /// <summary>Margen (m) alrededor de la pista del laboratorio donde no se arma una zona de practica (MAP-05).</summary>
+        private const float LabTrackMargin = 3.4f;
+
+        /// <summary>Corrimientos de t sobre la recta (hacia la torre) que se prueban si el punto elegido cae sobre la pista del laboratorio.</summary>
+        private static readonly float[] PathBacktrack = { 0f, -0.1f, -0.2f, -0.3f };
+
+        /// <summary>
+        /// ¿Cae <paramref name="p"/> sobre la plataforma o la pista del laboratorio (mas el margen)? La pista sale hacia el este
+        /// (<see cref="MapStructures.LaboratoryFacing"/>), empieza a <see cref="MapStructures.LaboratoryTrackStart"/> del centro y mide
+        /// <see cref="MapStructures.LaboratoryTrackLength"/> x <see cref="MapStructures.LaboratoryTrackWidth"/> m.
+        /// </summary>
+        public static bool InLabKeepOut(Vector2 p)
+        {
+            Vector2 rel = p - MapStructures.LaboratorySite;
+            if (rel.magnitude < MapStructures.LaboratoryPlatformRadius + LabTrackMargin) return true;
+            Vector2 f = MapStructures.LaboratoryFacing.normalized, side = new Vector2(-f.y, f.x);
+            float along = Vector2.Dot(rel, f), across = Mathf.Abs(Vector2.Dot(rel, side));
+            return along > MapStructures.LaboratoryTrackStart - LabTrackMargin
+                && along < MapStructures.LaboratoryTrackStart + MapStructures.LaboratoryTrackLength + LabTrackMargin
+                && across < MapStructures.LaboratoryTrackWidth * 0.5f + LabTrackMargin;
+        }
+
         /// <summary>Desnivel maximo (m) a 2,5 m del centro de una zona.</summary>
         private const float MaxHeightDelta = 0.28f;
 
@@ -84,20 +106,26 @@ namespace SpellSimulator.EditorTools.Map
             foreach (var spot in PathSpots)
             {
                 Vector2 to = spot.route == 0 ? lake : field;
-                Vector2 point = Vector2.Lerp(tower, to, spot.t);
                 Vector2 dir = (to - tower).normalized;
                 Vector2 perp = new Vector2(-dir.y, dir.x);
                 bool found = false;
-                foreach (float side in new[] { 1f, -1f })
+                // Si el punto de la recta cae sobre la plataforma o la pista del laboratorio, se corre hacia la torre (MAP-05).
+                foreach (float back in PathBacktrack)
                 {
-                    for (float d = 3.5f; d <= 7f && !found; d += 1.5f)
+                    Vector2 point = Vector2.Lerp(tower, to, spot.t + back);
+                    foreach (float side in new[] { 1f, -1f })
                     {
-                        Vector2 p = point + perp * side * d;
-                        if (Vector2.Distance(p, tower) < 10f || Vector2.Distance(p, field) < 5f) continue;
-                        if (ValleyShape.LakeFactor(p.x, p.y) < 1.3f || !IsFirm(p, taken, trees)) continue;
-                        BuildZone(root, template, material, $"Path{index}", p, -perp * side, index, spot.title, spot.hint);
-                        taken.Add(new Vector3(p.x, 0f, p.y));
-                        found = true;
+                        for (float d = 3.5f; d <= 7f && !found; d += 1.5f)
+                        {
+                            Vector2 p = point + perp * side * d;
+                            if (Vector2.Distance(p, tower) < 10f || Vector2.Distance(p, field) < 5f) continue;
+                            if (InLabKeepOut(p)) continue;
+                            if (ValleyShape.LakeFactor(p.x, p.y) < 1.3f || !IsFirm(p, taken, trees)) continue;
+                            BuildZone(root, template, material, $"Path{index}", p, -perp * side, index, spot.title, spot.hint);
+                            taken.Add(new Vector3(p.x, 0f, p.y));
+                            found = true;
+                        }
+                        if (found) break;
                     }
                     if (found) break;
                 }

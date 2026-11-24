@@ -86,6 +86,17 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
+        public void PracticeZones_AvoidLabPlatformAndTrack()
+        {
+            var lab = SpellSimulator.EditorTools.Map.MapStructures.LaboratorySite;
+            Assert.IsTrue(SpellSimulator.EditorTools.Map.CanvasDesigns.InLabKeepOut(lab), "la plataforma");
+            Assert.IsTrue(SpellSimulator.EditorTools.Map.CanvasDesigns.InLabKeepOut(lab + new Vector2(18f, 0f)), "la pista");
+            Assert.IsTrue(SpellSimulator.EditorTools.Map.CanvasDesigns.InLabKeepOut(lab + new Vector2(8f, 6f)), "el borde norte de la pista (donde estaba Path9)");
+            Assert.IsFalse(SpellSimulator.EditorTools.Map.CanvasDesigns.InLabKeepOut(lab + new Vector2(-12f, 10f)), "lejos, al noroeste");
+            Assert.IsFalse(SpellSimulator.EditorTools.Map.CanvasDesigns.InLabKeepOut(lab + new Vector2(8f, 12f)), "al norte, pasado el margen");
+        }
+
+        [Test]
         public void TrainingGround_IsFlat_AndFieldCenterDidNotMove()
         {
             Vector2 o = ValleyShape.TrainingOrigin;
