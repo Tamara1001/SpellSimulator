@@ -366,6 +366,19 @@ namespace SpellSimulator.EditorTools
             // --- Tutoriales nuevos, hojas livianas, barquito estable, muros de tierra y Wall Breaker.
             Check(GameObject.Find("Struct_EarthWorkshop") != null && GameObject.Find("Struct_WaterLab") != null && GameObject.Find("Slate_WaterLab") != null,
                 "tutoriales nuevos: taller de piedra y laboratorio del lago con su pizarra");
+            // Archivo (paso 3): la rotonda existe, tiene los 4 libros que ya no estan en la torre y no queda un pino adentro (r 14).
+            {
+                bool books = true;
+                string missing = "";
+                foreach (string id in new[] { "variants", "motion", "shape", "rare" })
+                    if (GameObject.Find("Book_" + id) == null) { books = false; missing += id + " "; }
+                int treesIn = 0;
+                var forest = GameObject.Find("Trees");
+                if (forest != null)
+                    foreach (Transform tree in forest.transform)
+                        if (Vector2.Distance(new Vector2(tree.position.x, tree.position.z), SpellSimulator.World.Map.ValleyShape.ArchiveCenter) < 12f) treesIn++;
+                Check(GameObject.Find("Struct_Archive") != null && books && treesIn == 0, $"archivo: rotonda {GameObject.Find("Struct_Archive") != null}, libros {books} {missing}, pinos adentro {treesIn}");
+            }
             // Campos de fuego y viento (paso 6): estructuras, blancos que arden y veletas con bisagra; sin pinos a menos de 8 m del centro.
             {
                 var fireSite = SpellSimulator.World.Map.ValleyShape.FireFieldCenter;

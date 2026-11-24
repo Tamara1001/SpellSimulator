@@ -21,7 +21,7 @@ SpellSimulator/
 │   │   │   ├── PostProcess.asset #   VolumeProfile (bloom, tonemapping, color, viñeta) de Pradera
 │   │   │   └── GlyphDictionary.asset
 │   │   ├── Editor/               #   SpellSimulator.Editor.asmdef — harness, sync del diccionario, chequeos
-│   │   │   └── Map/              #   MapBuilder, TowerBuilder, MapStructures (+ .FireField.cs y .WindField.cs: campos de elemento), MapDetails, MapLab (mesa del Laboratorio), LowPolyMesh (generador del mapa)
+│   │   │   └── Map/              #   MapBuilder, TowerBuilder, MapStructures (+ .Archive.cs, .FireField.cs y .WindField.cs: Archivo y campos de elemento), MapDetails, MapLab (mesa del Laboratorio), LowPolyMesh (generador del mapa)
 │   │   ├── Materials/            #   Canvas, BrushMaterial, Pen, Eraser, Rag, Inkwell, Crate, VRPointer, SpellParticle(.shader) + Additive/Alpha, StylizedWater(.shader) + Water, GroundMark(.shader) + GroundMark, StylizedLit(.shader) + Stylized, Waterfall(.shader) + Waterfall, Sky, Stone, Cloth, Binarize(.shader)
 │   │   ├── Prefabs/
 │   │   │   ├── Objects/          #   PaperCanvas, Pen, Eraser, Tool

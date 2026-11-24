@@ -57,15 +57,15 @@ namespace SpellSimulator.EditorTools.Map
 
             var p = new Palette
             {
-                wood = CanvasFrameMaterials.Solid("ShopWood", new Color(0.56f, 0.38f, 0.22f)),
-                darkWood = CanvasFrameMaterials.Solid("ShopDarkWood", new Color(0.36f, 0.23f, 0.14f)),
-                plank = CanvasFrameMaterials.Solid("ShopPlank", new Color(0.68f, 0.5f, 0.3f)),
+                wood = CanvasFrameMaterials.Solid("ShopWoodV2", new Color(0.46f, 0.31f, 0.19f)),   // madera del Archivo (columnas y vigas), no mas amarillenta
+                darkWood = CanvasFrameMaterials.Solid("ShopDarkWoodV2", new Color(0.30f, 0.20f, 0.12f)),
+                plank = CanvasFrameMaterials.Solid("ShopPlankV2", new Color(0.58f, 0.42f, 0.26f)),
                 metal = CanvasFrameMaterials.Solid("ShopMetal", new Color(0.62f, 0.62f, 0.66f)),
                 brass = CanvasFrameMaterials.Solid("ShopBrass", new Color(0.86f, 0.66f, 0.25f)),
                 cream = CanvasFrameMaterials.Solid("ShopCream", new Color(0.95f, 0.9f, 0.76f)),
                 board = CanvasFrameMaterials.Solid("ShopBoard", new Color(0.16f, 0.26f, 0.22f)),
                 cloudA = CanvasFrameMaterials.Solid("ShopClothRed", new Color(0.72f, 0.24f, 0.28f)),
-                cloudB = CanvasFrameMaterials.Solid("ShopClothCream", new Color(0.93f, 0.86f, 0.7f)),
+                cloudB = CanvasFrameMaterials.Solid("ShopClothCreamV2", new Color(0.95f, 0.91f, 0.80f)),
                 lantern = CanvasFrameMaterials.Solid("ShopLantern", new Color(1f, 0.82f, 0.4f)),
                 leather = CanvasFrameMaterials.Solid("CanvasCoverLeather", new Color(0.36f, 0.2f, 0.26f)),
                 teal = CanvasFrameMaterials.Solid("ShopTeal", new Color(0.2f, 0.55f, 0.62f)),
@@ -109,7 +109,8 @@ namespace SpellSimulator.EditorTools.Map
             }
 
             // ---- Tienda de plumas: cinco lapiceros, cada uno con sus plumas reales (se agarran y se reponen) ----
-            Frame(penShop, p, p.cloudA, p.cloudB, "PLUMAS Y PINCELES");
+            // Toldos: crema con un acento apagado por puesto, los mismos tonos que los estandartes de la rotonda (verde, terracota, azul, ocre).
+            Frame(penShop, p, ShopCloth("ShopClothSage", new Color(0.46f, 0.58f, 0.43f)), p.cloudB, "PLUMAS Y PINCELES");
             TMP_Text brushReadout = Text(penShop, "BrushReadout", new Vector3(0f, 1.72f, 0.42f), "Agarrá la que quieras\nse repone sola", 0.065f, new Color(0.95f, 0.9f, 0.7f), null, new Vector2(1.5f, 0.45f));
             Color[] cupColors =
             {
@@ -127,7 +128,7 @@ namespace SpellSimulator.EditorTools.Map
 
             // ---- Almacen de lienzos ----
             const float canvasShopWidth = 6.5f, canvasCounterWidth = 3.9f;
-            Frame(canvasShop, p, p.blue, p.cloudB, "LIENZOS Y LIBRETAS", canvasShopWidth, canvasCounterWidth);
+            Frame(canvasShop, p, ShopCloth("ShopClothTerra", new Color(0.74f, 0.45f, 0.32f)), p.cloudB, "LIENZOS Y LIBRETAS", canvasShopWidth, canvasCounterWidth);
             Text(canvasShop, "Note", new Vector3(0f, 1.72f, 0.42f), "Agarrá el que quieras\nse repone solo", 0.065f, new Color(0.95f, 0.9f, 0.7f), null, new Vector2(1.5f, 0.45f));
             PaperRolls(canvasShop, p);
             Piles(canvasShop, component, p, canvasShopWidth, canvasCounterWidth);
@@ -157,6 +158,9 @@ namespace SpellSimulator.EditorTools.Map
             go.transform.SetPositionAndRotation(world, Quaternion.Euler(0f, 180f + yaw, 0f));
             return go.transform;
         }
+
+        /// <summary>Tela de toldo con un color apagado (material guardado por nombre).</summary>
+        private static Material ShopCloth(string name, Color color) => CanvasFrameMaterials.Solid(name, color);
 
         /// <summary>Mostrador, trastienda, postes, toldo rayado con flecos, farol y cartel colgante.</summary>
         private static void Frame(Transform shop, Palette p, Material clothA, Material clothB, string title, float width = 2.8f, float counterWidth = -1f)
@@ -250,7 +254,7 @@ namespace SpellSimulator.EditorTools.Map
         /// <summary>Tres bandejas de frascos (normal, poderosa, resistente): cada frasco es un tintero portatil real; con E se guarda como cartucho y se repone.</summary>
         private static void InkStall(Transform shop, Palette p, Transform templateParent, GameObject wellSource, Material body)
         {
-            Frame(shop, p, p.teal, p.cloudB, "TINTAS");
+            Frame(shop, p, ShopCloth("ShopClothNavy", new Color(0.28f, 0.38f, 0.55f)), p.cloudB, "TINTAS");
             Text(shop, "Note", new Vector3(0f, 1.72f, 0.42f), "Agarrá un frasco\nse guarda como cartucho", 0.065f, new Color(0.95f, 0.9f, 0.7f), null, new Vector2(1.5f, 0.45f));
             // Estante del fondo con frascos grandes de adorno.
             Part(shop, PrimitiveType.Cube, "JarShelf", p.darkWood, new Vector3(0f, 1.3f, 0.38f), new Vector3(2.3f, 0.04f, 0.2f));
@@ -290,8 +294,7 @@ namespace SpellSimulator.EditorTools.Map
         /// <summary>Las tres estampas vacias del campo (S, M, L) en bandejas: 3 chicas, 2 medianas y 1 grande; se cargan con un glifo desde el grimorio.</summary>
         private static void StampStall(Transform shop, Palette p, Transform templateParent)
         {
-            Material violet = CanvasFrameMaterials.Solid("ShopClothViolet", new Color(0.5f, 0.32f, 0.62f));
-            Frame(shop, p, violet, p.cloudB, "SELLOS");
+            Frame(shop, p, ShopCloth("ShopClothOchre", new Color(0.8f, 0.62f, 0.3f)), p.cloudB, "SELLOS");
             Text(shop, "Note", new Vector3(0f, 1.72f, 0.42f), "Se cargan con un glifo\ndesde el grimorio (T)", 0.065f, new Color(0.95f, 0.9f, 0.7f), null, new Vector2(1.5f, 0.45f));
             (string id, string label, float x, int count, float spacing, float width)[] rows =
             {

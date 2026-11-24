@@ -5,6 +5,14 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-24 — Archivo, campo de tierra y campo de agua (pasos 3, 4 y 5 del rework del mapa)
+
+- **Archivo** (`MapStructures.Archive.cs`, subagente Opus): rotonda abierta de 9 m en (0, −46): piso de losas con mosaico rúnico, 10 columnas en r 8,8 más el pórtico de entrada norte (pérgola en «C» abierta al norte porque los puestos ocupan ese arco), estandartes de los 4 elementos, tres nichos con sus libros **reales** `variants`, `motion` y `shape` y su zona de prueba, altillo con `rare` y mesa de alquimia decorativa, mesa central con atril vacío (`primeros-hechizos`, aún no existe) y estantes vacíos para los lomos de `DiscoveryState`. Esos 4 libros no estaban colocados en ningún lado desde el rework de la torre: ya se pueden leer. Terreno llano a 13 m (`ValleyShape.ArchiveFlatRadius`) y pinos despejados a 14 m.
+- **Arcos según los caminos reales** (no según el plan): agua al oeste, fuego al suroeste (por el camino sur), tierra al este y viento por un mástil al noreste (el camino de viento sale por detrás del almacén de lienzos). Ver KI-148.
+- **Tiendas de la entrada** (`MapRestocker`): rediseñadas en el lugar para que combinen con el Archivo (decisión: mover tiendas ya armadas no aportaba nada y rompía la lógica de reposición): madera del tono de las columnas y toldos crema con un acento apagado por puesto (verde salvia, terracota, azul tinta, ocre; los tonos de los estandartes). Funcionalidad intacta.
+- **Campo de tierra**: `EarthWorkshop` pasa de (40, 30) a (20, −50), de cara al sureste (hacia la montaña: lo que rompe o lanza no apunta al campo de viento ni al Archivo). **Campo de agua**: `WaterLab` de (−44, 1,3) a la orilla sur del lago (−22, −30,3; `FindLakeside` con ángulo 300° y mínimo de distancia al agua relajado a 1,42).
+- Play Smoke: chequeo del Archivo (rotonda, los 4 libros, 0 pinos adentro). EditMode 695/695. Pines de sitios actualizados.
+
 ## 2026-11-24 — Campos de fuego y viento (paso 6 del rework del mapa)
 
 - **Sitios fijos** `FireField` (−18, −50) y `WindField` (26, −34), r 8, en `MapStructures.Sites()` (antes del santuario y los peñascos). `ValleyShape.Height` aplana ambos discos (plano hasta 5,6 m, suave hasta 8) y `ClearVegetation` los despeja a 10 m sin tocar `CanPlantTree` (el bosque no se reordena). Constantes `ValleyShape.FireFieldCenter/WindFieldCenter/ElementFieldRadius`.

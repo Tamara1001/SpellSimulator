@@ -63,9 +63,9 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
   - [x] **R2** Piso 2: ejercicios opcionales (flotar en un aro, girar un lienzo hasta encajar, tirar a una diana) + cartel de «dejar flotando»; la pila sigue destrabando — hecho 2026-11-17: 3 estaciones opcionales (marco para dejar el lienzo flotando, marco de canto, diana) con farolito, mesita con lienzo de práctica y cartel «Opcional»; no traban la bajada.
   - [x] **R3** Piso 1: lienzo agarrable con guia de apunte (rayo) + plantilla fantasma del circulo y el signo de viento + cartel de 3 pasos con dibujos (verificar antes si el lienzo admite guia) — hecho 2026-11-17: `TutorialPaperGuide` (plantilla fantasma de la receta gust con LineRenderers, no son trazos; rayo azul al sostener el papel = EmissionNormal), mesita en el piso 1 y cartel de 3 pasos. Sin probar a mano que el rayo apunte bien al sostenerlo.
   - [ ] **R4** Planta baja: UNA solucion guiada (lienzo con plantilla de rafaga apuntando a la puerta); agua y tierra como atajos sin cartel; los tutoriales viejos de aire y agua se mudan al Archivo (`motion`/`shape`)
-- [ ] **3** Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba)
-- [ ] **4** Campo de agua (orilla real vía `FindLakeside`, ≈ −22,−30)
-- [ ] **5** Campo de tierra (20,−50) + santuario (44,−38) + peñascos 1 y 3 al este/norte
+- [x] **3** Archivo (rotonda abierta) en (0,−46) según §18 (nichos de estudio con zona de prueba) — hecho 2026-11-24 (`MapStructures.Archive.cs`; faltan portal al Nexo = paso 8b, lomos de estantes y libro «Primeros hechizos»; KI-148)
+- [x] **4** Campo de agua (orilla real vía `FindLakeside`, ≈ −22,−30) — hecho 2026-11-24 en (−22, −30,3)
+- [x] **5** Campo de tierra (20,−50) + santuario (44,−38) + peñascos 1 y 3 al este/norte — hecho 2026-11-24 (santuario (44,−38); peñasco 1 (28,17) y peñasco 3 (47,75,−25,70))
 - [x] **6** Campos de fuego (−18,−50) y viento (26,−34): aplanado, sin pinos en r=10, props — hecho 2026-11-24 (`MapStructures.FireField.cs`/`.WindField.cs`; atriles vacíos hasta el paso 7; santuario → (44,−38), peñasco 1 → (28,17); KI-147)
 - [ ] **7** Reparto de libros de hechizos en `glifos.json` (releer el JSON actual: hay 7 hechizos nuevos de `b83b280`) + libro `seals`
 - [ ] **8b** Portal Archivo ↔ torre (D17)

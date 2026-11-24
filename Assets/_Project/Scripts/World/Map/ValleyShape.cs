@@ -51,6 +51,9 @@ namespace SpellSimulator.World.Map
         public static readonly Vector2 FireFieldCenter = new Vector2(-18f, -50f), WindFieldCenter = new Vector2(26f, -34f);
         public const float ElementFieldRadius = 8f;
 
+        /// <summary>Radio del aplanado del Archivo (plano hasta 70 %): la rotonda mide 9 m y las tiendas de la entrada quedan adentro.</summary>
+        public const float ArchiveFlatRadius = 13f;
+
         /// <summary>
         /// Entrenamiento base (blancos, munecos, atril de papel y mesas): etapa 2 del recorrido (Docs/MAPA_FLUJO_PLAN.md, paso 2),
         /// a 20 m al sur-suroeste del nexo. Es el punto del atril; el frente mira al suroeste, hacia el hueco entre el lago y el
@@ -119,6 +122,10 @@ namespace SpellSimulator.World.Map
             h = Mathf.Lerp(h, 0f, fireField);
             float windField = 1f - Smooth(ElementFieldRadius * 0.7f, ElementFieldRadius, Vector2.Distance(p, WindFieldCenter));
             h = Mathf.Lerp(h, 0f, windField);
+
+            // Archivo: llano.
+            float archive = 1f - Smooth(ArchiveFlatRadius * 0.7f, ArchiveFlatRadius, Vector2.Distance(p, ArchiveCenter));
+            h = Mathf.Lerp(h, 0f, archive);
 
             // Lago: cuenca eliptica.
             float lake = LakeFactor(x, z);

@@ -137,6 +137,8 @@ namespace SpellSimulator.EditorTools.Map
             Add("StoneCircle", Find(new Vector2(50f, -10f), 6f, 5.8f, 0.8f, false, taken), ValleyShape.FieldCenter, 5.8f, false);
             // Campos de fuego y viento: sitios FIJOS (terreno aplanado en ValleyShape.Height). Se registran antes del santuario y los
             // penascos para que se corran ellos: el santuario pasa a (44, -38) y el penasco 1 a la zona este (Docs/MAPA_FLUJO_PLAN.md, paso 6).
+            // Archivo (rotonda abierta, centro del anillo): fijo y con piso propio de 9 m (el pasto no crece adentro). Mira al norte, hacia el nexo.
+            Add("Archive", ValleyShape.ArchiveCenter, ValleyShape.Spawn, 9f, true);
             Add("FireField", ValleyShape.FireFieldCenter, ValleyShape.ArchiveCenter, ValleyShape.ElementFieldRadius, true, ValleyShape.ElementFieldRadius * 0.7f);
             Add("WindField", ValleyShape.WindFieldCenter, ValleyShape.FieldCenter, ValleyShape.ElementFieldRadius, false);
             Add("Shrine", Find(new Vector2(44f, -38f), 6f, 3.8f, 0.6f, false, taken), ValleyShape.FieldCenter, 3.8f, false);
@@ -148,8 +150,10 @@ namespace SpellSimulator.EditorTools.Map
                 Add("Crag_" + (i + 1), Find(crags[i], 7f, 6f, 1.8f, false, taken), ValleyShape.FieldCenter, 6f, false);
 
             // Tutoriales nuevos (al final: no mueven los sitios anteriores).
-            Add("EarthWorkshop", Find(new Vector2(40f, 30f), 10f, 6f, 1.0f, false, taken), ValleyShape.FieldCenter, 6f, false);
-            Add("WaterLab", FindLakeside(5f, taken), ValleyShape.LakeCenter, 5f, false);
+            // Campos de tierra y agua (paso 4-5 del rework, Docs/MAPA_FLUJO_PLAN.md): el taller de piedra pasa al sureste del Archivo, de cara al
+            // sureste (hacia la montaña: lo que rompe o lanza no apunta al campo de viento ni al Archivo); el laboratorio del lago, a la orilla sur.
+            Add("EarthWorkshop", Find(new Vector2(20f, -50f), 6f, 6f, 1.0f, false, taken), new Vector2(44f, -62f), 6f, false);
+            Add("WaterLab", FindLakeside(5f, taken, 300f, 1.42f), ValleyShape.LakeCenter, 5f, false);
 
             // Laboratorio (al final: no mueve nada): sitio y frente fijos en la pradera; el pasto no atraviesa la plataforma.
             Add("Laboratory", LaboratorySite, LaboratorySite + LaboratoryFacing, LaboratoryRadius, true, LaboratoryPlatformRadius);
@@ -205,15 +209,17 @@ namespace SpellSimulator.EditorTools.Map
         /// Sitio junto a la orilla del lago (los demas sitios se alejan de el): prueba los angulos libres de zonas de practica
         /// (CanvasDesigns.LakeSpots) acercandose al agua hasta encontrar piso firme y plano.
         /// </summary>
-        private static Vector2 FindLakeside(float radius, List<Site> taken)
+        private static Vector2 FindLakeside(float radius, List<Site> taken, float firstAngle = float.NaN, float minLakeFactor = float.NaN)
         {
-            foreach (float angle in new[] { 112f, 242f, 300f, 172f, 62f, 12f })
+            var angles = new List<float> { 112f, 242f, 300f, 172f, 62f, 12f };
+            if (!float.IsNaN(firstAngle)) { angles.Remove(firstAngle); angles.Insert(0, firstAngle); }
+            foreach (float angle in angles)
                 for (float k = 1.7f; k >= 1.25f; k -= 0.05f)
                 {
                     float a = angle * Mathf.Deg2Rad;
                     Vector2 p = ValleyShape.LakeCenter + new Vector2(Mathf.Cos(a) * ValleyShape.LakeRadii.x * k, Mathf.Sin(a) * ValleyShape.LakeRadii.y * k);
                     if (p.magnitude + radius > 63f) continue;
-                    if (ValleyShape.LakeFactor(p.x, p.y) < 1.2f + radius / 12f) continue;
+                    if (ValleyShape.LakeFactor(p.x, p.y) < (float.IsNaN(minLakeFactor) ? 1.2f + radius / 12f : minLakeFactor)) continue;
                     if (Vector2.Distance(p, ValleyShape.TowerCenter) < ValleyShape.HillRadius + 1f + radius) continue;
                     if (ValleyShape.RiverDistance(p.x, p.y) < ValleyShape.RiverHalfWidth + 3f + radius) continue;
                     if (ValleyShape.PathDistance(p.x, p.y) < ValleyShape.PathWidth + 1f + radius) continue;
@@ -301,6 +307,8 @@ namespace SpellSimulator.EditorTools.Map
             // Vegetacion: los campos de elemento se despejan a 10 m (CanPlantTree no cambia: el azar del bosque queda igual).
             ClearVegetation(MapBuilder.Ground(ValleyShape.FireFieldCenter.x, ValleyShape.FireFieldCenter.y), 10f);
             ClearVegetation(MapBuilder.Ground(ValleyShape.WindFieldCenter.x, ValleyShape.WindFieldCenter.y), 10f);
+            ClearVegetation(MapBuilder.Ground(ValleyShape.ArchiveCenter.x, ValleyShape.ArchiveCenter.y), 14f);
+            Archive(root, s["Archive"]);
             FireField(root, s["FireField"]);
             WindField(root, s["WindField"]);
             StudyPortal(root);

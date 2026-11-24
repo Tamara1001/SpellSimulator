@@ -29,8 +29,8 @@ namespace SpellSimulator.Tests
             ("Crag_2", 44f, 10f),
             ("Crag_3", 47.750f, -25.701f), // corrido ~1 m por el santuario; mudado al sitio viejo del laboratorio (antes (-6, -40), sobre el Archivo)
             ("Crag_4", 22.750f, 31.299f), // corrido ~1,5 m por el penasco 1
-            ("EarthWorkshop", 40f, 30f),
-            ("WaterLab", -44.189f, 1.338f),
+            ("EarthWorkshop", 20f, -50f),   // campo de tierra (paso 5): al sureste del Archivo
+            ("WaterLab", -22f, -30.289f),    // campo de agua (paso 4): orilla sur del lago
             ("Laboratory", 20f, -8f),
             ("FireField", -18f, -50f),    // campos de elemento (paso 6): fijos, el terreno se aplana en ValleyShape.Height
             ("WindField", 26f, -34f),
