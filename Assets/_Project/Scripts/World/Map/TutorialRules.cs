@@ -51,12 +51,13 @@ namespace SpellSimulator.World.Map
             return floor == Levels - 2 ? -1 : Levels - 2 - floor;
         }
 
-        /// <summary>True si el jugador esta en el vano de la puerta (dentro del espesor del muro, en la planta baja).</summary>
+        /// <summary>True si el jugador esta en el vano de la puerta (desde el espesor del muro hasta la barrera, en la planta baja).</summary>
         public static bool InDoorway(Vector3 local)
         {
             if (local.y > ArrivalMargin + 0.6f) return false;
             float radius = new Vector2(local.x, local.z).magnitude;
             if (radius < InnerRadius + 0.35f) return false;
+            if (radius > BarrierRadius - 0.3f) return false; // el vano termina en la barrera: mas afuera es la pradera (MAP-04)
             float angle = Mathf.Atan2(local.z, local.x) * Mathf.Rad2Deg;
             return Mathf.Abs(Mathf.DeltaAngle(angle, DoorAngle)) <= DoorHalfAngle;
         }

@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-24 — Tutorial: radio exterior de la puerta (MAP-04) y arreglo de compilación
+
+- `TutorialRules.InDoorway` ahora tiene cota exterior (`BarrierRadius - 0,3`): caminar por la pradera al sur de la torre ya no cuenta como cruzar el vano. Test sumado en `TutorialRulesTests`.
+- MAP-03 (`ArrivalMargin`) **no aplica**: el pivote del jugador va a 1–1,7 m del piso (+0,85 m de salto) y `PassedAt_CountsTheFloorsBelowTheTerrace` ya lo fija; bajar el margen de 2,6 a 1,0 rompería el salto. El hallazgo contaba desde y=15 como si fuera el pivote.
+- `VrControlsPanel`: `UiFonts` con nombre completo (`main` no compilaba y el Editor abría en Modo Seguro).
+
 ## 2026-11-23 — Texto y contraste de libros (LIB-07, LIB-13, UI2-06, UI2-07, UI2-08)
 
 - Grimorio: autosize mínimo 50 % e interlineado 4 en páginas densas (menos recortes).

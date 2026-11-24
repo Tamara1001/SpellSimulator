@@ -43,6 +43,8 @@ namespace SpellSimulator.Tests
             Assert.IsFalse(TutorialRules.InDoorway(new Vector3(0f, 1.4f, -(TowerBuilder.InnerRadius - 0.3f))), "todavia adentro");
             Assert.IsFalse(TutorialRules.InDoorway(new Vector3(0f, 1.4f, TowerBuilder.InnerRadius + 0.5f)), "lado norte");
             Assert.IsFalse(TutorialRules.InDoorway(Doorway + Vector3.up * TowerBuilder.FloorHeight), "un piso mas arriba");
+            Assert.IsTrue(TutorialRules.InDoorway(new Vector3(0f, 1.4f, -(TutorialRules.BarrierRadius - 0.5f))), "todavia dentro de la barrera");
+            Assert.IsFalse(TutorialRules.InDoorway(new Vector3(0f, 1.4f, -15f)), "afuera, en la pradera: no completa el tutorial (MAP-04)");
             Assert.Less(TowerBuilder.InnerRadius + 0.5f, TutorialRules.BarrierRadius - 0.5f, "el vano tiene que quedar antes de la barrera");
             Assert.Greater(TutorialRules.BarrierRadius, TowerBuilder.TerraceOuter + 0.3f, "la barrera va por fuera del balcon");
             Assert.Greater(TutorialRules.BarrierRadius, TowerBuilder.BaseRadius + 0.3f, "y por fuera del talud");
