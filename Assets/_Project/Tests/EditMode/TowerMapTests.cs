@@ -65,6 +65,18 @@ namespace SpellSimulator.Tests
             }
             Assert.IsTrue(ids.Contains("tower") && ids.Contains("training") && ids.Contains("laboratory"));
             Assert.IsTrue(ids.Contains("cabin-north") && ids.Contains("supply-stall"));
+            Assert.IsTrue(ids.Contains("archive"), "falta el Archivo (MAP-02)");
+        }
+
+        [Test]
+        public void PortalDelEstudio_EstaAfueraDeLaTorre()
+        {
+            WorldZoneCatalog.Zone study = null;
+            foreach (WorldZoneCatalog.Zone p in MapTowerMap.LoadResolvedPortals()) if (p.id == "tower-study") study = p;
+            Assert.IsNotNull(study);
+            Assert.AreEqual(ValleyShape.StudyPortal.x, study.x, 0.01f);
+            Assert.AreEqual(ValleyShape.StudyPortal.y, study.z, 0.01f);
+            Assert.Greater(Vector2.Distance(study.Position, ValleyShape.TowerCenter), TowerBuilder.OuterRadius + 1f, "el rombo no puede caer dentro de la torre (MAP-01)");
         }
 
         [Test]

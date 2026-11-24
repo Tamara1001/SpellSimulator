@@ -66,7 +66,7 @@ namespace SpellSimulator.World.Map
         }
 
         /// <summary>
-        /// Resuelve los orígenes que son constantes de <see cref="ValleyShape"/> (Tower, Training, Lake, Field, Spawn).
+        /// Resuelve los orígenes que son constantes de <see cref="ValleyShape"/> (Tower, Training, Lake, Field, Spawn, Archive, StudyPortal).
         /// False para los sitios de MapStructures (los resuelve el generador del Editor).
         /// </summary>
         public static bool TryResolveShape(string origin, out Vector2 position)
@@ -78,6 +78,8 @@ namespace SpellSimulator.World.Map
                 case "Lake": position = ValleyShape.LakeCenter; return true;
                 case "Field": position = ValleyShape.FieldCenter; return true;
                 case "Spawn": position = ValleyShape.Spawn; return true;
+                case "Archive": position = ValleyShape.ArchiveCenter; return true;
+                case "StudyPortal": position = ValleyShape.StudyPortal; return true;
                 default: position = Vector2.zero; return false;
             }
         }

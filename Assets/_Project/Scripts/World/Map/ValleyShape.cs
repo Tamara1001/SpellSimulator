@@ -38,6 +38,12 @@ namespace SpellSimulator.World.Map
 
         public static readonly Vector2 Spawn = new Vector2(0f, -6f);
 
+        /// <summary>Centro del Archivo (rotonda abierta; Docs/MAPA_FLUJO_PLAN.md §18). MapRestocker arma sus puestos de entrada aca.</summary>
+        public static readonly Vector2 ArchiveCenter = new Vector2(0f, -46f);
+
+        /// <summary>Portal del estudio: afuera de la torre, 14 m al sur de su puerta, sobre la pradera (MapStructures.StudyPortal).</summary>
+        public static readonly Vector2 StudyPortal = TowerCenter + new Vector2(0f, -14f);
+
         /// <summary>
         /// Entrenamiento base (blancos, munecos, atril de papel y mesas): etapa 2 del recorrido (Docs/MAPA_FLUJO_PLAN.md, paso 2),
         /// a 20 m al sur-suroeste del nexo. Es el punto del atril; el frente mira al suroeste, hacia el hueco entre el lago y el

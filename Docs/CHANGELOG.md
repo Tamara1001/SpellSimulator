@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-24 — Catálogo del mapa de la torre: portal exterior y Archivo (MAP-01, MAP-02 parcial)
+
+- `WorldZones.json`: el portal `tower-study` ahora apunta al origen `StudyPortal` (14 m al sur de la puerta de la torre, nueva constante `ValleyShape.StudyPortal`, que usa también `MapStructures.StudyPortal`); el rombo ya no cae dentro de la torre. Textos de `tower` y `tower-study` al día con el rework (torre-tutorial, portal afuera).
+- Zona nueva `archive` (origen `Archive` = `ValleyShape.ArchiveCenter`, antes en `MapRestocker`). El mapa pasa de 14 a 15 zonas y 4 portales. `WorldZoneCatalog.TryResolveShape` resuelve `Archive` y `StudyPortal`.
+- Tests: el catálogo exige `archive` y `PortalDelEstudio_EstaAfueraDeLaTorre`. EditMode 694/694.
+- **No se agregaron `fire-field` ni `wind-field`**: los campos de fuego y viento todavía no existen en el mundo (pasos 4–6 de `MAPA_FLUJO_PLAN.md`) y un marcador sobre pradera vacía confundiría. Se suman en el paso 9, con el grupo «Campos de elemento» (4 chips en una fila de la leyenda).
+
 ## 2026-11-24 — Zonas de práctica fuera de la pista del Laboratorio (MAP-05)
 
 - `CanvasDesigns.PracticeZones`: las zonas junto a los senderos no se arman sobre la plataforma ni la pista del Laboratorio (`InLabKeepOut`, con margen de 3,4 m) y, si el punto cae ahí, se corren hacia la torre (`PathBacktrack`). Test en `TrainingLayoutTests`.

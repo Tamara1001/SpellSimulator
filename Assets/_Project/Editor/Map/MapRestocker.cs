@@ -4,6 +4,7 @@ using UnityEngine;
 using SpellSimulator.Canvas;
 using SpellSimulator.Core;
 using SpellSimulator.World;
+using ValleyShape = SpellSimulator.World.Map.ValleyShape;
 
 namespace SpellSimulator.EditorTools.Map
 {
@@ -20,7 +21,7 @@ namespace SpellSimulator.EditorTools.Map
         private static readonly Quaternion Lying = Quaternion.Euler(90f, 0f, 0f);
 
         /// <summary>Centro del Archivo en el mundo (XZ). Ver ValleyShape (Archivo r 9) y Docs/MAPA_FLUJO_PLAN.md §18.</summary>
-        public static readonly Vector2 ArchiveCenter = new Vector2(0f, -46f);
+        public static readonly Vector2 ArchiveCenter = ValleyShape.ArchiveCenter;
         /// <summary>Posicion de cada puesto respecto del centro del Archivo (x, z mundo): al lado de la torre (+Z), a la entrada.</summary>
         private static readonly Vector2 PenShopLocal = new Vector2(-7.5f, 5.5f);
         private static readonly Vector2 CanvasShopLocal = new Vector2(7.5f, 5.5f);

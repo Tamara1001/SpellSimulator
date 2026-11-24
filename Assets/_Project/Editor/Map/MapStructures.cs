@@ -923,8 +923,7 @@ namespace SpellSimulator.EditorTools.Map
             var holder = new GameObject(Prefix + "PortalStudy").transform;
             holder.SetParent(parent, false);
             // Fuera de la torre (el interior es el tutorial): al sur, frente a la puerta, sobre el terreno.
-            Vector3 t = MapBuilder.TowerOrigin();
-            holder.SetPositionAndRotation(MapBuilder.Ground(t.x, t.z - 14f), Quaternion.LookRotation(Vector3.forward));
+            holder.SetPositionAndRotation(MapBuilder.Ground(ValleyShape.StudyPortal.x, ValleyShape.StudyPortal.y), Quaternion.LookRotation(Vector3.forward));
             report.AppendLine($"{holder.name}: {Fmt(holder.position)}");
             BuildPortal(holder, "tower-study", Vector3.zero, 0f, PortalBase.Floor, -1f, 0.95f, 0.55f, 0.52f, true);
         }
