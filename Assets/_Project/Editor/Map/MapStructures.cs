@@ -307,7 +307,7 @@ namespace SpellSimulator.EditorTools.Map
             // Vegetacion: los campos de elemento se despejan a 10 m (CanPlantTree no cambia: el azar del bosque queda igual).
             ClearVegetation(MapBuilder.Ground(ValleyShape.FireFieldCenter.x, ValleyShape.FireFieldCenter.y), 10f);
             ClearVegetation(MapBuilder.Ground(ValleyShape.WindFieldCenter.x, ValleyShape.WindFieldCenter.y), 10f);
-            ClearVegetation(MapBuilder.Ground(ValleyShape.ArchiveCenter.x, ValleyShape.ArchiveCenter.y), 14f);
+            ClearVegetation(MapBuilder.Ground(ValleyShape.ArchiveCenter.x, ValleyShape.ArchiveCenter.y), 17f);
             Archive(root, s["Archive"]);
             FireField(root, s["FireField"]);
             WindField(root, s["WindField"]);

@@ -51,8 +51,8 @@ namespace SpellSimulator.World.Map
         public static readonly Vector2 FireFieldCenter = new Vector2(-18f, -50f), WindFieldCenter = new Vector2(26f, -34f);
         public const float ElementFieldRadius = 8f;
 
-        /// <summary>Radio del aplanado del Archivo (plano hasta 70 %): la rotonda mide 9 m y las tiendas de la entrada quedan adentro.</summary>
-        public const float ArchiveFlatRadius = 13f;
+        /// <summary>Radio del aplanado del Archivo (plano hasta 70 %, 12,6 m): la rotonda mide 9 m y las tiendas de la entrada forman un arco a ~13 m.</summary>
+        public const float ArchiveFlatRadius = 18f;
 
         /// <summary>
         /// Entrenamiento base (blancos, munecos, atril de papel y mesas): etapa 2 del recorrido (Docs/MAPA_FLUJO_PLAN.md, paso 2),

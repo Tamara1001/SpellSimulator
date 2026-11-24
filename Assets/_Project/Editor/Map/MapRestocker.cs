@@ -22,15 +22,17 @@ namespace SpellSimulator.EditorTools.Map
 
         /// <summary>Centro del Archivo en el mundo (XZ). Ver ValleyShape (Archivo r 9) y Docs/MAPA_FLUJO_PLAN.md §18.</summary>
         public static readonly Vector2 ArchiveCenter = ValleyShape.ArchiveCenter;
-        /// <summary>Posicion de cada puesto respecto del centro del Archivo (x, z mundo): al lado de la torre (+Z), a la entrada.</summary>
-        private static readonly Vector2 PenShopLocal = new Vector2(-7.5f, 5.5f);
-        private static readonly Vector2 CanvasShopLocal = new Vector2(7.5f, 5.5f);
-        /// <summary>Los dos puestos de adentro (tintas y sellos): mas cerca de la torre y menos girados, en arco con los de afuera.</summary>
-        private static readonly Vector2 InkShopLocal = new Vector2(-2.6f, 6.6f);
-        private static readonly Vector2 StampShopLocal = new Vector2(2.6f, 6.6f);
-        private const float InnerShopYaw = 12f;
-        /// <summary>Guinada extra (grados) sobre el giro base de 180: con 0 el frente del puesto mira a +Z mundo (hacia la torre, de donde llega el jugador).</summary>
-        private const float ShopYaw = 25f;
+        /// <summary>
+        /// Plaza de los puestos: un arco FUERA de la rotonda (radio ~13,2 m del centro del Archivo, entre sus caminos), con el frente de cada puesto mirando
+        /// hacia el centro. Posiciones locales (x, z) respecto del centro (+Z = norte) y guinada (0 = el frente mira a +Z mundo; la formula es 270 - angulo
+        /// del puesto sobre el arco, medido desde +X en sentido antihorario). Los angulos dejan libres el camino de entrada (~75 grados), el de viento (~25) y el
+        /// de agua (180): lienzos 50, sellos 103, tintas 127, plumas 151.
+        /// </summary>
+        private static readonly Vector2 PenShopLocal = new Vector2(-11.54f, 6.40f);
+        private static readonly Vector2 CanvasShopLocal = new Vector2(8.48f, 10.11f);
+        private static readonly Vector2 InkShopLocal = new Vector2(-7.94f, 10.54f);
+        private static readonly Vector2 StampShopLocal = new Vector2(-2.97f, 12.86f);
+        private const float PenShopYaw = 119f, CanvasShopYaw = -140f, InkShopYaw = 143f, StampShopYaw = 167f;
 
         private const float CounterTop = 0.93f;
 
@@ -78,10 +80,10 @@ namespace SpellSimulator.EditorTools.Map
             root.transform.position = MapBuilder.Ground(ArchiveCenter.x, ArchiveCenter.y);
             var component = root.AddComponent<CanvasRestocker>();
 
-            Transform penShop = Shop(root.transform, "Tienda de plumas", PenShopLocal, ShopYaw);
-            Transform canvasShop = Shop(root.transform, "Almacen de lienzos", CanvasShopLocal, -ShopYaw);
-            Transform inkShop = Shop(root.transform, "Puesto de tintas", InkShopLocal, InnerShopYaw);
-            Transform stampShop = Shop(root.transform, "Puesto de sellos", StampShopLocal, -InnerShopYaw);
+            Transform penShop = Shop(root.transform, "Tienda de plumas", PenShopLocal, PenShopYaw);
+            Transform canvasShop = Shop(root.transform, "Almacen de lienzos", CanvasShopLocal, CanvasShopYaw);
+            Transform inkShop = Shop(root.transform, "Puesto de tintas", InkShopLocal, InkShopYaw);
+            Transform stampShop = Shop(root.transform, "Puesto de sellos", StampShopLocal, StampShopYaw);
             ClearVegetation(map, penShop.position, canvasShop.position, inkShop.position, stampShop.position);
 
             // Una plantilla desactivada por pincel del catalogo, clonada de la herramienta del campo con su modelo propio (sin Respawnable).

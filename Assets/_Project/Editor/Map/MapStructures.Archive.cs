@@ -8,27 +8,34 @@ namespace SpellSimulator.EditorTools.Map
         // ---------------------------------------------------------------- archivo
 
         // Marco local (StructRoot mira al Nexo): +Z = norte, +X = este. Angulos en grados desde +X hacia +Z (0 = este, 90 = norte).
-        // El arco norte lo ocupan los cuatro puestos de MapRestocker (z >= ~3.4: el almacen de lienzos llega hasta (4.1, 3.4) y los
-        // clientes de tintas y sellos se paran en z ~7.5-8.4). Por eso ahi no van columnas ni pergola: la pergola es una C de 169.5 a
-        // 372.5 grados y la entrada es una portada suelta sobre el final del camino (ValleyShape.Paths termina en (1, 9) local).
-        // Vanos con estandarte segun los caminos REALES de ValleyShape.Paths: oeste = agua (camino al lago), suroeste = fuego (lleva
-        // al extremo oeste del camino del sur, en el borde del campo de fuego), este = tierra (camino directo). El camino al viento
-        // sale al estenoreste (24.9 grados, detras del almacen de lienzos), fuera de la C: su estandarte va en un mastil suelto.
+        // Los puestos de MapRestocker quedan afuera (arco de r ~13): la pergola es un anillo completo de 15 columnas en r 8.8.
+        // Vanos segun los caminos REALES de ValleyShape.Paths: norte = entrada (el camino entra en (1, 9) local, cruza r 8.8 a ~84
+        // grados), oeste = agua (camino al lago), suroeste = fuego (lleva al extremo oeste del camino del sur, en el borde del campo de
+        // fuego), este = tierra (camino directo). El camino al viento sale al estenoreste (24.9 grados) por el tramo 12.5-39; su
+        // estandarte va en un mastil suelto, afuera.
         private const float ArcFloorRadius = 9f, ArcCurbRadius = 9.5f, ArcFloorLift = 0.03f;
-        private const int ArcFloorSegments = 24, ArcBeamSegments = 20;
+        private const int ArcFloorSegments = 24, ArcBeamSegments = 24;
         private const float ArcColumnRadius = 8.8f, ArcColumnHeight = 3.8f, ArcShaftRadius = 0.25f;
         private const float ArcBeamHeight = 0.3f, ArcRafterHeight = 0.12f, ArcPurlinHeight = 0.1f;
         private const float ArcWaterAngle = 180f, ArcFireAngle = 225f, ArcEarthAngle = 360f;
         /// <summary>Medio angulo de los vanos con estandarte (luz libre ~2,7 m) y del vano este (~3,3 m: deja libres los caminos a tierra y viento).</summary>
         private const float ArcVanoHalf = 10.5f, ArcEarthVanoHalf = 12.5f;
-        /// <summary>Portada norte: centro (x, z) y media luz entre ejes de columna (luz libre 3,2 m), sobre el final del camino.</summary>
-        private const float ArcGateX = 0.9f, ArcGateZ = 9.6f, ArcGateHalf = 1.85f;
+        /// <summary>
+        /// Vano de entrada norte: luz libre 3,2 m (medio angulo 12.15 a r 8.8). Centrado en 82 grados y no en 84: el camino (2,2 m)
+        /// sigue cabiendo entero (cruza r 8.8 entre 77 y 92 grados) y el tramo hacia la columna del viento queda en ~31 grados.
+        /// </summary>
+        private const float ArcNorthAngle = 82f, ArcNorthVanoHalf = 12.15f;
+        /// <summary>Columna entre el camino del viento (cruza r 8.8 entre 17.7 y 32.1 grados) y el vano norte.</summary>
+        private const float ArcWindColumnAngle = 39f;
+        /// <summary>Cartel de bienvenida: afuera, al oeste del camino de entrada (2,5 m del eje), mirando a quien llega.</summary>
+        private static readonly Vector2 ArcWelcomeSign = new Vector2(-0.63f, 11.15f);
         /// <summary>Mastil del estandarte del viento (entre el camino a tierra y el del viento) y hacia donde cuelga la bandera.</summary>
         private static readonly Vector2 ArcWindMast = new Vector2(9.6f, 1.9f);
         private static readonly Vector2 ArcWindFlagDir = new Vector2(-0.5f, 0.87f);
-        private const float ArcLecternRadius = 4.3f, ArcReaderRadius = 3.4f, ArcSignRadius = 8.1f;
+        private const float ArcLecternRadius = 4.2f, ArcReaderRadius = 3.3f, ArcSignRadius = 8.1f;
         private const float ArcVariantsAngle = 202.5f, ArcMotionAngle = 245f, ArcShapeAngle = 296f, ArcRareAngle = 338f;
-        private const float ArcShelfRadius = 4.9f, ArcDaisHeight = 0.15f;
+        /// <summary>Estantes de la memoria contra el anillo (frente 7.9, fondo 8.3; los plintos empiezan en 8.45).</summary>
+        private const float ArcShelfRadius = 8.1f, ArcDaisHeight = 0.15f;
         private const string ArcTitleColor = "#3D4F8C";
 
         private static readonly Color ArcSlab = new Color(0.86f, 0.82f, 0.73f);
@@ -60,8 +67,8 @@ namespace SpellSimulator.EditorTools.Map
 
         /// <summary>
         /// Archivo (Docs/Archivo/ARCHIVO_PLAN.md, Docs/MAPA_FLUJO_PLAN.md §18): rotonda abierta de r = 9 con piso de losas y anillos de
-        /// mosaico, pergola en C sobre 10 columnas (abierta al norte, donde estan los puestos de MapRestocker) con faroles y tres
-        /// estandartes en sus vanos, portada norte suelta y estandarte del viento en un mastil. Adentro: mesa central con atril vacio,
+        /// mosaico, pergola anular completa sobre 15 columnas con faroles, vano de entrada norte de 3,2 m, tres estandartes en sus
+        /// vanos (agua, fuego, tierra) y estandarte del viento en un mastil. Adentro: mesa central con atril vacio,
         /// tintero y papeles; tres nichos de estudio con su libro (variants, motion, shape) y zona de prueba; el rincon de los signos
         /// raros sobre una tarima con mesa de alquimia; dos estantes de la memoria. Una sola malla estatica (Struct_Archive); libros,
         /// atriles, mesa de alquimia, caja, plumas y carteles son objetos aparte. Pasillos de >= 2,2 m de cada vano y del portal (sur,
@@ -82,28 +89,30 @@ namespace SpellSimulator.EditorTools.Map
             // 1. Piso, mosaicos y zocalo (con collider).
             ArcFloor(b, t, floorY, groundMin);
 
-            // 2. Columnas, pergola en C (sin colliders arriba: el jugador no llega a 3,8 m), faroles y estandartes.
+            // 2. Anillo completo de columnas, viga anular y aro de cabriadas (sin colliders arriba: el jugador no llega a 3,8 m),
+            // faroles y estandartes. La entrada norte es un vano mas del anillo (sin estandarte).
             float top = floorY + ArcColumnHeight;
             float[] cols = ArcColumnAngles();
             foreach (float angle in cols)
                 ArcColumn(b, t, ArcPolar(ArcColumnRadius, angle), floorY, top, ArcFacing(angle));
-            float first = cols[0], last = cols[cols.Length - 1];
+            float first = cols[0], last = first + 360f;
             ArcRingBeam(b, ArcColumnRadius - 0.16f, ArcColumnRadius + 0.16f, top, top + ArcBeamHeight, first, last, ArcBeamSegments, WoodB);
             float rafterTop = top + ArcBeamHeight + ArcRafterHeight;
             ArcRingBeam(b, 7.8f, 7.92f, rafterTop, rafterTop + ArcPurlinHeight, first, last, ArcBeamSegments, WoodA);
             for (int i = 0; i < cols.Length; i++)
             {
+                float next = i + 1 < cols.Length ? cols[i + 1] : cols[0] + 360f;
                 ArcRafter(b, cols[i], top + ArcBeamHeight);
-                if (i + 1 < cols.Length) ArcRafter(b, (cols[i] + cols[i + 1]) * 0.5f, top + ArcBeamHeight);
+                ArcRafter(b, (cols[i] + next) * 0.5f, top + ArcBeamHeight);
+                // Faroles (solo malla, sin luz real: Quest) en cada tramo, salvo los de estandarte, el vano norte y el del portal (sur).
+                float mid = (cols[i] + next) * 0.5f;
+                if (ArcIsLanternBay(mid))
+                    ArcLantern(b, ArcAt(7.95f, mid, top + ArcBeamHeight), 0.85f);
             }
-            // Faroles (solo malla, sin luz real: Quest) en los tramos sin estandarte; el tramo 4 queda libre encima del portal (sur).
-            foreach (int bay in new[] { 1, 3, 5, 6, 7 })
-                ArcLantern(b, ArcAt(7.95f, (cols[bay] + cols[bay + 1]) * 0.5f, top + ArcBeamHeight), 0.85f);
             ArcVanoBanner(b, ArcWaterAngle, top, ArcWaterCloth, ArcWaterEmblem);
             ArcVanoBanner(b, ArcFireAngle, top, ArcFireCloth, ArcFireEmblem);
             ArcVanoBanner(b, ArcEarthAngle, top, ArcEarthCloth, ArcEarthEmblem);
             ArcWindStandard(b, t, ArcWindCloth, ArcWindEmblem);
-            ArcGate(b, t, floorY);
 
             // 3. Nichos de estudio (atril de cara al centro: quien lee mira hacia su zona de prueba) y rincon de los signos raros.
             ArcVariantsZone(b, t, floorY);
@@ -111,10 +120,11 @@ namespace SpellSimulator.EditorTools.Map
             ArcShapeZone(b, t, floorY);
             ArcRareNook(b, t, floorY, groundMin);
 
-            // 5. Mesa central con atril vacio. 6. Estantes de la memoria (detras de los puestos de tintas y sellos, a los lados del pasillo norte).
+            // 5. Mesa central con atril vacio. 6. Estantes de la memoria contra el anillo, al noreste (entre el pasillo del viento y el
+            // norte) y al noroeste (~3,5 m cada uno).
             ArcCenter(b, t, floorY);
-            ArcShelf(b, t, "Archive_ShelfNE", 42f, 74f, floorY);
-            ArcShelf(b, t, "Archive_ShelfNW", 106f, 138f, floorY);
+            ArcShelf(b, t, "Archive_ShelfNE", 35f, 59.5f, floorY);
+            ArcShelf(b, t, "Archive_ShelfNW", 120.5f, 145f, floorY);
 
             report.AppendLine($"  archivo: {b.TriangleCount} triangulos estaticos, piso a {floorY:F2} m (desnivel {groundMax - groundMin:F2} m).");
             Finish(t, b, "Struct_Archive");
@@ -197,22 +207,37 @@ namespace SpellSimulator.EditorTools.Map
         }
 
         /// <summary>
-        /// Diez columnas de la C: dos por cada vano con estandarte (oeste, suroeste, este) y cuatro repartidas en el sur. La C va
-        /// de la columna oeste del vano de agua (169.5) a la columna norte del vano de tierra (372.5 = 12.5, entre los caminos a
-        /// tierra y a viento).
+        /// Quince columnas en orden creciente desde 12.5 (columna norte del vano de tierra, entre los caminos a tierra y a viento):
+        /// 12.5, 39, 69.85 | vano norte | 94.15, 119.3, 144.4, 169.5 | agua | 190.5, 214.5 | fuego | 235.5, 257.9, 280.3, 302.7,
+        /// 325.1, 347.5 | tierra. Tramos de 21 a 31 grados.
         /// </summary>
         private static float[] ArcColumnAngles()
         {
+            float northEast = ArcNorthAngle - ArcNorthVanoHalf, northWest = ArcNorthAngle + ArcNorthVanoHalf;
+            float waterNorth = ArcWaterAngle - ArcVanoHalf;
             float southStart = ArcFireAngle + ArcVanoHalf, southEnd = ArcEarthAngle - ArcEarthVanoHalf;
-            var a = new float[10];
-            a[0] = ArcWaterAngle - ArcVanoHalf;
-            a[1] = ArcWaterAngle + ArcVanoHalf;
-            a[2] = ArcFireAngle - ArcVanoHalf;
-            a[3] = southStart;
-            for (int k = 1; k <= 4; k++) a[3 + k] = Mathf.Lerp(southStart, southEnd, k / 5f);
-            a[8] = southEnd;
-            a[9] = ArcEarthAngle + ArcEarthVanoHalf;
+            var a = new float[15];
+            a[0] = ArcEarthAngle + ArcEarthVanoHalf - 360f;
+            a[1] = ArcWindColumnAngle;
+            a[2] = northEast;
+            a[3] = northWest;
+            a[4] = Mathf.Lerp(northWest, waterNorth, 1f / 3f);
+            a[5] = Mathf.Lerp(northWest, waterNorth, 2f / 3f);
+            a[6] = waterNorth;
+            a[7] = ArcWaterAngle + ArcVanoHalf;
+            a[8] = ArcFireAngle - ArcVanoHalf;
+            a[9] = southStart;
+            for (int k = 1; k <= 4; k++) a[9 + k] = Mathf.Lerp(southStart, southEnd, k / 5f);
+            a[14] = southEnd;
             return a;
+        }
+
+        /// <summary>Tramo con farol: no los de estandarte (agua, fuego, tierra), ni el vano norte, ni el que queda sobre el portal (sur, 269 grados).</summary>
+        private static bool ArcIsLanternBay(float mid)
+        {
+            float m = Mathf.Repeat(mid, 360f);
+            bool Near(float angle) => Mathf.Abs(Mathf.DeltaAngle(m, angle)) < 3f;
+            return !Near(ArcWaterAngle) && !Near(ArcFireAngle) && !Near(ArcEarthAngle) && !Near(ArcNorthAngle) && !Near(269.1f);
         }
 
         // ---------------------------------------------------------------- piso
@@ -272,21 +297,25 @@ namespace SpellSimulator.EditorTools.Map
 
         // ---------------------------------------------------------------- columnas y pergola
 
-        /// <summary>Plinto de piedra, fuste de madera, capitel de piedra y menzula a lo largo de la viga (rot: +X = direccion de la viga).</summary>
+        /// <summary>
+        /// Plinto de piedra, fuste de madera, capitel de piedra y menzula a lo largo de la viga (rot: +X = direccion de la viga; el
+        /// plinto y el capitel tambien giran con rot, asi su cara interior queda en r 8.45 y no invade los estantes).
+        /// </summary>
         private static void ArcColumn(LowPolyMesh b, Transform t, Vector2 at, float baseY, float top, Quaternion rot)
         {
             float g = Mathf.Min(Rel(t, at.x, at.y), baseY) - 0.15f;
             float plinthTop = baseY + 0.25f, capitalBottom = top - 0.37f;
-            B(b, new Vector3(at.x, (g + plinthTop) * 0.5f, at.y), new Vector3(0.7f, plinthTop - g, 0.7f), StoneB, StoneA);
-            b.Frustum(Matrix4x4.Translate(new Vector3(at.x, plinthTop, at.y)), ArcShaftRadius, ArcShaftRadius * 0.88f, 0f, capitalBottom - plinthTop, 8, WoodA, false);
-            B(b, new Vector3(at.x, capitalBottom + 0.125f, at.y), new Vector3(0.62f, 0.25f, 0.62f), StoneA);
+            b.Box(Matrix4x4.TRS(new Vector3(at.x, (g + plinthTop) * 0.5f, at.y), rot, Vector3.one), new Vector3(0.7f, plinthTop - g, 0.7f), StoneB, StoneA);
+            b.Frustum(Matrix4x4.Translate(new Vector3(at.x, plinthTop, at.y)), ArcShaftRadius, ArcShaftRadius * 0.88f, 0f, capitalBottom - plinthTop, 6, WoodA, false);
+            b.Box(Matrix4x4.TRS(new Vector3(at.x, capitalBottom + 0.125f, at.y), rot, Vector3.one), new Vector3(0.62f, 0.25f, 0.62f), StoneA);
             b.Box(Matrix4x4.TRS(new Vector3(at.x, top - 0.06f, at.y), rot, Vector3.one), new Vector3(1.0f, 0.12f, 0.36f), StoneB, StoneA);
             Col(t, new Vector3(at.x, (g + top) * 0.5f, at.y), new Vector3(0.55f, top - g, 0.55f));
         }
 
-        /// <summary>Viga en arco (de a0 a a1 grados, crecientes) entre los radios r0 y r1, con tapas en los extremos.</summary>
+        /// <summary>Viga en arco (de a0 a a1 grados, crecientes) entre los radios r0 y r1, con tapas en los extremos si no cierra el anillo.</summary>
         private static void ArcRingBeam(LowPolyMesh b, float r0, float r1, float y0, float y1, float a0, float a1, int segments, Color color)
         {
+            bool closed = a1 - a0 >= 359.9f;
             for (int i = 0; i < segments; i++)
             {
                 float s0 = Mathf.Lerp(a0, a1, i / (float)segments), s1 = Mathf.Lerp(a0, a1, (i + 1) / (float)segments);
@@ -297,8 +326,8 @@ namespace SpellSimulator.EditorTools.Map
                 b.Quad(o0b, o1b, i1b, i0b, c * 0.9f);  // abajo
                 b.Quad(o0b, o0t, o1t, o1b, c);         // afuera
                 b.Quad(i1b, i1t, i0t, i0b, c);         // adentro
-                if (i == 0) b.Quad(i0b, i0t, o0t, o0b, c);
-                if (i == segments - 1) b.Quad(o1b, o1t, i1t, i1b, c);
+                if (!closed && i == 0) b.Quad(i0b, i0t, o0t, o0b, c);
+                if (!closed && i == segments - 1) b.Quad(o1b, o1t, i1t, i1b, c);
             }
         }
 
@@ -357,22 +386,6 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 d = new Vector3(ArcWindFlagDir.x, 0f, ArcWindFlagDir.y).normalized;
             var m = Matrix4x4.TRS(new Vector3(p.x, g, p.y) + d * 0.7f, Quaternion.LookRotation(Vector3.Cross(d, Vector3.up)), Vector3.one);
             ArcBanner(b, m, barY, barY, cloth, emblem);
-        }
-
-        /// <summary>Portada norte: dos columnas, dintel (sin collider), tablero de remate y dos faroles en la luz.</summary>
-        private static void ArcGate(LowPolyMesh b, Transform t, float floorY)
-        {
-            var left = new Vector2(ArcGateX - ArcGateHalf, ArcGateZ);
-            var right = new Vector2(ArcGateX + ArcGateHalf, ArcGateZ);
-            float gl = Rel(t, left.x, left.y), gr = Rel(t, right.x, right.y);
-            float gateTop = Mathf.Max(floorY, Mathf.Max(gl, gr)) + ArcColumnHeight;
-            ArcColumn(b, t, left, gl, gateTop, Quaternion.identity);
-            ArcColumn(b, t, right, gr, gateTop, Quaternion.identity);
-            B(b, new Vector3(ArcGateX, gateTop + 0.15f, ArcGateZ), new Vector3(2f * ArcGateHalf + 0.7f, 0.3f, 0.36f), WoodB, WoodA);
-            B(b, new Vector3(ArcGateX, gateTop + 0.5f, ArcGateZ), new Vector3(1.3f, 0.4f, 0.1f), Plaster);
-            B(b, new Vector3(ArcGateX, gateTop + 0.74f, ArcGateZ), new Vector3(1.4f, 0.08f, 0.14f), Keystone);
-            foreach (float dx in new[] { -0.95f, 0.95f })
-                ArcLantern(b, new Vector3(ArcGateX + dx, gateTop, ArcGateZ), 0.55f);
         }
 
         // ---------------------------------------------------------------- nichos
@@ -540,10 +553,11 @@ namespace SpellSimulator.EditorTools.Map
             Col(t, new Vector3(0f, floorY + height * 0.5f, 0f), new Vector3(1.76f, height, 1.76f));
 
             // Atril vacio: «Primeros hechizos» todavia no existe en glifos.json.
-            // TODO: StandBook(t, "primeros-hechizos", new Vector2(0f, 1.8f), new Vector2(0f, 2.6f), floorY); y sacar este atril decorativo
+            // A 1,25 m del borde de la mesa (pasillo libre entre ambos).
+            // TODO: StandBook(t, "primeros-hechizos", new Vector2(0f, 2.75f), new Vector2(0f, 3.55f), floorY); y sacar este atril decorativo
             // (StandBook arma su propio atril con collider).
-            var lectern = new Vector2(0f, 1.8f);
-            Vector2 v = (new Vector2(0f, 2.6f) - lectern).normalized;
+            var lectern = new Vector2(0f, 2.75f);
+            Vector2 v = (new Vector2(0f, 3.55f) - lectern).normalized;
             float lecternYaw = Mathf.Atan2(-v.x, -v.y) * Mathf.Rad2Deg;
             Matrix4x4 m = Matrix4x4.TRS(new Vector3(lectern.x, floorY, lectern.y), Quaternion.Euler(0f, lecternYaw, 0f), Vector3.one);
             b.Frustum(m, 0.25f, 0.12f, 0f, 0.1f, 6, WoodB);
@@ -552,10 +566,10 @@ namespace SpellSimulator.EditorTools.Map
             Col(t, new Vector3(lectern.x, floorY + 0.6f, lectern.y), new Vector3(0.5f, 1.2f, 0.5f));
         }
 
-        /// <summary>Estante curvo bajo de roble (4 tramos de cuerda entre a0 y a1 grados, r = ArcShelfRadius) con dos filas de ranuras vacias.</summary>
+        /// <summary>Estante curvo bajo de roble (3 tramos de cuerda entre a0 y a1 grados, r = ArcShelfRadius) con dos filas de ranuras vacias.</summary>
         private static void ArcShelf(LowPolyMesh b, Transform t, string name, float a0, float a1, float floorY)
         {
-            const int segments = 4;
+            const int segments = 3;
             const float depth = 0.4f, height = 1.0f;
             for (int i = 0; i < segments; i++)
             {
@@ -581,7 +595,8 @@ namespace SpellSimulator.EditorTools.Map
             Vector3 Outer(float deg) => t.TransformPoint(ArcAt(ArcSignRadius, deg, 0f));
             Vector3 Inward(float deg) => t.TransformDirection(ArcToCenter(deg));
 
-            CanvasDesigns.Sign(t, lit, "Sign_Archive_0", t.TransformPoint(new Vector3(-1.3f, 0f, 10.9f)), t.TransformDirection(new Vector3(0.3f, 0f, 1f).normalized),
+            // Afuera de la entrada, al oeste del camino, de cara a quien llega por el (rumbo de salida del camino: (0.51, 0.86)).
+            CanvasDesigns.Sign(t, lit, "Sign_Archive_0", t.TransformPoint(new Vector3(ArcWelcomeSign.x, 0f, ArcWelcomeSign.y)), t.TransformDirection(new Vector3(0.8f, 0f, 0.6f).normalized),
                 Title("Archivo"), "Libros, signos y práctica.\nElegí un arco para ir a un campo:\nagua (oeste), fuego (suroeste),\ntierra (este), viento (noreste).");
             CanvasDesigns.Sign(t, lit, "Sign_Archive_1", Outer(ArcVariantsAngle), Inward(ArcVariantsAngle),
                 Title("Variantes y parientes"), "Leé el libro del atril y probá\nla <b>luz</b> y el <b>cristal</b> en el\nrincón en sombra: el prisma y\nla lámpara están para eso.");

@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-24 — Las tiendas salen de la rotonda y la pérgola se cierra
+
+- **Tiendas de la entrada** (`MapRestocker`): ya no están en el arco norte del Archivo. Forman un arco FUERA de la rotonda (radio ~13,2 m), con el frente hacia el centro: lienzos a 50°, sellos a 103°, tintas a 127° y plumas a 151° (ángulo desde +X; fórmula de guinada 270 − ángulo), dejando libres los caminos de entrada (~75°), de viento (~25°) y de agua (180°). Conservan el rediseño de colores (madera del Archivo, toldos crema con acento apagado). `ValleyShape.ArchiveFlatRadius` sube a 18 y el despeje de árboles a 17 m.
+- **Pérgola**: anillo completo con 15 columnas, vano de entrada de 3,2 m integrado al anillo (centrado a 82°), aro de vigas y 10 faroles en todo el contorno; estantes de la memoria a r 8,1 (NE y NO); cartel de bienvenida afuera, a 2,5 m del eje del camino. ~3990 triángulos estáticos (límite 4000; columnas de 6 lados).
+- Corrige la nota anterior de esta tanda («tiendas rediseñadas en el lugar»): no alcanzaba, se reubicaron.
+
 ## 2026-11-24 — Archivo, campo de tierra y campo de agua (pasos 3, 4 y 5 del rework del mapa)
 
 - **Archivo** (`MapStructures.Archive.cs`, subagente Opus): rotonda abierta de 9 m en (0, −46): piso de losas con mosaico rúnico, 10 columnas en r 8,8 más el pórtico de entrada norte (pérgola en «C» abierta al norte porque los puestos ocupan ese arco), estandartes de los 4 elementos, tres nichos con sus libros **reales** `variants`, `motion` y `shape` y su zona de prueba, altillo con `rare` y mesa de alquimia decorativa, mesa central con atril vacío (`primeros-hechizos`, aún no existe) y estantes vacíos para los lomos de `DiscoveryState`. Esos 4 libros no estaban colocados en ningún lado desde el rework de la torre: ya se pueden leer. Terreno llano a 13 m (`ValleyShape.ArchiveFlatRadius`) y pinos despejados a 14 m.
