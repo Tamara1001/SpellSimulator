@@ -110,20 +110,8 @@ namespace SpellSimulator.EditorTools.Map
             }
             Col(t, pit + new Vector3(0f, 0.15f, 0f), new Vector3(1.3f, 0.3f, 1.3f));
 
-            // 4. Atril VACIO para el libro de fuego (a la izquierda, mirando al centro).
-            const float lecternX = -4.1f, lecternZ = -1.0f;
-            // TODO paso 7: StandBook(t, "spells-fire", new Vector2(-4.1f, -1.0f), Vector2.zero); y sacar este atril decorativo
-            // (StandBook arma su propio atril con collider).
-            {
-                float lg = Rel(t, lecternX, lecternZ);
-                Vector2 v = (Vector2.zero - new Vector2(lecternX, lecternZ)).normalized;
-                float lecternYaw = Mathf.Atan2(-v.x, -v.y) * Mathf.Rad2Deg;
-                Matrix4x4 m = Matrix4x4.TRS(new Vector3(lecternX, lg, lecternZ), Quaternion.Euler(0f, lecternYaw, 0f), Vector3.one);
-                b.Frustum(m, 0.25f, 0.12f, 0f, 0.1f, 6, WoodB);
-                b.Box(m * Matrix4x4.Translate(new Vector3(0f, 0.6f, 0f)), new Vector3(0.1f, 1.1f, 0.1f), WoodB);
-                b.Box(m * Matrix4x4.TRS(new Vector3(0f, 1.15f, 0f), Quaternion.Euler(-25f, 0f, 0f), Vector3.one), new Vector3(0.6f, 0.04f, 0.45f), WoodA, Plank);
-                Col(t, new Vector3(lecternX, lg + 0.6f, lecternZ), new Vector3(0.5f, 1.2f, 0.5f));
-            }
+            // 4. Libro de hechizos de fuego (paso 7), a la izquierda, mirando al centro.
+            StandBook(t, "spells-fire", new Vector2(-4.1f, -1.0f), Vector2.zero);
 
             // 7. Abrevadero y balde con agua en la entrada (decorativos), del lado izquierdo del camino.
             Vector2 trough = gateDir * 6.6f - gatePerp * 1.8f;

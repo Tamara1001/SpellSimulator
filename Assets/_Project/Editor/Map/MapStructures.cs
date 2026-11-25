@@ -295,8 +295,8 @@ namespace SpellSimulator.EditorTools.Map
             ClearVegetation(MapBuilder.Ground(ValleyShape.TrainingOrigin.x, ValleyShape.TrainingOrigin.y), TrainingKeepOut);
             var s = Sites();
             Watchtower(root, s["Watchtower"]);
-            Cabin(root, s["Cabin_1"], 1, "spells-wind-water", "Cabaña del norte");
-            Cabin(root, s["Cabin_2"], 2, "spells-fire-earth", "Cabaña del bosque");
+            Cabin(root, s["Cabin_1"], 1, null, "Cabaña del norte");   // sin libro hasta que haya libros avanzados (paso 7)
+            Cabin(root, s["Cabin_2"], 2, "spells-siege", "Cabaña del bosque");
             Cave(root, s["Cave"]);
             for (int i = 1; i <= 4; i++) Crag(root, s["Crag_" + i], i);
             StoneCircle(root, s["StoneCircle"]);
@@ -424,7 +424,6 @@ namespace SpellSimulator.EditorTools.Map
             ClearVegetation(t.TransformPoint(new Vector3(0f, 0f, zTop + run * 0.5f)), run * 0.5f + 1.2f);
 
             BuildPortal(t, "watchtower", new Vector3(0f, deck, -1.55f), 0f, PortalBase.Floor);
-            StandBook(t, "spells-siege", new Vector2(1.8f, 0.3f), Vector2.zero, deck);
             StandBook(t, "portals-heights", new Vector2(1.8f, 1.5f), Vector2.zero, deck);
             var chest = Chest(t, "SupplyChest_Watchtower", new Vector3(-1.6f, deck, 0.9f), 90f, true, out float chestTop);
             Supply(chest, MapContraptions.CreateRune(RuneKind.Stone, "RuneTemplate_Stone", chest.position, lit), chestTop + 0.07f, StoneCooldown, 2, "watchtower-stone");
@@ -520,9 +519,9 @@ namespace SpellSimulator.EditorTools.Map
             var tray = Tray(t, "PaperTray_" + name, new Vector3(-0.75f, desk, -1.35f));
             Supply(tray, PaperTemplate("PaperTemplate"), 0.08f, PaperCooldown, 2, "cabin" + index + "-paper");
             Matrix4x4 bookAt = lectern * Matrix4x4.TRS(new Vector3(0f, 1.17f, 0f), Quaternion.Euler(-25f, 0f, 0f), Vector3.one);
-            Book(t, bookId, t.TransformPoint(bookAt.GetColumn(3)), t.rotation * bookAt.rotation);
+            if (!string.IsNullOrEmpty(bookId)) Book(t, bookId, t.TransformPoint(bookAt.GetColumn(3)), t.rotation * bookAt.rotation);
             CanvasDesigns.Sign(t, lit, "Sign_Struct_" + name, t.TransformPoint(new Vector3(2.3f, 0f, 3.4f)), t.forward,
-                title, "Mesa con tinta, papeles\ny un libro de hechizos.");
+                title, string.IsNullOrEmpty(bookId) ? "Mesa con tinta\ny papeles." : "Mesa con tinta, papeles\ny un libro de hechizos.");
         }
 
         // ---------------------------------------------------------------- cueva
@@ -692,7 +691,6 @@ namespace SpellSimulator.EditorTools.Map
             HeightRange(t, -1.5f, 1.5f, -1f, 1f, out _, out float max);
             BuildPortal(t, "field-circle", new Vector3(0f, max + 0.15f, 0f), 0f, PortalBase.Terrain);
             StandBook(t, "portals-valley", new Vector2(-1.9f, -1.9f), Vector2.zero);
-            StandBook(t, "spells-water-deep", new Vector2(1.9f, -1.9f), Vector2.zero);
             CanvasDesigns.Sign(t, lit, "Sign_Struct_StoneCircle", t.TransformPoint(new Vector3(2.6f, 0f, 6.4f)), t.forward,
                 "Círculo de piedras", "Dibujá el sello del portal\nen la placa para viajar.");
         }
@@ -869,6 +867,9 @@ namespace SpellSimulator.EditorTools.Map
             Supply(tray, PaperTemplate("PaperTemplate"), 0.08f, PaperCooldown, 2, "earthshop-paper");
 
             // Cajas delante del muro: para lanzarles rocas.
+            // Libro de hechizos de tierra (paso 7), a la derecha del patio, de cara al centro.
+            StandBook(t, "spells-earth", new Vector2(2.6f, -1.8f), Vector2.zero);
+
             MovablesSetup.Prop(t, lit, "EarthCrate_A", MovablesSetup.Kind.BigBox, t.TransformPoint(new Vector3(-1.3f, 0f, 3.6f)), yaw + 8f, true);
             MovablesSetup.Prop(t, lit, "EarthCrate_B", MovablesSetup.Kind.SmallBox, t.TransformPoint(new Vector3(0.2f, 0f, 3.9f)), yaw - 12f, true);
             MovablesSetup.Prop(t, lit, "EarthCrate_C", MovablesSetup.Kind.BigBox, t.TransformPoint(new Vector3(1.6f, 0f, 3.5f)), yaw + 20f, true);
@@ -914,6 +915,9 @@ namespace SpellSimulator.EditorTools.Map
             FixedInkwell(t, "Inkwell_WaterLab", t.TransformPoint(new Vector3(-2.75f, desk, -1.6f)), yaw);
             var tray = Tray(t, "PaperTray_WaterLab", new Vector3(-1.75f, desk, -1.5f));
             Supply(tray, PaperTemplate("PaperTemplate"), 0.08f, PaperCooldown, 2, "waterlab-paper");
+
+            // Libro de hechizos de agua (paso 7), sobre la tarima, a la derecha de la pizarra.
+            StandBook(t, "spells-water", new Vector2(2.2f, -1.4f), new Vector2(2.2f, -2.4f), f);
 
             // Blancos hacia el agua.
             MovablesSetup.Prop(t, lit, "LabCrate_A", MovablesSetup.Kind.SmallBox, t.TransformPoint(new Vector3(-1.2f, 0f, 4.4f)), yaw + 10f, true);

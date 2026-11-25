@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-24 — Libros de hechizos por elemento en sus campos (paso 7 del rework del mapa)
+
+- `glifos.json`: los libros mixtos se parten en uno por elemento: **Hechizos de agua** `spells-water` (light_rain, downpour, wave, water_lance, water_draw, water_orb; absorbe «Aguas y mareas»), **de tierra** `spells-earth` (earth_spike, stone_wall, wall_bend y `thrown_rock`, que sale de asedio), **de fuego** `spells-fire` (small_flame, blaze, pyreball, ring_of_fire, flame_shot) y **de viento** `spells-wind` (wind_fan, whirl, updraft, wind_breath, grasping_wind, wind_wall). «Arte de asedio» queda con `fire_wall`. Se borran `spells-wind-water`, `spells-fire-earth` y `spells-water-deep` (quien los había leído los ve sin leer: aceptado). El campo `book` de los 21 hechizos afectados (`Data/Spells/*.json`) se actualizó.
+- Mapa: cada libro en su campo (`StandBook` en `EarthWorkshop`, `WaterLab`, `FireField`, `WindField`; se sacaron los atriles decorativos vacíos). «Arte de asedio» pasa de la atalaya a la **cabaña del bosque**; la **cabaña del norte** queda sin libro hasta que haya libros avanzados (decisión de Ale); el círculo de piedras se queda solo con `portals-valley`.
+- Tests: `SpellTests` revisa los 4 libros por elemento; Play Smoke chequea que estén en el mundo y que los mixtos ya no. EditMode 695/695.
+- **Pendiente:** libro «Sellos, runas y lienzos» del entrenamiento (requiere páginas de texto en el lector; decisión de Ale: después). **Observado:** el libro `elements` («Los cuatro elementos») no está colocado en ningún lado del mundo (ya pasaba antes de esta tanda; la torre usa los tomos I y II).
+
 ## 2026-11-24 — Las tiendas salen de la rotonda y la pérgola se cierra
 
 - **Tiendas de la entrada** (`MapRestocker`): ya no están en el arco norte del Archivo. Forman un arco FUERA de la rotonda (radio ~13,2 m), con el frente hacia el centro: lienzos a 50°, sellos a 103°, tintas a 127° y plumas a 151° (ángulo desde +X; fórmula de guinada 270 − ángulo), dejando libres los caminos de entrada (~75°), de viento (~25°) y de agua (180°). Conservan el rediseño de colores (madera del Archivo, toldos crema con acento apagado). `ValleyShape.ArchiveFlatRadius` sube a 18 y el despeje de árboles a 17 m.

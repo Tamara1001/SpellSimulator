@@ -6,7 +6,7 @@
   "element": "earth",
   "origin": "Book",
   "difficulty": 3,
-  "book": "spells-fire-earth",
+  "book": "spells-earth",
   "howTo": "Dibujá el sigilo de la tierra y una columna abajo, con la punta hacia el sigilo. Cerrá el anillo.",
   "ring": {
     "gapDeg": 34

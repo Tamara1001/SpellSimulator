@@ -66,9 +66,10 @@ namespace SpellSimulator.Tests
             catalog.Unlocked(_ => false, unlocked);
             CollectionAssert.AreEquivalent(new[] { "gust", "water_jet" }, unlocked.Select(s => s.Id).ToArray());
 
-            catalog.Unlocked(book => book == "spells-wind-water", unlocked);
+            catalog.Unlocked(book => book == "spells-wind", unlocked);
             var ids = unlocked.Select(s => s.Id).ToList();
-            CollectionAssert.IsSupersetOf(ids, new[] { "gust", "water_jet", "wind_fan", "light_rain", "whirl" });
+            CollectionAssert.IsSupersetOf(ids, new[] { "gust", "water_jet", "wind_fan", "whirl", "updraft" });
+            CollectionAssert.DoesNotContain(ids, "light_rain");
             CollectionAssert.DoesNotContain(ids, "small_flame");
         }
 
@@ -90,8 +91,10 @@ namespace SpellSimulator.Tests
                 Assert.IsNotNull(book, $"{spell.Id}: no existe el libro '{spell.Book}'.");
                 CollectionAssert.Contains(book.Spells, spell.Id);
             }
-            Assert.IsNotNull(lore.Book("spells-wind-water"));
-            Assert.IsNotNull(lore.Book("spells-fire-earth"));
+            // Paso 7 del rework del mapa: un libro de hechizos por elemento, en su campo.
+            foreach (string id in new[] { "spells-water", "spells-earth", "spells-fire", "spells-wind" })
+                Assert.IsNotNull(lore.Book(id), $"falta el libro {id}");
+            Assert.IsNull(lore.Book("spells-wind-water"), "los libros mixtos se partieron");
         }
 
         [Test]

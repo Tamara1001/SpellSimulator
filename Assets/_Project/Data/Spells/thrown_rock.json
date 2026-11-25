@@ -7,7 +7,7 @@
   "element": "earth",
   "origin": "Book",
   "difficulty": 3,
-  "book": "spells-siege",
+  "book": "spells-earth",
   "howTo": "Dibujá el sigilo de la tierra, una columna abajo y un signo de levitación arriba, ambos mirando al sigilo. Cerrá el anillo.",
   "ring": {
     "gapDeg": 34

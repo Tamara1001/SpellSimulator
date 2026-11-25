@@ -379,6 +379,14 @@ namespace SpellSimulator.EditorTools
                         if (Vector2.Distance(new Vector2(tree.position.x, tree.position.z), SpellSimulator.World.Map.ValleyShape.ArchiveCenter) < 12f) treesIn++;
                 Check(GameObject.Find("Struct_Archive") != null && books && treesIn == 0, $"archivo: rotonda {GameObject.Find("Struct_Archive") != null}, libros {books} {missing}, pinos adentro {treesIn}");
             }
+            // Libros de hechizos por elemento (paso 7): uno en cada campo; los libros mixtos viejos ya no estan.
+            {
+                string missingBooks = "";
+                foreach (string id in new[] { "spells-water", "spells-earth", "spells-fire", "spells-wind", "spells-siege", "spells-crystal" })
+                    if (GameObject.Find("Book_" + id) == null) missingBooks += id + " ";
+                bool oldGone = GameObject.Find("Book_spells-wind-water") == null && GameObject.Find("Book_spells-fire-earth") == null;
+                Check(missingBooks.Length == 0 && oldGone, $"libros de hechizos en los campos: faltan [{missingBooks.Trim()}], viejos fuera {oldGone}");
+            }
             // Campos de fuego y viento (paso 6): estructuras, blancos que arden y veletas con bisagra; sin pinos a menos de 8 m del centro.
             {
                 var fireSite = SpellSimulator.World.Map.ValleyShape.FireFieldCenter;

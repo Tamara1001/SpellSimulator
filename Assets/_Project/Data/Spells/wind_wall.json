@@ -7,7 +7,7 @@
   "element": "wind",
   "origin": "Book",
   "difficulty": 3,
-  "book": "spells-wind-water",
+  "book": "spells-wind",
   "howTo": "Dibujá el sigilo del viento, tres columnas dadas vuelta adelante y tres convergencias atrás. Cerrá el anillo.",
   "ring": {
     "gapDeg": 34

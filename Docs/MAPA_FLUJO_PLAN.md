@@ -67,7 +67,7 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
 - [x] **4** Campo de agua (orilla real vía `FindLakeside`, ≈ −22,−30) — hecho 2026-11-24 en (−22, −30,3)
 - [x] **5** Campo de tierra (20,−50) + santuario (44,−38) + peñascos 1 y 3 al este/norte — hecho 2026-11-24 (santuario (44,−38); peñasco 1 (28,17) y peñasco 3 (47,75,−25,70))
 - [x] **6** Campos de fuego (−18,−50) y viento (26,−34): aplanado, sin pinos en r=10, props — hecho 2026-11-24 (`MapStructures.FireField.cs`/`.WindField.cs`; atriles vacíos hasta el paso 7; santuario → (44,−38), peñasco 1 → (28,17); KI-147)
-- [ ] **7** Reparto de libros de hechizos en `glifos.json` (releer el JSON actual: hay 7 hechizos nuevos de `b83b280`) + libro `seals`
+- [x] **7** Reparto de libros de hechizos en `glifos.json` (releer el JSON actual: hay 7 hechizos nuevos de `b83b280`) + libro `seals` — hecho 2026-11-24 (un libro por elemento en su campo; asedio a la cabaña del bosque; cabaña norte sin libro; libro `seals` pendiente)
 - [ ] **8b** Portal Archivo ↔ torre (D17)
 - [ ] **9** Carteles + mapa de la torre (grupo «Campos de elemento») + `LearningFlowTests`
 - [ ] ~~**9b** Libro «El círculo y la columna» en la torre (D16)~~ → absorbido por T4 (v3)

@@ -7,7 +7,7 @@
   "element": "earth",
   "origin": "Book",
   "difficulty": 3,
-  "book": "spells-fire-earth",
+  "book": "spells-earth",
   "howTo": "Dibujá el sigilo de la tierra y dos signos de succión abajo, mirando al sigilo. Cerrá el anillo.",
   "ring": {
     "gapDeg": 34

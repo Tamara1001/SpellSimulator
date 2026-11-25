@@ -7,7 +7,7 @@
   "element": "fire",
   "origin": "Book",
   "difficulty": 3,
-  "book": "spells-fire-earth",
+  "book": "spells-fire",
   "howTo": "Dibujá el sigilo del fuego abajo, una columna que apunte hacia arriba y regiones a ambos lados. Cerrá el anillo.",
   "ring": {
     "gapDeg": 34

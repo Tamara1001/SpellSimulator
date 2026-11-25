@@ -6,7 +6,7 @@
   "element": "water",
   "origin": "Book",
   "difficulty": 2,
-  "book": "spells-wind-water",
+  "book": "spells-water",
   "howTo": "Dibujá el sigilo del agua y, a izquierda y derecha, un signo de dispersión mirando al sigilo. Cerrá el anillo.",
   "ring": {
     "gapDeg": 34

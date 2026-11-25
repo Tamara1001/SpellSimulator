@@ -7,7 +7,7 @@
   "element": "fire",
   "origin": "Book",
   "difficulty": 2,
-  "book": "spells-fire-earth",
+  "book": "spells-fire",
   "howTo": "Dibujá el sigilo del fuego y tres signos de dispersión repartidos alrededor. Cerrá el anillo.",
   "ring": {
     "gapDeg": 34

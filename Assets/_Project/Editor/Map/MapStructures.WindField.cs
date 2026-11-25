@@ -83,10 +83,8 @@ namespace SpellSimulator.EditorTools.Map
             var tray = Tray(t, "PaperTray_WindField", new Vector3(3.5f, desk, -2.2f));
             Supply(tray, PaperTemplate("PaperTemplate"), 0.08f, PaperCooldown, 2, "windfield-paper");
 
-            // Atril vacio para el libro de hechizos de viento.
-            // TODO paso 7: StandBook(t, "spells-wind", new Vector2(1.0f, -3.6f), new Vector2(0.8f, -2.8f));
-            // (StandBook trae su propio atril: al activarlo, borrar la llamada a WfEmptyLectern de abajo.)
-            WfEmptyLectern(t, new Vector2(1.0f, -3.6f), new Vector2(0.8f, -2.8f));
+            // Libro de hechizos de viento (paso 7).
+            StandBook(t, "spells-wind", new Vector2(1.0f, -3.6f), new Vector2(0.8f, -2.8f));
 
             // Carteles (titulo en celeste).
             Vector3 Dir(float x, float z) => t.TransformDirection(new Vector3(x, 0f, z).normalized);
@@ -393,24 +391,5 @@ namespace SpellSimulator.EditorTools.Map
             return go;
         }
 
-        // ---------------------------------------------------------------- atril vacio
-
-        /// <summary>Atril de madera sin libro (mismo modelo que el de StandBook), girado hacia quien lee (toward, local).</summary>
-        private static void WfEmptyLectern(Transform t, Vector2 local, Vector2 toward)
-        {
-            float y = Rel(t, local.x, local.y);
-            Vector2 v = (toward - local).normalized;
-            float faceYaw = Mathf.Atan2(-v.x, -v.y) * Mathf.Rad2Deg;
-            var b = new LowPolyMesh();
-            b.Frustum(Matrix4x4.identity, 0.25f, 0.12f, 0f, 0.1f, 6, WoodB);
-            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.6f, 0f)), new Vector3(0.1f, 1.1f, 0.1f), WoodB);
-            b.Box(Matrix4x4.TRS(new Vector3(0f, 1.15f, 0f), Quaternion.Euler(-25f, 0f, 0f), Vector3.one), new Vector3(0.6f, 0.04f, 0.45f), WoodA);
-            var stand = MapBuilder.Place("Lectern_WindField_Empty", t, MapBuilder.SaveMesh(b.Build("Lectern_WindField_Empty")), lit,
-                t.TransformPoint(new Vector3(local.x, y, local.y)), t.rotation * Quaternion.Euler(0f, faceYaw, 0f));
-            var col = stand.AddComponent<BoxCollider>();
-            col.center = new Vector3(0f, 0.6f, 0f);
-            col.size = new Vector3(0.5f, 1.2f, 0.5f);
-            stand.isStatic = true;
-        }
     }
 }

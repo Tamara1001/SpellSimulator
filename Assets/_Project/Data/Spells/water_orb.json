@@ -7,7 +7,7 @@
   "element": "water",
   "origin": "Book",
   "difficulty": 3,
-  "book": "spells-water-deep",
+  "book": "spells-water",
   "howTo": "Dibujá el sigilo del agua, una columna a cada lado y un signo de esfera en cada esquina. Cerrá el anillo.",
   "ring": {
     "gapDeg": 34
