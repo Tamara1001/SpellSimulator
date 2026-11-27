@@ -5,6 +5,11 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-27 — Docs finales del rework del mapa (paso 12, parte de docs)
+
+- `PRUEBA_MANUAL_MAPA.md` nuevo: lista para recorrer en PC y Quest lo hecho en el rework (torre, Nexo, Archivo, campos, vida, circuito).
+- `STATUS` (estado 2026-11-27), `ROADMAP` («Siguiente»), `GAME_DESIGN` (recorrido actual del mapa), `KNOWN_ISSUES` (KI-149) y el tracker del plan al día. Falta la prueba manual.
+
 ## 2026-11-27 — Circuito exterior del late game (paso 11b del rework del mapa)
 
 - `ValleyShape.Paths` suma 6 tramos (D26): viento → santuario → círculo de piedras → atalaya → puesto → cabaña del norte → cueva → cabaña del bosque → torre, esquivando cada sitio a radio + 3,6 m. Ningún sitio cambió de lugar; los pinos y rocas sobre el trazado desaparecen solos al regenerar.

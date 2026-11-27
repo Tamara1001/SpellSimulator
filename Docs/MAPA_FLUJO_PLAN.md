@@ -1,6 +1,6 @@
 # Plan: mapa del modo Libre ordenado por flujo de aprendizaje
 
-> **Estado: APROBADO por Tamara (2026-11-16), en implementación** (pasos 0, 1, N, 2, 2b, torre nueva, T1 y T2 hechos; **el trabajo va en la rama `rework-mapa`**, ver protocolo). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
+> **Estado (2026-11-27): implementado salvo el paso 10 (casitas, en espera) y la prueba manual del paso 12 ([PRUEBA_MANUAL_MAPA](PRUEBA_MANUAL_MAPA.md)).** Antes: **APROBADO por Tamara (2026-11-16), en implementación** (pasos 0, 1, N, 2, 2b, torre nueva, T1 y T2 hechos; **el trabajo va en la rama `rework-mapa`**, ver protocolo). Decisiones D1-D18 en §3 (las D15-D18 y §12b = **v2**, que pisa a v1).
 > **v3 (2026-11-16, correcciones de Tamara al dibujo): D19-D24 y §17-§18. La torre pasa a ser el tutorial, el spawn pasa a llamarse Nexo y el Archivo se redefine. §17 y §18 APROBADAS por Tamara el 2026-11-16 (D25-D27).**
 > La revisión crítica externa está en [MAPA_FLUJO_CRITICA.md](MAPA_FLUJO_CRITICA.md) y ya está volcada en §12b.
 
@@ -75,7 +75,7 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
 - [ ] ~~**13** Rework de la torre (A nichos, B estantes, C terraza)~~ → reemplazado por T1-T4; la idea B (estantes que se llenan) pasa al Archivo (§18)
 - [x] **11** Estandartes de color por elemento (malla emisiva sin luz) **y faroles de la ruta, que se encienden al leer cada libro** (D27) — hecho 2026-11-27 (farol junto a cada atril + estandarte por campo, D35)
 - [x] **11b** Circuito exterior: camino que une el late game en una vuelta (viento → santuario → círculo → atalaya → puesto → cabaña norte → cueva → cabaña del bosque → torre) (D26) — hecho 2026-11-27 (6 tramos nuevos en `ValleyShape.Paths`, ningún sitio se movió)
-- [ ] **12** Docs finales (`GAME_DESIGN`, `STRUCTURE`, `ROADMAP`, `STATUS`, `KNOWN_ISSUES`, `CHANGELOG`) + prueba manual en PC y Quest
+- [ ] **12** Docs finales (`GAME_DESIGN`, `STRUCTURE`, `ROADMAP`, `STATUS`, `KNOWN_ISSUES`, `CHANGELOG`) + prueba manual en PC y Quest — **docs hechos 2026-11-27**; falta la prueba manual: [PRUEBA_MANUAL_MAPA](PRUEBA_MANUAL_MAPA.md) (KI-149)
 
 ### Bitácora (anotar acá lo que se descubra al implementar; más reciente abajo)
 

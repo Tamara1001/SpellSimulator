@@ -68,7 +68,14 @@ Mismo sistema mágico, en una arena de combate.
    Si el anillo queda abierto, el sello está **preparado**: brilla y espera a que lo cierres.
 4. El mundo reacciona. Los diagnósticos (en el papel o en el libro) explican qué se reconoció.
 
-## Mapa del modo Libre (M5, blockout)
+## Mapa del modo Libre (recorrido actual, 2026-11-27)
+El valle se recorre por etapas de aprendizaje (detalle y decisiones en [MAPA_FLUJO_PLAN](MAPA_FLUJO_PLAN.md)): **torre-tutorial** →
+**Nexo** (reaparición, tablero del mapa y poste con flechas) → **entrenamiento** y **laboratorio** → **Archivo** (rotonda con los libros de
+signos y el portal del Archivo) → **4 campos de elemento** con su libro de hechizos → **late game** unido por un **circuito exterior**
+(santuario, círculo de piedras, atalaya, puesto, cabañas y cueva) que vuelve a la torre. Nada se bloquea: el tablero hace latir la etapa
+sugerida, los faroles junto a cada libro y los estandartes de cada campo se prenden al leerlos, y los portales son atajos.
+
+## Mapa del modo Libre (M5, blockout; histórico)
 Valle de ~140 m cerrado por montañas (se recorre en menos de un minuto caminando). En el centro, la **torre** sobre una
 loma: planta baja **biblioteca** (estantes, mesas, escritorio con un papel apoyado que emite hacia arriba), primer piso
 **estudio**, segundo piso y **terraza** almenada bajo el techo cónico violeta; los pisos se unen con rampas en espiral.

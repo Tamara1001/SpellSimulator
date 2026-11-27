@@ -5,7 +5,16 @@ tags: [doc, estado]
 
 > Una pagina para retomar rapido. Actualizar al cerrar cada hito; el detalle va en CHANGELOG y KNOWN_ISSUES.
 
-## ▶ Estado 2026-11-23 (rama `main`) — leer esto primero
+## ▶ Estado 2026-11-27 (rama `main`) — leer esto primero
+
+Rework del mapa casi cerrado ([MAPA_FLUJO_PLAN](MAPA_FLUJO_PLAN.md)): hechos todos los pasos salvo el **10** (casitas, en espera de hechizos
+que combinen elementos, D34). Lo último (2026-11-26/27, Ale): portal del Archivo (8b), postes con flechas y latido de la etapa sugerida en
+el tablero (9), **vida del jugador en Libre** con palanca «Sin daño» en el laboratorio (V), faroles de libros y estandartes de campo que se
+prenden al leer (11) y circuito exterior del late game (11b). EditMode 709 y smoke en verde.
+- **Lo primero:** recorrer [PRUEBA_MANUAL_MAPA](PRUEBA_MANUAL_MAPA.md) en PC y después en Quest (KI-149) y anotar lo que falle.
+- **Trello:** las tarjetas del mapa (MAP-01..08) están en «Por Revisar». Hay conector de Trello en Claude Code.
+
+## Estado 2026-11-23 (histórico, rama `main`)
 
 `rework-mapa` ya está **mergeada en `main`**; se trabaja en `main`. Ese día: auditoría con Antigravity (`Docs/AUDIT/`: informes 01-05, plan urgente, briefs 01-16; tareas cargadas en el Trello «SpellSimulator») y arreglos:
 - **Físicas:** viento acotado y enfriamiento (FIS-01/02), agua con varios colliders, flotabilidad y apuntado (FIS-03/06/07), cristalizados, estado estático de `EarthShapes`, buffers 256, limpiezas.

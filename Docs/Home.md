@@ -22,6 +22,7 @@ Vault de Obsidian del proyecto. Abrí la carpeta `Docs/` como vault.
 - [[TESTING]] — matriz de pruebas de lienzos (automáticas y checklist manual).
 - [[HARNESS]] — cómo verificar cambios (Unity MCP, trucos, tests, test de humo de Play).
 - [[KNOWN_ISSUES]] — bugs y deuda técnica.
+- [[MAPA_FLUJO_PLAN]] — rework del mapa por flujo de aprendizaje (tracker y decisiones); [[PRUEBA_MANUAL_MAPA]] — lista para probarlo a mano.
 - [[DECISIONS]] — registro de decisiones (ADR).
 - [[REFERENCE]] — proyecto de referencia `wha-spell-simulator`.
 - [[CHANGELOG]] — bitácora de cambios.
