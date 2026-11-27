@@ -5,6 +5,13 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-26 — Postes con flechas y etapa sugerida en el tablero (paso 9 del rework del mapa)
+
+- **Postes con flechas** (D31, decisión de Ale): uno en el Nexo (Torre, Laboratorio, Entrenamiento, Archivo, Lago) y otro adentro del Archivo junto a la entrada (Agua, Fuego, Tierra, Viento, Nexo). Una palabra por flecha, del color de su zona en el tablero, legible por las dos caras. Datos en `Scripts/World/Map/Signposts.cs`, malla en `Editor/Map/MapSignposts.cs` (después de `MapStructures`, apoyado sobre el piso real).
+- **Tablero del mapa** (D32): los marcadores de la etapa sugerida laten (+18 %, sin allocations). `LearningFlow` (lógica pura) decide la etapa por libros leídos; `MapStageHighlighter` (en el tablero) la recalcula al leer un libro o reiniciar el progreso. `TowerMap.SetSuggested/IsSuggested`.
+- Tests: `SignpostsTests` (4) y `LearningFlowTests` (4); Play Smoke chequea los postes (2 y 20 palabras) y el latido. EditMode 704/704, smoke PASS.
+- Decisiones D31-D34 anotadas en `MAPA_FLUJO_PLAN.md` (incluye: interruptor «sin daño» en el laboratorio y casitas en espera).
+
 ## 2026-11-26 — Portal del Archivo (paso 8b del rework del mapa)
 
 - Portal nuevo `archive` («Portal del Archivo») adentro de la rotonda, al sur (`ValleyShape.ArchivePortal`, (0, −52,6)), compacto y mirando al centro (`MapStructures.Archive.cs`). Identidad en `portals.json`: **agua + flotar + convergencia**. Atajo de ida y vuelta con el portal del estudio (frente a la torre, junto al Nexo), según D17.

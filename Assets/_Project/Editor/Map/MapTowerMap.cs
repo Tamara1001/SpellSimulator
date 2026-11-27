@@ -107,6 +107,7 @@ namespace SpellSimulator.EditorTools.Map
             var towerMap = board.AddComponent<TowerMap>();
             towerMap.Setup(zones, meshes, material);
             towerMap.SetupPortals(portals, portalMeshes, material);
+            board.AddComponent<SpellSimulator.Learning.MapStageHighlighter>();   // etapa sugerida que late (paso 9, D32)
 
             // Número sobre cada marcador (claro sobre colores oscuros y al revés).
             float numberZ = -(MapProjection.MarkerDepth + MapProjection.TextLift);

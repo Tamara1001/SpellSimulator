@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using SpellSimulator.Interfaces;
@@ -24,6 +25,9 @@ namespace SpellSimulator.World.Map
     {
         /// <summary>Cada cuánto se vuelve a buscar el interactor del jugador si todavía no existe (s).</summary>
         private const float InteractorRetrySeconds = 1f;
+
+        /// <summary>Latido de los marcadores de la etapa sugerida (D32): crecen hasta +18 % con un ciclo de ~2 s.</summary>
+        private const float PulseScale = 0.18f, PulseSpeed = 3f;
 
         private const string HintPc = "Apuntá un número o un rombo.\nClic: lo resalta en la lista.\nTab: vista completa (Tab o Esc cierra).\nLos rombos son portales: cruzalos para viajar.";
         private const string HintVr = "Apuntá un número o un rombo con el rayo.\nGatillo: lo resalta en la lista.\nLos rombos son portales: cruzalos para viajar.";
@@ -56,6 +60,8 @@ namespace SpellSimulator.World.Map
         private int shownInfo = int.MinValue;
         private int shownBar = int.MinValue;
         private bool shownHintVr;
+        private bool[] suggested = Array.Empty<bool>();
+        private bool anySuggested;
 
         public int ZoneCount => zones != null ? zones.Length : 0;
         public int MarkerCount => markers != null ? markers.Length : 0;
@@ -164,6 +170,7 @@ namespace SpellSimulator.World.Map
         private void Update()
         {
             TrackHover();
+            if (anySuggested) Pulse();
             int info = hovered != null ? EntryOf(hovered) : selected;
             if (info != shownInfo || (info < 0 && PlatformDetector.IsVR != shownHintVr)) ShowInfo(info);
             int bar = hovered != null ? EntryOf(hovered) : selected;
@@ -235,6 +242,38 @@ namespace SpellSimulator.World.Map
                 WorldZoneCatalog.Zone portal = portals[i];
                 infoLines[n + i] = $"<b><color={portal.HtmlColor}>Portal:</color>  {portal.name}</b>\n<size=85%>{portal.use}\nEl mapa no teletransporta.</size>";
             }
+        }
+
+        // ---------------------------------------------------------------- etapa sugerida
+
+        /// <summary>
+        /// Marca las zonas (ids de WorldZones.json) que laten como etapa sugerida; las demás vuelven a su tamaño. Lo llama
+        /// MapStageHighlighter cuando cambia lo leído, no por frame.
+        /// </summary>
+        public void SetSuggested(IReadOnlyList<string> zoneIds)
+        {
+            if (suggested.Length != ZoneCount) suggested = new bool[ZoneCount];
+            anySuggested = false;
+            for (int i = 0; i < ZoneCount; i++)
+            {
+                bool on = false;
+                if (zoneIds != null)
+                    for (int k = 0; k < zoneIds.Count && !on; k++) on = zones[i] != null && zones[i].id == zoneIds[k];
+                suggested[i] = on;
+                anySuggested |= on;
+                if (!on && markers[i] != null && markers[i] != hovered) markers[i].transform.localScale = Vector3.one;
+            }
+        }
+
+        /// <summary>¿La zona <paramref name="i"/> late como etapa sugerida?</summary>
+        public bool IsSuggested(int i) => i >= 0 && i < suggested.Length && suggested[i];
+
+        private void Pulse()
+        {
+            float scale = 1f + PulseScale * (0.5f + 0.5f * Mathf.Sin(Time.time * PulseSpeed));
+            Vector3 v = Vector3.one * scale;
+            for (int i = 0; i < suggested.Length && i < markers.Length; i++)
+                if (suggested[i] && markers[i] != null && markers[i] != hovered) markers[i].transform.localScale = v;
         }
 
         // ---------------------------------------------------------------- marcadores

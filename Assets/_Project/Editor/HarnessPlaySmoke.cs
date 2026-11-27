@@ -1064,6 +1064,22 @@ namespace SpellSimulator.EditorTools
             bool noTeleport = mapCam != null && (mapCam.transform.position - beforeMap).sqrMagnitude < 1e-6f
                 && towerMap != null && towerMap.PortalMarkerCount >= 5;
             Check(noTeleport, "mapa de la torre: presionar los rombos de portal no teletransporta");
+            // Paso 9 (D32): el tablero hace latir la etapa sugerida segun los libros leidos.
+            var stageHl = towerMap != null ? towerMap.GetComponent<SpellSimulator.Learning.MapStageHighlighter>() : null;
+            if (stageHl != null) stageHl.Refresh();
+            int pulsing = 0;
+            if (towerMap != null) for (int i = 0; i < towerMap.ZoneCount; i++) if (towerMap.IsSuggested(i)) pulsing++;
+            Check(stageHl != null && stageHl.Shown != null && pulsing > 0, $"mapa de la torre: late la etapa sugerida ({(stageHl != null ? stageHl.Shown?.ToString() : "sin MapStageHighlighter")}, {pulsing} marcadores)");
+            // Paso 9 (D31): postes con flechas en el Nexo y en el Archivo.
+            int posts = 0, words = 0;
+            foreach (string post in new[] { "Signpost_Nexus", "Signpost_Archive" })
+            {
+                var postGo = GameObject.Find(post);
+                if (postGo == null) continue;
+                posts++;
+                words += postGo.GetComponentsInChildren<TMPro.TextMeshPro>().Length;
+            }
+            Check(posts == 2 && words == 20, $"postes con flechas: {posts}/2 postes y {words}/20 palabras (dos caras por flecha)");
             bool tabOpens = false, tabClosed = false;
             if (towerMap != null && mapCam != null && !SpellSimulator.Player.PlatformDetector.IsVR
                 && towerMap.TryGetFocusFrame(out Vector3 mapCenter, out Vector3 mapNormal, out Vector2 mapSize))
