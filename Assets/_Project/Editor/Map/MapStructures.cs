@@ -1422,6 +1422,7 @@ namespace SpellSimulator.EditorTools.Map
             col.size = new Vector3(0.5f, 1.2f, 0.5f);
             Matrix4x4 bookAt = stand.transform.localToWorldMatrix * Matrix4x4.TRS(new Vector3(0f, 1.17f, 0f), Quaternion.Euler(-25f, 0f, 0f), Vector3.one);
             Book(t, id, bookAt.GetColumn(3), stand.transform.rotation * Quaternion.Euler(-25f, 0f, 0f));
+            MapBeacons.BookLantern(t, lit, id, stand.transform);   // farolito que se prende al leerlo (paso 11, D27)
         }
 
         /// <summary>Libro de aprendizaje (mismo modelo que los de la torre).</summary>

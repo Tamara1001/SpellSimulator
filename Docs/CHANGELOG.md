@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-27 — El mundo responde: faroles de libros y estandartes de campo (paso 11 del rework del mapa)
+
+- `ReadBeacon` (Learning): prende un objeto al leer su libro, por eventos (`LibraryBook.BookRead`, `Discovery.Discovered`), sin Update; al prenderse por una lectura suena el aviso de los faroles del tutorial.
+- `MapBeacons` (Editor): farolito al costado de cada atril de libro (11) y estandarte del color de cada campo de elemento (4) que brilla al leer su libro de hechizos. Decisión D35 (Ale).
+- Play Smoke: 15 faroles/estandartes y su estado coincide con lo leído. EditMode 708/708, smoke PASS.
+
 ## 2026-11-26 — Vida del jugador en modo Libre y palanca «sin daño» (paso V del rework del mapa)
 
 - El jugador ahora **recibe daño** en Libre (D28): `PlayerVitality` le pone `Health` (100), se regenera 8/s tras 6 s sin daño, avisa en el HUD con vida baja y al morir **reaparece en el Nexo** con la vida llena. En Duelo no interviene.

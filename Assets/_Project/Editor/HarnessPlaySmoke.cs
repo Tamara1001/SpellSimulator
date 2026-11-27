@@ -1117,6 +1117,18 @@ namespace SpellSimulator.EditorTools
                 words += postGo.GetComponentsInChildren<TMPro.TextMeshPro>().Length;
             }
             Check(posts == 2 && words == 20, $"postes con flechas: {posts}/2 postes y {words}/20 palabras (dos caras por flecha)");
+            // Paso 11 (D27): faroles de atril y estandartes de campo encendidos segun lo leido.
+            var beacons = Object.FindObjectsByType<SpellSimulator.Learning.ReadBeacon>(FindObjectsSortMode.None);
+            int banners = 0, beaconsOk = 0;
+            var discovery = SpellSimulator.Learning.Discovery.Instance;
+            foreach (var beacon in beacons)
+            {
+                if (beacon.name.StartsWith("FieldBanner_")) banners++;
+                beacon.Refresh(false);
+                if (discovery != null && beacon.IsLit == discovery.State.HasRead(beacon.BookId)) beaconsOk++;
+            }
+            Check(banners == 4 && beacons.Length >= 14 && beaconsOk == beacons.Length,
+                $"el mundo responde: {beacons.Length} faroles/estandartes ({banners}/4 estandartes), {beaconsOk} coinciden con lo leido");
             bool tabOpens = false, tabClosed = false;
             if (towerMap != null && mapCam != null && !SpellSimulator.Player.PlatformDetector.IsVR
                 && towerMap.TryGetFocusFrame(out Vector3 mapCenter, out Vector3 mapNormal, out Vector2 mapSize))

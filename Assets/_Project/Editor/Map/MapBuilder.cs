@@ -75,6 +75,7 @@ namespace SpellSimulator.EditorTools.Map
             FieldExtraTableNotebooks(map);   // cuadernos y hojas que estaban en la mesa chica del piso 1
             MapStructures.Build(map, lit);   // torre de vigia, cabanas, cueva, peñascos, circulo, santuario, puesto y portales
             MapSignposts.Build(map, lit);    // postes con flechas del Nexo y del Archivo (despues de MapStructures: usan el piso real)
+            MapBeacons.FieldBanners(map, lit);   // estandartes de los campos que se encienden al leer su libro (paso 11, D27)
             MovablesSetup.Apply(map, lit);
             InteractionSetup.Apply();
             FlammableSetup.Apply();

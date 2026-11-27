@@ -32,7 +32,7 @@ SpellSimulator/
 │   │   ├── Audio/                #   Synth/ (generado por Tools/Audio/synth_audio.py), Kenney/{RPG,Impact,Interface} (CC0, con License.txt)
 │   │   ├── Art/Generated/        #   mallas generadas por MapBuilder (terreno, pinos, rocas, torre, muebles); no editar a mano
 │   │   ├── Scripts/              #   SpellSimulator.Runtime.asmdef
-│   │   │   ├── Learning/         #   GlyphLore, DiscoveryState, Discovery, LibraryBook, Grimoire, GrimoireButton, LearningFlow + MapStageHighlighter (etapa sugerida en el tablero)
+│   │   │   ├── Learning/         #   GlyphLore, DiscoveryState, Discovery, LibraryBook, Grimoire, GrimoireButton, LearningFlow + MapStageHighlighter (etapa sugerida en el tablero), ReadBeacon (faroles y estandartes que se prenden al leer)
 │   │   │   ├── Audio/            #   AudioLibrary, AudioDirector, GameAudio, AmbientEmitter, FootstepAudio, CollisionAudio
 │   │   │   ├── Canvas/           #   DrawingCanvas
 │   │   │   ├── Casting/          #   SpellCaster, SealActivation, SealReader, SealRecord, StampPattern

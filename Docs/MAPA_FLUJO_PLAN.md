@@ -73,7 +73,7 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
 - [ ] ~~**9b** Libro «El círculo y la columna» en la torre (D16)~~ → absorbido por T4 (v3)
 - [ ] **10** Casitas (libros de hechizos combinados; mientras tanto `spells-siege` a la cabaña del bosque) + camino torre→norte
 - [ ] ~~**13** Rework de la torre (A nichos, B estantes, C terraza)~~ → reemplazado por T1-T4; la idea B (estantes que se llenan) pasa al Archivo (§18)
-- [ ] **11** Estandartes de color por elemento (malla emisiva sin luz) **y faroles de la ruta, que se encienden al leer cada libro** (D27)
+- [x] **11** Estandartes de color por elemento (malla emisiva sin luz) **y faroles de la ruta, que se encienden al leer cada libro** (D27) — hecho 2026-11-27 (farol junto a cada atril + estandarte por campo, D35)
 - [ ] **11b** Circuito exterior: camino que une el late game en una vuelta (viento → santuario → círculo → atalaya → puesto → cabaña norte → cueva → cabaña del bosque → torre) (D26)
 - [ ] **12** Docs finales (`GAME_DESIGN`, `STRUCTURE`, `ROADMAP`, `STATUS`, `KNOWN_ISSUES`, `CHANGELOG`) + prueba manual en PC y Quest
 
@@ -138,6 +138,8 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
   - 704 EditMode y smoke en verde (2 chequeos nuevos). Capturas `paso9_poste_nexo.png`, `paso9_poste_archivo.png`. Desde algunos ángulos la flecha de Archivo tapa en parte la de Lago (apuntan parecido).
 - 2026-11-26 — **Paso V hecho.** `PlayerVitality` (en el jugador) + `VitalityRules` (lógica pura) + `NoDamageSetting` (PlayerPrefs) + `NoDamageLever` en la plataforma del laboratorio, en (15,8, −5,8), del lado por donde se llega desde el Nexo, con cartelito «Sin daño». 100 de vida, regenera 8/s tras 6 s sin daño, aviso en el HUD por debajo del 35 % y al morir. En Duelo no hace nada (manda NetDuel). `Health` ganó `Invulnerable` y `Heal`.
   - **Sin medir a mano:** cuánto daño hace de verdad un hechizo propio o el pasto en llamas al jugador (los propios no lo dañan si el campo tiene al jugador como `Source`). No hay barra de vida en el HUD de Libre: solo avisos. 708 EditMode y smoke en verde (chequeo nuevo).
+- 2026-11-27 — **Paso 11 hecho.** `ReadBeacon` (prende su parte clara si se leyó el libro; eventos, sin Update; suena al prenderse por una lectura) en 11 faroles de atril (`MapBeacons.BookLantern`, desde `StandBook`) y 4 estandartes (`MapBeacons.FieldBanners`): agua (−20,2, −33,7), fuego (−14,3, −55,6), tierra (15,6, −49,1) y viento (19,4, −35,3), en el borde de cada campo mirando al camino que llega. Brillo por color HDR + bloom, sin luces reales. Los tomos de la torre no llevan farol (la torre ya tiene sus faroles de nivel).
+  - 708 EditMode y smoke en verde (chequeo nuevo). Capturas `paso11_estandarte_fuego.png`, `paso11_farol_libro.png` (renderizadas sin post-proceso: en juego el bloom las hace brillar más).
 - **Pendiente anotado por Tamara:** limpiar los muebles y cosas viejas que quedan en la torre (alquimia, estudio, mobiliario del piso 1 y planta baja) y dejarla coherente; encaja con T3/T4 y el paso 3 (la alquimia se muda al Archivo).
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),
@@ -209,6 +211,7 @@ con un mapa **compacto y caminable**, **sin bloquear nada** (todo sigue accesibl
 | D31 | Señalización del mapa (Ale, 2026-11-26) | **Postes con flechas** de madera de una palabra, pintadas del color de su destino, en el Nexo y a la salida del Archivo. Sin frases (sigue el «menos texto» de Tamara). Pisa a §8.2. |
 | D32 | Etapa sugerida en el tablero (Ale, 2026-11-26) | **Sí, pulso suave** sobre el marcador de la etapa siguiente según los libros leídos (§9). Solo resalta, no bloquea. |
 | D33 | Interruptor «sin daño» (Ale, 2026-11-26) | Se desbloquea en el **laboratorio**. Cierra la pregunta abierta de D28. |
+| D35 | Qué se enciende al leer (Ale, 2026-11-27) | Un **farolito junto a cada atril de libro** del mundo (se ve qué libros faltan) y un **estandarte por campo** que brilla al leer su libro de hechizos. Sin faroles a lo largo del camino. |
 | D34 | Casitas (Ale, 2026-11-26) | El paso 10 **espera** a que existan hechizos que combinen elementos. |
 | D27 | Mundo que responde | **Sí**: faroles en la ruta y estandartes de cada campo que se encienden al leer cada libro, sin bloquear nada (mallas activadas por `DiscoveryState`, sin `Update`). Paso 11. |
 
