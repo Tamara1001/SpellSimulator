@@ -108,12 +108,33 @@ namespace SpellSimulator.Tests
         }
 
         [Test]
+        public void Paths_CircuitReachesTheLateGameWithoutCrossingIt()
+        {
+            // Paso 11b (D26): el circuito toca el borde de cada sitio del late game y no pasa por encima de ninguno
+            // (MapStructures.Clear exige camino a mas de radio + 3,2 m del centro). Posiciones y radios de MapStructures.
+            (string name, Vector2 center, float radius)[] sites =
+            {
+                ("santuario", new Vector2(44f, -38f), 3.8f), ("circulo", new Vector2(50f, -10f), 5.8f),
+                ("atalaya", new Vector2(37.28f, 44.43f), 4.5f), ("puesto", new Vector2(10f, 48f), 2.8f),
+                ("cabaña norte", new Vector2(-8f, 46f), 3.6f), ("cueva", new Vector2(-32.33f, 51.73f), 6.5f),
+                ("cabaña del bosque", new Vector2(-28f, 34f), 3.6f), ("peñasco 2", new Vector2(44f, 10f), 6f),
+                ("peñasco 3", new Vector2(47.75f, -25.7f), 6f),
+            };
+            foreach (var (name, center, radius) in sites)
+            {
+                float d = ValleyShape.PathDistance(center.x, center.y);
+                Assert.GreaterOrEqual(d, radius + ValleyShape.PathWidth + 1f, $"un camino pisa {name}");
+                if (!name.StartsWith("peñasco")) Assert.Less(d, radius + 8f, $"el circuito no llega a {name}");
+            }
+        }
+
+        [Test]
         public void SpawnAndFieldAreClearOfTrees()
         {
             Assert.IsFalse(ValleyShape.CanPlantTree(ValleyShape.Spawn.x, ValleyShape.Spawn.y));
             Assert.IsFalse(ValleyShape.CanPlantTree(ValleyShape.FieldCenter.x, ValleyShape.FieldCenter.y));
             Assert.IsFalse(ValleyShape.CanPlantTree(ValleyShape.TowerCenter.x, ValleyShape.TowerCenter.y));
-            Assert.IsTrue(ValleyShape.CanPlantTree(40f, 35f));
+            Assert.IsTrue(ValleyShape.CanPlantTree(38f, 28f)); // (40, 35) quedo junto al circuito exterior (paso 11b)
         }
     }
 }

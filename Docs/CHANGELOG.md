@@ -5,6 +5,11 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-27 — Circuito exterior del late game (paso 11b del rework del mapa)
+
+- `ValleyShape.Paths` suma 6 tramos (D26): viento → santuario → círculo de piedras → atalaya → puesto → cabaña del norte → cueva → cabaña del bosque → torre, esquivando cada sitio a radio + 3,6 m. Ningún sitio cambió de lugar; los pinos y rocas sobre el trazado desaparecen solos al regenerar.
+- Tests: `ValleyShapeTests.Paths_CircuitReachesTheLateGameWithoutCrossingIt`; el punto de árboles del test viejo se corrió a (38, 28). EditMode 709/709, smoke PASS.
+
 ## 2026-11-27 — El mundo responde: faroles de libros y estandartes de campo (paso 11 del rework del mapa)
 
 - `ReadBeacon` (Learning): prende un objeto al leer su libro, por eventos (`LibraryBook.BookRead`, `Discovery.Discovered`), sin Update; al prenderse por una lectura suena el aviso de los faroles del tutorial.

@@ -98,7 +98,21 @@ namespace SpellSimulator.World.Map
             new[] { new Vector2(1f, 26f), new Vector2(1f, 35f), new Vector2(1f, 41.5f), new Vector2(-1.8f, 42.8f) },
             new[] { new Vector2(1f, 41.5f), new Vector2(4.5f, 44f) },
             // Nexo -> laboratorio: termina en el borde de la plataforma (centro (20, -8), radio 5,2).
-            new[] { Spawn, new Vector2(8f, -7f), new Vector2(14.2f, -7.7f) }
+            new[] { Spawn, new Vector2(8f, -7f), new Vector2(14.2f, -7.7f) },
+
+            // Circuito exterior (paso 11b, D26): une el late game en una vuelta que termina en la torre. Cada tramo esquiva los
+            // sitios a radio + 3,6 m (la regla de MapStructures.Clear) y termina en el borde de lo que une; los portales son atajos.
+            // Viento -> santuario, con desvio al circulo de piedras (por el oeste del peñasco 3).
+            new[] { new Vector2(33.1f, -24.6f), new Vector2(37.5f, -26.5f), new Vector2(39.4f, -31.9f) },
+            new[] { new Vector2(37.5f, -26.5f), new Vector2(38f, -19f), new Vector2(41.7f, -14.8f) },
+            // Circulo -> atalaya, por el este del peñasco 2; llega al pie de la rampa.
+            new[] { new Vector2(53f, -0.5f), new Vector2(54.8f, 8f), new Vector2(53.5f, 20f), new Vector2(46f, 32f), new Vector2(41.5f, 37.5f) },
+            // Atalaya -> puesto de suministros (por el oeste de la atalaya, lejos de su rampa).
+            new[] { new Vector2(29.5f, 41.5f), new Vector2(29.5f, 47f), new Vector2(22f, 47.5f), new Vector2(16.5f, 47f) },
+            // Cabaña del norte -> cueva -> cabaña del bosque (pasa por el frente de la cueva sin entrar).
+            new[] { new Vector2(-14.8f, 43f), new Vector2(-18f, 44f), new Vector2(-23f, 46f), new Vector2(-25.5f, 44f), new Vector2(-27f, 41.3f) },
+            // Cabaña del bosque -> torre: sube la loma y se une al camino torre -> norte.
+            new[] { new Vector2(-21.5f, 30.5f), new Vector2(-14f, 28f), new Vector2(-6f, 28.5f), new Vector2(1f, 30f) }
         };
 
         public const float PathWidth = 2.2f;
