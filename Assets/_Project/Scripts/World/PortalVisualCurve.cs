@@ -125,6 +125,7 @@ namespace SpellSimulator.World
                 case "watchtower": return new Color(0.45f, 0.8f, 1f);
                 case "field-circle": return new Color(0.5f, 1f, 0.62f);
                 case "cave": return new Color(1f, 0.7f, 0.35f);
+                case "archive": return new Color(0.45f, 0.6f, 1f);
             }
             if (string.IsNullOrEmpty(id)) return new Color(0.75f, 0.65f, 1f);
             uint h = 2166136261u;

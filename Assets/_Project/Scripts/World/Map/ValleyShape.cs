@@ -45,6 +45,12 @@ namespace SpellSimulator.World.Map
         public static readonly Vector2 StudyPortal = TowerCenter + new Vector2(0f, -14f);
 
         /// <summary>
+        /// Portal del Archivo (paso 8b, D17): adentro de la rotonda, al sur (6,6 m del centro, entre los nichos de movimiento y de
+        /// formas), mirando al centro (MapStructures.ArchivePortal). Atajo de vuelta al portal del estudio, frente a la torre.
+        /// </summary>
+        public static readonly Vector2 ArchivePortal = ArchiveCenter + new Vector2(0f, -6.6f);
+
+        /// <summary>
         /// Campos de fuego y viento (Docs/MAPA_FLUJO_PLAN.md, paso 6; coordenadas v2): terreno llano en un disco de <see cref="ElementFieldRadius"/>
         /// (plano hasta 70 % y suave hasta el borde, como el entrenamiento). Los caminos de <see cref="Paths"/> terminan en su borde.
         /// </summary>

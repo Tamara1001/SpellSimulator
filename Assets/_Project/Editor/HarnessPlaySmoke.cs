@@ -345,23 +345,34 @@ namespace SpellSimulator.EditorTools
             }
             else failures.Add("falta el slot de cartuchos del HUD (o el InkSupply del jugador)");
 
-            // --- Estructuras del mapa (MapStructures): los 4 portales, puntos de reaparicion y la estacion de reciclaje.
+            // --- Estructuras del mapa (MapStructures): los 5 portales, puntos de reaparicion y la estacion de reciclaje.
             bool portals = Portal.Find("tower-study") != null && Portal.Find("watchtower") != null
-                && Portal.Find("field-circle") != null && Portal.Find("cave") != null;
+                && Portal.Find("field-circle") != null && Portal.Find("cave") != null && Portal.Find("archive") != null;
             int supplyPoints = Object.FindObjectsByType<SupplyPoint>(FindObjectsSortMode.None).Length;
             bool recycling = Object.FindFirstObjectByType<RecyclingStation>() != null;
-            Check(portals && supplyPoints >= 3 && recycling, "estructuras: 4 portales, 3+ puntos de reaparicion y estacion de reciclaje");
+            Check(portals && supplyPoints >= 3 && recycling, "estructuras: 5 portales, 3+ puntos de reaparicion y estacion de reciclaje");
 
             // Portales circulares: disco atravesable (CrossTrigger es trigger) y animacion (PortalVisuals) en los cuatro.
             int crossable = 0;
-            foreach (string id in new[] { "tower-study", "watchtower", "field-circle", "cave" })
+            foreach (string id in new[] { "tower-study", "watchtower", "field-circle", "cave", "archive" })
             {
                 var portal = Portal.Find(id);
                 var cross = portal != null ? portal.transform.Find("CrossTrigger") : null;
                 var trigger = cross != null ? cross.GetComponent<Collider>() : null;
                 if (trigger != null && trigger.isTrigger && portal.GetComponent<PortalVisuals>() != null) crossable++;
             }
-            Check(crossable == 4, $"portales: {crossable}/4 con trigger para atravesar el disco y PortalVisuals");
+            Check(crossable == 5, $"portales: {crossable}/5 con trigger para atravesar el disco y PortalVisuals");
+            // Portal del Archivo (paso 8b): adentro de la rotonda (r < 8,5) y su llegada mira al centro, sobre el piso.
+            var archivePortal = Portal.Find("archive");
+            if (archivePortal != null)
+            {
+                Vector3 ap = archivePortal.transform.position, arr = archivePortal.Arrival != null ? archivePortal.Arrival.position : ap;
+                var center = new Vector3(SpellSimulator.World.Map.ValleyShape.ArchiveCenter.x, ap.y, SpellSimulator.World.Map.ValleyShape.ArchiveCenter.y);
+                bool inside = Vector3.Distance(new Vector3(ap.x, ap.y, ap.z), center) < 8.5f;
+                bool arrivalIn = Vector3.Distance(new Vector3(arr.x, ap.y, arr.z), center) < Vector3.Distance(ap, center);
+                bool floor = Physics.Raycast(arr + Vector3.up * 0.5f, Vector3.down, 1.5f, ~0, QueryTriggerInteraction.Ignore);
+                Check(inside && arrivalIn && floor, $"portal del Archivo: adentro de la rotonda ({Vector3.Distance(ap, center):F1} m), llegada hacia el centro y sobre piso ({floor})");
+            }
 
             // --- Tutoriales nuevos, hojas livianas, barquito estable, muros de tierra y Wall Breaker.
             Check(GameObject.Find("Struct_EarthWorkshop") != null && GameObject.Find("Struct_WaterLab") != null && GameObject.Find("Slate_WaterLab") != null,
@@ -1051,7 +1062,7 @@ namespace SpellSimulator.EditorTools
                 for (int i = 0; i < towerMap.PortalMarkerCount; i++) towerMap.GetPortalMarker(i).Press();
             yield return null;
             bool noTeleport = mapCam != null && (mapCam.transform.position - beforeMap).sqrMagnitude < 1e-6f
-                && towerMap != null && towerMap.PortalMarkerCount >= 4;
+                && towerMap != null && towerMap.PortalMarkerCount >= 5;
             Check(noTeleport, "mapa de la torre: presionar los rombos de portal no teletransporta");
             bool tabOpens = false, tabClosed = false;
             if (towerMap != null && mapCam != null && !SpellSimulator.Player.PlatformDetector.IsVR

@@ -135,6 +135,12 @@ namespace SpellSimulator.EditorTools.Map
             StandBook(t, "shape", ArcPolar(ArcLecternRadius, ArcShapeAngle), ArcPolar(ArcReaderRadius, ArcShapeAngle), floorY);
             StandBook(t, "rare", ArcPolar(6.45f, ArcRareAngle), ArcPolar(5.5f, ArcRareAngle), floorY + ArcDaisHeight);
 
+            // Portal del Archivo (paso 8b): version compacta (como la del estudio) entre los nichos de movimiento y de formas,
+            // mirando al centro; la placa queda del lado oeste para no pisar el arenero.
+            Vector3 portalLocal = t.InverseTransformPoint(new Vector3(ValleyShape.ArchivePortal.x, 0f, ValleyShape.ArchivePortal.y));
+            float portalYaw = Mathf.Atan2(-portalLocal.x, -portalLocal.z) * Mathf.Rad2Deg;
+            BuildPortal(t, "archive", new Vector3(portalLocal.x, floorY, portalLocal.z), portalYaw, PortalBase.Floor, -1f, 0.95f, 0.55f, 0.52f, true);
+
             // Mesa de alquimia (decorativa; sus alambiques y frascos estan en la malla estatica).
             Quaternion rareRot = t.rotation * ArcFacing(ArcRareAngle);
             TowerBuilder.Table(t, lit, "Archive_AlchemyTable", t.rotation * ArcAt(7.45f, ArcRareAngle, floorY + ArcDaisHeight), rareRot.eulerAngles.y, 1.6f, 0.6f);

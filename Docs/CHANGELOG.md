@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-26 — Portal del Archivo (paso 8b del rework del mapa)
+
+- Portal nuevo `archive` («Portal del Archivo») adentro de la rotonda, al sur (`ValleyShape.ArchivePortal`, (0, −52,6)), compacto y mirando al centro (`MapStructures.Archive.cs`). Identidad en `portals.json`: **agua + flotar + convergencia**. Atajo de ida y vuelta con el portal del estudio (frente a la torre, junto al Nexo), según D17.
+- `glifos.json`: «Caminos del valle» (`portals-valley`) anota también `archive`. `WorldZones.json`: rombo del portal en el tablero, corrido a (0, −54) para no tapar el marcador del Archivo. Color propio en `PortalVisualCurve.TintFor`.
+- Tests: `PortalRecipeTests` pasa a 5 identidades y revisa que el libro del valle enseñe Archivo y estudio; Play Smoke: 5 portales atravesables y el del Archivo adentro de la rotonda, con la llegada sobre el piso. EditMode 696/696, smoke PASS.
+
 ## 2026-11-24 — Libros de hechizos por elemento en sus campos (paso 7 del rework del mapa)
 
 - `glifos.json`: los libros mixtos se parten en uno por elemento: **Hechizos de agua** `spells-water` (light_rain, downpour, wave, water_lance, water_draw, water_orb; absorbe «Aguas y mareas»), **de tierra** `spells-earth` (earth_spike, stone_wall, wall_bend y `thrown_rock`, que sale de asedio), **de fuego** `spells-fire` (small_flame, blaze, pyreball, ring_of_fire, flame_shot) y **de viento** `spells-wind` (wind_fan, whirl, updraft, wind_breath, grasping_wind, wind_wall). «Arte de asedio» queda con `fire_wall`. Se borran `spells-wind-water`, `spells-fire-earth` y `spells-water-deep` (quien los había leído los ve sin leer: aceptado). El campo `book` de los 21 hechizos afectados (`Data/Spells/*.json`) se actualizó.

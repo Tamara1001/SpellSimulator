@@ -20,6 +20,11 @@
       "id": "cave",
       "displayName": "Portal de la cueva",
       "identity": { "sigil": "fire", "signs": ["dispersion", "column"] }
+    },
+    {
+      "id": "archive",
+      "displayName": "Portal del Archivo",
+      "identity": { "sigil": "water", "signs": ["float", "convergence"] }
     }
   ]
 }

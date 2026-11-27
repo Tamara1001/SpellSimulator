@@ -130,10 +130,10 @@ namespace SpellSimulator.Tests
         // ---- Datos reales (Data/Portals/portals.json) ----
 
         [Test]
-        public void RealFile_FourDistinctWellFormedIdentities()
+        public void RealFile_FiveDistinctWellFormedIdentities()
         {
             var recipes = PortalRecipes.LoadDefault();
-            string[] ids = { "tower-study", "watchtower", "field-circle", "cave" };
+            string[] ids = { "tower-study", "watchtower", "field-circle", "cave", "archive" };
             foreach (string id in ids)
             {
                 var def = recipes.Find(id);
@@ -148,6 +148,19 @@ namespace SpellSimulator.Tests
                 AssertGlyphExists("sigils", recipes.Find(id).Identity.Sigil);
                 foreach (string s in recipes.Find(id).Identity.Signs) AssertGlyphExists("signs", s);
             }
+        }
+
+        [Test]
+        public void ArchivePortal_TaughtByValleyBook_WithTheStudyPortal()
+        {
+            // Paso 8b (D17): «Caminos del valle» anota el portal del Archivo junto con el del estudio, asi se puede ir y volver.
+            var lore = Learning.GlyphLore.FromJson(File.ReadAllText("Assets/_Project/Data/Lore/glifos.json"));
+            var book = lore.Book("portals-valley");
+            Assert.IsNotNull(book);
+            CollectionAssert.Contains(book.Portals, "archive");
+            CollectionAssert.Contains(book.Portals, "tower-study");
+            var known = Learning.PortalKnowledge.Known(PortalRecipes.LoadDefault(), lore.Books, id => id == "portals-valley");
+            Assert.IsTrue(known.Exists(d => d.Id == "archive") && known.Exists(d => d.Id == "tower-study"));
         }
 
         [Test]
