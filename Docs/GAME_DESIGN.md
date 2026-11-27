@@ -17,7 +17,9 @@ tags: [doc, diseño]
 ## Modos
 
 ### Modo Libre (prioridad para la evaluación)
-Simulador puro, sin fallar ni morir. Se aprende, se experimenta y se rompe todo.
+Simulador sin fallar: se aprende, se experimenta y se rompe todo. Desde 2026-11-26 (D28/D33) **el jugador recibe daño** de los
+hechizos y la quemadura, se recupera solo tras 6 s sin daño y, si llega a 0, reaparece en el Nexo con la vida llena. La
+**palanca «Sin daño» del laboratorio** apaga el daño (queda guardado entre partidas). Caerse del mundo también devuelve al Nexo.
 
 - **Mapa** (muy chico, una sola escena):
   - **La torre**: varios pisos con bibliotecas, mesas de trabajo, atriles con papeles fijos, tinteros, estantes de
@@ -242,8 +244,9 @@ que se suelta (E) o se deja flotando (G) a menos de 0,85 m; si ya había otro, s
    inválido, cada trazo nuevo vuelve a intentar el lanzamiento. Un sello lanzado queda **gastado** hasta que se borre
    o se vuelva a abrir el anillo.
 2. **Hechizos activos simultáneos**: se define midiendo rendimiento en Quest (tarea de M3/M7). Valor provisorio: 6.
-3. **El personaje recibe efectos** en el modo Libre: empujones, viento y salpicaduras. No recibe daño. Para probar
-   el daño hay **muñecos de práctica** (tela, arden; vuelven a aparecer a los 4 s).
+3. **El personaje recibe efectos** en el modo Libre: empujones, viento y salpicaduras. ~~No recibe daño.~~ Desde 2026-11-26
+   sí recibe daño (ver Modo Libre; se apaga con la palanca del laboratorio). Los **muñecos de práctica** siguen para probar
+   el daño sin arriesgarse (tela, arden; vuelven a aparecer a los 4 s).
 4. **Sellos grabados en piedra** (definido):
    - Son permanentes y se reactivan tocándolos (secundario sobre el sello) o con su trigger.
    - Cooldown = `max(5 s, 2 × duración del hechizo)`.

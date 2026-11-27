@@ -250,6 +250,7 @@ namespace SpellSimulator.EditorTools.Map
 
             Shelf(root, material, floor);
             EntranceSign(root, material);
+            NoDamageLever(root, material);   // paso V (D33): interruptor «sin daño» junto a la llegada desde el nexo
             Lights(root, material, floor);
 
             Debug.Log($"[MapLab] laboratorio en {root.position} mirando {forward}; pinos/rocas despejados: {cleared}; " +
@@ -1403,6 +1404,46 @@ namespace SpellSimulator.EditorTools.Map
         /// lado de la torre (junto a la pista si la torre queda de ese lado), de cara a la torre (desde donde llega el jugador) y corrido
         /// para no tapar el paso. Explica en pocas lineas que es y como se usa en 4 pasos.
         /// </summary>
+        /// <summary>Palanca «sin daño» (paso V, D33): sobre la plataforma, del lado por donde se llega desde el nexo (local, m).</summary>
+        private static readonly Vector3 NoDamageLeverLocal = new Vector3(-2.2f, 0f, -4.2f);
+
+        private static void NoDamageLever(Transform root, Material material)
+        {
+            var stone = new Color(0.62f, 0.6f, 0.56f);
+            var iron = new Color(0.25f, 0.25f, 0.28f);
+            Vector3 at = root.TransformPoint(NoDamageLeverLocal);
+            Physics.SyncTransforms();
+            if (Physics.Raycast(at + Vector3.up * 5f, Vector3.down, out RaycastHit hit, 10f, ~0, QueryTriggerInteraction.Ignore)) at.y = hit.point.y;
+            else at.y = MapBuilder.Ground(at.x, at.z).y;
+            Vector3 toNexus = new Vector3(SpellSimulator.World.Map.ValleyShape.Spawn.x, 0f, SpellSimulator.World.Map.ValleyShape.Spawn.y) - at;
+            toNexus.y = 0f;
+
+            var b = new LowPolyMesh();
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.45f, 0f)), new Vector3(0.3f, 0.9f, 0.3f), stone, stone * 0.9f);
+            b.Box(Matrix4x4.Translate(new Vector3(0f, 0.93f, 0f)), new Vector3(0.38f, 0.06f, 0.38f), iron);
+            var go = MapBuilder.Place("NoDamageLever", root, MapBuilder.SaveMesh(b.Build("Lab_NoDamageLever")), material, at, Quaternion.LookRotation(toNexus.normalized));
+            go.isStatic = false;
+            var col = go.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, 0.72f, 0f);
+            col.size = new Vector3(0.42f, 1.46f, 0.46f);
+
+            // Mango aparte (gira segun el estado) y farolito verde que se prende sin daño.
+            var hb = new LowPolyMesh();
+            hb.Box(Matrix4x4.Translate(new Vector3(0f, 0.21f, 0f)), new Vector3(0.05f, 0.42f, 0.05f), iron);
+            hb.Box(Matrix4x4.Translate(new Vector3(0f, 0.44f, 0f)), new Vector3(0.13f, 0.13f, 0.13f), new Color(0.3f, 0.7f, 0.4f));
+            var handle = MapBuilder.Place("Handle", go.transform, MapBuilder.SaveMesh(hb.Build("Lab_NoDamageLever_Handle")), material, go.transform.TransformPoint(new Vector3(0f, 0.96f, 0f)), go.transform.rotation);
+            handle.isStatic = false;
+            var gb = new LowPolyMesh();
+            gb.Frustum(Matrix4x4.identity, 0.07f, 0.07f, 0f, 0.12f, 6, new Color(0.7f, 1f, 0.6f));
+            var glow = MapBuilder.Place("Glow", go.transform, MapBuilder.SaveMesh(gb.Build("Lab_NoDamageLever_Glow")), material, go.transform.TransformPoint(new Vector3(0.12f, 0.96f, 0.12f)), go.transform.rotation);
+            glow.isStatic = false;
+
+            var lever = go.AddComponent<SpellSimulator.World.NoDamageLever>();
+            Assign(lever, "glow", glow);
+            Assign(lever, "handle", handle.transform);
+            CanvasDesigns.Sign(root, material, "Sign_NoDamage", at + go.transform.right * 0.9f, toNexus.normalized, "Sin daño", "E: prender o apagar");
+        }
+
         private static void EntranceSign(Transform root, Material material)
         {
             Vector3 toTower = MapBuilder.TowerOrigin() - root.position;

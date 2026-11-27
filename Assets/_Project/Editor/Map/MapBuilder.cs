@@ -471,6 +471,8 @@ namespace SpellSimulator.EditorTools.Map
                 player.transform.rotation = Quaternion.Euler(0f, -52f, 0f);
                 // Tutorial / nexo / reaparicion (Docs/MAPA_FLUJO_PLAN.md, paso N): quien lo ubica en juego es PlayerSpawn.
                 if (player.GetComponent<Player.PlayerSpawn>() == null) player.AddComponent<Player.PlayerSpawn>();
+                // Vida en Libre (paso V): daño de hechizos, regeneracion, reaparecer en el nexo al morir e interruptor «sin daño».
+                if (player.GetComponent<Player.PlayerVitality>() == null) player.AddComponent<Player.PlayerVitality>();
                 // PlayerSpawn reemplaza al Respawnable del jugador (que lo devolvia a su pose inicial en la torre).
                 var playerRespawnable = player.GetComponent<World.Respawnable>();
                 if (playerRespawnable != null) Object.DestroyImmediate(playerRespawnable);

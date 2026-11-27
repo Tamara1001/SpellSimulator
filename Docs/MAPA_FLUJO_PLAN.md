@@ -45,7 +45,7 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
 - [x] **1** Mover el laboratorio a la pradera (20,−8) — sitio y frente fijos (este); se quitó `TrackClear`/`LaboratoryFront`
 - [x] **2** Mover el entrenamiento — quedó en **(−6, −25)** con frente al **suroeste** (ver bitácora)
 - [x] **2b** Caminos completos (`ValleyShape.Paths`) **antes** de fijar sitios 3-6 (y peñasco 3 mudado a (47, −27))
-- [ ] **V** *(v3, D28)* Vida del jugador en modo Libre: recibe daño, al morir reaparece en el Nexo, y un interruptor desbloqueable apaga el daño (**falta decidir dónde se desbloquea**)
+- [x] **V** *(v3, D28)* Vida del jugador en modo Libre: recibe daño, al morir reaparece en el Nexo, y un interruptor desbloqueable apaga el daño — hecho 2026-11-26 (palanca en el laboratorio, D33)
 - [x] **N** *(v3, §17)* Nexo: reaparición, tablero con el mapa, pregunta «¿saltear el tutorial?» al entrar a Modo Sandbox (la guía de «siguiente etapa» y el portal del Nexo llegan con los pasos 9 y T)
 - [x] **TS** *(D30)* Silueta nueva de la torre: base en talud, terraza de 7 m en voladizo, techo más alto
 - [x] **T1** Terraza: movilidad básica, barrera mágica, palanca de salteo, faroles de nivel
@@ -136,6 +136,8 @@ Si te dicen eso, **empezá por acá**. Rama `rework-mapa`, último commit `33e5d
 - 2026-11-26 — **Paso 9 hecho.** Postes con flechas (`Signposts` datos + `MapSignposts` en el Editor): Nexo en (−2,2, −3,8) con Torre / Laboratorio / Entrenamiento / Archivo / Lago y Archivo en (−1,8, −39,7) (adentro, al oeste de la entrada norte) con Agua / Fuego / Tierra / Viento / Nexo; una palabra por flecha, color de `WorldZones.json`, texto en las dos caras. Tablero: `LearningFlow` + `MapStageHighlighter` hacen latir la etapa sugerida.
   - **Adaptación de §9:** la torre enseña con los tomos I y II (no con `elements`) y no existe el libro `seals`, así que tras la torre laten a la vez Entrenamiento y Archivo; libro del Archivo → los 4 campos; libro de hechizos de un elemento → late game (atalaya, círculo, santuario, cueva, cabaña del bosque). Quien saltea el tutorial ve latir la torre hasta leer un tomo (aceptable: solo sugiere).
   - 704 EditMode y smoke en verde (2 chequeos nuevos). Capturas `paso9_poste_nexo.png`, `paso9_poste_archivo.png`. Desde algunos ángulos la flecha de Archivo tapa en parte la de Lago (apuntan parecido).
+- 2026-11-26 — **Paso V hecho.** `PlayerVitality` (en el jugador) + `VitalityRules` (lógica pura) + `NoDamageSetting` (PlayerPrefs) + `NoDamageLever` en la plataforma del laboratorio, en (15,8, −5,8), del lado por donde se llega desde el Nexo, con cartelito «Sin daño». 100 de vida, regenera 8/s tras 6 s sin daño, aviso en el HUD por debajo del 35 % y al morir. En Duelo no hace nada (manda NetDuel). `Health` ganó `Invulnerable` y `Heal`.
+  - **Sin medir a mano:** cuánto daño hace de verdad un hechizo propio o el pasto en llamas al jugador (los propios no lo dañan si el campo tiene al jugador como `Source`). No hay barra de vida en el HUD de Libre: solo avisos. 708 EditMode y smoke en verde (chequeo nuevo).
 - **Pendiente anotado por Tamara:** limpiar los muebles y cosas viejas que quedan en la torre (alquimia, estudio, mobiliario del piso 1 y planta baja) y dejarla coherente; encaja con T3/T4 y el paso 3 (la alquimia se muda al Archivo).
 > Autora del diseño: Tamara D'Angelo (decisiones) + sesión de diseño de Claude (redacción). Fecha: 2026-11-16.
 > Relacionado: [MAPA_REORGANIZACION.md](MAPA_REORGANIZACION.md) (diagnóstico de distancias, previo), [GAME_DESIGN.md](GAME_DESIGN.md),

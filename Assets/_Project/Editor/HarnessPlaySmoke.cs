@@ -1050,6 +1050,43 @@ namespace SpellSimulator.EditorTools
                 }
             }
             Check(spawnOk, "nexo: el tutorial empieza en la terraza, el salteo deja en el nexo y una caida reaparece en el nexo");
+            // Paso V (D28, D33): vida del jugador en Libre, reaparicion al morir y palanca «sin daño» del laboratorio.
+            {
+                var vitality = Object.FindFirstObjectByType<SpellSimulator.Player.PlayerVitality>();
+                var noDamageLever = Object.FindFirstObjectByType<SpellSimulator.World.NoDamageLever>();
+                bool hadUnlocked = SpellSimulator.Player.NoDamageSetting.Unlocked, hadOn = SpellSimulator.Player.NoDamageSetting.On;
+                bool hurts = false, shielded = false, revived = false;
+                if (vitality != null && vitality.Health != null && noDamageLever != null)
+                {
+                    var hp = vitality.Health;
+                    var vBody = vitality.GetComponent<Rigidbody>();
+                    Vector3 vBack = vBody.position;
+                    Quaternion vBackRot = vBody.rotation;
+                    SpellSimulator.Player.NoDamageSetting.Set(false);
+                    hp.ResetHealth();
+                    hp.Damage(30f);
+                    hurts = Mathf.Approximately(hp.Current, hp.Max - 30f);
+                    noDamageLever.Press(); // apagado -> la palanca lo enciende
+                    float hpBefore = hp.Current;
+                    hp.Damage(30f);
+                    shielded = SpellSimulator.Player.NoDamageSetting.On && Mathf.Approximately(hp.Current, hpBefore);
+                    noDamageLever.Press();
+                    vBody.position = new Vector3(5f, vBack.y, 40f);
+                    vitality.transform.position = vBody.position;
+                    Physics.SyncTransforms();
+                    hp.Damage(hp.Max * 2f);
+                    Vector3 afterDeath = vBody.position;
+                    revived = !hp.IsDead && Mathf.Approximately(hp.Current, hp.Max)
+                        && Vector2.Distance(new Vector2(afterDeath.x, afterDeath.z), SpellSimulator.World.Map.ValleyShape.Spawn) < 1.5f;
+                    vBody.linearVelocity = Vector3.zero;
+                    vBody.position = vBack;
+                    vitality.transform.SetPositionAndRotation(vBack, vBackRot);
+                    Physics.SyncTransforms();
+                }
+                if (hadUnlocked) SpellSimulator.Player.NoDamageSetting.Set(hadOn); else SpellSimulator.Player.NoDamageSetting.ResetForTests();
+                Check(vitality != null && noDamageLever != null && hurts && shielded && revived,
+                    $"vida en Libre: el daño resta, la palanca del laboratorio lo apaga y al morir reaparece en el nexo con vida llena (vitalidad {vitality != null}, palanca {noDamageLever != null}, daño {hurts}, sin daño {shielded}, reaparece {revived})");
+            }
             var towerMap = Object.FindFirstObjectByType<SpellSimulator.World.Map.TowerMap>();
             Check(towerMap != null && Vector2.Distance(new Vector2(towerMap.transform.position.x, towerMap.transform.position.z),
                 SpellSimulator.World.Map.ValleyShape.Spawn) < 8f, "nexo: el tablero del mapa esta junto al nexo");

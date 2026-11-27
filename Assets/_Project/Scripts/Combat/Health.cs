@@ -21,6 +21,9 @@ namespace SpellSimulator.Combat
         public bool IsDead => Current <= 0f;
         public float Fraction => maxHealth > 0f ? Current / maxHealth : 0f;
 
+        /// <summary>Si es true, <see cref="Damage"/> no hace nada (interruptor «sin daño» del modo Libre, PlayerVitality).</summary>
+        public bool Invulnerable { get; set; }
+
         /// <summary>(salud, daño) en cada golpe.</summary>
         public event Action<Health, float> Damaged;
         public event Action<Health> Died;
@@ -45,7 +48,7 @@ namespace SpellSimulator.Combat
 
         public void Damage(float amount)
         {
-            if (amount <= 0f || IsDead) return;
+            if (amount <= 0f || IsDead || Invulnerable) return;
             Current = Mathf.Max(0f, Current - amount);
             pendingPopup += amount;
             Damaged?.Invoke(this, amount);
@@ -62,6 +65,13 @@ namespace SpellSimulator.Combat
         {
             maxHealth = Mathf.Max(1f, max);
             Current = maxHealth;
+        }
+
+        /// <summary>Recupera vida sin pasar del maximo (regeneracion del jugador en Libre). No revive: un muerto sigue muerto.</summary>
+        public void Heal(float amount)
+        {
+            if (amount <= 0f || IsDead) return;
+            Current = Mathf.Min(maxHealth, Current + amount);
         }
 
         public void ResetHealth()

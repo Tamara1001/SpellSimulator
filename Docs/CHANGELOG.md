@@ -5,6 +5,12 @@ tags: [doc, changelog]
 
 Entradas más nuevas arriba. Una por tarea/commit relevante: fecha, qué, por qué, docs tocadas.
 
+## 2026-11-26 — Vida del jugador en modo Libre y palanca «sin daño» (paso V del rework del mapa)
+
+- El jugador ahora **recibe daño** en Libre (D28): `PlayerVitality` le pone `Health` (100), se regenera 8/s tras 6 s sin daño, avisa en el HUD con vida baja y al morir **reaparece en el Nexo** con la vida llena. En Duelo no interviene.
+- **Palanca «Sin daño»** en el laboratorio (D33, `NoDamageLever` + `NoDamageSetting` en PlayerPrefs): la primera vez lo desbloquea y lo enciende; después alterna. `Health.Invulnerable` y `Health.Heal` nuevos.
+- Tests: `VitalityRulesTests` (4); Play Smoke: daño, palanca y reaparición. EditMode 708/708, smoke PASS. `GAME_DESIGN.md` actualizado (antes decía «sin morir»).
+
 ## 2026-11-26 — Postes con flechas y etapa sugerida en el tablero (paso 9 del rework del mapa)
 
 - **Postes con flechas** (D31, decisión de Ale): uno en el Nexo (Torre, Laboratorio, Entrenamiento, Archivo, Lago) y otro adentro del Archivo junto a la entrada (Agua, Fuego, Tierra, Viento, Nexo). Una palabra por flecha, del color de su zona en el tablero, legible por las dos caras. Datos en `Scripts/World/Map/Signposts.cs`, malla en `Editor/Map/MapSignposts.cs` (después de `MapStructures`, apoyado sobre el piso real).
